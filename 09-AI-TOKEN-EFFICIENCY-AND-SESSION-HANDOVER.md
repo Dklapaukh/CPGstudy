@@ -36,7 +36,7 @@ Maintain `docs/CONTINUE-HERE.md` in the repository, concise and current:
 
 ## Copyable new-chat prompt template
 ```text
-Continue development of the Paramedic Mentoring App from the attached repository or accessible project folder.
+Continue development of the Your School of Paramedicine from the attached repository or accessible project folder.
 First read START-HERE.md, docs/CONTINUE-HERE.md, and 09-AI-TOKEN-EFFICIENCY-AND-SESSION-HANDOVER.md. Read other specification and source files selectively as needed. Do not assume access to prior chat history.
 
 Current milestone: [FILL FROM HANDOVER]

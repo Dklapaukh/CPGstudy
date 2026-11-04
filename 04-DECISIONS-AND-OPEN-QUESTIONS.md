@@ -1,35 +1,31 @@
-# 04 — Confirmed decisions, proposals and open questions
+# 04 — Decisions and remaining implementation choices
 
 ## Confirmed
-- Product: personalised co-developed School of Paramedicine, live observation, debrief, external reflection through exports, and longitudinal progress.
-- Editable nested sections, subsections, notes and ordering; version history for jobs.
-- One live observer per job, either mentor or mentee. Learning to mentor/observe is part of the purpose.
-- Different devices will be used; secure cross-device accounts and sync from first functional release.
-- One mentor, fewer than five mentees; mentor can view all assigned mentees, mentee can view all own records and no other mentee's records.
-- NZCPG catalogue mirrors official website broad categories/title ordering, with medicines separate, title and direct official link only.
-- Per-mentee NZCPG statuses Not reviewed / Completed / Requires review, with reason for review and history; record guidelines discussed.
-- Export job logs through device sharing/email when possible; dashboards show completion and benchmark trends. Benchmarks may be defined before or after jobs, calculated from existing timestamped events.
-- Non-technical owner requires precise plain-English, step-by-step Supabase setup instructions.
-- Code readability, maintainability, rationale comments, tests, architecture documentation and professional handover are non-negotiable.
+- Official product name **Your School of Paramedicine**; each mentee's editable nested framework can be named for them.
+- Professional, intuitive, clean 2018–2021-era design; no detailed aesthetic specification.
+- Pilot one mentor, fewer than five mentees; architecture supports multiple independent mentor groups on one Supabase project. Mentor access limited to assigned mentees; mentees see all their own records. One active mentor per mentee initially.
+- One observer per job, either mentor or mentee. Completion checklist only: one timestamp per item per job, optional note button, auditable correction; no quality grades or scores.
+- Job history, collaborative debrief and export of logs/notes for reflections elsewhere; no in-app reflection writing.
+- NZCPG catalogue follows official broad categories and titles with medicines separate; titles and direct links only. Track discussions, Completed/Requires review (reason required)/Not reviewed per mentee; completion is not competency certification.
+- Benchmarks are chosen by mentor/mentee before or after jobs, derived from retained event timestamps; missing event pairs excluded and sample size shown.
+- Phone/tablet/desktop accounts and cloud persistence required. Offline is optional; online-only acceptable with visible save status and no silent data loss.
+- GitHub repository: https://github.com/Dklapaukh/Mentoring ; source/docs there, real account and mentoring data in Supabase. Extract planning ZIP before uploading its contents, preserving paths. Do not publish app until ready; repository visibility and website deployment are different things.
+- Plain-English beginner Supabase instructions; readable TypeScript, tests, documented rationale, GitHub Actions, verified commits, safe rollback and AI session handovers mandatory. Avoid unnecessary complexity and paid services for pilot.
+- Mentee consent planned; no formal governance workflow in app, but retain essential security/privacy controls.
 
-- Live observations are a simple completion checklist with **one completion timestamp per item per job**, optional per-row note button, and auditable corrections; no scores, ratings or grading rubric.
-- No reflection editor or draft reflections; export job logs/debrief notes for writing reflections elsewhere.
-- Offline support is optional if reasonably simple; online-only is acceptable for pilot.
-- NZCPG Completed is a manually selected learning-tracker status, not competence sign-off.
-- Mentees will be consented and risks explained; no formal governance-review workflow is requested. Baseline security/privacy safeguards remain.
+## Decisions needed when implementing the affected feature
+1. Define exceptional record deletion, data retention/offboarding and formal correction procedures before real pilot; ordinary finalised job observations remain immutable with auditable corrections.
+2. Detail exceptional mentor reassignment and account recovery/revocation behaviour; the invitation-only acceptance flow and initial roles are decided.
+3. Retention, deletion, backup, export and offboarding arrangements before real data is stored.
+4. Exact NZCPG catalogue source/version, link verification and update/retirement process.
+5. Which start/end events define each benchmark; users choose them rather than a fixed clinical rule.
 
-## Recommended, not yet finally selected
-- Supabase Auth + Postgres + RLS; TypeScript responsive PWA hosted on GitHub Pages.
-- Separate immutable observations from retrospective debrief notes; auditable corrections.
-- Preserve framework snapshots, stable CPG IDs and benchmark definitions for meaningful historical analysis.
-- Start with a small number of explicit, non-competitive trend measures.
+## Out of scope unless approved
+Competence scoring, patient-identifiable clinical records, full NZCPG content conversion, built-in reflection editor, simultaneous observers, organisation hierarchy, global mentor dashboard, payments and complex offline conflict resolution.
 
-## Open questions requiring decisions before relevant implementation
-1. **Edit permissions:** can mentees change School items, CPG statuses and debriefs independently? Can they edit/delete finalised observations? Who can correct mistakes?
-2. **Benchmark event definitions:** exact time zero and end criteria are chosen by mentor/mentee when configuring each benchmark; definitions may be prospective or retrospective. Case-mix interpretation remains a reporting consideration.
-3. **Data handling:** decide retention, deletion, backup and user offboarding; consent does not replace basic privacy safeguards.
-4. **CPG import:** authoritative NZCPG website edition and update frequency; handling retired/renamed guidelines; how to verify links.
-5. **Mentor role:** whether only one assigned mentor exists per mentee during pilot and what happens when reassigned.
-
-## Explicit non-decisions
-No automatic clinical competence certification, patient-record system, full NZCPG conversion, AI grading, simultaneous live multi-editor, or organisation-wide rollout has been approved.
+## Confirmed operational decisions (November 2026)
+- Initial owner: administrator and mentor. Administrator may invite mentors, but cannot automatically read unrelated mentoring records. Mentors invite mentees; invitations require verified identity and acceptance. No open privileged signup.
+- Both mentor and mentee may edit the shared School and add debrief notes. Finalised observations preserve original timestamps with auditable corrections; no routine deletion control.
+- UTC event times and separate save times; local-time display; server-confirmed save feedback; online-only pilot permitted.
+- Documented, tested backup/restore outside public GitHub; check Supabase Free inactivity, limits and email quotas before launch.
+- Full two-mentor/two-mentee isolation and end-to-end cross-device pilot tests are required.

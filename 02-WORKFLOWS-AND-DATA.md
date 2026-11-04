@@ -50,3 +50,17 @@ A benchmark is a configurable elapsed-time measure between two named events reco
 - Recalculate qualifying historical jobs when a new benchmark is created; exclude jobs without both required events, and show the qualifying-job count.
 - Keep benchmark definition versions so changes do not silently rewrite the interpretation of earlier reports.
 - Each checklist item can have **at most one active completion timestamp per job**. A correction preserves the previous value, reason/author and correction time in an audit trail.
+
+## Multiple independent mentors: data and permissions
+- Model users and mentor-to-mentee assignments as data, not as a single hard-coded administrator account.
+- Scope **every** school, job, observation, debrief, guideline status, benchmark and export to its owning mentee. Authorisation must check the signed-in user's identity and the current assignment in the database (Supabase RLS), including joins, updates and exports.
+- Each mentor sees only assigned mentees. Each mentee sees only their own records. A mentor must not be able to add an arbitrary existing mentee by supplying an email or ID; invitation/acceptance and verified assignment are required.
+- Initially allow one active mentor assignment per mentee. Record assignment creation/revocation and plan safe reassignment without losing the mentee's historical data. Do not give the app owner blanket visibility into unrelated mentors' records.
+- Security tests must use **two mentors and at least two mentees in different groups**, plus a mentee attempting to access another mentee's records; test both reads and writes.
+
+## Invitation, finalisation and event-time rules
+- Initial administrator setup uses a privileged, documented bootstrap operation, never client-side role self-promotion.
+- Administrator invites mentor → verified mentor accepts → mentor invites mentee → verified mentee accepts → server creates scoped assignment. Invitations must expire, be single-use or otherwise replay-safe, and be revocable; do not trust an email address alone as authorisation.
+- Record each job event with original occurrence time (UTC), server receipt/save time, author and audit history for corrections. Display times in the viewer’s local timezone; retain original recorded timestamps for retrospective benchmarks.
+- A finalised job is read-only as to original observations; permitted corrections append audit information rather than silently overwriting history. Both parties may add attributed debrief notes. Do not expose everyday deletion of finalised records.
+- Never show a successful save until confirmed by server. On failed connectivity, clearly mark unsaved actions; no claim of offline capture unless tested.

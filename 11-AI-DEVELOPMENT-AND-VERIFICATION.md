@@ -42,3 +42,8 @@ Provide 2–6 steps in plain English: which device/browser to use, exactly what 
 4. Exact owner action required, if any.
 5. Next task from the handover.
 6. CONTINUE CURRENT CHAT or START NEW CHAT, why, and a fully filled copyable prompt if starting fresh.
+
+## Operational acceptance tests
+- Add automated tests for invitation acceptance/expiry/replay, privileged role bootstrap, administrator without blanket record access, finalised-event audit corrections, UTC event versus save times, and server-confirmed save status.
+- Human pilot acceptance: two mentors and two mentees; create and edit School; observe and finalise job; debrief; mark NZCPG progress; calculate historical benchmark; export; sign in on another device; simulate network loss; verify no cross-group access.
+- Confirm backup restoration and free-tier operational constraints before real use; report untested conditions explicitly.

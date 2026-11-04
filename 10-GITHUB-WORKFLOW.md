@@ -1,38 +1,27 @@
-# 10 — GitHub-first build workflow and compact prompts (mandatory once building starts)
+# 10 — GitHub-first development and session workflow
 
-## Confirmed owner workflow
-The owner will upload all planning documents and subsequent build files to a GitHub repository. Repository URL is **not yet provided**; request it before using it. Never confuse this repository with Pocket Resus. The repository is the canonical versioned record for code, documentation, migrations and current build progress. No AI tool may assume it has GitHub access.
+**Canonical repository:** https://github.com/Dklapaukh/Mentoring. The owner created it; its current files, branch and commit must still be checked, not assumed. The website is not yet published. GitHub is for code, documents, tests, migrations and progress—not for mentoring records or secrets. Supabase holds actual user data. Keep `.env.example` with placeholders and `.gitignore` for local secrets.
 
-## One-time repository setup
-1. Explain to the owner, in plain English, how to create a **private** repository and upload the planning files, preserving folder paths.
-2. Include `START-HERE.md` at the repository root and maintain `docs/CONTINUE-HERE.md` as the short, authoritative live handover. Keep numbered planning documents in a documented location; update paths in START-HERE if moved.
-3. Confirm the URL, default branch, latest commit and that required files are present. Do not say uploaded until verified.
-4. Explain how to upload replacements and commit changes through the GitHub website if the coding tool cannot push. Never put Supabase service-role keys, secrets, personal data or patient information in GitHub. Provide `.env.example` with placeholders and `.gitignore` for secrets.
+## First upload
+Download and **extract** the latest planning ZIP. Upload the contents, not the ZIP alone, to the repository root preserving paths such as `docs/CONTINUE-HERE.md`; avoid creating an extra enclosing folder. Replace outdated files deliberately, commit, and verify their paths. If the repository already contains implementation work, inspect before overwriting. GitHub Pages deployment is a separate later step. A private source repository does not make a deployed GitHub Pages website private.
 
 ## Every coding session
-1. Confirm repository and branch; clone/fetch latest code if supported. If not, request current ZIP/files.
-2. Read `START-HERE.md` and `docs/CONTINUE-HERE.md` first; read other numbered documents and code only as relevant. Verify handover claims against actual code/tests and recent commits.
-3. Work only on the task under `State > Next`, unless the owner specifies otherwise; preserve confirmed requirements.
-4. Implement focused changes, test, and update `docs/CONTINUE-HERE.md` including commit/branch (if known), verified state, files changed, tests, blockers, upload status and one next task.
-5. If direct GitHub push is unavailable, provide a complete upload package and exact file paths and upload instructions. Ask the owner to confirm upload and any device test result. Do not treat unuploaded code as canonical.
-6. Explain in 1–2 sentences whether a fresh chat is more efficient. If yes, give a fully filled copyable next-chat prompt; if no, explain why staying retains useful context.
+1. Verify actual repository access, branch and latest commit; clone/fetch when supported, otherwise request the latest files. Do not mistake a local ZIP for a verified commit.
+2. Read `START-HERE.md` and `docs/CONTINUE-HERE.md`; open other documents and source only as needed.
+3. Complete one task under `State > Next` with clear acceptance criteria, focused changes and appropriate tests.
+4. Update `docs/CONTINUE-HERE.md`: actual state, tests, blockers, changed files, upload/deployment/device-test status, one next task, and last known good commit SHA if verified.
+5. If direct push is unavailable, provide a complete upload package, exact destination paths, plain-English upload steps and a request for owner confirmation. Do not mark files committed before verification.
+6. Explain briefly whether a new chat is more token-efficient and why; if yes, provide a fully populated copyable prompt. Never sacrifice code quality, safety or testing for token savings.
 
-## Recommended handover shape
-Use headings `State`, `Completed`, `Verified tests`, `Pending upload/device check`, `Known issues`, `Next`, `Relevant files`, and `Owner actions`. Under `State > Next`, identify one specific task with acceptance criteria. Distinguish code produced, code committed, deployed code, and device-verified code. Do not claim a phone test passed without the owner's report.
-
-## Compact continuation prompt template
+## Compact continuation prompt
 ```text
-Continue the Paramedic Mentoring App. Repository: [VERIFIED GITHUB URL].
-Clone/fetch [BRANCH] and check the latest commit. Read `START-HERE.md` and `docs/CONTINUE-HERE.md` first; read other numbered documents and source files only when needed.
-Do the task under `State > Next`. Follow the end-of-task routine in `10-GITHUB-WORKFLOW.md` and the code quality and token efficiency standards.
-Verified status: [ACTUAL UPLOAD / DEPLOYMENT / DEVICE TEST RESULT].
-Next task: [ONE TASK].
-I am non-technical; give exact plain-English steps for any manual actions.
-At the end, update handover, report tests, provide upload instructions if needed, and say whether to continue this chat or start a new one, with reasons and a copyable prompt if new.
+Continue Your School of Paramedicine. Repository: https://github.com/Dklapaukh/Mentoring.
+Verify branch and latest commit. Read START-HERE.md and docs/CONTINUE-HERE.md first; read other documents only as needed.
+Implement State > Next, follow 10-GITHUB-WORKFLOW.md and 11-AI-DEVELOPMENT-AND-VERIFICATION.md, and run appropriate tests.
+Verified upload/deployment/device status: [FILL WITH ACTUAL RESULTS].
+I am non-technical: explain required manual steps in plain English.
+Update handover; distinguish implemented, committed, deployed and user-tested work. Recommend continuing or starting a new chat with a reason and ready-to-copy prompt if new.
 ```
 
-## Limits and safety
-GitHub is a source of truth only for committed content. A local change not yet uploaded is a separate working copy. Verify version consistency before modifying database migrations or deployment files. GitHub Pages is public hosting even when source access is restricted; never expose secrets in browser code. Prefer concise diffs and focused test results to full-file dumps, but never skip security, tests or maintainable documentation to save tokens.
-
-## Continuous integration and verified checkpoints
-Once application source exists, implement the minimal GitHub Actions checks defined in `11-AI-DEVELOPMENT-AND-VERIFICATION.md`. Record a last-known-good commit SHA, GitHub upload status, deployment status, automated-test status and owner device-check status independently in `docs/CONTINUE-HERE.md`. Provide safe, plain-English rollback steps and avoid force pushes.
+## Verification and rollback
+Run TypeScript, lint, build and relevant tests, including separate-account Supabase RLS tests before real use. Introduce minimal GitHub Actions checks when executable code exists. Preserve identifiable last-known-good commits and provide safe rollback instructions; do not force-push. Never claim an owner device test passed without their report.

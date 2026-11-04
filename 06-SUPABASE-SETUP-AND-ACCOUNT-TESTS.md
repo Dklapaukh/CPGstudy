@@ -25,3 +25,11 @@ This document requires a future coding assistant to produce an actual click-by-c
 
 ## Privacy gate
 Before real deployment, confirm employer requirements for staff assessments, hosting location, consent/notice, retention, deletion, backups and prohibition on identifiable patient case data.
+
+## Extra beginner setup and access checks
+Explain how to create and verify **two mentor test accounts and two mentee test accounts**, safely assign one mentee to each mentor, and verify that cross-group access fails at the database level. Explain how to invite a second mentor without exposing service-role keys or giving them global access. Include explicit cleanup instructions for test accounts and data.
+
+## Administrator and invitation walkthrough
+Explain click-by-click how the owner signs up and is securely assigned Administrator + Mentor via a privileged bootstrap (never browser-accessible service-role keys). Then explain how to invite a second mentor through Manage Mentors, verify and accept the invitation, invite each mentor’s own mentee, verify and accept, and revoke an invitation or assignment. Include email delivery/redirect troubleshooting and safe test-data cleanup.
+
+Test: administrator can manage mentor invitations but cannot query the other mentor’s mentoring records; mentor A cannot access mentor B’s mentee; mentees cannot read one another; role self-promotion and invitation replay fail. Validate server-side RLS directly, not merely hidden UI. Also verify cross-device login, UTC/local timestamp rendering, failed saves, and backup restoration using fictional data.

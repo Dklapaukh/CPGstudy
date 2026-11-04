@@ -53,3 +53,17 @@ Patient-identifiable records, clinical decision support, automated grading, full
 ## Confirmed benchmark flexibility
 - Mentor and mentee may choose benchmark definitions prospectively or retrospectively. A newly defined measure can be applied to past jobs where the required events were recorded.
 - The app must not alter historical events to calculate a benchmark. Show missing-data exclusions and the number of jobs included.
+
+## Product naming and visual direction (confirmed)
+The product is called **Your School of Paramedicine**. Personalised frameworks may still be labelled "[Mentee]'s School of Paramedicine". Design as a clean professional app with the feel of software from around 2018–2021: easy and intuitive, without additional prescriptive aesthetic guidance.
+
+## Multiple mentors — minimum viable support
+Use one application and one backend for multiple mentor accounts. Each mentor can invite/manage only their own assigned mentees and see only their assigned mentees' information. Mentees see all their own information. Pilot usage is still one mentor and fewer than five mentees. Do not build an organisation hierarchy, payments, mentor-to-mentor sharing, or real-time co-editing. A mentee has one active mentor for now; reassignment and edit permissions need explicit decisions before those features are implemented.
+
+## Invitation-only accounts and administrator scope
+- The initial owner is securely bootstrapped as **Administrator + Mentor**; administrator can also maintain their own mentee group.
+- The administrator invites additional mentors by email through a simple Manage Mentors screen. Invited mentors verify their identity and accept before receiving mentor access.
+- Each mentor invites mentees by email; each mentee verifies identity and accepts the assignment before access is granted. No public self-registration that grants mentor privileges.
+- Administrator manages accounts/invitations only; **administrator status does not grant automatic access to other mentors’ mentees or mentoring records**.
+- Both authorised mentor and mentee can edit their shared School and contribute debrief notes. Finalised observations preserve original event history; corrections are audited. No routine delete action in initial UI.
+- This is the initial pilot permission policy; reassignment, exceptional recovery access and formal deletion procedures require deliberate design before release.

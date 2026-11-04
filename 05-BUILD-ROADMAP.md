@@ -46,7 +46,21 @@ Each checklist item has one active completion timestamp per job. Corrections are
 - Token savings never override tests, access security, data integrity or maintainability.
 
 ## GitHub build workflow
-At the start of implementation, establish the private canonical GitHub repository and follow `10-GITHUB-WORKFLOW.md` for every milestone, including verified commit state and concise continuation prompts.
+At the start of implementation, verify the canonical GitHub repository and follow `10-GITHUB-WORKFLOW.md` for every milestone, including verified commit state and concise continuation prompts.
 
 ## Cross-cutting acceptance gate for every milestone
 Follow `11-AI-DEVELOPMENT-AND-VERIFICATION.md`: define acceptance criteria, run focused regression tests plus available type/lint/build checks, report unverified work, provide a simple phone/tablet acceptance test, checkpoint a last-known-good commit and update `docs/CONTINUE-HERE.md`. Add a minimal GitHub Actions CI workflow as soon as executable source exists. Do not mark a milestone complete solely because files were generated or uploaded.
+
+## Multi-mentor acceptance criteria for foundation milestone
+- App is named **Your School of Paramedicine** and follows the intentionally broad 2018–2021 professional design brief.
+- Database supports multiple mentors without creating separate websites or Supabase projects.
+- A test Mentor A can access only Mentee A, and Mentor B can access only Mentee B. Neither mentor can access the other's mentee records, including via direct API requests or exports. Mentees can access only their own records.
+- Invitation/assignment cannot be forged by an unauthorised user. No account can self-promote to a privileged cross-tenant role.
+- No additional organisation administration, billing, or complicated shared-mentor functionality is introduced.
+
+## Milestone 1 additions and pilot gate
+- Bootstrap the owner as Administrator + Mentor securely; implement the minimal invitation-only Manage Mentors and mentor-to-mentee acceptance flow without public privilege escalation. Build database RLS before displaying real records.
+- Test administrator can invite a second mentor but cannot read that mentor’s unrelated records. Test invitation expiry/replay, rejected or revoked assignments, direct API reads/writes and exports.
+- Confirm same authorised mentor/mentee can retrieve saved data across phone/tablet/desktop. Include disconnected save failure and visible save-status tests.
+- Before real pilot: document and successfully test backup/restore, confirm Supabase Free limits/inactivity behaviour, consent/retention rules and a complete fictional job → debrief → NZCPG review → benchmark → export journey.
+- Do not add a broad admin dashboard, organisation hierarchy, grading, complex offline sync or extra paid infrastructure.

@@ -1,25 +1,15 @@
-# 08 — Conversation-to-specification consistency review
+# 08 — Consistency audit (4 November 2026)
 
-Reviewed: 4 November 2026. This document records a planning consistency check, not a code or live NZCPG-site audit.
+The active specification is `START-HERE.md` plus documents 01–07 and 09–11. This file records the audit only; it is not an additional requirements source.
 
-## Confirmed and covered
-- Collaboratively editable, reorderable School of Paramedicine with nested clinical assessment/reasoning/communication/recap items and notes.
-- One observer per job, either mentor or mentee; observing and providing feedback are themselves learning activities.
-- One completion timestamp per checklist item per job; compact optional note button; corrections retain provenance; no grades.
-- Job timeline, debrief notes, saved logs, device sharing/email export for reflection outside the app; no reflection editor.
-- Dashboard with completion trends and time benchmarks, including benchmarks defined after jobs were recorded.
-- NZCPG broad categories and titles in website order, medicines separate, official links only, per-mentee completion/review statuses, reasons, discussion history.
-- Mentor sees all assigned mentees; each mentee sees all own records; accounts and cloud sync across phone/tablet/desktop. Initial pilot one mentor and fewer than five mentees.
-- Supabase is recommended, with novice-friendly click-by-click setup and security tests. Offline support is optional; online-only permitted with honest save-state handling.
-- Maintainable, clearly annotated TypeScript, tests, architecture/decision records and independent-programmer handover.
-- Mentee consent planned; no dedicated governance workflow requested; baseline privacy/security and patient de-identification remain.
+- Confirmed product name and broad design brief are reflected in product and technical documents.
+- Multiple independent mentors share one Supabase backend; access is limited to assigned mentees; mentees see all their own records.
+- GitHub repository is `https://github.com/Dklapaukh/Mentoring`; repository creation is confirmed by owner, but latest commit and uploaded contents must be verified. App not yet published.
+- GitHub contains source/docs, not actual mentoring data. Supabase stores accounts, job records, notes, NZCPG progress and benchmarks; exported files are user-managed.
+- Cross-device access is required after authentication and synchronisation are implemented and tested. Offline support remains optional.
+- One observer per job, one timestamp per checklist item, optional note and auditable corrections; no grading scale.
+- Retrospective/prospective benchmarks, NZCPG title/link tracker, external reflection export, tool-neutral efficient AI workflow and professional handover retained.
+- Outdated instructions to create a repository, to defer accounts, or to support simultaneous live observers are superseded. Remaining edit/delete, invitation, retention and catalogue-source decisions are explicitly open in `04-DECISIONS-AND-OPEN-QUESTIONS.md`.
 
-## Still open; do not invent decisions
-1. Specific edit/delete rights for mentee and mentor, including finalised observations and debriefs. Visibility is confirmed, editing is not.
-2. Data retention, offboarding, backup/restore policy and organisational restrictions before using real staff records.
-3. Precise benchmark start/end events are chosen by the pair when defining each measure, not centrally imposed now.
-4. Exact NZCPG catalogue titles, category structure, medicine grouping and live URLs require verification against the official website at implementation.
-5. How mentor reassignment would work if ever needed.
-
-## Implementation caution
-Do not conflate one observer per job with only one person being allowed to access the saved record. Do not conflate NZCPG completion with demonstrated clinical competence. Do not conflate consent with exemption from applicable privacy obligations.
+## Latest review outcome
+Confirmed: invitation-only owner/admin + mentor onboarding; admin has no automatic cross-mentor record access; shared School editing and attributed debriefs; immutable finalised observation history with auditable corrections; UTC event times distinct from server save times; explicit online save state; tested backup/restore; two-mentor isolation and full cross-device pilot tests. Unresolved: exceptional reassignment, retention/deletion and organisational privacy approvals. No additional product features authorised.
