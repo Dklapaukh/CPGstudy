@@ -65,6 +65,13 @@ textarea{width:100%;min-height:6.5rem;border:0;background:#edf1ef;border-radius:
 .bl>span,.kl>span{flex:1;min-width:0}
 .cb{flex:none;margin-left:auto;align-self:flex-start;border:0;background:transparent;color:var(--mut);font-size:.85rem;line-height:1;padding:.3rem;border-radius:8px;cursor:pointer;min-width:32px;min-height:32px;opacity:.7}
 .cb:active{background:var(--gs);opacity:1}
+.doc>.hbar{display:flex;align-items:center;cursor:pointer;margin:.6rem -.72rem 0;user-select:none}
+.doc>.hbar:after{content:"";flex:none;margin:0 .2rem 0 auto;width:.5rem;height:.5rem;border-right:2px solid #fff;border-top:2px solid #fff;transform:rotate(45deg)}
+.doc>.hbar[aria-expanded=true]:after{transform:rotate(135deg)}
+.hbar.hc:before{content:"💬";margin-right:.5rem;font-size:.85rem}
+.acb{padding:.3rem 0 .4rem}
+.bl.has-c,.kl.has-c{background:#fff4d6;box-shadow:0 0 0 .3rem #fff4d6;border-radius:6px}
+.has-c .cb{opacity:1;color:#b36b00}
 .tw{overflow-x:auto;margin:.7rem -.2rem}
 table{border-collapse:collapse;font-size:.8rem;min-width:100%}
 td{border:1px solid #B2B2B2;padding:.35rem .5rem;vertical-align:top}
@@ -238,6 +245,37 @@ document.addEventListener('click',function(e){
  nt.value=(nt.value?nt.value.replace(/\s+$/,'')+'\n':'')+'• '+sn+' — '+c;
  nt.dispatchEvent(new Event('input',{bubbles:true}));
  b.textContent='✓';setTimeout(function(){b.textContent='💬'},1500)});
+</script>
+<script>
+(function(){
+var app=document.getElementById('app');if(!app)return;
+function norm(s){return(s||'').replace(/\s+/g,' ').trim()}
+function mark(){
+ var nt=document.getElementById('nt');
+ Array.prototype.forEach.call(app.querySelectorAll('.bl,.kl'),function(r){
+  var sp=r.querySelector('span'),t=norm(sp&&sp.textContent),sn=t.length>70?t.slice(0,70)+'…':t;
+  r.classList.toggle('has-c',!!(nt&&t&&nt.value.indexOf('• '+sn+' — ')>=0))});
+ Array.prototype.forEach.call(app.querySelectorAll('.acb'),function(a){
+  var h=a.previousElementSibling;if(h)h.classList.toggle('hc',!!a.querySelector('.has-c'))})}
+function acc(){
+ Array.prototype.forEach.call(app.querySelectorAll('.doc'),function(d){
+  if(d.getAttribute('data-acc'))return;d.setAttribute('data-acc','1');
+  var hs=Array.prototype.filter.call(d.children,function(c){return c.classList.contains('hbar')});
+  hs.forEach(function(h,k){
+   var w=document.createElement('div');w.className='acb';
+   var n=h.nextSibling;
+   while(n&&!(n.nodeType===1&&n.classList.contains('hbar'))){var nx=n.nextSibling;w.appendChild(n);n=nx}
+   h.parentNode.insertBefore(w,h.nextSibling);
+   var open=k===0;w.hidden=!open;
+   h.setAttribute('role','button');h.setAttribute('tabindex','0');h.setAttribute('aria-expanded',open);
+   function tg(){var o=w.hidden;w.hidden=!o;h.setAttribute('aria-expanded',o)}
+   h.onclick=tg;
+   h.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();tg()}}})})}
+function run(){acc();mark()}
+new MutationObserver(run).observe(app,{childList:true,subtree:true});
+document.addEventListener('input',mark);
+setInterval(mark,2000);run();
+})();
 </script>
 </body>
 </html>
