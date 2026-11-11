@@ -1,7 +1,7 @@
 /*
  * Reading and saving quiz progress in the state (Decision E, Option 1). Each medicine's card
- * schedules are one extra entry (QUIZ_ENTRY_PREFIX + medicine id) and the new-cards-per-day
- * setting is another (QUIZ_SETTINGS_ENTRY_ID), so they are saved, uploaded and merged by the same
+ * schedules are one extra entry (QUIZ_ENTRY_PREFIX + medicine id) and the daily-limit
+ * settings are another (QUIZ_SETTINGS_ENTRY_ID), so they are saved, uploaded and merged by the same
  * code as the guidelines, work offline and follow the tracker to another phone.
  * The study session itself (state.quiz) is kept in memory only.
  * Depends on state.js, sync.js, guidelines.js, logic.js, quizCards.js and quizSchedule.js.
@@ -16,7 +16,7 @@ import {
   nextSchedule,
   parseSchedules,
   serialiseSchedules,
-  clampNewPerDay,
+  clampSetting,
   studyPlan,
   advanceSession,
 } from './quizSchedule.js';
@@ -25,7 +25,8 @@ import {
   QUIZ_ENTRY_PREFIX,
   QUIZ_SETTINGS_ENTRY_ID,
   QUIZ_SECTION_NAME,
-  QUIZ_NEW_PER_DAY,
+  QUIZ_NEW_MEDICINES_PER_DAY,
+  QUIZ_REVIEWS_PER_DAY,
   QUIZ_AGAIN_GAP,
 } from './constants.js';
 
@@ -75,27 +76,46 @@ export function allSchedules() {
   return schedules;
 }
 
-/** The new-cards-per-day setting. */
-export function getNewPerDay() {
+// Each daily-limit setting: its name in the stored note and its allowed range.
+export const QUIZ_SETTINGS = {
+  newMedicinesPerDay: QUIZ_NEW_MEDICINES_PER_DAY,
+  reviewsPerDay: QUIZ_REVIEWS_PER_DAY,
+};
+
+/** The stored settings note as an object; {} when there is none or it is damaged. */
+function storedSettings() {
   const entry = state.entries[QUIZ_SETTINGS_ENTRY_ID];
-  if (!entry) return QUIZ_NEW_PER_DAY.DEFAULT;
+  if (!entry) return {};
   try {
-    return clampNewPerDay(JSON.parse(entry.n).newPerDay);
+    const parsed = JSON.parse(entry.n);
+    return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
-    return QUIZ_NEW_PER_DAY.DEFAULT; // a damaged setting falls back to the default
+    return {}; // a damaged setting falls back to the defaults
   }
 }
 
-/** Saves the new-cards-per-day setting. */
-export function saveNewPerDay(value) {
-  saveNoteEntry(QUIZ_SETTINGS_ENTRY_ID, JSON.stringify({ newPerDay: clampNewPerDay(value) }));
+/** The daily-limit settings: { newMedicinesPerDay, reviewsPerDay }, each within its range. */
+export function getQuizSettings() {
+  const stored = storedSettings();
+  const settings = {};
+  for (const [name, limits] of Object.entries(QUIZ_SETTINGS)) {
+    settings[name] = clampSetting(stored[name], limits);
+  }
+  return settings;
+}
+
+/** Saves one daily-limit setting by name; unknown names are ignored. */
+export function saveQuizSetting(name, value) {
+  if (!QUIZ_SETTINGS[name]) return;
+  const settings = { ...getQuizSettings(), [name]: clampSetting(value, QUIZ_SETTINGS[name]) };
+  saveNoteEntry(QUIZ_SETTINGS_ENTRY_ID, JSON.stringify(settings));
 }
 
 /** What can be studied today (see studyPlan in quizSchedule.js). */
 export const currentStudyPlan = () =>
-  studyPlan(quizCards(), allSchedules(), today(), getNewPerDay());
+  studyPlan(quizCards(), allSchedules(), today(), getQuizSettings());
 
-/** Starts a study session: due cards first, then today's new cards. */
+/** Starts a study session: due cards first, then today's new medicines' cards. */
 export function startSession() {
   const plan = currentStudyPlan();
   state.quiz = { queue: [...plan.dueIds, ...plan.newIds], revealed: false, answered: 0 };

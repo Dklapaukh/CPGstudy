@@ -10,6 +10,7 @@ import {
   blocksUnderHeading,
   tableNames,
   plainText,
+  isPointerGroup,
 } from '../src/quizCards.js';
 import {
   dayNumber,
@@ -19,10 +20,22 @@ import {
   advanceSession,
   serialiseSchedules,
   parseSchedules,
-  clampNewPerDay,
+  clampSetting,
   intervalText,
 } from '../src/quizSchedule.js';
-import { RATING, QUIZ_SECTION_NAME, QUIZ_ENTRY_PREFIX } from '../src/constants.js';
+import {
+  RATING,
+  QUIZ_SECTION_NAME,
+  QUIZ_ENTRY_PREFIX,
+  QUIZ_NEW_MEDICINES_PER_DAY,
+  QUIZ_REVIEWS_PER_DAY,
+} from '../src/constants.js';
+import {
+  withoutChildDoses,
+  dosesMedicine,
+  instructionGroups,
+  adultDosesByIndication,
+} from '../src/quizDoses.js';
 
 // Matches the backend's MAX_NOTE_LENGTH and its id rule (backend/Code.gs).
 const BACKEND_MAX_NOTE_LENGTH = 5000;
@@ -38,13 +51,85 @@ test('every medicine gets cards with unique ids, and the introduction guideline 
   assert.equal(cards[0].prompt, 'Adenosine – Indications');
 });
 
-test('doses are split into one card each, including paediatric and RSI table doses', () => {
+test('doses are split into one card each, with adult RSI table doses and no paediatric ones', () => {
   const rocuronium = cards.filter((card) => card.medicineId === 'cpg-14-40').map((c) => c.key);
-  assert.ok(rocuronium.filter((key) => key.startsWith('dose-')).length >= 2);
-  assert.equal(rocuronium.filter((key) => key.startsWith('paed-')).length, 5);
-  assert.equal(rocuronium.filter((key) => key.startsWith('rsi-')).length, 2);
-  const glucoseGel = cards.filter((card) => card.prompt.startsWith('Glucose Gel'));
-  assert.ok(!glucoseGel.some((card) => card.key.startsWith('paed-')), '10% glucose IV is not gel');
+  assert.ok(rocuronium.some((key) => key.startsWith('dose-')));
+  assert.equal(rocuronium.filter((key) => key.startsWith('rsi-')).length, 1, 'adult table only');
+  assert.ok(!cards.some((card) => /paediatric/i.test(card.prompt)));
+  const answerText = (card) => JSON.stringify(card.answerBlocks);
+  assert.ok(!cards.some((card) => /See the paediatric drug dose tables/.test(answerText(card))));
+  const amiodarone = cards.find((card) => card.id === 'cpg-14-4|dose-cardiac-arrest');
+  assert.equal(amiodarone.prompt, 'Amiodarone – Cardiac arrest – Dose');
+});
+
+test('a medicine sent to "the individual guideline" gets one card per indication', () => {
+  const adrenaline = cards.filter((card) => card.medicineId === 'cpg-14-3');
+  const prompts = adrenaline.map((card) => card.prompt);
+  assert.ok(prompts.includes('Adrenaline – Anaphylaxis – Dose'));
+  assert.ok(prompts.includes('Adrenaline – Cardiac Arrest – Dose'));
+  assert.ok(!prompts.includes('Adrenaline – Dose'), 'the pointer itself is not a card');
+  assert.ok(
+    !prompts.some((prompt) => prompt.includes('Croup')),
+    'child-only guidelines are skipped',
+  );
+  const anaphylaxis = adrenaline.find((card) => card.prompt === 'Adrenaline – Anaphylaxis – Dose');
+  assert.match(JSON.stringify(anaphylaxis.answerBlocks), /0\.5 mg IM for an adult/);
+  assert.doesNotMatch(JSON.stringify(anaphylaxis.answerBlocks), /child/i);
+  const morphine = cards.filter((card) => card.medicineId === 'cpg-14-32').map((c) => c.prompt);
+  assert.ok(morphine.includes('Morphine – Cardiogenic Pulmonary Oedema – Dose'));
+  const midazolam = cards.filter((card) => card.medicineId === 'cpg-14-31').map((c) => c.prompt);
+  assert.ok(!midazolam.some((prompt) => prompt.includes('Analgesia for Acute Pain')));
+});
+
+test('withoutChildDoses drops child-only lines with the lines indented under them', () => {
+  const blocks = [
+    ['b', 'Administer adrenaline:', 1],
+    ['b', '0.5 mg IM for an adult.', 2],
+    ['b', 'See the paediatric drug dose tables.', 2],
+    ['p', 'For a child aged 5-14 years:', 1],
+    ['b', '1 drop/second.', 2],
+    ['b', '0.5 mg for adults and children. See the tables for a child.', 1],
+    ['h', 'Next', '#000'],
+    ['b', 'Kept.', 1],
+  ];
+  assert.deepEqual(
+    withoutChildDoses(blocks).map((block) => block[1]),
+    [
+      'Administer adrenaline:',
+      '0.5 mg IM for an adult.',
+      '0.5 mg for adults and children.',
+      'Next',
+      'Kept.',
+    ],
+  );
+  const groups = instructionGroups(blocks);
+  assert.deepEqual(
+    groups.map((group) => group.length),
+    [5, 1, 1],
+    'a top-level bullet takes the lines under it; a heading ends a group',
+  );
+});
+
+test('dosesMedicine gives each dose to the nearest medicine named in the line', () => {
+  const medicine = (name, others) => ({ names: [name], otherNames: others });
+  const line = 'Prior to midazolam give 150-200 mcg of fentanyl or 15-20 mg of morphine.';
+  assert.equal(dosesMedicine(line, medicine('midazolam', ['fentanyl', 'morphine'])), false);
+  assert.equal(dosesMedicine(line, medicine('morphine', ['fentanyl', 'midazolam'])), true);
+  assert.equal(dosesMedicine('Administer 0.5 mg IM.', medicine('adrenaline', [])), true);
+  assert.equal(dosesMedicine('Administer adrenaline IM.', medicine('adrenaline', [])), false);
+});
+
+test('adultDosesByIndication shares one entry between guidelines with the same doses', () => {
+  const guideline = (n, t, colour) => ({ n, t, b: [['b', 'Give 1 mg of drug IV.', 1, colour]] });
+  const entries = adultDosesByIndication(
+    [guideline('1', 'One', '#111'), guideline('2', 'Two', '#222'), { n: '3', t: 'Three', b: [] }],
+    { names: ['drug'], otherNames: [] },
+  );
+  assert.equal(entries.length, 1);
+  assert.deepEqual(
+    entries[0].guidelines.map((g) => g.t),
+    ['One', 'Two'],
+  );
 });
 
 test('a full set of schedules fits in one backend entry per medicine', () => {
@@ -66,7 +151,7 @@ test('a full set of schedules fits in one backend entry per medicine', () => {
   }
 });
 
-test('splitDoseGroups keeps sub-points with their dose and drops bare pointers', () => {
+test('splitDoseGroups keeps sub-points with their dose; bare pointers are recognised', () => {
   const blocks = [
     ['b', 'Cardiac arrest: 1 mg', 1, '#000'],
     ['b', 'Repeat every 4 minutes', 2, '#000'],
@@ -74,8 +159,12 @@ test('splitDoseGroups keeps sub-points with their dose and drops bare pointers',
     ['b', 'See the paediatric drug doses', 1, '#000'],
   ];
   const groups = splitDoseGroups(blocks);
-  assert.equal(groups.length, 2);
-  assert.equal(groups[0].length, 2);
+  assert.deepEqual(
+    groups.map((group) => group.length),
+    [2, 1, 1],
+  );
+  assert.deepEqual(groups.map(isPointerGroup), [false, false, true]);
+  assert.equal(isPointerGroup([['b', 'For RSI: see the ‘RSI’ guideline.', 1]]), true);
   const steps = [
     [['b', '6 mg', 1, '#000']],
     [['b', 'If no response, 12 mg', 1, '#000']],
@@ -133,17 +222,27 @@ test('nextSchedule updates due day, ease, reps, lapses and keeps the first day',
   assert.equal(hard.ease, 1.3, 'ease never drops below 1.3');
 });
 
-test('studyPlan: due cards first by due day, then new cards up to the daily limit', () => {
-  const ids = ['a', 'b', 'c', 'd', 'e'].map((id) => ({ id }));
+test('studyPlan: due cards first, reviews limited, then whole new medicines', () => {
+  const card = (id, medicineId) => ({ id, medicineId });
+  const list = [
+    card('a1', 'a'),
+    card('a2', 'a'),
+    card('b1', 'b'),
+    card('b2', 'b'),
+    card('c1', 'c'),
+    card('d1', 'd'),
+  ];
   const schedules = {
-    b: { due: 10, first: 5 },
-    c: { due: 8, first: 12 }, // started today, counts towards the new-card limit
-    d: { due: 30, first: 5 },
+    a1: { due: 12, interval: 0, first: 12 }, // started today and rated Again
+    b1: { due: 10, interval: 3, first: 5 }, // review due
+    b2: { due: 9, interval: 2, first: 5 }, // review due, older
+    d1: { due: 13, interval: 1, first: 4 }, // reviewed today, counts towards the review limit
   };
-  const plan = studyPlan(ids, schedules, 12, 2);
-  assert.deepEqual(plan.dueIds, ['c', 'b']);
-  assert.deepEqual(plan.newIds, ['a']);
-  assert.equal(plan.newLeftToday, 1);
+  const plan = studyPlan(list, schedules, 12, { newMedicinesPerDay: 2, reviewsPerDay: 2 });
+  assert.deepEqual(plan.dueIds, ['a1', 'b2'], 'Again cards always; one review left of two');
+  assert.deepEqual(plan.newIds, ['a2', 'c1'], 'the started medicine, then one new medicine');
+  assert.equal(plan.newMedicineCount, 1);
+  assert.equal(plan.reviewsLeftToday, 1);
 });
 
 test('advanceSession: Again puts the card back a few places on, other ratings remove it', () => {
@@ -166,11 +265,12 @@ test('schedules survive saving and reading back; damaged notes give an empty sch
   assert.deepEqual(parseSchedules('{"x":[1,2]}'), {});
 });
 
-test('clampNewPerDay and intervalText', () => {
-  assert.equal(clampNewPerDay('20'), 20);
-  assert.equal(clampNewPerDay(100), 30);
-  assert.equal(clampNewPerDay(1), 5);
-  assert.equal(clampNewPerDay('x'), 10);
+test('clampSetting and intervalText', () => {
+  assert.equal(clampSetting('3', QUIZ_NEW_MEDICINES_PER_DAY), 3);
+  assert.equal(clampSetting(100, QUIZ_NEW_MEDICINES_PER_DAY), 10);
+  assert.equal(clampSetting(0, QUIZ_NEW_MEDICINES_PER_DAY), 1);
+  assert.equal(clampSetting('x', QUIZ_NEW_MEDICINES_PER_DAY), 2);
+  assert.equal(clampSetting(undefined, QUIZ_REVIEWS_PER_DAY), 30);
   assert.equal(intervalText(0), 'again today');
   assert.equal(intervalText(1), '1 day');
   assert.equal(intervalText(4), '4 days');

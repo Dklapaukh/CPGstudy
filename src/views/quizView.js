@@ -11,11 +11,12 @@ import {
   currentStudyPlan,
   currentCard,
   previewRatings,
-  getNewPerDay,
+  getQuizSettings,
+  QUIZ_SETTINGS,
 } from '../quizState.js';
 import { intervalText } from '../quizSchedule.js';
 import { blockHtml } from './templates.js';
-import { RATING, QUIZ_HASH, QUIZ_NEW_PER_DAY } from '../constants.js';
+import { RATING, QUIZ_HASH } from '../constants.js';
 
 const app = document.getElementById('app');
 
@@ -37,19 +38,29 @@ export function quizButtonHtml() {
   return `<a class="quiz-button" href="#${QUIZ_HASH}">Medicines quiz${count}</a>`;
 }
 
-function newPerDaySelectHtml() {
-  const current = getNewPerDay();
+// The daily-limit dropdowns on the overview: setting name, element id and label.
+const SETTING_SELECTS = [
+  { name: 'newMedicinesPerDay', id: 'quiz-new-medicines', label: 'New medicines per day' },
+  { name: 'reviewsPerDay', id: 'quiz-reviews', label: 'Review cards per day' },
+];
+
+/** One daily-limit dropdown, with the saved value selected. */
+function settingSelectHtml({ name, id, label }, settings) {
+  const limits = QUIZ_SETTINGS[name];
   let options = '';
-  for (
-    let value = QUIZ_NEW_PER_DAY.MIN;
-    value <= QUIZ_NEW_PER_DAY.MAX;
-    value += QUIZ_NEW_PER_DAY.STEP
-  ) {
-    const selected = value === current ? ' selected' : '';
+  for (let value = limits.MIN; value <= limits.MAX; value += limits.STEP) {
+    const selected = value === settings[name] ? ' selected' : '';
     options += `<option value="${value}"${selected}>${value}</option>`;
   }
-  return `<label class="quiz-setting">New cards per day
-    <select id="quiz-new-per-day">${options}</select></label>`;
+  return `<label class="quiz-setting">${label}
+    <select id="${id}" data-setting="${name}">${options}</select></label>`;
+}
+
+/** The line of today's numbers, for example "12 cards due · 2 new medicines (31 cards) today". */
+function countsText(plan) {
+  const medicines = plural(plan.newMedicineCount, 'new medicine');
+  const newCards = plan.newIds.length ? ` (${plural(plan.newIds.length, 'card')})` : '';
+  return `${plural(plan.dueIds.length, 'card')} due · ${medicines}${newCards} today`;
 }
 
 function overviewHtml() {
@@ -64,14 +75,15 @@ function overviewHtml() {
   const startButton = waiting
     ? '<button class="quiz-start-button" type="button" data-action="quiz-start">Start</button>'
     : '<p class="empty-message">Nothing left to study today. Come back tomorrow.</p>';
-  const counts = `${plural(plan.dueIds.length, 'card')} due · ${plural(plan.newIds.length, 'new card')} today`;
+  const settings = getQuizSettings();
   return `${finished}
-    <p class="quiz-counts">${counts}</p>
+    <p class="quiz-counts">${countsText(plan)}</p>
     ${startButton}
     <p class="quiz-totals">${learnt} of ${cards.length} cards started</p>
-    ${newPerDaySelectHtml()}
+    ${SETTING_SELECTS.map((select) => settingSelectHtml(select, settings)).join('')}
     <p class="quiz-help">Read the question, answer it in your head, then tap Show answer and rate
-      how hard it was. Cards you find easy come back less often.</p>`;
+      how hard it was. Cards you find easy come back less often. Each new medicine brings all of
+      its cards; review cards are cards you have studied before that are due again.</p>`;
 }
 
 function ratingButtonsHtml(card) {
