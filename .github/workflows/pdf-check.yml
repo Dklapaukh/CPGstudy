@@ -1,7 +1,8 @@
-# Daily check for a new EAS guidelines PDF (feature 6, Decision D).
-# Downloads the PDF, runs scripts/check-pdf.js and, when the export date or any guideline's
-# version entry has changed, opens a pull request with the updated content/pdf-status.json and a
-# report of what changed. It never changes the guideline content and never publishes anything.
+# Daily check for a new EAS guidelines PDF (feature 6, Decisions D and Y).
+# Downloads the PDF and runs scripts/check-pdf.js. When the export date or any guideline's
+# version entry has changed, it rebuilds the content from the PDF (scripts/build-guidelines.js,
+# no AI), rebuilds content/related.js, sets the date in version.json, runs `npm run check` and
+# opens a pull request with all of it and a report. Nothing is published until you merge.
 # Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
 name: pdf-check
 on:
@@ -14,10 +15,11 @@ permissions:
   pull-requests: write
 jobs:
   check-pdf:
-    runs-on: ubuntu-latest
+    # A fixed image, so a change of "ubuntu-latest" cannot break the pdftotext install.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Install pdftotext
@@ -27,32 +29,69 @@ jobs:
       - name: Compare with the last scan
         id: scan
         run: node scripts/check-pdf.js "$RUNNER_TEMP/EAS.pdf" "$RUNNER_TEMP/report.md"
-      - name: Open a pull request for the new PDF
+      - name: Check whether a pull request already exists for this PDF
         if: steps.scan.outputs.changed == 'true'
+        id: branch
         env:
-          GH_TOKEN: ${{ github.token }}
           EXPORTED_ON: ${{ steps.scan.outputs.exported_on }}
         run: |
           branch="pdf-update-${EXPORTED_ON//./-}"
+          echo "name=$branch" >> "$GITHUB_OUTPUT"
           if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
             echo "A pull request branch for this PDF already exists: $branch"
-            exit 0
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
+      - name: Rebuild the content from the PDF
+        if: steps.scan.outputs.changed == 'true' && steps.branch.outputs.exists == 'false'
+        run: |
+          npm install
+          node scripts/build-guidelines.js "$RUNNER_TEMP/EAS.pdf" "$RUNNER_TEMP/content-report.md"
+          node scripts/build-related.js
+          npx prettier --write content/pdf-status.json content/pdf-rebuild.json version.json
+          # The result goes into the pull request; a failure does not stop the pull request.
+          if npm run check > "$RUNNER_TEMP/check.log" 2>&1; then
+            echo "passed" > "$RUNNER_TEMP/check-result"
+          else
+            echo "FAILED" > "$RUNNER_TEMP/check-result"
+          fi
+      - name: Open a pull request for the new PDF
+        if: steps.scan.outputs.changed == 'true' && steps.branch.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPORTED_ON: ${{ steps.scan.outputs.exported_on }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
-          git add content/pdf-status.json
-          git commit -m "New EAS guidelines PDF exported $EXPORTED_ON"
-          git push origin "$branch"
+          git checkout -b "$BRANCH"
+          git add content/pdf-status.json content/pdf-rebuild.json content/guidelines.js \
+            content/related.js version.json
+          git commit -m "Guidelines rebuilt from the EAS PDF exported $EXPORTED_ON"
+          git push origin "$BRANCH"
           {
-            echo "A new EAS guidelines PDF was found. Nothing in the app has changed yet."
+            echo "A new EAS guidelines PDF was found and the content was rebuilt from it."
+            echo "Nothing is published until this pull request is merged."
             echo
             cat "$RUNNER_TEMP/report.md"
             echo
+            cat "$RUNNER_TEMP/content-report.md"
+            echo
+            echo "### Automatic checks"
+            echo "\`npm run check\` $(cat "$RUNNER_TEMP/check-result") on the rebuilt content."
+            echo '<details><summary>Last lines of the check</summary>'
+            echo
+            echo '```'
+            tail -n 25 "$RUNNER_TEMP/check.log"
+            echo '```'
+            echo '</details>'
+            echo
             echo "### Before merging"
-            echo "- [ ] Rebuild \`content/guidelines.js\` from the new PDF on this branch."
-            echo "- [ ] Run \`node scripts/build-related.js\` and set the date in \`version.json\`."
-            echo "- [ ] Run \`npm run check\` (it fails until the content matches this PDF)."
+            echo "- [ ] Read the changes to each guideline under \"Check formatting\" (Files changed,"
+            echo "      content/guidelines.js); after merging, open them in the app and compare with the PDF."
+            echo "- [ ] Check the section of any new guideline."
+            echo "- [ ] Merge. Phones then show \"A new version of the guidelines is available\"."
           } > "$RUNNER_TEMP/body.md"
-          gh pr create --head "$branch" --title "New EAS guidelines PDF ($EXPORTED_ON)" \
+          gh pr create --head "$BRANCH" --title "New EAS guidelines PDF ($EXPORTED_ON)" \
             --body-file "$RUNNER_TEMP/body.md"
