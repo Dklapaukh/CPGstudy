@@ -19,7 +19,7 @@ import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
 import { applyUpdate } from './updateState.js';
-import { startSession, endSession, rateCurrentCard, saveNewPerDay } from './quizState.js';
+import { startSession, endSession, rateCurrentCard, saveQuizSetting } from './quizState.js';
 import { renderQuizScreen } from './views/quizView.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
@@ -269,8 +269,8 @@ export function attachEventListeners() {
   });
 
   app.addEventListener('change', (event) => {
-    if (event.target.id === 'quiz-new-per-day') {
-      saveNewPerDay(event.target.value);
+    if (event.target.dataset.setting) {
+      saveQuizSetting(event.target.dataset.setting, event.target.value);
       renderQuizScreen();
     }
   });

@@ -2,16 +2,30 @@
  * Builds the medicines quiz flashcards from the guideline content. Pure: takes the guideline
  * sections and returns cards, touching nothing else. Cards are rebuilt on every start, so a
  * content update changes the cards without any separate data file.
- * Depends on constants.js.
+ * Depends on constants.js and quizDoses.js.
  *
  * A card is { id, medicineId, key, prompt, answerBlocks, source }:
  *   id           medicineId + '|' + key, unique, stable across content updates where possible
  *   key          short name inside the medicine, used to store the card's schedule
- *   prompt       plain text shown on the front, for example "Adrenaline – Indications"
+ *   prompt       plain text shown on the front, for example "Amiodarone – Cardiac arrest – Dose"
  *   answerBlocks content blocks shown on the back, in the guideline data format
  *   source       plain text naming the guideline the answer comes from, for example "CPG 14.3"
+ *
+ * Only adult doses are tested: lines only about a child are removed and the paediatric dose
+ * tables are not used.
  */
 import { BLOCK } from './constants.js';
+import {
+  plainText,
+  withoutChildDoses,
+  namesMedicine,
+  guidelineDoseBlocks,
+  adultDosesByIndication,
+  blockText,
+  hasDose,
+} from './quizDoses.js';
+
+export { plainText };
 
 // The topics asked for each medicine, in the order they are introduced. `heading` is the
 // heading text in the medicine guideline. Dosage is split into one card per dose (see below).
@@ -26,22 +40,28 @@ export const QUIZ_TOPICS = [
   { key: 'mechanism', heading: 'Mechanism of action' },
 ];
 const DOSAGE_HEADING = 'Dosage';
+const DOSE_WORD = 'Dose';
 const TOP_LEVEL = 1;
 // A dose label is the text before the first colon, if the colon comes this early.
 const MAX_DOSE_LABEL_LENGTH = 70;
 const MAX_KEY_SLUG_LENGTH = 24;
-// Dose bullets that only point elsewhere ("See the paediatric drug doses…") are not cards: the
-// doses they point to become their own cards from the guidelines below.
+// Dose bullets that only point elsewhere ("See the 'RSI' guideline") are not cards themselves.
 const POINTER_PATTERN = /^(see|refer to)\b/i;
+// "See the individual guideline": the doses are spread over the guidelines for each indication.
+const INDIVIDUAL_GUIDELINES_PATTERN = /\bsee the individual guidelines?\b/i;
+// The guideline a pointer names, in quotes: "see the ‘post intubation’ guideline".
+const NAMED_GUIDELINE_PATTERN = /['‘’]\s*([^'‘’]+?)\s*['‘’]\s*guideline/i;
 
-// Guidelines whose dose tables are split into extra dosage cards (Decision Z2).
-const PAEDIATRIC_DOSES_NUMBER = '7.2';
+// Guidelines that are never searched for adult doses: the RSI guideline has its own table cards
+// and the Paediatrics section holds only child doses.
 const RSI_DOSES_NUMBER = '9.3';
-const WEIGHT_BAND_PATTERN = /\bkg\b/i;
-const DOSE_COLUMN = 1;
-const NO_DOSE = '-';
+const PAEDIATRICS_SECTION_NAME = 'Paediatrics';
+const PAEDIATRIC_TABLE_PATTERN = /paediatric/i;
+// Guidelines outside the Paediatrics section that are only about children, so every dose in
+// them is a child dose even where the line does not say so.
+const CHILD_ONLY_GUIDELINE_TITLES = ['Croup', 'Bronchiolitis'];
 
-// How a medicine is named in the dose tables, where its title's first word is not enough
+// How a medicine is named in other guidelines, where its title's first word is not enough
 // (for example "Glucose Gel" must not match "10% glucose IV"). Lower case.
 const TABLE_NAME_OVERRIDES = {
   'Glucose Gel': ['glucose gel'],
@@ -50,16 +70,6 @@ const TABLE_NAME_OVERRIDES = {
   'GTN (Glyceryl Trinitrate) IV': ['gtn iv', 'glyceryl trinitrate iv'],
   'GTN (Glyceryl Trinitrate) Spray': ['gtn spray', 'glyceryl trinitrate spray'],
 };
-
-/** Plain text of a piece of content markup: tags removed, the two allowed entities decoded. */
-export function plainText(markup) {
-  return String(markup)
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&amp;/g, '&')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 /** A short lower-case key made of letters, digits and dashes, for storing a card's schedule. */
 function slug(text) {
@@ -95,10 +105,7 @@ export function splitDoseGroups(blocks) {
     if (isTopLevelBullet(block) || groups.length === 0) groups.push([]);
     groups[groups.length - 1].push(block);
   }
-  return groups.filter((group) => {
-    const isOnlyAPointer = group.length === 1 && POINTER_PATTERN.test(plainText(group[0][1]));
-    return !isOnlyAPointer;
-  });
+  return groups;
 }
 
 /** The label of a dose group: the text before an early colon, or '' when there is none. */
@@ -108,6 +115,20 @@ function doseLabel(group) {
   const text = plainText(first[1]);
   const colon = text.indexOf(':');
   return colon > 0 && colon <= MAX_DOSE_LABEL_LENGTH ? text.slice(0, colon).trim() : '';
+}
+
+/** The text of a group's first line after its label, for example "see the ‘RSI’ guideline." */
+function textAfterLabel(group) {
+  const text = plainText(group[0][1]);
+  const label = doseLabel(group);
+  return label ? text.slice(text.indexOf(':') + 1).trim() : text;
+}
+
+/** True when a dose group only sends the reader to another guideline. */
+export function isPointerGroup(group) {
+  if (group.length !== 1) return false;
+  const text = textAfterLabel(group);
+  return POINTER_PATTERN.test(text) || INDIVIDUAL_GUIDELINES_PATTERN.test(text);
 }
 
 /** Gives every key in the list a unique version by adding -2, -3… to repeats. */
@@ -133,112 +154,102 @@ export function joinUnlabelledGroups(groups) {
   return joined;
 }
 
-/** The dosage cards of one medicine's own guideline, one per labelled dose. */
-function ownDoseCards(medicine) {
-  const sectionBlocks = blocksUnderHeading(medicine.b, DOSAGE_HEADING);
-  const groups = joinUnlabelledGroups(splitDoseGroups(sectionBlocks));
-  const labels = groups.map(doseLabel);
+/** The adult dose groups of a medicine's own Dosage section, split into doses and pointers. */
+function ownDoseGroups(medicine) {
+  const sectionBlocks = withoutChildDoses(blocksUnderHeading(medicine.b, DOSAGE_HEADING));
+  const groups = splitDoseGroups(sectionBlocks);
+  const joined = joinUnlabelledGroups(groups.filter((group) => !isPointerGroup(group)));
+  // A group with no number and unit is general advice ("use a dose at the lower end of the
+  // range if a caution is present"), not a dose to learn.
+  const givesDose = (group) => group.some((block) => hasDose(blockText(block)));
+  return { doses: joined.filter(givesDose), pointers: groups.filter(isPointerGroup) };
+}
+
+/**
+ * The dosage cards of one medicine's own guideline, one per labelled dose. Unlabelled doses are
+ * "Dose" when no dose has a label, otherwise "Other dose" (numbered when there are several).
+ */
+function ownDoseCards(medicine, doseGroups) {
+  const labels = doseGroups.map(doseLabel);
   const keys = uniqueKeys(labels.map((label, i) => `dose-${slug(label) || i + 1}`));
-  return groups.map((group, i) => {
-    const part = groups.length > 1 ? `, part ${i + 1} of ${groups.length}` : '';
-    const detail = labels[i] ? `: ${labels[i]}` : part;
+  const unlabelledCount = labels.filter((label) => !label).length;
+  const hasLabels = unlabelledCount < labels.length;
+  let unlabelledSeen = 0;
+  return doseGroups.map((group, i) => {
+    let detail = labels[i] ? `${labels[i]} – ${DOSE_WORD}` : DOSE_WORD;
+    if (!labels[i] && hasLabels) detail = `Other ${DOSE_WORD.toLowerCase()}`;
+    if (!labels[i]) unlabelledSeen++;
+    if (!labels[i] && unlabelledCount > 1) detail += `, ${unlabelledSeen} of ${unlabelledCount}`;
     return {
       key: keys[i],
-      prompt: `${medicine.t} – Dosage${detail}`,
+      prompt: `${medicine.t} – ${detail}`,
       answerBlocks: group,
       source: `CPG ${medicine.n}`,
     };
   });
 }
 
-/** The lower-case names a medicine goes by in the dose tables. */
+/** The lower-case names a medicine goes by in other guidelines and tables. */
 export function tableNames(title) {
   if (TABLE_NAME_OVERRIDES[title]) return TABLE_NAME_OVERRIDES[title];
   return [title.split(/\s+/)[0].toLowerCase()];
 }
 
-const escapeForPattern = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** True when the first cell of a table row names the medicine (as a whole word). */
-function rowNamesMedicine(row, names) {
-  const firstCell = row[0] ? plainText(row[0].t).toLowerCase() : '';
-  return names.some((name) => new RegExp(`\\b${escapeForPattern(name)}\\b`).test(firstCell));
+/** The guideline a pointer names in quotes ("see the ‘post intubation’ guideline"), or null. */
+function namedGuideline(pointer, guidelines) {
+  const match = NAMED_GUIDELINE_PATTERN.exec(plainText(pointer[0][1]));
+  if (!match) return null;
+  const wanted = [match[1].toLowerCase()];
+  return guidelines.find((guideline) => namesMedicine(guideline.t, wanted)) || null;
 }
-
-/** True when a table row is a coloured header row, such as "Cardiac arrest | Dose | Volume". */
-const isHeaderRow = (row) => row.some((cell) => cell && cell.bg);
-
-const rowHasDose = (row) => {
-  const doseCell = row[DOSE_COLUMN];
-  return Boolean(doseCell) && plainText(doseCell.t) !== NO_DOSE;
-};
 
 /**
- * The weight bands of the paediatric dose guideline: [{ band, rows }], where rows are the
- * table rows under that band's heading. A header row is kept as { header: row } so that the
- * matching rows can be shown under the right header.
+ * Cards for labelled pointers to one named guideline, such as Fentanyl's "IV for sedation post
+ * intubation: see the ‘post intubation’ guideline". The RSI guideline is skipped (its table
+ * cards cover it), as is any pointer whose guideline gives no adult dose for this medicine.
  */
-export function paediatricBands(guideline) {
-  const bands = [];
-  let current = null;
-  for (const block of guideline.b) {
-    if (block[0] === BLOCK.HEADING) {
-      const heading = plainText(block[1]);
-      current = WEIGHT_BAND_PATTERN.test(heading) ? { band: heading, rows: [] } : null;
-      if (current) bands.push(current);
-    } else if (current && block[0] === BLOCK.TABLE) {
-      block[1].forEach((row) => current.rows.push(isHeaderRow(row) ? { header: row } : row));
-    }
-  }
-  return bands;
-}
-
-/** The rows of one band that give this medicine a dose, each under its header row. */
-function bandRowsFor(rows, names) {
-  const result = [];
-  let header = null;
-  let headerShown = false;
-  for (const row of rows) {
-    if (row.header) {
-      header = row.header;
-      headerShown = false;
-    } else if (rowNamesMedicine(row, names) && rowHasDose(row)) {
-      if (header && !headerShown) result.push(header);
-      headerShown = true;
-      result.push(row);
-    }
-  }
-  return result;
-}
-
-/** One dosage card per weight band of the paediatric dose guideline that doses this medicine. */
-function paediatricDoseCards(medicine, paediatricGuideline) {
-  if (!paediatricGuideline) return [];
-  const names = tableNames(medicine.t);
+function namedGuidelineCards(medicine, pointers, guidelines, medicineNames) {
   const cards = [];
-  for (const { band, rows } of paediatricBands(paediatricGuideline)) {
-    const matched = bandRowsFor(rows, names);
-    if (!matched.some((row) => !isHeaderRow(row))) continue;
+  for (const pointer of pointers) {
+    const label = doseLabel(pointer);
+    const target = namedGuideline(pointer, guidelines);
+    if (!label || !target || target.n === RSI_DOSES_NUMBER) continue;
+    const answerBlocks = guidelineDoseBlocks(target, medicineNames);
+    if (answerBlocks.length === 0) continue;
     cards.push({
-      key: `paed-${slug(band)}`,
-      prompt: `${medicine.t} – Paediatric dose: ${band}`,
-      answerBlocks: [[BLOCK.TABLE, matched]],
-      source: `CPG ${paediatricGuideline.n}`,
+      key: `dose-${slug(label)}`,
+      prompt: `${medicine.t} – ${label} – ${DOSE_WORD}`,
+      answerBlocks,
+      source: `CPG ${target.n}`,
     });
   }
   return cards;
 }
 
 /**
- * The RSI dose tables: [{ title, weightsBlock, rows }]. The title is the heading above the
- * table; the weights line is the paragraph just above it, when there is one.
+ * One card per indication from the other guidelines (Decisions Z8 to Z10), for a medicine
+ * whose own Dosage section is missing or says "See the individual guideline".
+ */
+function indicationDoseCards(medicine, guidelines, medicineNames) {
+  return adultDosesByIndication(guidelines, medicineNames).map((entry) => ({
+    key: `dose-cpg-${entry.guidelines[0].n.replace(/\./g, '-')}`,
+    prompt: `${medicine.t} – ${entry.guidelines.map((guideline) => guideline.t).join(', ')} – ${DOSE_WORD}`,
+    answerBlocks: entry.answerBlocks,
+    source: `CPG ${entry.guidelines.map((guideline) => guideline.n).join(', ')}`,
+  }));
+}
+
+/**
+ * The RSI dose tables for adults: [{ title, weightsBlock, rows }]. The title is the heading
+ * above the table; the weights line is the paragraph just above it, when there is one.
+ * The paediatric table is left out (paediatric doses are not tested).
  */
 export function rsiTables(guideline) {
   const tables = [];
   let title = '';
   guideline.b.forEach((block, i) => {
     if (block[0] === BLOCK.HEADING) title = plainText(block[1]);
-    if (block[0] !== BLOCK.TABLE) return;
+    if (block[0] !== BLOCK.TABLE || PAEDIATRIC_TABLE_PATTERN.test(title)) return;
     const previous = guideline.b[i - 1];
     const weightsBlock = previous && previous[0] === BLOCK.PARAGRAPH ? previous : null;
     tables.push({ title, weightsBlock, rows: block[1] });
@@ -246,7 +257,11 @@ export function rsiTables(guideline) {
   return tables;
 }
 
-/** One dosage card per row of the RSI dose tables that names this medicine. */
+/** True when the first cell of a table row names the medicine (as a whole word). */
+const rowNamesMedicine = (row, names) =>
+  Boolean(row[0]) && namesMedicine(plainText(row[0].t), names);
+
+/** One dosage card per row of the adult RSI dose table that names this medicine. */
 function rsiDoseCards(medicine, rsiGuideline) {
   if (!rsiGuideline) return [];
   const names = tableNames(medicine.t);
@@ -258,12 +273,33 @@ function rsiDoseCards(medicine, rsiGuideline) {
       const weights = table.weightsBlock ? [table.weightsBlock] : [];
       cards.push({
         key: `rsi-${tableIndex + 1}-${slug(rowName)}`,
-        prompt: `${medicine.t} – RSI dose (${table.title}): ${rowName}`,
+        prompt: `${medicine.t} – RSI (${table.title}): ${rowName} – ${DOSE_WORD}`,
         answerBlocks: [...weights, [BLOCK.TABLE, [row]]],
         source: `CPG ${rsiGuideline.n}`,
       });
     });
   });
+  return cards;
+}
+
+/** Every dosage card of one medicine: its own doses, then doses from other guidelines. */
+function doseCards(medicine, context) {
+  const { doses, pointers } = ownDoseGroups(medicine);
+  const sendsToEachGuideline = pointers.some((pointer) =>
+    INDIVIDUAL_GUIDELINES_PATTERN.test(plainText(pointer[0][1])),
+  );
+  // This medicine's names and every other medicine's, to tell whose dose a line gives.
+  const ownNames = tableNames(medicine.t);
+  const medicineNames = {
+    names: ownNames,
+    otherNames: context.allNames.filter((name) => !ownNames.includes(name)),
+  };
+  const cards = ownDoseCards(medicine, doses);
+  if (doses.length === 0 || sendsToEachGuideline) {
+    cards.push(...indicationDoseCards(medicine, context.searchable, medicineNames));
+  }
+  cards.push(...namedGuidelineCards(medicine, pointers, context.named, medicineNames));
+  cards.push(...rsiDoseCards(medicine, context.rsi));
   return cards;
 }
 
@@ -280,14 +316,11 @@ function topicCard(medicine, topic) {
 }
 
 /** Every card of one medicine, in topic order, with ids filled in. */
-function medicineCards(medicine, doseGuidelines) {
+function medicineCards(medicine, context) {
   const cards = [];
   for (const topic of QUIZ_TOPICS) {
-    if (topic.heading === DOSAGE_HEADING) {
-      cards.push(...ownDoseCards(medicine));
-      cards.push(...paediatricDoseCards(medicine, doseGuidelines.paediatric));
-      cards.push(...rsiDoseCards(medicine, doseGuidelines.rsi));
-    } else {
+    if (topic.heading === DOSAGE_HEADING) cards.push(...doseCards(medicine, context));
+    else {
       const card = topicCard(medicine, topic);
       if (card) cards.push(card);
     }
@@ -302,22 +335,28 @@ function medicineCards(medicine, doseGuidelines) {
 }
 
 /**
- * All quiz cards, in the order new cards are introduced (guideline order, then topic order).
+ * All quiz cards, in the order they are introduced (guideline order, then topic order).
  * `sections` is the guideline data's sections; `sectionName` is the medicines section. A
  * guideline in that section counts as a medicine only if it has an Indications heading (the
  * introduction guideline does not).
  */
 export function buildQuizCards(sections, sectionName) {
-  const allGuidelines = sections.flatMap((section) => section.items);
-  const byNumber = (number) => allGuidelines.find((guideline) => guideline.n === number);
-  const doseGuidelines = {
-    paediatric: byNumber(PAEDIATRIC_DOSES_NUMBER),
-    rsi: byNumber(RSI_DOSES_NUMBER),
-  };
   const section = sections.find((candidate) => candidate.name === sectionName);
   if (!section) return [];
+  const searchableSections = sections.filter(
+    (candidate) => candidate.name !== sectionName && candidate.name !== PAEDIATRICS_SECTION_NAME,
+  );
+  const searchableGuidelines = searchableSections
+    .flatMap((candidate) => candidate.items)
+    .filter((guideline) => !CHILD_ONLY_GUIDELINE_TITLES.includes(guideline.t));
+  const context = {
+    searchable: searchableGuidelines.filter((guideline) => guideline.n !== RSI_DOSES_NUMBER),
+    rsi: searchableGuidelines.find((guideline) => guideline.n === RSI_DOSES_NUMBER),
+    named: searchableGuidelines,
+  };
   const medicines = section.items.filter(
     (item) => blocksUnderHeading(item.b, QUIZ_TOPICS[0].heading).length > 0,
   );
-  return medicines.flatMap((medicine) => medicineCards(medicine, doseGuidelines));
+  context.allNames = medicines.flatMap((medicine) => tableNames(medicine.t));
+  return medicines.flatMap((medicine) => medicineCards(medicine, context));
 }

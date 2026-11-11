@@ -17,6 +17,7 @@
     "src/queue.js",
     "src/queueState.js",
     "src/quizCards.js",
+    "src/quizDoses.js",
     "src/quizSchedule.js",
     "src/quizState.js",
     "src/related.js",

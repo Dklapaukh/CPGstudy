@@ -7,9 +7,9 @@
  *   interval days between the last answer and `due`; 0 means "again today"
  *   ease     how fast the interval grows on Good (starts at 2.5)
  *   reps     times answered, lapses: times forgotten after it had been learnt
- *   first    day number the card was first answered, used for the new-cards-per-day limit
+ *   first    day number the card was first answered, used for the daily limits
  */
-import { RATING, QUIZ_NEW_PER_DAY } from './constants.js';
+import { RATING } from './constants.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MS_PER_MINUTE = 60 * 1000;
@@ -71,36 +71,91 @@ export function intervalText(days) {
   return days === 1 ? '1 day' : `${days} days`;
 }
 
-/** How many new cards a day the settings allow, kept within the allowed range. */
-export function clampNewPerDay(value) {
+/** A daily-limit setting kept within its allowed range, or its default when not a number. */
+export function clampSetting(value, limits) {
   const number = Math.round(Number(value));
-  if (!Number.isFinite(number)) return QUIZ_NEW_PER_DAY.DEFAULT;
-  return Math.min(QUIZ_NEW_PER_DAY.MAX, Math.max(QUIZ_NEW_PER_DAY.MIN, number));
+  if (value === null || value === undefined || !Number.isFinite(number)) return limits.DEFAULT;
+  return Math.min(limits.MAX, Math.max(limits.MIN, number));
+}
+
+/** The day a card was last answered: answering sets its due day that many days ahead. */
+const lastAnsweredDay = (schedule) => schedule.due - schedule.interval;
+
+/** The cards of each medicine, in card order: [[card, card…], …]. */
+function cardsByMedicine(cards) {
+  const groups = [];
+  const groupById = {};
+  for (const card of cards) {
+    if (!groupById[card.medicineId]) {
+      groupById[card.medicineId] = [];
+      groups.push(groupById[card.medicineId]);
+    }
+    groupById[card.medicineId].push(card);
+  }
+  return groups;
 }
 
 /**
- * What can be studied today: { dueIds, newIds, newLeftToday }. Due cards come first, oldest
- * due first; new cards follow in card order, as many as are left of today's new-card limit.
- * `cards` is the card list in introduction order; `schedules` maps card id to schedule.
+ * Today's new cards: every unstudied card of the next medicines, a whole medicine at a time
+ * (Decision Z7). A medicine started today keeps its remaining cards without using another
+ * place. Returns { newIds, newMedicineCount, newMedicinesLeftToday }.
  */
-export function studyPlan(cards, schedules, today, newPerDay) {
-  const due = [];
-  const unseen = [];
-  let newStartedToday = 0;
+function newCardsToday(cards, schedules, today, newMedicinesPerDay) {
+  const startedToday = [];
+  const waiting = [];
+  for (const medicineCards of cardsByMedicine(cards)) {
+    const unseen = medicineCards.filter((card) => !schedules[card.id]).map((card) => card.id);
+    const isStartedToday = medicineCards.some((card) => schedules[card.id]?.first === today);
+    if (isStartedToday) startedToday.push(unseen);
+    else if (unseen.length > 0) waiting.push(unseen);
+  }
+  const newMedicinesLeftToday = Math.max(0, newMedicinesPerDay - startedToday.length);
+  const chosen = waiting.slice(0, newMedicinesLeftToday);
+  return {
+    newIds: [...startedToday, ...chosen].flat(),
+    newMedicineCount: chosen.length,
+    newMedicinesLeftToday,
+  };
+}
+
+/**
+ * Today's due cards, oldest due first. Reviews (cards first studied before today) are limited
+ * to `reviewsPerDay`, counting those already answered today (Decision Z6). A card answered
+ * today and due again (rated Again) always comes back, so a session can be finished.
+ */
+function dueCardsToday(cards, schedules, today, reviewsPerDay) {
+  const answeredTodayAndDue = [];
+  const reviews = [];
+  let reviewsDone = 0;
   cards.forEach((card, order) => {
     const schedule = schedules[card.id];
-    if (!schedule) unseen.push(card.id);
-    else {
-      if (schedule.first === today) newStartedToday++;
-      if (schedule.due <= today) due.push({ id: card.id, due: schedule.due, order });
-    }
+    if (!schedule) return;
+    const answeredToday = lastAnsweredDay(schedule) === today;
+    if (answeredToday && schedule.first < today) reviewsDone++;
+    if (schedule.due > today) return;
+    const item = { id: card.id, due: schedule.due, order };
+    if (answeredToday) answeredTodayAndDue.push(item);
+    else reviews.push(item);
   });
-  due.sort((a, b) => a.due - b.due || a.order - b.order);
-  const newLeftToday = Math.max(0, newPerDay - newStartedToday);
+  const byDueDay = (a, b) => a.due - b.due || a.order - b.order;
+  const reviewsLeft = Math.max(0, reviewsPerDay - reviewsDone);
+  const chosen = [
+    ...answeredTodayAndDue.sort(byDueDay),
+    ...reviews.sort(byDueDay).slice(0, reviewsLeft),
+  ];
+  return { dueIds: chosen.map((item) => item.id), reviewsLeftToday: reviewsLeft };
+}
+
+/**
+ * What can be studied today: { dueIds, newIds, newMedicineCount, newMedicinesLeftToday,
+ * reviewsLeftToday }. Due cards come first, then the new medicines' cards in card order.
+ * `cards` is the card list in introduction order; `schedules` maps card id to schedule;
+ * `settings` is { newMedicinesPerDay, reviewsPerDay }.
+ */
+export function studyPlan(cards, schedules, today, settings) {
   return {
-    dueIds: due.map((item) => item.id),
-    newIds: unseen.slice(0, newLeftToday),
-    newLeftToday,
+    ...dueCardsToday(cards, schedules, today, settings.reviewsPerDay),
+    ...newCardsToday(cards, schedules, today, settings.newMedicinesPerDay),
   };
 }
 

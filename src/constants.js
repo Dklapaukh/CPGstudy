@@ -101,7 +101,10 @@ export const QUIZ_HASH = 'quiz';
 export const QUIZ_ENTRY_PREFIX = 'quiz-';
 export const QUIZ_SETTINGS_ENTRY_ID = 'quiz-settings';
 export const QUIZ_SECTION_NAME = 'Medicines';
-export const QUIZ_NEW_PER_DAY = { MIN: 5, MAX: 30, STEP: 5, DEFAULT: 10 };
+// Daily limits, set on the quiz screen (Decisions Z6 and Z7). New cards come a whole medicine
+// at a time; reviews are cards already studied that are due again.
+export const QUIZ_NEW_MEDICINES_PER_DAY = { MIN: 1, MAX: 10, STEP: 1, DEFAULT: 2 };
+export const QUIZ_REVIEWS_PER_DAY = { MIN: 10, MAX: 200, STEP: 10, DEFAULT: 30 };
 // A card rated Again comes back after this many other cards in the same session.
 export const QUIZ_AGAIN_GAP = 3;
 export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy' };

@@ -1,5 +1,12 @@
 # Change log
 
+- 2026-11-11: Medicines quiz by medicine. New medicines per day (1 to 10, default 2) replaces
+  new cards per day, and each brings all of its cards; new review limit (10 to 200, default 30).
+  Paediatric doses are no longer tested (CPG 7.2 and the paediatric RSI table dropped, child-only
+  lines removed). Adrenaline, Midazolam and Morphine get one adult-dose card per indication from
+  the other guidelines, shared where the instructions are the same. Dose cards read
+  "Medicine – Indication – Dose". New `src/quizDoses.js`. 415 cards.
+
 - 2026-11-11: Medicines quiz (`#quiz`): 522 flashcards built from the 45 medicine guidelines
   (indications, contraindications, each dose including CPG 7.2 paediatric weight bands and CPG
   9.3 RSI rows, cautions, adverse effects, onset, duration, mechanism), rated Again / Hard /

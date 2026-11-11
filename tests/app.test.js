@@ -239,10 +239,11 @@ test('the list screen opens the Review queue screen, where a guideline can be re
 });
 
 test('the Medicines quiz shows a card, its answer, and saves the rating as a quiz entry', async () => {
-  assert.match($('.quiz-button').textContent, /^Medicines quiz \(10 today\)$/);
+  // Default: two new medicines a day, Adenosine (8 cards) and Adrenaline (22 cards).
+  assert.match($('.quiz-button').textContent, /^Medicines quiz \(30 today\)$/);
   dom.window.location.hash = '#quiz';
   await sleep(30);
-  assert.match($('.quiz-counts').textContent, /0 cards due · 10 new cards today/);
+  assert.match($('.quiz-counts').textContent, /0 cards due · 2 new medicines \(30 cards\) today/);
   click($('[data-action="quiz-start"]'));
   assert.match($('.quiz-prompt').textContent, /^Adenosine – Indications$/);
   assert.equal($('.quiz-answer'), null, 'the answer is hidden until asked for');
@@ -251,15 +252,17 @@ test('the Medicines quiz shows a card, its answer, and saves the rating as a qui
   assert.equal($('.quiz-answer .comment-button'), null, 'answers have no comment buttons');
   assert.equal($$('.rating-button').length, 4);
   click($('[data-rating="good"]'));
-  assert.match($('.quiz-left').textContent, /^9 cards left$/);
+  assert.match($('.quiz-left').textContent, /^29 cards left$/);
   await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
   assert.ok(stored['quiz-cpg-14-2'], 'the rating is uploaded as the medicine quiz entry');
   click($('[data-action="quiz-end"]'));
-  assert.match($('.quiz-counts').textContent, /9 new cards today/);
-  const select = $('#quiz-new-per-day');
-  select.value = '20';
+  // Adenosine was started today, so its 7 other cards stay without using a place.
+  assert.match($('.quiz-counts').textContent, /1 new medicine \(29 cards\) today/);
+  const select = $('#quiz-new-medicines');
+  select.value = '3';
   select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-  assert.match($('.quiz-counts').textContent, /19 new cards today/);
+  assert.match($('.quiz-counts').textContent, /2 new medicines \(38 cards\) today/);
+  assert.equal($('#quiz-reviews').value, '30', 'review limit defaults to 30');
   dom.window.location.hash = '';
   await sleep(30);
 });
