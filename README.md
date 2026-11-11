@@ -19,6 +19,9 @@ through a Google Sheet.
 | `src/state.js`                                       | The one state object and saving it on the phone.                                |
 | `src/updates.js`, `src/updateState.js`               | Update prompt: pure logic (tested), and checking, downloading and tags.         |
 | `version.json`                                       | Published export date and the list of app files (read by the update prompt).    |
+| `scripts/pdfScan.js`, `scripts/check-pdf.js`         | Reads the EAS PDF: export date and newest version per guideline. Tested.        |
+| `content/pdf-status.json`                            | Last PDF scan (fingerprint, export date, versions). Written by the script.      |
+| `.github/workflows/pdf-check.yml`                    | Daily PDF check; opens a pull request when the PDF changes.                     |
 | `src/api.js`, `src/sync.js`                          | Talking to the backend; queued edits and merging.                               |
 | `src/views/`                                         | One file per screen: login, mentor, list, guideline.                            |
 | `src/navigation.js`, `src/events.js`, `src/main.js`  | Screen changes, all clicks and typing, start-up.                                |
@@ -56,6 +59,23 @@ through a Google Sheet.
   if the dates differ or if a file in `src/`, `src/views/`, `content/` is missing from `files`.
 - App code changes alone do not show the banner (Decision T). Phones pick them up on a normal
   reload once GitHub Pages' cache (about 10 minutes) has expired.
+
+## Checking for a new guidelines PDF (feature 6)
+
+- Every morning a GitHub Action downloads `https://cpg.stjohn.org.nz/assets/pdf/EAS.pdf` and
+  runs `node scripts/check-pdf.js`. It is a plain script with no AI: the same PDF always gives
+  the same result. It reads the export date and each guideline's newest version-history entry.
+- If nothing changed it does nothing. If the export date or any version entry changed, it opens
+  a pull request named "New EAS guidelines PDF (date)" listing changed, new and removed
+  guidelines with the "Update:" text. Nothing in the app changes until you merge.
+- It never touches `content/guidelines.js`. Rebuilding the content from the PDF is a separate
+  step (plan, section 8). `npm run check` fails on that pull request until the content matches.
+- One-off setup on GitHub: Settings, Actions, General, Workflow permissions, tick "Allow GitHub
+  Actions to create and approve pull requests". Run it by hand from the Actions tab
+  ("pdf-check", "Run workflow"). Pull requests made by the Action do not start the normal
+  checks by themselves; push any commit to the branch to start them.
+- To run it on your computer: install poppler (`pdftotext`), then
+  `node scripts/check-pdf.js path/to/EAS.pdf report.md`.
 
 ## Content
 
