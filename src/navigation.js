@@ -11,6 +11,7 @@ import { renderMentor } from './views/mentorView.js';
 import { renderList } from './views/listView.js';
 import { renderGuidelineDetail, refreshDetailFromState } from './views/detailView.js';
 import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
+import { markGuidelineSeen } from './updateState.js';
 import { SCREEN, MESSAGES, QUEUE_HASH } from './constants.js';
 
 const app = document.getElementById('app');
@@ -48,6 +49,7 @@ export function route() {
   if (index >= 0) {
     // Remember where the list was scrolled to, so Back returns to the same place.
     if (!app.querySelector('.guideline-body')) state.listScrollY = window.scrollY;
+    markGuidelineSeen(id); // the "Updated" tag lasts until the guideline is opened (feature 7)
     renderGuidelineDetail(index);
   } else if (id === QUEUE_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;

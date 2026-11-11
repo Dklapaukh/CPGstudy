@@ -22,6 +22,13 @@ export const state = {
   listScrollY: 0,
   openSections: {}, // section name -> true while open
   currentGuideline: null,
+  // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
+  updateAvailable: false,
+  updateInProgress: false,
+  updateFailed: false,
+  updateCheckInProgress: false,
+  lastUpdateCheckAt: 0, // time of the last successful check, in milliseconds
+  updatedGuidelineIds: new Set(), // guidelines whose text changed in the last content update
 };
 
 /** Saves the signed-in tracker on this phone so it works offline. */

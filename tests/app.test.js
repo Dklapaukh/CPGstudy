@@ -12,6 +12,10 @@ const MENTOR = 'mentor-secret';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const requests = [];
 const stored = {};
+// Static files (feature 7): what version.json says, and every other file that was fetched.
+const published = JSON.parse(readFileSync('version.json', 'utf8'));
+const fileRequests = [];
+let fileDownloadsWork = true;
 let dom;
 let doc;
 
@@ -34,6 +38,17 @@ function fakeBackend(body) {
     stored[c.id] = { s: c.s, n: c.n, t: c.t };
   });
   return { ok: true, label: 'Sam - 2026', data: { ...stored } };
+}
+
+function fakeFetch(url, options) {
+  if (String(url).startsWith('version.json')) {
+    return { ok: true, json: async () => ({ ...published }) };
+  }
+  if (options && options.cache === 'reload') {
+    fileRequests.push(url);
+    return { ok: fileDownloadsWork };
+  }
+  return { json: async () => fakeBackend(JSON.parse(options.body)) };
 }
 
 const click = (element) => element.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
@@ -59,9 +74,7 @@ before(() => {
     Event: dom.window.Event,
     confirm: () => true,
     setInterval: (fn, ms) => realSetInterval(fn, ms).unref(),
-    fetch: async (url, options) => ({
-      json: async () => fakeBackend(JSON.parse(options.body)),
-    }),
+    fetch: async (url, options) => fakeFetch(url, options),
   };
   Object.entries(globals).forEach(([key, value]) => {
     Object.defineProperty(globalThis, key, {
@@ -217,6 +230,59 @@ test('the list screen opens the Review queue screen, where a guideline can be re
   assert.equal($$('.queue-item').length, before - 1);
   dom.window.location.hash = '';
   await sleep(30);
+});
+
+async function checkAgain() {
+  const { state } = await import('../src/state.js');
+  state.lastUpdateCheckAt = 0;
+  doc.dispatchEvent(new dom.window.Event('visibilitychange'));
+  await sleep(30);
+}
+
+test('the list footer shows the export date, the last check and the study-aid notice', () => {
+  const footer = $('.app-footer').textContent;
+  assert.match(footer, /Guidelines exported 24\.09\.2026/);
+  assert.doesNotMatch($('.update-checked-time').textContent, /not yet/);
+  assert.match(footer, /Study aid only/);
+  assert.equal($('#update-banner').hidden, true);
+});
+
+test('newer guidelines show the banner; Update now downloads every file, then reloads', async () => {
+  published.guidelinesExportedOn = '01.01.2099';
+  await checkAgain();
+  assert.equal($('#update-banner').hidden, false);
+  assert.match($('#update-banner').textContent, /A new version of the guidelines is available/);
+  fileDownloadsWork = false;
+  click($('[data-action="apply-update"]'));
+  await sleep(30);
+  assert.match($('#update-banner').textContent, /Couldn’t download the update/);
+  fileDownloadsWork = true;
+  const realLocation = globalThis.location;
+  let reloads = 0;
+  globalThis.location = { reload: () => reloads++ };
+  click($('[data-action="apply-update"]'));
+  await sleep(30);
+  globalThis.location = realLocation;
+  assert.equal(reloads, 1);
+  assert.ok(published.files.every((path) => fileRequests.includes(path)));
+  published.guidelinesExportedOn = '24.09.2026';
+  await checkAgain();
+  assert.equal($('#update-banner').hidden, true);
+});
+
+test('a changed guideline is tagged Updated until it is opened', async () => {
+  const { state } = await import('../src/state.js');
+  state.updatedGuidelineIds.add('cpg-2-1');
+  dom.window.location.hash = '#queue';
+  await sleep(30);
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.equal($$('.updated-tag').length, 1);
+  dom.window.location.hash = '#cpg-2-1';
+  await sleep(30);
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.equal($$('.updated-tag').length, 0);
 });
 
 test('switching tracker signs out and clears the saved tracker', async () => {

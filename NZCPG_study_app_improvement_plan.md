@@ -296,7 +296,8 @@ Rule: unanswered questions are shown to the user in the chat with full option te
 | A, B, C, E, F | Feature behaviour | Features 1 and 2 (shelved, see the log); not needed for feature 3 |
 | L, M, N, O, P | Feature 5 behaviour (review queue) | Answered 11 Nov 2026, see the log |
 | Q, R, S | Feature 5: where the queue is seen, its size limit, when it clears | Answered 11 Nov 2026, see the log |
-| D, items I1 and I3 | PDF update pipeline | Features 6 and 7 |
+| T, U, V | Feature 7 behaviour (update prompt) | Answered 11 Nov 2026, see the log |
+| D, items I1 and I3 | PDF update pipeline | Feature 6 (feature 7 was built without them: it works however `version.json` is updated) |
 
 ### Information needed (items I1 and I3 still open)
 
@@ -339,6 +340,10 @@ All answered (G, H, I, J, K). See the answered log.
 ### Decisions: feature 5 (related-guideline review queue)
 
 All answered (L to S). See the answered log.
+
+### Decisions: feature 7 (update prompt)
+
+All answered (T, U, V). See the answered log.
 
 ### Decision: PDF update pipeline
 
@@ -386,6 +391,16 @@ All answered (L to S). See the answered log.
   - Manual overrides live in `content/related-overrides.js` (empty); run `node scripts/build-related.js` after editing it.
   - Not checked on a real phone: layout of the panels, the Review queue screen, two devices sharing a queue.
   - Not done: the plan's "queue length 3, 5 or 8 in settings" (Decision L chose fixed 5) and "exclude guidelines reviewed in the last few days" (no review dates; Decision P chose no exclusion).
+- 11 Nov 2026, feature 7 answers: **Decision T: Option 1** (the banner is triggered by guideline content only, a later export date in `version.json`; app code changes alone do not show it). **Decision U: Option 1** (applied only when "Update now" is tapped; nothing reloads by itself). **Decision V: Option 1** (the "Updated" tag lasts until the guideline is opened on that phone). Format check: **Option 1**, run with the settings recorded in this plan in a scratch copy; the zip again had no `.prettierrc` or `.prettierignore` (`.github` was there).
+- 11 Nov 2026, choices I made building feature 7 (say if you want any different):
+  - `version.json` at the root holds `guidelinesExportedOn` and `files` (every file the app loads). A test fails if the date differs from `content/guidelines.js` or a file is missing from the list, so publishing new guidelines means committing the content, `content/related.js` and `version.json` together.
+  - Only a **later** date counts (dates are `dd.mm.yyyy`), so a stale cached `version.json` can never offer a downgrade. Checks: on open, on `pageshow` and on return to the foreground, at most once a minute (`UPDATE_CHECK_MIN_INTERVAL_MS`). Offline checks fail quietly and retry next time.
+  - "Update now" re-fetches every listed file with `cache: 'reload'` (GitHub Pages lets browsers keep files about 10 minutes, so a plain reload could load old copies), then reloads. If any download fails it does not reload (there is no service worker, so a failed reload would be a blank page) and shows "Couldn’t download the update. Check your signal and try again." Unsent edits are saved first and sent after the reload.
+  - "Updated" tags are worked out on each phone: fingerprints of each guideline's title and text are stored under their own key `eas-cpg-update-v1` (the saved tracker format is unchanged) and compared when the export date changes. The first run tags nothing. Not shared across phones or with the mentor.
+  - The banner sits above every screen (outside the app container, so redrawing it never touches a note). The list screen has a footer: "Guidelines exported <date> · last checked for updates <time>", plus "Study aid only. The guidelines here are an uncontrolled copy; for clinical use refer to the official guidelines. View online at cpg.stjohn.org.nz".
+  - Not done: a service worker / full offline mode (a separate decision, see feature 7 in section 4).
+  - Not checked on a real phone: banner layout, an update on GitHub Pages end to end.
+
 ---
 
 ## 9. Code review
@@ -568,3 +583,4 @@ to paste.
 | 11 Nov 2026 | `npm run check` run on the full repository: 31 tests pass (including the Random guideline button test), lint clean; one Prettier fix in `tests/logic.test.js`. Feature 5 not started: Decisions L to P (section 8) written and asked, unanswered. | You: copy `tests/logic.test.js` and `CHANGELOG.md` into the repository. Answer Decisions L to P, then feature 5 is built: offline link-graph script and data file, queue logic with tests, panel and progress strip, CSS, change log. |
 | 11 Nov 2026 | Decisions L1, M2 plus add-to-queue button, N1, O2, P1 recorded. Found that the repository lacks `.prettierrc`, `.prettierignore` and `.github/` (never uploaded); replacements supplied. Feature 5 summary given for you to confirm; Decisions Q, R, S asked, unanswered. No feature 5 code yet. | You: add the three config files to the repository (GitHub, Add file, Create new file; the name `.github/workflows/checks.yml` creates the folders). Confirm the feature summary and answer Q, R, S. Then feature 5 is built (backend change first, then app). |
 | 11 Nov 2026 | Feature 5 built: related-guideline panel (top 5 with reasons), review queue (add, add all, remove, ticking off, auto-empty), queue strip on every guideline, Review queue screen and list-screen button. New files `src/queue.js`, `src/related.js`, `src/queueState.js`, `src/views/queueView.js`, `scripts/build-related.js`, `content/related.js` (generated), `content/related-overrides.js`; README, change log, CSS updated. No backend change needed (queue stored as the entry `review-queue`). `npm run check` passes (43 tests) using the config files supplied earlier. | You: copy the changed and new files into the repository, add `content/related.js` to `.prettierignore`, try it on your phone (add related guidelines, mark one Complete, open the Review queue screen, check on a second phone). Then pick feature 6 or 7 in a fresh chat with the full repository zip. |
+| 11 Nov 2026 | Decisions T1, U1, V1 recorded. Feature 7 built: `version.json`, `src/updates.js` (pure, 7 tests), `src/updateState.js`, `src/views/updateView.js`, banner in `index.html`, "Updated" tag and footer on the list screen, check on open and return to the app, CSS, README ("Publishing an update"), change log. No backend change. `npm run check` passes (53 tests) with the plan's recorded Prettier settings (dotfiles missing from the zip again). Checked in real Chromium: banner shows for a later date, Update now reloads, no errors. | You: copy the changed and new files into the repository (and add the `.prettierrc` and `.prettierignore` if they are really missing on GitHub). Test on your phone: temporarily set a later date in `version.json` on GitHub, open the app, tap Update now, then put the date back. Next: feature 6 needs items I1 and I3 and Decision D; or revisit features 1 and 2 (Decisions A to F). |

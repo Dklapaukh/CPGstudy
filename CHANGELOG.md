@@ -1,5 +1,13 @@
 # Change log
 
+- 2026-11-11: Feature 7, update prompt. New `version.json` (export date and file list) is
+  checked on open and on return to the app. A later export date shows a banner, "A new version
+  of the guidelines is available. Update now."; tapping it re-downloads every file past the
+  browser cache and reloads (not if any download fails). Changed guidelines are tagged
+  "Updated" until opened, worked out on each phone from text fingerprints (own storage key
+  `eas-cpg-update-v1`; saved tracker format unchanged). The list screen has a footer with the
+  export date, last check and a study-aid notice. No backend change.
+
 - 2026-11-11: Feature 5, related guidelines and review queue. Each guideline shows up to 5
   related guidelines with a reason, ranked by link score (then Incomplete, Needs review,
   Complete). "Add to review queue" and "Add all" fill a queue of at most 5, shown with

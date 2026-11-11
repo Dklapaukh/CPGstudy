@@ -1,0 +1,32 @@
+{
+  "guidelinesExportedOn": "24.09.2026",
+  "files": [
+    "index.html",
+    "styles/app.css",
+    "content/guidelines.js",
+    "content/related-overrides.js",
+    "content/related.js",
+    "src/api.js",
+    "src/comments.js",
+    "src/constants.js",
+    "src/events.js",
+    "src/guidelines.js",
+    "src/logic.js",
+    "src/main.js",
+    "src/navigation.js",
+    "src/queue.js",
+    "src/queueState.js",
+    "src/related.js",
+    "src/state.js",
+    "src/sync.js",
+    "src/updateState.js",
+    "src/updates.js",
+    "src/views/detailView.js",
+    "src/views/listView.js",
+    "src/views/loginView.js",
+    "src/views/mentorView.js",
+    "src/views/queueView.js",
+    "src/views/templates.js",
+    "src/views/updateView.js"
+  ]
+}

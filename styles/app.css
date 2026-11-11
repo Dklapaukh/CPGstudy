@@ -809,3 +809,60 @@ td.table-cell--coloured {
   font-weight: 500;
   text-decoration: none;
 }
+
+/* Feature 7: update banner, "Updated" tag and the list screen footer */
+.update-banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--colour-text);
+  color: #fff;
+  font-size: 1rem;
+}
+.update-banner[hidden] {
+  display: none;
+}
+.update-banner__text {
+  flex: 1 1 12rem;
+  margin: 0;
+}
+.update-banner__button {
+  min-height: 44px;
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--colour-green);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.update-banner__error {
+  flex-basis: 100%;
+  margin: 0;
+}
+.updated-tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0 0.45rem;
+  border-radius: 6px;
+  background: var(--colour-green-soft);
+  color: #146b46;
+  font-size: 0.8rem;
+  font-weight: 600;
+  vertical-align: 0.1em;
+}
+.app-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--colour-line);
+  color: #5f6461;
+  font-size: 0.85rem;
+}
+.app-footer p {
+  margin: 0 0 0.5rem;
+}

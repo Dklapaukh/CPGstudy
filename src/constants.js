@@ -48,6 +48,13 @@ export const RELATED_REASON_TEXT = {
   chosen: 'Recommended pairing',
 };
 
+// Feature 7, the update prompt. version.json is published next to index.html and names the
+// guideline export date and every file of the app (see README, "Publishing an update").
+export const VERSION_FILE_URL = 'version.json';
+export const UPDATE_STORAGE_KEY = 'eas-cpg-update-v1'; // separate from STORAGE_KEY on purpose
+// Opening the app fires both start-up and "pageshow", so checks closer together are skipped.
+export const UPDATE_CHECK_MIN_INTERVAL_MS = 60000;
+
 export const SCREEN = { LOGIN: 'login', MENTOR: 'mentor', TRACKER: 'tracker' };
 
 // First item of each content block in the guideline data.
@@ -73,4 +80,12 @@ export const MESSAGES = {
     'This browser is blocking saved data, so changes can’t be kept on this phone while offline.',
   COPY_FALLBACK: 'Press and hold the code to copy it',
   SAVE_FAILED: 'Could not save on this browser',
+  UPDATE_AVAILABLE: 'A new version of the guidelines is available.',
+  UPDATE_BUTTON: 'Update now',
+  UPDATE_DOWNLOADING: 'Downloading the update…',
+  UPDATE_FAILED: 'Couldn’t download the update. Check your signal and try again.',
+  UPDATED_TAG: 'Updated',
+  STUDY_AID_NOTICE:
+    'Study aid only. The guidelines here are an uncontrolled copy; for clinical use refer to ' +
+    'the official guidelines.',
 };

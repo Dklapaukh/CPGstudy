@@ -16,6 +16,7 @@ import {
 import { updateSyncStatus } from '../sync.js';
 import { coverHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
+import { footerHtml, drawUpdateStatus } from './updateView.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -116,8 +117,11 @@ function rowHtml(guideline) {
   if (status === STATUS.REVIEW) dotClass = ' status-dot--review';
   const entry = state.entries[guideline.id];
   const notesNote = entry && entry.n ? ' · has notes' : '';
+  const updatedTag = state.updatedGuidelineIds.has(guideline.id)
+    ? ` <span class="updated-tag">${MESSAGES.UPDATED_TAG}</span>`
+    : '';
   return `<a class="guideline-row" href="#${guideline.id}"><i class="status-dot${dotClass}"></i>
-    <div><b>${escapeHtml(guideline.t)}</b><small>CPG EAS ${guideline.n}${notesNote}</small></div></a>`;
+    <div><b>${escapeHtml(guideline.t)}${updatedTag}</b><small>CPG EAS ${guideline.n}${notesNote}</small></div></a>`;
 }
 
 function sectionsHtml(newlyClosed) {
@@ -170,10 +174,11 @@ export function renderList() {
     <button class="random-button" id="random-guideline-button" type="button">
       Random guideline</button>
     ${queueButtonHtml()}
-    ${filtersHtml(counts, guidelines.length)}${sectionsHtml(newlyClosed)}</div>`;
+    ${filtersHtml(counts, guidelines.length)}${sectionsHtml(newlyClosed)}${footerHtml()}</div>`;
   app.querySelectorAll('details.section-group').forEach((details) => {
     if (state.openSections[details.dataset.section]) details.open = true;
   });
   addRandomGuidelineButtonListener();
   updateSyncStatus();
+  drawUpdateStatus();
 }

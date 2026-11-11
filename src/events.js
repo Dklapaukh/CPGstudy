@@ -17,6 +17,7 @@ import { getQueue, saveQueue, tickOffQueuedGuideline } from './queueState.js';
 import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
+import { applyUpdate } from './updateState.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS } from './constants.js';
 
 const app = document.getElementById('app');
@@ -250,4 +251,9 @@ export function attachEventListeners() {
   );
 
   window.addEventListener('hashchange', route);
+
+  // The update banner sits outside the app container (see views/updateView.js).
+  byId('update-banner').addEventListener('click', (event) => {
+    if (event.target.closest('[data-action="apply-update"]')) applyUpdate();
+  });
 }

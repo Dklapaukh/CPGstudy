@@ -17,6 +17,8 @@ through a Google Sheet.
 | `content/related.js`, `content/related-overrides.js` | Related-guideline links (built by script) and the hand-edited overrides.        |
 | `scripts/build-related.js`                           | `node scripts/build-related.js` rebuilds `content/related.js`.                  |
 | `src/state.js`                                       | The one state object and saving it on the phone.                                |
+| `src/updates.js`, `src/updateState.js`               | Update prompt: pure logic (tested), and checking, downloading and tags.         |
+| `version.json`                                       | Published export date and the list of app files (read by the update prompt).    |
 | `src/api.js`, `src/sync.js`                          | Talking to the backend; queued edits and merging.                               |
 | `src/views/`                                         | One file per screen: login, mentor, list, guideline.                            |
 | `src/navigation.js`, `src/events.js`, `src/main.js`  | Screen changes, all clicks and typing, start-up.                                |
@@ -39,6 +41,21 @@ through a Google Sheet.
 - The review queue is saved as one extra entry with the id `review-queue` in the tracker's
   data (its note holds the queue as JSON). It uses the normal save and sync path, so the backend
   needs no change. It appears as a row in the Data sheet; do not edit that row by hand.
+
+## Publishing an update (feature 7)
+
+- The app reads `version.json` on open and whenever it comes back to the foreground (at most
+  once a minute). If `guidelinesExportedOn` is later than the export date in
+  `content/guidelines.js` it shows "A new version of the guidelines is available. Update now."
+- Tapping "Update now" downloads every file in the `files` list again, then reloads. Nothing
+  reloads by itself, so a note being typed is never interrupted. Unsent edits are kept.
+- After the update, each phone compares the old and new text and tags changed guidelines
+  "Updated" in the list until they are opened on that phone.
+- When you publish new guidelines: commit `content/guidelines.js`, the rebuilt
+  `content/related.js` and `version.json` with the new date **together**. `npm run check` fails
+  if the dates differ or if a file in `src/`, `src/views/`, `content/` is missing from `files`.
+- App code changes alone do not show the banner (Decision T). Phones pick them up on a normal
+  reload once GitHub Pages' cache (about 10 minutes) has expired.
 
 ## Content
 
@@ -71,4 +88,5 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - Offline: changes are kept and sent when signal returns (by hand).
 - Related guidelines (at most 5) show under a guideline; "Add to review queue" and "Add all" fill the queue (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the queue; the list screen has a "Review queue (n)" button.
 - Comment button adds to the notes and highlights the point.
+- A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
 - Switch tracker and sign out.
