@@ -15,6 +15,9 @@ const WORD_LIST = WORDS.split(',');
 const MAX_NOTE_LENGTH = 5000;
 const LOCK_WAIT_MS = 20000;
 const WRONG_PASSCODE_DELAY_MS = 1500;
+// setup() writes this passcode for the first mentor. It is public (it is in this file), so it is
+// refused until it has been changed in the Mentors tab (review item C4).
+const PLACEHOLDER_MENTOR_PASSCODE = 'change-this-to-a-long-passcode';
 // A phone's clock may be a little fast. Edit times further ahead than this are cut back, so a
 // wrong clock cannot beat every later edit from other devices.
 const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
@@ -41,7 +44,7 @@ function setup() {
   });
   const mentors = getSheet_(SHEET.MENTORS);
   if (mentors.getLastRow() < 2) {
-    mentors.appendRow(['Your name', 'change-this-to-a-long-passcode']);
+    mentors.appendRow(['Your name', PLACEHOLDER_MENTOR_PASSCODE]);
   }
 }
 
@@ -80,6 +83,8 @@ function doPost(e) {
 function handleRequest_(request) {
   const code = normalise_(request.code);
   const action = request.action;
+
+  if (code === PLACEHOLDER_MENTOR_PASSCODE) return { ok: false, error: 'placeholder-passcode' };
 
   if (action === 'open') {
     const tracker = findTracker_(code);

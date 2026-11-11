@@ -12,6 +12,8 @@ import * as mupdf from 'mupdf';
 
 const POSITION_DECIMALS = 1000;
 const CHARACTER_DECIMALS = 10;
+// Characters whose font sizes differ by no more than this are in the same style.
+const SAME_SIZE_TOLERANCE = 0.1;
 // MuPDF names embedded font subsets "ABCDEF+FontName"; the prefix is dropped.
 const SUBSET_PREFIX = /^[A-Z]{6}\+/;
 
@@ -45,7 +47,7 @@ function pageSpans(page) {
         span &&
         span.font === fontName &&
         span.col === colourHex &&
-        Math.abs(span.size - size) <= 0.1;
+        Math.abs(span.size - size) <= SAME_SIZE_TOLERANCE;
       if (!sameStyle) {
         span = {
           font: fontName,

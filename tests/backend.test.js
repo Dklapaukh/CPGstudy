@@ -76,6 +76,17 @@ test('open: tracker, mentor, and a wrong passcode that is delayed after the lock
   assert.equal('delayBeforeReply' in wrong, false);
 });
 
+test('the placeholder mentor passcode is refused even when it is in the Sheet (C4)', () => {
+  tabs.Mentors.push(['Your name', 'change-this-to-a-long-passcode']);
+  const placeholder = { code: 'Change-this-to-a-long-passcode' };
+  assert.equal(post({ action: 'open', ...placeholder }).error, 'placeholder-passcode');
+  assert.equal(
+    post({ action: 'create', label: 'Sam', ...placeholder }).error,
+    'placeholder-passcode',
+  );
+  tabs.Mentors.pop();
+});
+
 test('save: bad ids ignored, future times cut back, older edits lose', () => {
   const now = Date.now();
   const first = post({

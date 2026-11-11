@@ -31,10 +31,14 @@ function itemFrom(id, rebuilt) {
   return { id, n: rebuilt.n, t: rebuilt.t, hc: rebuilt.hc, b: rebuilt.b };
 }
 
-/**
- * Section name of every published guideline number. Also returns the first section's name,
- * which a new guideline takes when no guideline comes before it in the PDF.
- */
+/** Published guideline items by number. */
+export function itemsByNumber(guidelineData) {
+  return new Map(
+    guidelineData.sections.flatMap((section) => section.items.map((item) => [item.n, item])),
+  );
+}
+
+/** Section name of every published guideline number. */
 function sectionsByNumber(guidelineData) {
   const sectionOf = new Map();
   guidelineData.sections.forEach((section) => {
@@ -44,57 +48,31 @@ function sectionsByNumber(guidelineData) {
 }
 
 /**
- * Merges rebuilt guidelines into the published content.
- * Takes the published guidelineData, the rebuilt guidelines in PDF order and the stored rebuild
- * record ({ fingerprints, notExact }, or null on the first run).
- * Returns { guidelineData, record, report } where report lists the guideline numbers that are
- * unchanged, changed, new, removed and "checkFormatting" (changed or new guidelines whose
- * rebuilt version replaces text the converter could not, or cannot be shown to, rebuild exactly).
+ * Decides what one rebuilt guideline becomes. Takes the rebuilt guideline, its fingerprint, the
+ * published item with its number (undefined for a new guideline) and the stored record as
+ * { fingerprints, notExact (a Set) }. Returns { item, outcome, notExact, checkFormatting }:
+ * outcome is 'unchanged', 'changed' or 'added', notExact says the kept published text differs
+ * from the rebuilt version, and checkFormatting says the rebuilt layout is not proven exact.
  */
-export function mergeRebuilt(guidelineData, rebuiltList, storedRecord) {
-  const publishedItems = new Map();
-  guidelineData.sections.forEach((section) => {
-    section.items.forEach((item) => publishedItems.set(item.n, item));
-  });
-  const sectionOf = sectionsByNumber(guidelineData);
-  const storedFingerprints = storedRecord ? storedRecord.fingerprints : {};
-  const storedNotExact = new Set(storedRecord ? storedRecord.notExact : []);
-  const report = { unchanged: [], changed: [], added: [], removed: [], checkFormatting: [] };
-  const fingerprints = {};
-  const notExact = [];
-  const placed = []; // { sectionName, item } in PDF order
-  let previousSection = guidelineData.sections[0].name;
-
-  for (const rebuilt of rebuiltList) {
-    const fingerprint = guidelineFingerprint(rebuilt);
-    fingerprints[rebuilt.n] = fingerprint;
-    const published = publishedItems.get(rebuilt.n);
-    let item;
-    if (published && storedFingerprints[rebuilt.n] === fingerprint) {
-      item = published; // unchanged in the PDF: keep the published text, even if not exact
-      report.unchanged.push(rebuilt.n);
-      if (!isExactRebuild(published, rebuilt)) notExact.push(rebuilt.n);
-    } else if (published) {
-      item = itemFrom(published.id, rebuilt); // the id stays, so progress is kept
-      report.changed.push(rebuilt.n);
-      if (storedNotExact.has(rebuilt.n) || !storedFingerprints[rebuilt.n]) {
-        report.checkFormatting.push(rebuilt.n);
-      }
-    } else {
-      item = itemFrom(guidelineId(rebuilt.n), rebuilt);
-      report.added.push(rebuilt.n);
-      report.checkFormatting.push(rebuilt.n);
-    }
-    // A new guideline joins the section of the guideline before it in the PDF.
-    const sectionName = sectionOf.get(rebuilt.n) || previousSection;
-    previousSection = sectionName;
-    placed.push({ sectionName, item });
+function mergeOne(rebuilt, fingerprint, published, stored) {
+  if (published && stored.fingerprints[rebuilt.n] === fingerprint) {
+    // Unchanged in the PDF: keep the published text, even where the converter's version differs.
+    const notExact = !isExactRebuild(published, rebuilt);
+    return { item: published, outcome: 'unchanged', notExact, checkFormatting: false };
   }
+  if (published) {
+    // Changed in the PDF: take the rebuilt version. The id stays, so progress is kept.
+    const unproven = stored.notExact.has(rebuilt.n) || !stored.fingerprints[rebuilt.n];
+    const item = itemFrom(published.id, rebuilt);
+    return { item, outcome: 'changed', notExact: false, checkFormatting: unproven };
+  }
+  const item = itemFrom(guidelineId(rebuilt.n), rebuilt);
+  return { item, outcome: 'added', notExact: false, checkFormatting: true };
+}
 
-  const rebuiltNumbers = new Set(rebuiltList.map((rebuilt) => rebuilt.n));
-  report.removed = [...publishedItems.keys()].filter((number) => !rebuiltNumbers.has(number));
-
-  const sections = guidelineData.sections
+/** The published sections holding the placed items ({ sectionName, item }), empty ones dropped. */
+function sectionsOf(guidelineData, placed) {
+  return guidelineData.sections
     .map((section) => ({
       name: section.name,
       items: placed
@@ -102,6 +80,46 @@ export function mergeRebuilt(guidelineData, rebuiltList, storedRecord) {
         .map((entry) => entry.item),
     }))
     .filter((section) => section.items.length > 0);
+}
+
+/**
+ * Merges rebuilt guidelines into the published content.
+ * Takes the published guidelineData, the rebuilt guidelines in PDF order and the stored rebuild
+ * record ({ fingerprints, notExact }, or null on the first run).
+ * Returns { guidelineData, record, report } where report lists the guideline numbers that are
+ * unchanged, changed, added, removed and "checkFormatting" (changed or new guidelines whose
+ * rebuilt version replaces text the converter could not, or cannot be shown to, rebuild exactly).
+ */
+export function mergeRebuilt(guidelineData, rebuiltList, storedRecord) {
+  const publishedItems = itemsByNumber(guidelineData);
+  const sectionOf = sectionsByNumber(guidelineData);
+  const stored = {
+    fingerprints: storedRecord ? storedRecord.fingerprints : {},
+    notExact: new Set(storedRecord ? storedRecord.notExact : []),
+  };
+  const report = { unchanged: [], changed: [], added: [], removed: [], checkFormatting: [] };
+  const fingerprints = {};
+  const notExact = [];
+  const placed = []; // { sectionName, item } in PDF order
+  // A new guideline joins the section of the guideline before it in the PDF (the first section
+  // when nothing comes before it).
+  let previousSection = guidelineData.sections[0].name;
+
+  for (const rebuilt of rebuiltList) {
+    const fingerprint = guidelineFingerprint(rebuilt);
+    fingerprints[rebuilt.n] = fingerprint;
+    const merged = mergeOne(rebuilt, fingerprint, publishedItems.get(rebuilt.n), stored);
+    report[merged.outcome].push(rebuilt.n);
+    if (merged.notExact) notExact.push(rebuilt.n);
+    if (merged.checkFormatting) report.checkFormatting.push(rebuilt.n);
+    const sectionName = sectionOf.get(rebuilt.n) || previousSection;
+    previousSection = sectionName;
+    placed.push({ sectionName, item: merged.item });
+  }
+
+  const rebuiltNumbers = new Set(rebuiltList.map((rebuilt) => rebuilt.n));
+  report.removed = [...publishedItems.keys()].filter((number) => !rebuiltNumbers.has(number));
+  const sections = sectionsOf(guidelineData, placed);
   return { guidelineData: { sections }, record: { fingerprints, notExact }, report };
 }
 

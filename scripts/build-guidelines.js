@@ -3,11 +3,13 @@
  * Option 2). No AI: a plain converter, so the same PDF always gives the same content.
  * Usage:
  *   node scripts/build-guidelines.js <EAS.pdf> [<report.md>]
- *       Merges the PDF into the content (see scripts/contentUpdate.js), sets the export date in
+ *       Merges the PDF into the content (see scripts/contentUpdate.js), checks it with
+ *       scripts/contentCheck.js, sets the export date in
  *       content/guidelines.js and version.json, updates content/pdf-rebuild.json and writes the
  *       pull request report. Run scripts/build-related.js afterwards.
  *   node scripts/build-guidelines.js <EAS.pdf> --check
- *       Acceptance test: says how many guidelines the PDF rebuilds exactly. Changes nothing.
+ *       Acceptance test: says how many guidelines the PDF rebuilds exactly, and fails if the
+ *       converter no longer gives the rebuild recorded for the same PDF. Changes nothing.
  *   node scripts/build-guidelines.js <EAS.pdf> --baseline
  *       Records content/pdf-rebuild.json for the PDF the published content came from.
  * Run by .github/workflows/pdf-check.yml. Depends on the `mupdf` development dependency.
@@ -16,10 +18,12 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { documentInfo, guidelineData } from '../content/guidelines.js';
 import { readPdfPages } from './pdfPages.js';
 import { buildAllGuidelines } from './pdfContent.js';
+import { contentProblems } from './contentCheck.js';
 import {
   guidelineFileText,
   guidelineFingerprint,
   isExactRebuild,
+  itemsByNumber,
   mergeRebuilt,
   mergeReport,
 } from './contentUpdate.js';
@@ -53,19 +57,38 @@ function rebuildPdf(pdfPath) {
 }
 
 /** Published guideline items by number. */
-function publishedByNumber() {
-  return new Map(
-    guidelineData.sections.flatMap((section) => section.items.map((item) => [item.n, item])),
-  );
-}
+const publishedByNumber = () => itemsByNumber(guidelineData);
 
 /** Writes a JSON file with two-space indents and a final new line. */
 function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-/** --check: prints how many guidelines are rebuilt exactly, and which are not. */
-function checkExact(rebuilt) {
+/**
+ * Throws when the converter no longer gives the rebuild recorded for this same PDF. That means
+ * the converter's output has changed (re-record the baseline if that was intended, see README)
+ * or the PDF changed without a new export date.
+ */
+function confirmRecordedRebuild(exportedOn, rebuilt) {
+  const record = JSON.parse(readFileSync(RECORD_FILE, 'utf8'));
+  if (record.exportedOn !== exportedOn) {
+    console.log(`The record is for the ${record.exportedOn} PDF, so it was not compared.`);
+    return;
+  }
+  const different = rebuilt
+    .filter((guideline) => record.fingerprints[guideline.n] !== guidelineFingerprint(guideline))
+    .map((guideline) => guideline.n);
+  if (different.length) {
+    throw new Error(`Not the recorded rebuild of this PDF for: ${different.join(' ')}`);
+  }
+  console.log('The converter gives the recorded rebuild of this PDF.');
+}
+
+/**
+ * --check: prints how many guidelines are rebuilt exactly, and which are not, then confirms
+ * that the converter still gives the recorded rebuild.
+ */
+function checkExact(exportedOn, rebuilt) {
   const published = publishedByNumber();
   const notExact = rebuilt.filter((guideline) => {
     const item = published.get(guideline.n);
@@ -77,6 +100,7 @@ function checkExact(rebuilt) {
   );
   console.log(`Not exact: ${notExact.map((guideline) => guideline.n).join(' ') || 'none'}.`);
   if (missing.length) console.log(`In the content but not the PDF: ${missing.join(' ')}.`);
+  confirmRecordedRebuild(exportedOn, rebuilt);
 }
 
 /** --baseline: records the rebuild of the PDF that the published content came from. */
@@ -103,6 +127,11 @@ function recordBaseline(exportedOn, rebuilt) {
 function updateContent(exportedOn, rebuilt, reportPath) {
   const storedRecord = JSON.parse(readFileSync(RECORD_FILE, 'utf8'));
   const merged = mergeRebuilt(guidelineData, rebuilt, storedRecord);
+  // The app shows the content as markup, so nothing unexpected may be written (review item R13).
+  const problems = contentProblems(merged.guidelineData);
+  if (problems.length) {
+    throw new Error(`Unexpected content, nothing was written:\n${problems.join('\n')}`);
+  }
   writeFileSync(
     CONTENT_FILE,
     guidelineFileText({ ...documentInfo, exportedOn }, merged.guidelineData),
@@ -128,7 +157,7 @@ function main() {
       'Usage: node scripts/build-guidelines.js <pdf> [<report.md> | --check | --baseline]',
     );
   const { exportedOn, rebuilt } = rebuildPdf(pdfPath);
-  if (option === '--check') checkExact(rebuilt);
+  if (option === '--check') checkExact(exportedOn, rebuilt);
   else if (option === '--baseline') recordBaseline(exportedOn, rebuilt);
   else updateContent(exportedOn, rebuilt, option);
 }

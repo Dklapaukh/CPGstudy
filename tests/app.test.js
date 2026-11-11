@@ -6,6 +6,7 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
+import { SEARCH_PAUSE_MS } from '../src/constants.js';
 
 const TRACKER = 'maple-oak-reef-11';
 const MENTOR = 'mentor-secret';
@@ -134,13 +135,18 @@ test('filters and search narrow the list', async () => {
   assert.match($('.empty-message').textContent, /Nothing matches/);
   click($$('.filter-chip')[0]);
   const search = $('#search-input');
-  search.value = 'adrenaline';
+  search.focus();
+  search.value = 'Adrenaline ';
   search.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  assert.equal($$('.guideline-row').length, 180, 'the list waits until typing has paused');
+  await sleep(SEARCH_PAUSE_MS + 50);
   const found = $$('.guideline-row').length;
   assert.ok(found > 0 && found < 180);
   assert.equal(doc.activeElement.id, 'search-input');
+  assert.equal($('#search-input').value, 'Adrenaline ', 'the text stays as typed');
   $('#search-input').value = '';
   $('#search-input').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  await sleep(SEARCH_PAUSE_MS + 50);
   assert.equal($$('.guideline-row').length, 180);
 });
 

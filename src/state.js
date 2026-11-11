@@ -17,6 +17,7 @@ export const state = {
   lastSyncFailed: false,
   storageBlocked: false,
   syncTimer: 0,
+  searchTimer: 0,
   filter: FILTER.ALL,
   searchText: '',
   listScrollY: 0,

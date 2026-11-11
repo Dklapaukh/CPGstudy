@@ -299,6 +299,7 @@ Rule: unanswered questions are shown to the user in the chat with full option te
 | T, U, V | Feature 7 behaviour (update prompt) | Answered 11 Nov 2026, see the log |
 | D, items I1 and I3 | PDF update pipeline | Answered 11 Nov 2026, see the log |
 | Y | Feature 6 stage B: guidelines the converter cannot rebuild exactly | Answered 11 Nov 2026, see the log |
+| Review items R4, R8, R11, R12, R13, C4, C5 | Open review items from section 9 | Answered 11 Nov 2026, see the log |
 
 ### Information needed
 
@@ -412,6 +413,17 @@ Decisions D and Y answered (see the log). No open questions.
   - The banner sits above every screen (outside the app container, so redrawing it never touches a note). The list screen has a footer: "Guidelines exported <date> · last checked for updates <time>", plus "Study aid only. The guidelines here are an uncontrolled copy; for clinical use refer to the official guidelines. View online at cpg.stjohn.org.nz".
   - Not done: a service worker / full offline mode (a separate decision, see feature 7 in section 4).
   - Not checked on a real phone: banner layout, an update on GitHub Pages end to end.
+- **11 Nov 2026 – open review items (section 9).** Every recommendation accepted except R12.
+  - **R4: Option 2.** Comments stay inside the notes text. A snippet is the first 70 characters of the point, or one character past the longest start it shares with a different point of the same guideline. Comments written with the older 70-character snippet still highlight (and are still shared by points that start the same way). Points with exactly the same text cannot be told apart.
+  - **R8: Option 1.** Search uses the plain words of each guideline (markup and data punctuation removed) and the list is redrawn 150 ms after typing stops. Fixed in passing: the search box used to drop a typed space and lower-case the text on every redraw.
+  - **R11a: Option 1.** Secondary text #565c58 everywhere (6.85:1 on white, 6.01:1 on the grey controls).
+  - **R11b: Option 1.** Green #1a7d53 (5.12:1 with white text) and orange #b35900 (4.83:1), for buttons, dots and rings. St John header colours inside the guidelines unchanged.
+  - **R11c: Option 1.** Base text 15 px (was 13.33 px).
+  - **R12: no notice.** You decided it is not needed: the app is not used with patients and no patient information is entered. Closed.
+  - **R13: Option 1.** `scripts/contentCheck.js` allows only the six block shapes, `<b>`, `<br>`, `&lt;`, `&amp;`, hex colours and indent levels 0 to 3. It stops a rebuild from the PDF and fails `npm run check`.
+  - **C4: Option 1.** The backend refuses the placeholder mentor passcode; passcodes stay plain text in the Sheet. Needs a redeploy of `backend/Code.gs`.
+  - **C5: Option 1.** Code unchanged; README says to revisit at about 20,000 Data rows (roughly 110 full trackers) or when a sync takes over 3 seconds.
+  - **Converter tidy-up: Option 1.** No change in output intended. Not confirmed against the PDF in the chat (the PDF could not be downloaded there); the daily run and `--check` now fail if the converter stops giving the recorded rebuild.
 
 ---
 
@@ -586,6 +598,8 @@ to paste.
 
 ## 13. Status log
 
+Review items from section 9: all are now fixed, documented or closed by decision. Only R10 remains as handled through C2 (the backend cuts back edit times more than 5 minutes ahead).
+
 | Date | What happened | Next step |
 |---|---|---|
 | 10 Nov 2026 | Plan written, `Code.gs` and `index.html` reviewed, working rules and style guide added. No code written. | Answer Decisions G to K, then start the refactor (section 11) in a fresh chat. |
@@ -598,3 +612,4 @@ to paste.
 | 11 Nov 2026 | Decisions T1, U1, V1 recorded. Feature 7 built: `version.json`, `src/updates.js` (pure, 7 tests), `src/updateState.js`, `src/views/updateView.js`, banner in `index.html`, "Updated" tag and footer on the list screen, check on open and return to the app, CSS, README ("Publishing an update"), change log. No backend change. `npm run check` passes (53 tests) with the plan's recorded Prettier settings (dotfiles missing from the zip again). Checked in real Chromium: banner shows for a later date, Update now reloads, no errors. | You: copy the changed and new files into the repository (and add the `.prettierrc` and `.prettierignore` if they are really missing on GitHub). Test on your phone: temporarily set a later date in `version.json` on GitHub, open the app, tap Update now, then put the date back. Next: feature 6 needs items I1 and I3 and Decision D; or revisit features 1 and 2 (Decisions A to F). |
 | 11 Nov 2026 | Items I1, I3 and Decision D2 recorded. Feature 6 stage A built on branch `feature-6-pdf-check` (pull request): `scripts/pdfScan.js` (pure, 6 tests), `scripts/check-pdf.js`, daily `.github/workflows/pdf-check.yml`, baseline `content/pdf-status.json` (180 guidelines, 156 version entries, all matching the content). `.prettierrc`, `.prettierignore`, `.gitignore` added. `npm run check` passes in full (59 tests, format and lint). README and change log updated. Decision Y asked. | You: merge the pull request, tick "Allow GitHub Actions to create and approve pull requests", run "pdf-check" once from the Actions tab (expect "No change"). Answer Decision Y, then build the converter (stage B) in a fresh chat with the attached PDF. |
 | 11 Nov 2026 | Decision Y2 recorded. Feature 6 stage B built on branch `feature-6-converter` (pull request): converter `scripts/pdfPages.js` (MuPDF) and `scripts/pdfContent.js`, merge and file writer `scripts/contentUpdate.js`, command `scripts/build-guidelines.js` (`--check`, `--baseline`), baseline `content/pdf-rebuild.json`. Acceptance test: 170 of 180 guidelines rebuild exactly from the 24.09.2026 PDF; the 10 others keep their published text until the PDF changes them. `pdf-check.yml` now commits the rebuilt content, `content/related.js`, `version.json` and the rebuild record, runs `npm run check` and reports it in the pull request; actions moved to v5 and `ubuntu-24.04`. `npm run check` passes (69 tests). | You: merge the pull request, then run "pdf-check" once from the Actions tab (expect "No change", and no Node 20 warning). The first real PDF update will test the whole path: read the "Check formatting" list in that pull request before merging. Next feature: features 1 and 2 (Decisions A to F) or the open review items (R4, R8, R11 to R13, C4, C5), in a fresh chat. |
+| 11 Nov 2026 | Open review items built on branch `review-items` (pull request): R4 unique comment snippets, R8 plain-text search with a 150 ms pause, R11 contrast and 15 px base text, R13 content checker, C4 placeholder passcode refused, C5 README note; R12 closed (not wanted). Converter reviewed (clear and efficient) and tidied with no intended change in output: `scripts/pdfRows.js` and `scripts/pdfTables.js` split out, `mergeRebuilt` split, named constants. `--check` and the daily run now confirm the recorded rebuild. `npm run check` passes (78 tests). Not checked: the look of the new colours and text size on a real phone; the converter against the real PDF. | You: before merging, run "pdf-check" from the Actions tab on the branch `review-items` (expect a green run with "The converter gives the recorded rebuild of this PDF"). Merge, redeploy `backend/Code.gs`, check colours, text size, search and comments on your phone. Next: features 1 and 2 (Decisions A to F, section 8), in a fresh chat. |

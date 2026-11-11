@@ -22,6 +22,8 @@ through a Google Sheet.
 | `scripts/pdfScan.js`, `scripts/check-pdf.js`              | Reads the EAS PDF: export date and newest version per guideline. Tested.         |
 | `content/pdf-status.json`                                 | Last PDF scan (fingerprint, export date, versions). Written by the script.       |
 | `scripts/pdfPages.js`, `scripts/pdfContent.js`            | Converter: reads the PDF's text and shapes, and turns them into content. Tested. |
+| `scripts/pdfRows.js`, `scripts/pdfTables.js`              | Converter parts: rows of text, and tables.                                       |
+| `scripts/contentCheck.js`                                 | Refuses content with unexpected markup; lists every block shape. Tested.         |
 | `scripts/contentUpdate.js`, `scripts/build-guidelines.js` | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.         |
 | `content/pdf-rebuild.json`                                | Fingerprint of each rebuilt guideline, and which ones are not rebuilt exactly.   |
 | `.github/workflows/pdf-check.yml`                         | Daily PDF check; opens a pull request with the rebuilt content.                  |
@@ -100,12 +102,20 @@ through a Google Sheet.
   `node scripts/build-guidelines.js path/to/EAS.pdf --baseline` (otherwise every guideline
   looks changed on the next update).
 - The converter only writes plain text (with `<` and `&` escaped), `<b>` and `<br>`, so content
-  from the PDF cannot add markup or scripts to the app.
+  from the PDF cannot add markup or scripts to the app. `scripts/contentCheck.js` enforces this:
+  the rebuild stops, and `npm run check` fails, if the content holds any other tag, entity,
+  colour format or block shape.
+- On days with no new PDF the daily run also runs `--check`, which fails (a red run) if the
+  converter no longer gives the rebuild recorded in `content/pdf-rebuild.json` for that PDF.
 
 ## Content
 
-Guideline text is trusted content built into the app and is put on the page as markup.
-If content is ever downloaded automatically (feature 6) it must be validated first.
+Guideline text is put on the page as markup without escaping. That is safe because
+`scripts/contentCheck.js` allows only `<b>`, `<br>`, `&lt;`, `&amp;`, hex colours and the six
+known block shapes, and it runs on every rebuild from the PDF and in `npm run check`.
+Search uses the plain words of each guideline (markup removed) and redraws the list 150 ms
+after typing stops. A comment line in the notes starts with the first 70 characters of its
+point, or more when another point of the guideline starts the same way (`src/comments.js`).
 The export date and source line shown on each guideline come from `content/guidelines.js`.
 
 ## Backend (what the Apps Script does)
@@ -115,9 +125,13 @@ checks the passcode against the `Mentors` and `Trackers` tabs, reads or writes t
 and sends back this tracker's entries. To update it: Sheet, Extensions, Apps Script, paste
 `backend/Code.gs`, then Deploy, Manage deployments, edit, New version. The address stays the same.
 Passcodes are stored as plain text in the Sheet, so keep its sharing limited and replace the
-placeholder mentor passcode created by `setup()`. The passcode is also kept in the phone's
+placeholder mentor passcode created by `setup()`: the backend refuses that passcode, and the
+app says to change it in the Mentors tab. The passcode is also kept in the phone's
 browser and the backend address is in the page; anyone with a tracker passcode can read and
 change that tracker, so keep passcodes long and unguessable.
+Every request reads the whole `Data` tab, for all trackers. That is fine at the current size;
+revisit it (for example one tab per tracker) at about 20,000 `Data` rows, roughly 110 full
+trackers, or when a sync takes more than 3 seconds.
 
 ## Behaviour checklist (same result before and after any tidy-up)
 

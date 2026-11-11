@@ -3,11 +3,13 @@
   --colour-background: #fff;
   --colour-surface: #fff;
   --colour-text: #121212;
-  --colour-muted: #8a8f8c;
+  /* Secondary text: 6.85:1 on white, 6.01:1 on the grey controls (WCAG AA asks for 4.5:1). */
+  --colour-muted: #565c58;
   --colour-line: #e4e7e5;
-  --colour-green: #1f8f5f;
+  /* Status colours dark enough for white text: green 5.12:1, orange 4.83:1. */
+  --colour-green: #1a7d53;
   --colour-green-soft: #e3f1ea;
-  --colour-review: #f28800;
+  --colour-review: #b35900;
   --colour-control: #edf1ef;
   color-scheme: light;
   box-sizing: border-box;
@@ -27,7 +29,7 @@ body {
   background: var(--colour-background);
   color: var(--colour-text);
   font:
-    13.33px/1.5 Roboto,
+    15px/1.5 Roboto,
     'Helvetica Neue',
     'Segoe UI',
     system-ui,
@@ -704,9 +706,6 @@ td.table-cell--coloured {
 }
 
 /* ---------- Related guidelines and the review queue ---------- */
-:root {
-  --colour-muted-strong: #565c58; /* muted text that still meets 4.5:1 contrast on white */
-}
 .related-panel,
 .queue-panel {
   margin-top: 1.4rem;
@@ -722,7 +721,7 @@ td.table-cell--coloured {
 .related-panel__hint,
 .queue-panel__progress {
   margin: 0 0 0.6rem;
-  color: var(--colour-muted-strong);
+  color: var(--colour-muted);
 }
 .queue-panel__progress {
   font-weight: 500;
@@ -760,7 +759,7 @@ td.table-cell--coloured {
 }
 .related-item__link small,
 .queue-item__link small {
-  color: var(--colour-muted-strong);
+  color: var(--colour-muted);
 }
 .queue-item__tick {
   color: var(--colour-green);
@@ -785,14 +784,14 @@ td.table-cell--coloured {
   color: #fff;
 }
 .queue-remove-button {
-  border-color: var(--colour-muted-strong);
-  color: var(--colour-muted-strong);
+  border-color: var(--colour-muted);
+  color: var(--colour-muted);
 }
 .queue-add-button:disabled,
 .queue-add-all-button:disabled {
   border-color: var(--colour-line);
   background: var(--colour-line);
-  color: var(--colour-muted-strong);
+  color: var(--colour-muted);
   cursor: default;
 }
 .queue-button {
@@ -860,7 +859,7 @@ td.table-cell--coloured {
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid var(--colour-line);
-  color: #5f6461;
+  color: var(--colour-muted);
   font-size: 0.85rem;
 }
 .app-footer p {
