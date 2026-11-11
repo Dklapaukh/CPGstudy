@@ -4,7 +4,15 @@
  */
 import { state } from '../state.js';
 import { guidelines, sections } from '../guidelines.js';
-import { countStatuses, getStatus, guidelineMatches, escapeHtml, ringArcs } from '../logic.js';
+import {
+  countStatuses,
+  getStatus,
+  guidelineMatches,
+  escapeHtml,
+  ringArcs,
+  suggestionCandidates,
+  pickSuggestion,
+} from '../logic.js';
 import { updateSyncStatus } from '../sync.js';
 import { coverHtml } from './templates.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
@@ -65,6 +73,22 @@ function progressHtml(counts, total, justClosed) {
     <span>${counts[STATUS.INCOMPLETE]} not done</span></div></div>`;
 }
 
+/**
+ * Opens a random guideline straight away. The scope is the one open section if exactly one is
+ * open, otherwise all guidelines. Filters and search do not limit the choice.
+ * The listener is attached here (not in the shared click handler) so this file is self-contained.
+ */
+function addRandomGuidelineButtonListener() {
+  app.querySelector('#random-guideline-button').addEventListener('click', () => {
+    const openSectionNames = [...app.querySelectorAll('details.section-group[open]')].map(
+      (details) => details.dataset.section,
+    );
+    const candidates = suggestionCandidates(sections, openSectionNames);
+    const suggestion = pickSuggestion(candidates, state.entries, Math.random());
+    if (suggestion) location.hash = `#${suggestion.id}`;
+  });
+}
+
 function filtersHtml(counts, total) {
   const filters = [
     [FILTER.ALL, `All (${total})`],
@@ -113,8 +137,8 @@ function sectionsHtml(newlyClosed) {
     const sectionCounts = countStatuses(section.items, state.entries);
     const done = sectionCounts[STATUS.COMPLETE];
     html += `<details class="section-group"${isFiltering ? ' open' : ''}
-      data-section="${escapeHtml(section.name)}"><summary>${escapeHtml(section.name)}
-      <span>${done}/${section.items.length}</span>
+      data-section="${escapeHtml(section.name)}"><summary><span class="section-name">${escapeHtml(section.name)}</span>
+      <span class="section-count">${done}/${section.items.length}</span>
       ${ringHtml(sectionCounts, section.items.length, 'completion-ring--small', newlyClosed.has(section.name))}</summary>${matching.map(rowHtml).join('')}
       </details>`;
   });
@@ -142,9 +166,12 @@ export function renderList() {
       'Mentoring tracker · progress and notes are shared with everyone who has this passcode' +
       '<br><span class="sync-status"></span>',
   })}<div class="page-padding">${warning}${progressHtml(counts, guidelines.length, newlyClosed.has(OVERALL_RING_NAME))}
+    <button class="random-button" id="random-guideline-button" type="button">
+      Random guideline</button>
     ${filtersHtml(counts, guidelines.length)}${sectionsHtml(newlyClosed)}</div>`;
   app.querySelectorAll('details.section-group').forEach((details) => {
     if (state.openSections[details.dataset.section]) details.open = true;
   });
+  addRandomGuidelineButtonListener();
   updateSyncStatus();
 }
