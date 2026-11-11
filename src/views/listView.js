@@ -15,6 +15,7 @@ import {
 } from '../logic.js';
 import { updateSyncStatus } from '../sync.js';
 import { coverHtml } from './templates.js';
+import { queueButtonHtml } from './queueView.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -168,6 +169,7 @@ export function renderList() {
   })}<div class="page-padding">${warning}${progressHtml(counts, guidelines.length, newlyClosed.has(OVERALL_RING_NAME))}
     <button class="random-button" id="random-guideline-button" type="button">
       Random guideline</button>
+    ${queueButtonHtml()}
     ${filtersHtml(counts, guidelines.length)}${sectionsHtml(newlyClosed)}</div>`;
   app.querySelectorAll('details.section-group').forEach((details) => {
     if (state.openSections[details.dataset.section]) details.open = true;

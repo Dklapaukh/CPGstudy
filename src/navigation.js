@@ -10,7 +10,8 @@ import { renderLogin } from './views/loginView.js';
 import { renderMentor } from './views/mentorView.js';
 import { renderList } from './views/listView.js';
 import { renderGuidelineDetail, refreshDetailFromState } from './views/detailView.js';
-import { SCREEN, MESSAGES } from './constants.js';
+import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
+import { SCREEN, MESSAGES, QUEUE_HASH } from './constants.js';
 
 const app = document.getElementById('app');
 
@@ -32,7 +33,10 @@ export function showLogin(message, passcodeValue) {
 /** Shows the mentor screen. `details` is { name, created, message, labelValue, openValue }. */
 export function showMentor(details) {
   state.screen = SCREEN.MENTOR;
-  state.mentorContext = { name: details.name, created: details.created || null };
+  state.mentorContext = {
+    name: details.name,
+    created: details.created || null,
+  };
   renderMentor(details);
 }
 
@@ -45,6 +49,9 @@ export function route() {
     // Remember where the list was scrolled to, so Back returns to the same place.
     if (!app.querySelector('.guideline-body')) state.listScrollY = window.scrollY;
     renderGuidelineDetail(index);
+  } else if (id === QUEUE_HASH) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    renderQueueScreen();
   } else {
     renderList();
     window.scrollTo(0, state.listScrollY);
@@ -87,6 +94,8 @@ export function refreshScreen() {
   const scrollY = window.scrollY;
   if (state.currentGuideline && app.querySelector('.guideline-body')) {
     refreshDetailFromState();
+  } else if (app.querySelector('.queue-screen')) {
+    refreshQueueViews();
   } else if (!(document.activeElement && document.activeElement.id === 'search-input')) {
     renderList();
     window.scrollTo(0, scrollY);

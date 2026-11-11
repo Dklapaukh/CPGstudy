@@ -702,3 +702,110 @@ td.table-cell--coloured {
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+/* ---------- Related guidelines and the review queue ---------- */
+:root {
+  --colour-muted-strong: #565c58; /* muted text that still meets 4.5:1 contrast on white */
+}
+.related-panel,
+.queue-panel {
+  margin-top: 1.4rem;
+  padding: 0.9rem 0.8rem;
+  border-radius: 14px;
+  background: var(--colour-control);
+}
+.related-panel h2,
+.queue-panel h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+}
+.related-panel__hint,
+.queue-panel__progress {
+  margin: 0 0 0.6rem;
+  color: var(--colour-muted-strong);
+}
+.queue-panel__progress {
+  font-weight: 500;
+}
+.related-list,
+.queue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.related-item,
+.queue-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--colour-line);
+}
+.related-item__link,
+.queue-item__link {
+  display: flex;
+  flex: 1 1 14rem;
+  gap: 0.8rem;
+  align-items: flex-start;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+}
+.related-item__link b,
+.queue-item__link b {
+  display: block;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.related-item__link small,
+.queue-item__link small {
+  color: var(--colour-muted-strong);
+}
+.queue-item__tick {
+  color: var(--colour-green);
+  font-weight: 500;
+}
+.queue-add-button,
+.queue-remove-button,
+.queue-add-all-button {
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--colour-green);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--colour-green);
+  font-weight: 500;
+  cursor: pointer;
+}
+.queue-add-all-button {
+  width: 100%;
+  margin-top: 0.6rem;
+  background: var(--colour-green);
+  color: #fff;
+}
+.queue-remove-button {
+  border-color: var(--colour-muted-strong);
+  color: var(--colour-muted-strong);
+}
+.queue-add-button:disabled,
+.queue-add-all-button:disabled {
+  border-color: var(--colour-line);
+  background: var(--colour-line);
+  color: var(--colour-muted-strong);
+  cursor: default;
+}
+.queue-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.6rem;
+  min-height: 48px;
+  border: 1px solid var(--colour-green);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--colour-green);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+}

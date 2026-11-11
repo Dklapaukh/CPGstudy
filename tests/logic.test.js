@@ -16,7 +16,13 @@ import {
 } from '../src/logic.js';
 
 const sampleGuidelines = [
-  { id: 'a', n: '1.1', t: 'Alpha', sec: 'First', b: [['p', 'Give adrenaline', 0]] },
+  {
+    id: 'a',
+    n: '1.1',
+    t: 'Alpha',
+    sec: 'First',
+    b: [['p', 'Give adrenaline', 0]],
+  },
   { id: 'b', n: '1.2', t: 'Beta', sec: 'First', b: [['p', 'Give oxygen', 0]] },
   { id: 'c', n: '2.1', t: 'Gamma', sec: 'Second', b: [] },
 ];
@@ -32,7 +38,11 @@ test('getStatus defaults to incomplete', () => {
 
 test('countStatuses counts every guideline once', () => {
   const entries = { a: { s: 'c' }, b: { s: 'v' } };
-  assert.deepEqual(countStatuses(sampleGuidelines, entries), { i: 1, v: 1, c: 1 });
+  assert.deepEqual(countStatuses(sampleGuidelines, entries), {
+    i: 1,
+    v: 1,
+    c: 1,
+  });
 });
 
 test('guidelineMatches applies status filter, title search and body search', () => {
@@ -53,7 +63,9 @@ test('mergeRemoteEntries: newest time wins and ties keep the local entry', () =>
   assert.equal(older.changed, false);
   const tie = mergeRemoteEntries(local, { a: { s: 'i', n: 'theirs', t: 10 } });
   assert.deepEqual(tie.entries.a, local.a);
-  const newer = mergeRemoteEntries(local, { a: { s: 'v', n: 'theirs', t: 11 } });
+  const newer = mergeRemoteEntries(local, {
+    a: { s: 'v', n: 'theirs', t: 11 },
+  });
   assert.deepEqual(newer.entries.a, { s: 'v', n: 'theirs', t: 11 });
   assert.equal(newer.changed, true);
 });
@@ -88,7 +100,9 @@ test('syncStatusText', () => {
 });
 
 test('flattenGuidelines adds the section name', () => {
-  const flat = flattenGuidelines({ sections: [{ name: 'S', items: [{ id: 'x' }] }] });
+  const flat = flattenGuidelines({
+    sections: [{ name: 'S', items: [{ id: 'x' }] }],
+  });
   assert.deepEqual(flat, [{ id: 'x', sec: 'S' }]);
 });
 
@@ -114,7 +128,10 @@ const sampleSections = [
 ];
 
 test('suggestionCandidates uses the one open section, otherwise everything', () => {
-  assert.deepEqual(suggestionCandidates(sampleSections, ['Second']).map((g) => g.id), ['c']);
+  assert.deepEqual(
+    suggestionCandidates(sampleSections, ['Second']).map((g) => g.id),
+    ['c'],
+  );
   assert.equal(suggestionCandidates(sampleSections, []).length, 3);
   assert.equal(suggestionCandidates(sampleSections, ['First', 'Second']).length, 3);
 });

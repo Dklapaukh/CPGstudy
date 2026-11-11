@@ -1,5 +1,16 @@
 # Change log
 
+- 2026-11-11: Feature 5, related guidelines and review queue. Each guideline shows up to 5
+  related guidelines with a reason, ranked by link score (then Incomplete, Needs review,
+  Complete). "Add to review queue" and "Add all" fill a queue of at most 5, shown with
+  "n of m done" on every guideline and on a Review queue screen (button on the list screen).
+  Marking a queued guideline Complete or Review ticks it off; the last tick empties the queue.
+  A guideline can be removed from the queue. The queue is shared by everyone with the passcode
+  and needs no backend change (stored as the entry `review-queue`). Links are built offline by
+  `scripts/build-related.js` into `content/related.js`; hand edits go in
+  `content/related-overrides.js`. README says `npm install` (there is no lock file).
+- 2026-11-11: Formatting only: re-wrapped one test line in `tests/logic.test.js` so the Prettier
+  check passes. No behaviour change.
 - 2026-11-11: Feature 4, "Random guideline" button on the list screen. Opens one guideline
   at once, no reason shown. Favours Incomplete (weight 6), then Needs review (3), then Complete
   (1). Draws from the one open section if exactly one is open, otherwise from all guidelines.

@@ -18,13 +18,34 @@ export const COMMENT_SNIPPET_LENGTH = 70;
 export const DEFAULT_HEADER_COLOUR = '#00693C';
 
 export const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
-export const FILTER = { ALL: 'all', INCOMPLETE: 'inc', REVIEW: 'rev', COMPLETE: 'done' };
+export const FILTER = {
+  ALL: 'all',
+  INCOMPLETE: 'inc',
+  REVIEW: 'rev',
+  COMPLETE: 'done',
+};
 // How much more likely a guideline is to be suggested, by status: Incomplete first, then
 // Needs review, then Complete. Higher number means more likely.
 export const SUGGESTION_WEIGHT = {
   [STATUS.INCOMPLETE]: 6,
   [STATUS.REVIEW]: 3,
   [STATUS.COMPLETE]: 1,
+};
+
+// The review queue is saved as one extra entry in the tracker's data, so it needs no backend
+// change: its note holds the queue as JSON and its status is always Incomplete.
+export const QUEUE_ENTRY_ID = 'review-queue';
+export const MAX_QUEUE_SIZE = 5;
+export const RELATED_LIST_SIZE = 5;
+export const QUEUE_HASH = 'queue';
+// Why a guideline is related, by the reason code stored in content/related.js.
+export const RELATED_REASON_TEXT = {
+  mentions: 'Mentioned in this guideline',
+  'mentioned-by': 'Mentions this guideline',
+  'shared-medicines': 'Uses some of the same medicines',
+  'next-to': 'Next to this guideline in the numbering',
+  'same-section': 'Same section',
+  chosen: 'Recommended pairing',
 };
 
 export const SCREEN = { LOGIN: 'login', MENTOR: 'mentor', TRACKER: 'tracker' };

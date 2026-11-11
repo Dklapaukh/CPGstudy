@@ -5,26 +5,40 @@ through a Google Sheet.
 
 ## Structure
 
-| Path                                                | Purpose                                                                         |
-| --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `index.html`                                        | Page shell. Loads the styles and `src/main.js`.                                 |
-| `styles/app.css`                                    | All styles. Class names say what the element is.                                |
-| `content/guidelines.js`                             | Guideline text as data, one guideline per line. Not edited by hand.             |
-| `src/constants.js`                                  | Named constants: status codes, storage key, backend address, timings, messages. |
-| `src/logic.js`, `src/comments.js`                   | Pure logic (merge, filters, comment lines). Tested.                             |
-| `src/state.js`                                      | The one state object and saving it on the phone.                                |
-| `src/api.js`, `src/sync.js`                         | Talking to the backend; queued edits and merging.                               |
-| `src/views/`                                        | One file per screen: login, mentor, list, guideline.                            |
-| `src/navigation.js`, `src/events.js`, `src/main.js` | Screen changes, all clicks and typing, start-up.                                |
-| `backend/Code.gs`                                   | The Google Apps Script service (see "Backend").                                 |
-| `tests/`                                            | `npm test`. Includes a simulated-browser run of the whole app.                  |
+| Path                                                 | Purpose                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `index.html`                                         | Page shell. Loads the styles and `src/main.js`.                                 |
+| `styles/app.css`                                     | All styles. Class names say what the element is.                                |
+| `content/guidelines.js`                              | Guideline text as data, one guideline per line. Not edited by hand.             |
+| `src/constants.js`                                   | Named constants: status codes, storage key, backend address, timings, messages. |
+| `src/logic.js`, `src/comments.js`                    | Pure logic (merge, filters, comment lines). Tested.                             |
+| `src/queue.js`, `src/related.js`                     | Pure logic for the review queue and the related list. Tested.                   |
+| `src/queueState.js`                                  | Reading and saving the review queue in the state.                               |
+| `content/related.js`, `content/related-overrides.js` | Related-guideline links (built by script) and the hand-edited overrides.        |
+| `scripts/build-related.js`                           | `node scripts/build-related.js` rebuilds `content/related.js`.                  |
+| `src/state.js`                                       | The one state object and saving it on the phone.                                |
+| `src/api.js`, `src/sync.js`                          | Talking to the backend; queued edits and merging.                               |
+| `src/views/`                                         | One file per screen: login, mentor, list, guideline.                            |
+| `src/navigation.js`, `src/events.js`, `src/main.js`  | Screen changes, all clicks and typing, start-up.                                |
+| `backend/Code.gs`                                    | The Google Apps Script service (see "Backend").                                 |
+| `tests/`                                             | `npm test`. Includes a simulated-browser run of the whole app.                  |
 
 ## Run, check and publish
 
 - Needs a web server: ES modules do not load from a file opened directly. Locally: `npx serve .`.
 - Publishing: GitHub Pages serving the `main` branch root. The address stays the same.
-- `npm ci` once, then `npm run check` (formatting, error checking, tests). GitHub runs it on
+- `npm install` once, then `npm run check` (formatting, error checking, tests). GitHub runs it on
   every push.
+
+## Related guidelines and the review queue
+
+- `content/related.js` is built, not edited. To change a link, add a pair to `add` or `remove`
+  in `content/related-overrides.js` and run `node scripts/build-related.js`. Scores and weights
+  are named constants at the top of `scripts/build-related.js`. Rebuild after any change to
+  `content/guidelines.js`.
+- The review queue is saved as one extra entry with the id `review-queue` in the tracker's
+  data (its note holds the queue as JSON). It uses the normal save and sync path, so the backend
+  needs no change. It appears as a row in the Data sheet; do not edit that row by hand.
 
 ## Content
 
@@ -55,5 +69,6 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - Changing status and notes saves, showing "Saving…" then "Saved".
 - Two devices on one passcode show the same data after a sync (by hand).
 - Offline: changes are kept and sent when signal returns (by hand).
+- Related guidelines (at most 5) show under a guideline; "Add to review queue" and "Add all" fill the queue (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the queue; the list screen has a "Review queue (n)" button.
 - Comment button adds to the notes and highlights the point.
 - Switch tracker and sign out.

@@ -19,7 +19,12 @@ function fakeBackend(body) {
   requests.push(body);
   const code = String(body.code).trim().toLowerCase();
   if (body.action === 'open' && code === TRACKER) {
-    return { ok: true, role: 'tracker', label: 'Sam - 2026', data: { ...stored } };
+    return {
+      ok: true,
+      role: 'tracker',
+      label: 'Sam - 2026',
+      data: { ...stored },
+    };
   }
   if (body.action === 'open' && code === MENTOR) return { ok: true, role: 'mentor', name: 'Mia' };
   if (body.action === 'open') return { ok: false, error: 'not-found' };
@@ -37,7 +42,10 @@ const $$ = (selector) => [...doc.querySelectorAll(selector)];
 
 before(() => {
   const html = readFileSync('index.html', 'utf8').replace(/<script[^>]*><\/script>/, '');
-  dom = new JSDOM(html, { url: 'https://example.test/', pretendToBeVisual: true });
+  dom = new JSDOM(html, {
+    url: 'https://example.test/',
+    pretendToBeVisual: true,
+  });
   doc = dom.window.document;
   dom.window.scrollTo = () => {};
   dom.window.prompt = () => 'Check dose';
@@ -51,10 +59,16 @@ before(() => {
     Event: dom.window.Event,
     confirm: () => true,
     setInterval: (fn, ms) => realSetInterval(fn, ms).unref(),
-    fetch: async (url, options) => ({ json: async () => fakeBackend(JSON.parse(options.body)) }),
+    fetch: async (url, options) => ({
+      json: async () => fakeBackend(JSON.parse(options.body)),
+    }),
   };
   Object.entries(globals).forEach(([key, value]) => {
-    Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
+    Object.defineProperty(globalThis, key, {
+      value,
+      configurable: true,
+      writable: true,
+    });
   });
   Object.defineProperty(globalThis, 'navigator', {
     value: dom.window.navigator,
@@ -167,6 +181,42 @@ test('going back to the list keeps the section state and shows the new count', a
   assert.match($('.completion-ring--large').getAttribute('aria-label'), /^1 of 180 complete/);
   assert.equal($$('.completion-ring--just-closed').length, 0);
   assert.match($('.guideline-row small').textContent, /has notes|CPG EAS/);
+});
+
+test('related guidelines can be added to the review queue and are ticked off when marked', async () => {
+  dom.window.location.hash = '#cpg-2-1';
+  await sleep(30);
+  const relatedCount = $$('.related-item').length;
+  assert.ok(relatedCount > 0 && relatedCount <= 5);
+  assert.equal($('.queue-panel'), null);
+  click($('.queue-add-button'));
+  assert.match($('.queue-panel__progress').textContent, /^0 of 1 done/);
+  assert.equal($('.queue-add-button').disabled, true);
+  click($('[data-action="add-all-to-queue"]'));
+  assert.match($('.queue-panel__progress').textContent, new RegExp(`^0 of ${relatedCount} done`));
+  const firstQueuedId = $('.queue-item__link').getAttribute('href').slice(1);
+  dom.window.location.hash = `#${firstQueuedId}`;
+  await sleep(30);
+  click($('[data-action="set-status"][data-status="c"]'));
+  assert.match($('.queue-panel__progress').textContent, new RegExp(`^1 of ${relatedCount} done`));
+  await sleep(1200);
+  const savedQueue = JSON.parse(stored['review-queue'].n);
+  assert.equal(savedQueue.length, relatedCount);
+  assert.equal(savedQueue.filter((queued) => queued.done).length, 1);
+});
+
+test('the list screen opens the Review queue screen, where a guideline can be removed', async () => {
+  dom.window.location.hash = '';
+  await sleep(30);
+  const button = $('.queue-button');
+  assert.match(button.textContent, /^Review queue \(\d\)$/);
+  dom.window.location.hash = '#queue';
+  await sleep(30);
+  const before = $$('.queue-item').length;
+  click($('.queue-remove-button'));
+  assert.equal($$('.queue-item').length, before - 1);
+  dom.window.location.hash = '';
+  await sleep(30);
 });
 
 test('switching tracker signs out and clears the saved tracker', async () => {

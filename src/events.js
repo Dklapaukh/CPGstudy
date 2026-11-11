@@ -12,6 +12,9 @@ import {
   updateCommentHighlights,
   toggleHeading,
 } from './views/detailView.js';
+import { refreshQueueViews, shownRelatedIds } from './views/queueView.js';
+import { getQueue, saveQueue, tickOffQueuedGuideline } from './queueState.js';
+import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS } from './constants.js';
@@ -64,9 +67,16 @@ async function createTracker() {
       openValue: byId('open-code-input').value,
     });
   try {
-    const reply = await sendRequest({ action: 'create', code: state.mentorPasscode, label });
+    const reply = await sendRequest({
+      action: 'create',
+      code: state.mentorPasscode,
+      label,
+    });
     if (reply && reply.ok) {
-      showMentor({ name, created: { code: reply.code, label: reply.label || label } });
+      showMentor({
+        name,
+        created: { code: reply.code, label: reply.label || label },
+      });
     } else {
       showAgain(
         reply && reply.error === 'not-mentor' ? MESSAGES.NOT_A_MENTOR_CODE : MESSAGES.GENERIC_ERROR,
@@ -135,8 +145,22 @@ function changeStatus(button) {
   const status = button.dataset.status;
   recordEdit(status, notes.value);
   showSelectedStatus(status);
+  if (status !== STATUS.INCOMPLETE) tickOffQueuedGuideline(state.currentGuideline.id);
+  refreshQueueViews();
   if (status !== STATUS.INCOMPLETE && !notes.value) notes.focus();
 }
+
+/* ---------- Review queue ---------- */
+
+function changeQueue(newQueue) {
+  saveQueue(newQueue);
+  refreshQueueViews();
+}
+
+const addGuidelineToQueue = (button) => changeQueue(addToQueue(getQueue(), [button.dataset.id]));
+const addAllRelatedToQueue = () => changeQueue(addToQueue(getQueue(), shownRelatedIds()));
+const removeGuidelineFromQueue = (button) =>
+  changeQueue(removeFromQueue(getQueue(), button.dataset.id));
 
 function addComment(button) {
   const notes = byId('notes-input');
@@ -181,6 +205,9 @@ const clickActions = {
     renderList();
   },
   'set-status': changeStatus,
+  'add-to-queue': addGuidelineToQueue,
+  'add-all-to-queue': addAllRelatedToQueue,
+  'remove-from-queue': removeGuidelineFromQueue,
   comment: addComment,
   'toggle-heading': toggleHeading,
 };

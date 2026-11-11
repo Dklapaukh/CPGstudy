@@ -8,6 +8,7 @@ import { getStatus, escapeHtml, formatUpdatedDate, nextTimestamp } from '../logi
 import { notesHaveComment } from '../comments.js';
 import { scheduleSync, updateSyncStatus } from '../sync.js';
 import { bodyHtml } from './templates.js';
+import { reviewPanelsHtml, refreshQueueViews } from './queueView.js';
 import { documentInfo } from '../../content/guidelines.js';
 import { STATUS, MESSAGES, DEFAULT_HEADER_COLOUR } from '../constants.js';
 
@@ -54,7 +55,8 @@ export function renderGuidelineDetail(index) {
         placeholder="Notes for this guideline (what you covered, what to revisit)"
         >${escapeHtml(entry.n || '')}</textarea>
       <div class="save-hint"><span id="updated-date">${updated}</span><span class="sync-status"></span></div>
-      <div class="guideline-body">${bodyHtml(guideline.b)}</div></div>
+      <div class="guideline-body">${bodyHtml(guideline.b)}</div>
+      <div id="review-panels">${reviewPanelsHtml(guideline)}</div></div>
     <div class="neighbour-nav">${neighbourLinkHtml(guidelines[index - 1], false)}
       ${neighbourLinkHtml(guidelines[index + 1], true)}</div>`;
   window.scrollTo(0, 0);
@@ -96,6 +98,7 @@ export function refreshDetailFromState() {
   // Never overwrite notes the person is typing right now.
   if (notes && document.activeElement !== notes) notes.value = entry.n || '';
   updateCommentHighlights();
+  refreshQueueViews();
 }
 
 /**
