@@ -11,8 +11,9 @@ import { renderMentor } from './views/mentorView.js';
 import { renderList } from './views/listView.js';
 import { renderGuidelineDetail, refreshDetailFromState } from './views/detailView.js';
 import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
+import { renderQuizScreen } from './views/quizView.js';
 import { markGuidelineSeen } from './updateState.js';
-import { SCREEN, MESSAGES, QUEUE_HASH } from './constants.js';
+import { SCREEN, MESSAGES, QUEUE_HASH, QUIZ_HASH } from './constants.js';
 
 const app = document.getElementById('app');
 
@@ -54,6 +55,9 @@ export function route() {
   } else if (id === QUEUE_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderQueueScreen();
+  } else if (id === QUIZ_HASH) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    renderQuizScreen();
   } else {
     renderList();
     window.scrollTo(0, state.listScrollY);
@@ -65,6 +69,7 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
   state.passcode = passcode;
   state.label = label || '';
   state.entries = mergeRemoteEntries({}, remoteEntries || {}).entries;
+  state.quiz = null;
   state.pendingChanges = {};
   saveSession();
   state.mentorPasscode = '';
@@ -85,6 +90,7 @@ export function signOut(message) {
   state.entries = {};
   state.pendingChanges = {};
   state.currentGuideline = null;
+  state.quiz = null;
   clearSavedSession();
   clearHash();
   showLogin(message);
@@ -98,6 +104,9 @@ export function refreshScreen() {
     refreshDetailFromState();
   } else if (app.querySelector('.queue-screen')) {
     refreshQueueViews();
+  } else if (app.querySelector('.quiz-screen')) {
+    // Only the overview is redrawn: redrawing a card would hide an answer being read.
+    if (!state.quiz || state.quiz.queue.length === 0) renderQuizScreen();
   } else if (!(document.activeElement && document.activeElement.id === 'search-input')) {
     renderList();
     window.scrollTo(0, scrollY);

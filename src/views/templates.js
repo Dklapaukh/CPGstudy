@@ -30,8 +30,11 @@ function cellHtml(cell) {
   return `<td class="${classes.join(' ').trim()}"${style}>${cell.t}</td>`;
 }
 
-/** Markup for one content block other than a heading. */
-export function blockHtml(block) {
+/**
+ * Markup for one content block other than a heading. `commentButton` is the markup added to each
+ * point; the quiz passes '' because its answers have no notes to comment into.
+ */
+export function blockHtml(block, commentButton = COMMENT_BUTTON) {
   const [kind] = block;
   if (kind === BLOCK.PARAGRAPH) return `<p class="indent-${block[2]}">${block[1]}</p>`;
   if (kind === BLOCK.BULLET) {
@@ -39,15 +42,15 @@ export function blockHtml(block) {
     const indent = level > 1 ? ` indent-${level - 1}` : '';
     const marker = level > 1 ? '»' : '›';
     return `<div class="bullet-row${indent}" style="--block-colour:${colour}">
-      <i class="bullet-marker">${marker}</i><span>${text}</span>${COMMENT_BUTTON}</div>`;
+      <i class="bullet-marker">${marker}</i><span>${text}</span>${commentButton}</div>`;
   }
   if (kind === BLOCK.KEY) {
     const [, label, text, colour] = block;
     return `<div class="key-row" style="--block-colour:${colour}">
-      <i class="key-marker">${label}</i><span>${text}</span>${COMMENT_BUTTON}</div>`;
+      <i class="key-marker">${label}</i><span>${text}</span>${commentButton}</div>`;
   }
   if (kind === BLOCK.BOX) {
-    const inner = block[1].map((inside) => blockHtml(inside)).join('');
+    const inner = block[1].map((inside) => blockHtml(inside, commentButton)).join('');
     return `<div class="colour-box" style="--block-colour:${block[2]}">${inner}</div>`;
   }
   if (kind === BLOCK.TABLE) return tableHtml(block[1]);
