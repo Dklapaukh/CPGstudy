@@ -156,6 +156,9 @@ test('going back to the list keeps the section state and shows the new count', a
   dom.window.location.hash = '';
   await sleep(30);
   assert.match($('.progress-legend').textContent, /1 of 180 complete/);
+  assert.equal($$('.completion-ring').length, 15); // one overall ring and 14 section rings
+  assert.match($('.completion-ring--large').getAttribute('aria-label'), /^1 of 180 complete/);
+  assert.equal($$('.completion-ring--just-closed').length, 0);
   assert.match($('.guideline-row small').textContent, /has notes|CPG EAS/);
 });
 

@@ -1,0 +1,547 @@
+# NZCPG Study App – Improvement Plan
+
+Status: refactor steps 1 to 8 of section 11 are done (11 Nov 2026), with no change in behaviour. See section 13 for the current status and next step.
+Based on: `index.html` (the attached latest version, guideline content exported 24.09.2026) and `Code.gs` (the Apps Script backend). After the refactor the app is a folder of files (see the README in the repository); the 1.3 MB single file no longer exists.
+
+Revision 2: added the backend review, the hosting and PDF source details, and a GitHub-based update pipeline. Items I could not verify are marked **Unverified**.
+
+Revision 3: **no view tracking.** The app records only when a guideline is marked Complete or Review, not when it is opened. This removes the "last viewed" field and most of the backend complexity from revision 2.
+
+Revision 4: added working rules (section 0), a consolidated open questions list (section 8), a code review (section 9), a style guide for readable code (section 10), a refactor plan (section 11), a handoff prompt for new chats (section 12) and a status log (section 13).
+
+---
+
+## 0. How we work (rules for every session)
+
+### Token efficiency
+
+Work is done in as token-efficient a way as possible. Every message in a chat makes Claude re-read the whole conversation, so long chats and large file dumps are the main cost.
+
+1. **Never read the whole app file.** `index.html` is about 1.3 MB, and about 1.27 MB of that is one line of guideline data (line 102 of the current file). Read only the code (lines 103 onward) or a specific line range, using `grep`, `sed` or `cut`. Never print the data line.
+2. **Edit with targeted replacements.** Do not re-print or rewrite whole files, and do not paste large blocks of code into the chat. Deliver changed files and summarise in a few sentences.
+3. **This document is the project memory.** Record decisions and status here. Do not repeat analysis that is already written here.
+4. **Ask all questions in one message.** Present only the questions that are relevant to the next step (see "Questions" below).
+5. **Verify by running checks, not by reading code back.** Use syntax checks, tests and the behaviour checklist in section 11.
+6. **One phase or feature per chat.** Starting a new chat is cheaper than carrying a long history. When the conversation has grown long, when a phase finishes, or when the topic changes, Claude says so and gives a ready-to-paste prompt (template in section 12) so the new chat starts with only the files, this document and a short task.
+7. **Update sections 8 and 13 before ending a chat**, so the next chat can start from them.
+
+### Questions
+
+8. All unanswered questions live in section 8.
+9. Whenever questions are unanswered and relevant to the next step, Claude presents them in the chat with the **full text of every option, never abbreviated**, and then records the answers in section 8 and section 13.
+
+### Code quality
+
+10. All new and changed code follows the style guide in section 10, so that a human programmer can audit it without help.
+11. A refactor changes how code is written, not what it does. Behaviour changes are made separately.
+
+---
+
+## 1. How the app works today (what the plan has to fit around)
+
+| Area | Current state |
+|---|---|
+| Delivery | One self-contained HTML file, about 1.29 MB, no service worker, no build step |
+| Content | 180 guidelines in 14 sections, embedded as JSON in `<script id="d">` (about 1.27 MB of the file) |
+| Content structure | Each guideline has `id`, `n` (e.g. 3.12), `t` (title), `hc` (header colour) and `b` (blocks). Block types: heading, paragraph, bullet, key-line, box, table |
+| Progress | Three states per guideline: `i` Incomplete, `v` Review, `c` Complete, plus free-text notes |
+| Timestamp | One field, `t`, set whenever the status **or the note** changes. Because note edits also change it, it cannot be used as the "last reviewed" date |
+| Storage | `localStorage` key `eas-cpg-tracker-v2`, plus a pending-changes queue `P` |
+| Sync | Google Apps Script web app. Passcode login, `load` and `save` actions, polled every 30 seconds. Merge rule is last-write-wins per guideline using `t` |
+| Sharing | A tracker is shared by everyone who has its passcode (mentee and mentor). Mentors can create trackers |
+| Navigation | Hash routing (`#cpg-3-12`), a list grouped by section with filter chips and search, previous and next links on the detail page |
+| Progress display | A single stacked bar plus counts: complete, to review, not done. Section headers show `done/total` |
+| Backend | `Code.gs`, a Google Apps Script web app on a Google Sheet with tabs Mentors, Trackers and Data. Actions: `open`, `load`, `save`, `create` |
+| Backend data | The Data sheet has one row per tracker and guideline with columns Key, Tracker passcode, Guideline, Status, Note, Updated (ms). Only status, note and the timestamp are stored or returned |
+| Hosting | GitHub repository `Dklapaukh/Mentoring`. **Unverified:** I could not open the repository (the fetch was rate limited), so I do not know whether it is served by GitHub Pages or how the file is laid out |
+| Version info | 156 of 180 guidelines contain a "Version history" block in their text. Each guideline carries the footer "exported 24.09.2026" |
+
+### Three findings that shape the design
+
+1. **`t` cannot be reused for "last reviewed".** It also changes when a note is edited, so a note tweak would restart the review clock. A separate field, `r`, is needed that changes only when the status is set to Complete or Review.
+2. **`r` can travel with the status change.** Because `r` is written in the same save as the status, it follows the existing last-write-wins rule. No separate merge rule is needed, and the shared tracker (mentee and mentor on one passcode) stays consistent: everyone sees the same review dates.
+3. **Guidelines almost never link to each other explicitly.** Only 1 of 180 guidelines contains a literal "CPG EAS x.y" reference. Related guidelines have to be found by other means (see feature 5).
+
+---
+
+## 2. Feature list at a glance
+
+| # | Feature | Size | Needs backend change? |
+|---|---|---|---|
+| 1 | Show when a guideline was last reviewed (marked Complete or Review) | Small | Yes (new field) |
+| 2 | Flag guidelines not reviewed for X days | Small | Optional (setting) |
+| 3 | Completion rings: overall and per section | Small–medium | No |
+| 4 | Suggest a random guideline to review | Small | No |
+| 5 | Related-guideline review queue | Large | Optional (queue persistence) |
+| 6 | Check for guideline updates from the PDF | Large | Yes, plus a new build step |
+| 7 | Prompt the user to update the app | Medium | No |
+
+---
+
+## 3. Data model and backend changes (foundation for 1, 2, 4, 5)
+
+### New per-guideline fields
+
+- `r` – last reviewed timestamp. Set when the status is changed to Complete or Review, and nowhere else. Opening a guideline records nothing.
+- `ver` – the guideline version the person last completed against (needed for feature 6; can be added later with feature 6).
+
+Existing saved data has no `r` or `ver`. For guidelines already marked Complete or Review, the app can fall back to the existing `t` as an estimate of the review date until they are next reviewed. Missing `r` on an Incomplete guideline means "not reviewed yet".
+
+### What has to change in `Code.gs`
+
+I read the backend and these are the changes. They are now small:
+
+1. **Store and return `r`.** `readData_` returns `s`, `n`, `t` and `save_` writes columns 4 to 6. Fix: add column G "Last reviewed" (and column H "Version" when feature 6 is built), return them from `readData_`, and write them in `save_` alongside the status.
+2. **No special merge rule.** Because `r` is saved together with the status under the existing "newest `t` wins" check in `save_`, it needs no separate logic. Use the same check on the app side in `merge()`: copy `r` when the server record is accepted.
+3. **Set `r` only on a real review.** The app sets `r` when the person changes the status to Complete or Review. Editing a note must send the existing `r` unchanged, not a new one.
+4. **Write volume does not increase.** Saves happen only when status or notes change, as they do now. The extra 30-second polling load is unchanged.
+5. **Settings storage.** If the stale threshold and queue size are shared (Decision E), they need a home. Simplest option: a new Settings tab keyed by tracker passcode, with a `settings` action to read and write it. If settings are per device, no backend change is needed.
+6. **Update information.** A new `content` action (no passcode needed, it holds no private data) returns the current content version and the changed-guideline list from feature 6.
+7. **Deployment.** Edit the existing deployment and choose "New version", so the web app URL stays the same. Old copies of the app on phones keep working because they ignore the new fields and the existing response shape is unchanged. Deploy the backend before the app.
+
+The `Code.gs` input checks (id format, status values, 5000-character note limit) are sound and should stay as they are.
+
+---
+
+## 4. Feature details
+
+### Feature 1 – Show when a guideline was last reviewed
+
+**What the user sees**
+
+- On the list: a muted line under each title, for example "CPG EAS 3.12 · Reviewed 12 days ago", or "Not reviewed yet" for Incomplete guidelines.
+- On the detail page: "Last reviewed 28 Oct 2026 (Complete)" next to the existing "Updated" hint.
+
+**Key design decisions**
+
+- "Reviewed" means the status was set to Complete or Review. Opening a guideline is not recorded.
+- A guideline already marked Complete has no way to record a second review, because tapping Complete again changes nothing. Suggested solution: when a guideline is already Complete, show a "Reviewed again today" button that updates the date without changing the status. See Decision A.
+- Use relative wording ("12 days ago") on the list and full dates on the detail page.
+
+### Feature 2 – Flag guidelines not reviewed for X days
+
+**What the user sees**
+
+- A small amber "Not reviewed in 30 days" tag on the list row.
+- A new filter chip: "Overdue (N)".
+- A setting for the number of days, with an off position.
+
+**Key design decisions**
+
+- Flagging applies to guidelines marked Complete (that is where forgetting matters). Guidelines marked Review are already flagged by their status. Incomplete guidelines show "Not reviewed yet" and are not counted as overdue.
+- Suggested default threshold: 30 days, adjustable from 7 to 90.
+- Show the overdue count on the cover so it is visible without opening the filter.
+
+### Feature 3 – Completion rings (overall and per section)
+
+**What the user sees**
+
+- One large ring on the cover replacing or sitting beside the current bar. The ring shows the percentage complete, with a second arc in orange for "to review".
+- A small ring in each section header, replacing the `done/total` text on the right, with the count kept as a label.
+
+**Key design decisions**
+
+- Rings are drawn as inline SVG circles, so no libraries are needed and they work offline.
+- A ring segment per state (complete green, review orange, remaining grey) keeps the same colours the app already uses.
+- Optional second ring or tint for stale guidelines, so a section that is "complete but going stale" looks different from one that is genuinely fresh. Decide later; build the basic ring first.
+- Ring percentages should recalculate whenever the sync merge changes data, using the existing refresh function.
+
+### Feature 4 – Suggest a random guideline to review
+
+**What the user sees**
+
+- A "Suggest one" button on the list screen. It opens one guideline with a short reason, for example "Not reviewed for 41 days".
+
+**Key design decisions**
+
+- Use weighted random, not pure random, so it favours: stale guidelines, then guidelines marked Review, then Incomplete, then everything else.
+- Avoid repeating the last few suggestions in a row (keep a short history of the last 5).
+- Optional scope: all guidelines, or only the section the person is currently looking at.
+- Optional "skip" button that draws another one.
+
+### Feature 5 – Related-guideline review queue
+
+**Goal:** similar guidelines get reviewed together to improve retention, without producing a long, discouraging list.
+
+**What the user sees**
+
+- At the bottom of a guideline (and when marking it Complete or Review), a "Review these next" panel of at most 5 related guidelines, each with a one-line reason such as "Mentioned in this guideline" or "Same section".
+- A "Review queue" progress strip: "2 of 5 done".
+- When the queue is finished, the next guideline the person opens generates a fresh queue.
+- A "Recommended" block that is always available, not just at the end of a guideline.
+
+**How relatedness is calculated**
+
+Explicit "CPG EAS x.y" references only exist in 1 of 180 guidelines, so they cannot be the main source. A link graph is built ahead of time (when the content is generated), not while the app runs, from these signals:
+
+1. Title mentions. A scan of guideline text (excluding the Version history block) for other guidelines' titles. Raw results are noisy: the median guideline mentions 4 other titles and the maximum is 31, so the matches must be scored, not simply listed.
+2. Medicine mentions. Non-medicine guidelines mention about 2.5 medicine titles each on average. A guideline that uses adrenaline links to the Adrenaline medicine guideline, and guidelines that share medicines link to each other.
+3. Same section or adjacent numbering (for example the croup, stridor and bronchiolitis guidelines).
+4. Manual overrides: a small hand-edited file of pairs to force-add or remove, because clinical judgement beats text matching.
+
+Each link gets a score; the queue takes the top 5 by score.
+
+**Keeping the list short (the main risk)**
+
+- Hard cap of 5 per queue, adjustable in settings (3, 5 or 8).
+- Exclude guidelines reviewed in the last few days, and guidelines already in the current queue.
+- Prefer guidelines that are stale, Review, or Incomplete over ones already fresh and complete.
+- The queue is generated when a guideline is marked Complete or Review, and does not grow while it is being worked through. A guideline in the queue is ticked off when it is marked Complete or Review. Only after the queue is finished does the next guideline marked start a new one.
+- Medicine guidelines should count as lower-weight links, since 46 of the 180 guidelines are medicines and they would otherwise dominate every list.
+
+**Storage:** the queue only needs to survive the session; it can be kept in `localStorage` per device. Persisting it through the backend is optional.
+
+### Feature 6 – Check for guideline updates from the PDF
+
+**The source (from what you told me)**
+
+You said the guidelines page at `cpg.stjohn.org.nz/tabs/guidelines` has a download option for the EAS guidelines, among three download links, and that the EAS one is the one to use. **Unverified:** I could not open it. The site is a JavaScript app, so fetching the page returns only page metadata, and I cannot see the link behind the button. I need the direct file address (long-press or right-click the EAS download button and copy the link). Please also paste it without the `?fbclid=...` tracking part, which is not needed.
+
+What I did find: the site also hosts single-guideline PDFs at addresses of the form `cpg.stjohn.org.nz/assets/pdf/guidelines/<guideline title> - EAS.pdf`, each stamped "Uncontrolled document exported <date>". These are a possible fallback source, but your chosen single EAS download should be the primary one.
+
+**The practical constraints**
+
+- A browser app cannot normally download a PDF from another website, because the other site must allow it (CORS). This is not something the app can control.
+- Apps Script can download the file (`UrlFetchApp`) and run on a timer, but it has no built-in way to read text out of a PDF. It is good for checking whether the file has changed, not for converting it.
+- A PDF does not keep the structure your app uses (coloured headings, key-lines, boxes, tables), so converting it back into the app's content is lossy. A manual check is needed before anything is published.
+- The "exported" date on the PDF is when it was generated, not when the content changed. The real change signal is each guideline's "Version history" entry (for example "28 October 2024 1.0.5 Update…"), which 156 of your 180 guidelines have.
+- **Unverified:** St John's terms of use for the guideline PDFs. An automatic download on a schedule is worth clearing with whoever manages the CPGs, particularly as the documents are marked uncontrolled.
+
+**Recommended approach – three stages, using GitHub**
+
+Because the app is already in a GitHub repository, a **GitHub Action** on a schedule is a better fit than Apps Script for the PDF work:
+
+*Stage A – Detect and notify (do first).* A scheduled Action (for example daily) downloads the EAS PDF, compares a fingerprint (file hash and size) with the last one, and, when it has changed, extracts the text with a PDF tool and reads each guideline's newest version-history entry. It writes a small `content-version.json` to the repository containing the PDF export date, a content version number, and a list of guideline ids with their latest version. If nothing changed, it does nothing. The app fetches that small file from its own site (no CORS problem) and compares it with the version it ships with.
+
+*Stage B – Semi-automatic update.* When a change is detected, the Action also builds the new content file and opens a **pull request** instead of publishing. You review it (a changed-guideline summary is included), merge it, and the app picks it up. This keeps the manual check in place.
+
+*Stage C – Fully automatic (only if A and B prove reliable).* The Action publishes without the review step.
+
+For the app to use updated content without being re-uploaded, the 1.27 MB of guideline data would move out of `index.html` into its own `content.json`, cached on the phone. This also makes updates smaller and faster.
+
+**What happens to a person's progress when a guideline changes**
+
+- Progress is keyed by guideline `id`, so ids must stay stable across updates. The extraction step must match guidelines by number (e.g. 3.12), and any new, removed or renumbered guideline must be flagged in the pull request.
+- If a guideline they marked Complete has a newer version than their stored `ver`, show an "Updated" badge and offer to move it to Review. This also creates a natural revision prompt.
+- Keep a short "What changed" line taken from the version-history entry.
+
+### Feature 7 – Prompt the user to update the app
+
+**What the user sees**
+
+- A banner at the top: "A new version of the guidelines is available. Update now."
+- Guidelines that changed are tagged "Updated" in the list.
+
+**Key design decisions**
+
+- Check on open and when the app returns to the foreground (the app already listens for both events).
+- The app has no service worker, so updating means fetching the new content and reloading. A service worker would also make the app work fully offline, which is a useful extra for use on shift, but it is a separate decision.
+- Never update while the person is partway through typing a note. Apply on next list view or on tap.
+- Show the current content version and the date it was last checked in a footer or settings area.
+- Always show a "Guidelines exported <date>" line. The source documents are marked uncontrolled, so the app should make clear it is a study aid and the official site is the reference for clinical use.
+
+---
+
+## 5. Suggested order of work
+
+0. **Refactor first, with no behaviour change** (section 11), if Decision H is answered "refactor first". Every feature below then lands in readable code.
+1. **Foundation:** the `r` field, the small backend update to store it, and a settings object.
+2. **Features 1 and 2:** last reviewed and stale flagging (they depend directly on the new field).
+3. **Feature 3:** rings (independent, can be done in parallel).
+4. **Feature 4:** random suggestion (uses the stale logic from feature 2).
+5. **Feature 5:** build the link graph offline, check it manually, then add the queue.
+6. **Feature 7 and Stage A of feature 6:** version detection and the update banner.
+7. **Stage B of feature 6:** semi-automatic content updates.
+
+---
+
+## 6. Risks
+
+| Risk | Mitigation |
+|---|---|
+| A note edit restarting the review clock | `r` changes only when the status is set to Complete or Review |
+| Review queue becomes long and discouraging | Hard cap, exclusion rules, queue not allowed to grow |
+| Noisy relatedness (a title mentioned in passing) | Scoring, a cap on medicine links, manual overrides file |
+| PDF cannot be fetched from the browser | Do the fetching server-side, never in the app |
+| PDF-to-app conversion loses formatting | Keep a manual check step (Stage B) before publishing |
+| Phones with blocked storage | The app already shows a warning; new features must degrade the same way |
+| Backend (Apps Script) change breaks existing trackers | New fields are optional, missing values treated as "never", deploy backend first, keep the same web app URL by editing the existing deployment |
+| Automatic download conflicts with St John's terms | Confirm permission before enabling the scheduled download; Stage A can be switched off without affecting the app |
+| A bad extraction publishes wrong clinical content | Pull request review in Stage B, "exported" date shown in the app, study-aid disclaimer |
+
+---
+
+## 7. Testing checklist (when coding starts)
+
+- Old saved trackers (no `r`, `ver`) load without errors, and already-complete guidelines fall back to `t`.
+- Editing a note does not change the last reviewed date.
+- Two devices on the same passcode: a review on one device appears on the other with the same date.
+- Offline use: a review is recorded locally and synced when back online.
+- Stale threshold off, 7 days, and 90 days behave correctly.
+- Rings show correct values for 0%, 100% and a section with zero completed.
+- Queue never exceeds the cap and never repeats a guideline reviewed recently.
+- Update banner appears once, not repeatedly, and does not interrupt note typing.
+
+---
+
+## 8. Open questions
+
+Rule: unanswered questions are shown to the user in the chat with full option text whenever they are relevant to the next step (section 0). Answers are moved to the answered log at the end of this section. Note: "Decision I" (automatic checks) and the information items I1 to I4 share a letter. Items are always written "item I1" below.
+
+### Which questions block what
+
+| ID | Topic | Needed before |
+|---|---|---|
+| G, H, Decisions I, J, K | Code structure and refactor | Answered, see the log |
+| A, B, C, E, F | Feature behaviour | Features 1 and 2 (shelved, see the log); not needed for feature 3 |
+| D, items I1 and I3 | PDF update pipeline | Features 6 and 7 |
+
+### Information needed (items I1 and I3 still open)
+
+- **Item I1.** The direct link to the EAS download button, copied from the button itself (not the page address, and without the `?fbclid=` tracking part). I could not open it.
+- **Item I3.** Whether you have permission, or are willing to check, to download the PDF automatically on a schedule.
+
+### Decisions: code structure and readability
+
+All answered (G, H, I, J, K). See the answered log.
+
+### Decisions: feature behaviour
+
+**Shelved on 11 Nov 2026:** time-based reviews (features 1 and 2) are skipped for now, so Decisions A, B, C, E and F are not being asked. They stay below unchanged for when time-based reviews are picked up again. Decision C is moot for the rings as built (only Complete counts as green, Needs review as orange).
+
+**Decision A – How is a second review of an already-Complete guideline recorded?**
+
+- Option 1: A "Reviewed again today" button appears on guidelines already marked Complete. It updates the date and leaves the status as Complete.
+- Option 2: Tapping Complete again when it is already selected updates the date. This needs no new button, but an accidental tap resets the review clock.
+
+**Decision B – What happens to the last reviewed date when a guideline is set back to Incomplete?**
+
+- Option 1: The date is cleared, so the guideline shows "Not reviewed yet".
+- Option 2: The date is kept, so the guideline still shows when it was last reviewed, even though it is now Incomplete.
+
+**Decision C – What counts toward the completion rings?**
+
+- Option 1: Only Complete guidelines count, as with the current bar.
+- Option 2: Complete guidelines count, but a Complete guideline that is overdue for review counts as partial, so the ring slowly drops if it is not revisited.
+
+**Decision E – Where do settings (overdue threshold, queue length) live?**
+
+- Option 1: Shared with the tracker, stored in a new Settings tab, so the mentee and mentor see the same thresholds. This needs a backend change.
+- Option 2: Per device only, stored in the phone's browser. No backend change, but settings do not follow the person to another phone.
+
+**Decision F – Queue length**
+
+- Option 1: Fixed at 5.
+- Option 2: Adjustable in settings between 3 and 8, default 5.
+
+### Decision: PDF update pipeline
+
+**Decision D – How far should the PDF update go?**
+
+- Option 1: Detect and notify only. The app tells the user a new version exists, and you rebuild and publish it yourself.
+- Option 2: Semi-automatic. A scheduled job builds the new content, you approve it, and the app downloads it automatically.
+- Option 3: Fully automatic. The job builds and publishes with no approval step.
+
+### Answered log
+
+- No view tracking: only marking a guideline Complete or Review is recorded (revision 3).
+- The EAS download on the CPG site is the correct PDF source (the link itself is still needed, see I1).
+- The app is hosted in the GitHub repository `Dklapaukh/Mentoring`.
+- The code is to be made as easy to read and audit as possible, with written style rules for all future code (section 10).
+- Work is to be as token efficient as possible, including using a fresh chat with a new prompt when that is cheaper (section 0).
+- 11 Nov 2026, code structure (all answered):
+  - **Decision G: Option 2.** Separate readable files, no build step; the page loads them directly (ES modules, so it needs a web server such as GitHub Pages).
+  - **Decision H: Option 1.** Refactor first, with no behaviour change. Done (section 11, steps 1 to 8).
+  - **Decision I: Option 1.** Automatic formatting and error checking on every GitHub change, plus tests for the logic that matters. In place (`.github/workflows/checks.yml`, `npm run check`).
+  - **Decision J: Option 1.** Modern JavaScript (`const` and `let`, arrow functions, modules). `Code.gs` also uses it, so the Apps Script project must use the V8 runtime (Project Settings, "Enable Chrome V8 runtime").
+  - **Decision K: Option 1.** The comment button works as before, now in its own file (`src/comments.js`) with tests. The weakness is unchanged: two points that start with the same 70 characters share a highlight (test written to show it).
+- 11 Nov 2026, information: **item I2** answered: GitHub Pages serves `index.html` from the `main` branch (so the web address stays the same). **Item I4** answered: you can edit the Sheet and redeploy the Apps Script; the README explains what the script does and how to redeploy. **Items I1 (EAS download link) and I3 (permission to download automatically) are still open.**
+- 11 Nov 2026, choices made during the refactor (no behaviour change unless stated):
+  - Guideline data is `content/guidelines.js` (data only, one guideline per line, identical content, checked). The export date and source line now come from that file (R9).
+  - Entry fields stay `s`, `n`, `t` and the saved-on-phone format stays `{c, l, s, p}`, so nobody is signed out and the backend needs no change to work with the new app.
+  - Colours that come from the guideline content are passed as CSS custom properties (`--block-colour`), not as inline styles. Unused CSS (`.danger`, `--am`, `.ui`) was removed.
+  - Search results are identical. The search text is now built once per guideline (R8, first half). **Not done, because it changes behaviour:** stripping HTML tags from the search text and waiting about 150 ms after typing (R8, second half).
+  - Backend changes that do alter behaviour slightly, as listed in step 6: the wrong-passcode 1.5 s delay now happens after the lock is released (C1); edit times are cut back to at most 5 minutes ahead of the server clock (C2/R10; the 5 minutes is my choice, change `MAX_CLOCK_AHEAD_MS` to adjust); failures return `server-error` instead of the raw error text (C6). The app treats any unknown error as before.
+  - Verified without a real phone: 23 app and logic tests plus 3 backend tests pass; for all 180 guidelines the rendered text and element counts match the old code, and 52 filter and search combinations give identical results. **Not yet checked by you on a real phone:** the items marked "by hand" in the README checklist (sections staying open, two devices, offline).
+
+- 11 Nov 2026, scope change by you: **features 1 and 2 (last reviewed date, stale flagging) are skipped for now**; **feature 3 (completion rings) was built instead**. Rules you set: one overall ring and one ring per section; green for Complete, orange for Needs review, empty for Incomplete; a short animation when a ring closes. Choices I made: the rings replace the progress bar (the legend text under it stays); the section ring sits beside the `done/total` count; a closed section ring shows a tick; the animation (arc fills, tick draws, ring pops) plays only when a ring newly reaches 100% while the list is shown, never on first load or when switching tracker, and not when the phone asks for reduced motion. Say if you want any of these different.
+- 11 Nov 2026: new Apps Script deployment address put into `src/constants.js` (`BACKEND_URL`).
+
+---
+
+## 9. Code review
+
+### 9.1 Scope and method
+
+- **Read in full:** `Code.gs` (144 lines) and all of the code and styles in `index.html`.
+- **Analysed by script, not read line by line:** the guideline content (1.27 MB of data).
+- **Not done:** the app was not run in a browser, no tests exist to run, and I could not open the GitHub repository. Findings come from reading the code, so a finding about behaviour is a strong reading, not a confirmed bug.
+- Severity: **High** means it badly affects auditing or can cause wrong behaviour. **Medium** means it should be fixed during the refactor. **Low** means worth fixing when the area is touched.
+
+### 9.2 Overall verdict
+
+- **`Code.gs` is in good shape.** It is short, has clear function names, validates its input, and uses a lock to avoid two saves clashing. It needs a few targeted fixes (C1 to C7).
+- **`index.html` works but is written in a very compact style that is hard for a human auditor to read.** The main problem is how the code is written and organised, not obvious logic errors. This is fixable without changing what the app does.
+
+### 9.3 Measurements for `index.html`
+
+| Measure | Result |
+|---|---|
+| JavaScript size | 176 lines in 3 separate script blocks, with about 92 function definitions |
+| Long lines (over 120 characters) | 42 of 176 JavaScript lines; the longest is 419 characters |
+| Stylesheet | 92 lines, 20 of them over 120 characters |
+| Explanatory comments in the code | None found |
+| Empty `catch` blocks | 4 |
+| Styles written inside the JavaScript | 10 places |
+| Content and code | One file; the content is a single 1.27 MB line |
+
+### 9.4 Findings: `index.html`
+
+| ID | Severity | Finding | Recommendation |
+|---|---|---|---|
+| R1 | High | **Compact, minified-looking style.** One-letter names (`S`, `P`, `K`, `D`, `M`, `q`, `st`, `rb`, `rf`), several statements per line, and very long lines make it hard to follow. | Rename, reformat and comment following section 10. |
+| R2 | High | **Code, styles and 1.27 MB of data share one file, and the data sits on a single line.** A content update rewrites the file and changes cannot be compared line by line. | Separate the content from the code (Decision G). |
+| R3 | High | **The 2nd and 3rd script blocks are add-on patches.** They change the page after the main code has drawn it, using a `MutationObserver` and a timer that runs every 2 seconds (`setInterval(mark, 2000)`) even when nothing has changed. Behaviour is spread across places. | Fold them into the main drawing code, work from the saved state, and remove the timer and observer. |
+| R4 | High | **Comments are fragile** (see Decision K). They live inside the notes text and are found again by matching the first 70 characters. | Decision K. |
+| R5 | Medium | **Shared global state.** About 14 variables (`S`, `P`, `view`, `cur`, `flt`, `q`, `busy`, `lastErr`, `fail`, `tm`, `lastY`, `code`, `lbl`, `M`) are changed from many functions. Screens are rebuilt wholesale and the handlers re-attached, and `rf()` has special cases to avoid losing focus and scroll position. | One state object, one drawing function per screen, event handlers attached once. |
+| R6 | Medium | **Page built by joining strings with logic inside.** Class names are one letter (`.p`, `.w`, `.r`, `.d`, `.s`, `.q`, `.c`, `.v`, `.i`, `.l1`), and 10 places carry inline styles. | Small template helpers, descriptive class names, styles kept in the stylesheet. |
+| R7 | Medium | **Status codes `i`, `v`, `c` and their labels are repeated** throughout the app and again in `Code.gs`. | One named constants table in each file, each pointing to the other. |
+| R8 | Medium | **Search is wasteful.** For every keystroke, each guideline whose title does not match is converted with `JSON.stringify` and searched, 180 times, with no pause after typing. The search text also includes HTML tags. | Build the search text once at load (tags removed) and wait about 150 ms after typing stops. |
+| R9 | Medium | **Hard-coded document details.** "Uncontrolled document exported 24.09.2026" and the source line are typed into the guideline page code. They will go stale when content updates (feature 6). | Take them from the content file. |
+| R10 | Medium | **The phone's clock decides who wins a merge.** A phone with its clock set ahead would beat every later edit from other devices until that date arrives. | Make the backend limit timestamps to the server time plus a small allowance (see also C2). |
+| R11 | Medium | **Contrast and text size.** The grey secondary text measures 3.29:1 on white and 2.88:1 on the grey buttons, below the 4.5:1 that WCAG AA asks for normal text. White text on the orange Review state measures 2.53:1, and on green 4.08:1. Base text is 13.33 px. This matters for use in poor light, such as in a vehicle. | Propose darker secondary text and a darker orange for text backgrounds. The St John header colours inside the guidelines are not changed. I will ask before changing the app's own colours. |
+| R12 | Medium | **Notes are shared and stored in a Google Sheet, and could contain patient details.** The app gives no warning. | Add a one-line notice under the notes box: do not enter patient-identifiable information. Check this against your service's information rules. |
+| R13 | Low | **Content is inserted into the page without escaping.** This is safe only because the content is built into the app and trusted. If content is later downloaded (feature 6), it must be treated as untrusted. | Validate and clean the content during the build step, before it is published. |
+| R14 | Low | **Four empty `catch` blocks** hide errors (saving to the phone, copying to the clipboard). | Each should say why the error is safe to ignore, or show a message. |
+| R15 | Low | **The passcode is kept in the browser in plain text, and the web address of the backend is in the page.** This is reasonable for a low-risk study tool. Anyone with a passcode can read and change that tracker. | Document it in the README and keep tracker passcodes long and unguessable. |
+| R16 | Low | **Small leftovers.** The cover function contains `(btn?'':'')`, which does nothing. The date format is written twice. Open sections are remembered as a property on the `list` function. There are no tests and no explanatory comments. | Tidy during the refactor. |
+
+### 9.5 Findings: `Code.gs`
+
+| ID | Severity | Finding | Recommendation |
+|---|---|---|---|
+| C1 | High | **A wrong passcode waits 1.5 seconds while holding the lock.** `doPost` takes the lock and then `handle_` sleeps inside it. A burst of wrong guesses makes every other user wait, and requests can fail after the 20-second lock wait. | Check the passcode and apply the delay outside the lock, or use a different throttle. |
+| C2 | Medium | **Client timestamps are trusted.** `Number(c.t) \|\| Date.now()` accepts whatever time the phone sends (see R10). | Limit `t` to the server time plus a small allowance. |
+| C3 | Medium | **Magic column numbers.** `getRange(row, 4, 1, 3)` and `getRange(row, 6)` break silently when a column is added, which feature 1 will do. | One column map constant used everywhere, including `setup()`. |
+| C4 | Medium | **Plain-text passcodes, and a placeholder mentor passcode.** `setup()` adds the passcode `change-this-to-a-long-passcode`. If it is not changed, anyone who guesses it can create trackers. | Check it has been changed, keep the sheet's sharing limited to you, and note this in the README. Hashing passcodes is possible but adds complexity, and I would only do it if you want it. |
+| C5 | Low | **Every request reads the whole Data sheet, for all trackers.** Fine at the current size. It will slow down as trackers and notes grow. | Leave for now, and note the size at which to revisit it. |
+| C6 | Low | **Raw error text goes back to the phone** (`String(err)`). | Return a generic message and log the details on the server. |
+| C7 | Low | **Few explanatory comments.** Only a couple of functions describe their purpose or return value. | Add a short comment on every function (section 10). |
+
+### 9.6 What is already good
+
+- `Code.gs`: lock service, input checks (id pattern, status values, note length), plain-text columns so notes are never treated as formulas, and a consistent trailing-underscore name for internal functions.
+- `index.html`: changes are queued and retried when offline, merging is separate from saving, user text is escaped, status buttons use `aria-pressed`, tap targets are 44 to 48 px, and it handles phone safe areas and blocked storage.
+
+---
+
+## 10. Style guide: how all future code is written
+
+Goal: a human programmer who does not know the project can read any function once and explain what it does. These rules apply to `index.html`, its script files, the stylesheet and `Code.gs`. Where code is changed, the changed area is brought up to this guide.
+
+### Names and layout
+
+1. **Full descriptive names.** `guidelineStatus`, not `st`. `pendingChanges`, not `P`. A name says what the thing is or does. No one-letter names except a loop counter.
+2. **One statement per line.** No chained statements with commas or semicolons on a single line.
+3. **Lines of at most 100 characters.** A formatter enforces this (Decision I).
+4. **Descriptive CSS class names** (for example `guideline-row`, `status-button--complete`), not `.r` or `.c`. No styles written inside JavaScript.
+5. **Named constants, not magic values.** Status codes, storage keys, time limits, column numbers and colours each have one named definition.
+
+### Structure
+
+6. **Small functions that do one thing.** A function is normally under 30 lines. If it needs "and" in its description, split it.
+7. **Logic is kept apart from the screen.** Pure functions (merging, review dates, overdue flags, queue building) take input and return a result, and touch nothing else. They can be tested without a browser.
+8. **One state object, one way to draw.** The screen is drawn from the saved state. Code does not reach into the page afterwards to patch it, and there are no polling timers for display changes.
+9. **Content is data, not code.** Guideline text lives in its own content file and is never typed into the code.
+10. **Group the code by purpose, with a labelled heading for each group**: constants, state, storage, sync, merge, screens, events, start-up.
+11. **Modern JavaScript** (`const` and `let`, arrow functions) if Decision J is Option 1. Never `var`.
+
+### Comments and documentation
+
+12. **Every function has a one-to-three line comment** saying what it is for, what it takes, and what it returns.
+13. **Comments explain why, not what.** Any rule that came from a real need (for example "viewing must not change the review date") has a comment saying so.
+14. **Every file starts with a short header** describing its purpose and what it depends on.
+15. **A README in the repository** explains the structure, how to run and publish the app, how the backend and sheet are set up, and how updates are made.
+16. **A short change log.** Each change gets a dated one-line entry.
+
+### Safety and quality
+
+17. **No silent errors.** An empty `catch` states why it is safe, or the error is shown or logged.
+18. **Treat all text from outside as untrusted.** Escape it before putting it on the page. Content downloaded for updates is validated before it is published.
+19. **Accessibility.** Contrast of at least 4.5:1 for normal text, tap targets of at least 44 px, labels on every button, and status never shown by colour alone.
+20. **Tests for logic.** Every pure function has tests (Decision I). Fixing a bug starts with a test that shows it.
+21. **Small changes.** One purpose per change, with no behaviour change mixed into a tidy-up.
+
+### Apps Script specifics (`Code.gs`)
+
+22. One column map constant for the sheet, one place that defines the status values, a short comment on every function, no work that waits or sleeps while holding the lock, and generic error messages returned to the app.
+
+### Checklist before any change is accepted
+
+- Does every new name say what it is?
+- Can each new function be explained in one sentence?
+- Are there constants rather than magic values?
+- Is the screen drawn from state, with no page patching or timers?
+- Do new pure functions have tests?
+- Is the README or change log updated?
+
+---
+
+## 11. Refactor plan (no change in behaviour)
+
+Decision H was Option 1, so this ran first. **Steps 1 to 8 are done (11 Nov 2026).** Step 1 baseline: the old files stay in the repository's git history (tag the last commit before this change, for example `before-refactor`, so you can go back). Step 7: tests are in `tests/`. Step 8: the checklist is now in the README and mostly automated (`tests/app.test.js`); the "by hand" items need a real phone. Each step can be checked separately.
+
+1. **Baseline.** Keep a copy of the current files and write the behaviour checklist below.
+2. **Separate the content.** Move the guideline data into its own content file and the styles into their own file (shape depends on Decision G). The data line is never printed or read into the chat.
+3. **Reformat and rename.** Mechanical changes only: formatting, full names, constants. No logic changes.
+4. **Fold in the add-ons.** Merge the 2nd and 3rd script blocks into the main drawing code and remove the timer and observer (R3).
+5. **One state object and one drawing function per screen** (R5, R6).
+6. **Backend tidy.** Column map, lock fix, timestamp limit, comments (C1 to C3, C6, C7).
+7. **Tests** for the pure functions (Decision I).
+8. **Re-run the behaviour checklist** and compare with the baseline.
+
+### Behaviour checklist (same result before and after the refactor)
+
+- Sign in with a tracker passcode and with a mentor passcode, and a wrong passcode shows the message.
+- Mentor creates a tracker and sees the new passcode; opens an existing tracker.
+- List shows 14 sections with correct counts; sections open and close and stay as left.
+- Filters (All, Incomplete, Needs review, Complete) and search give the same results.
+- Opening a guideline shows all content; previous and next work; the headings fold and unfold.
+- Changing status and editing notes saves, and shows "Saving…" then "Saved".
+- Two devices on the same passcode show the same data after a sync.
+- Offline: changes are kept and sent when signal returns.
+- Comment button adds to the notes and highlights the point (or the behaviour decided in Decision K).
+- Switch tracker and sign out work.
+
+---
+
+## 12. Handoff prompt for a new chat
+
+Use this when Claude recommends a fresh chat (section 0, rule 6). Attach this document, `index.html` and `Code.gs`, and replace the text in the square brackets.
+
+```
+I'm continuing work on my NZCPG study app (GitHub: Dklapaukh/Mentoring).
+Attached: the plan (NZCPG_study_app_improvement_plan.md) and [the repository as a zip, or only the
+files this task touches, for example src/logic.js and backend/Code.gs].
+
+First read the plan: section 0 (working rules), section 8 (open questions and the answered log)
+and section 13 (status). Follow section 10 for all code. Read the README, then only the files this
+task needs. Do not read content/guidelines.js: it is 1.3 MB of guideline data.
+
+Task for this chat: [one task, for example "Answer Decisions A to F, then build features 1 and 2"].
+
+Be as token efficient as possible. Ask me any relevant unanswered questions in one message with
+the full text of every option. Run `npm run check` before finishing. At the end, update sections 8
+and 13 of the plan, and tell me whether the next step is cheaper in a fresh chat, with the prompt
+to paste.
+```
+
+---
+
+## 13. Status log
+
+| Date | What happened | Next step |
+|---|---|---|
+| 10 Nov 2026 | Plan written, `Code.gs` and `index.html` reviewed, working rules and style guide added. No code written. | Answer Decisions G to K, then start the refactor (section 11) in a fresh chat. |
+| 11 Nov 2026 | Decisions G2, H1, I1, J1, K1 recorded. Refactor steps 1 to 8 done with no change in behaviour: new file structure, descriptive names and classes, one state object, add-ons folded in (timer and observer removed), backend tidy (C1 to C3, C6, C7), tests, README, change log, GitHub checks. Fixed in passing: R1, R2, R3, R5, R6, R7, R9, R14, R16, C1, C2, C3, C6, C7. Documented only: R15, C4. Still open: R4 (kept, K1), R8 second half, R10 (via C2), R11 contrast, R12 patient-information notice, R13, C5. | You: copy the files into the repository, tag the old commit, redeploy `backend/Code.gs` (optional, the app works with the old one), and check the "by hand" items on your phone. Then answer Decisions A to F (section 8) and build features 1 and 2 in a fresh chat. |
+| 11 Nov 2026 | You skipped features 1 and 2 (time-based reviews; Decisions A to F shelved). Feature 3 built: overall and per-section completion rings (green Complete, orange Needs review, empty Incomplete) with a closing animation; `ringArcs` in `src/logic.js` with a test, an app test for ring count and label, CSS in `styles/app.css`, README structure unchanged. New backend address set. `npm run check` passes (27 tests). Not checked on a real phone: how the animation looks. | You: copy the changed files into the repository, check the rings and animation on your phone (complete the last guideline of a section). Then pick the next feature (4 to 7) in a fresh chat. |

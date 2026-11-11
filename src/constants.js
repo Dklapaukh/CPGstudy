@@ -6,7 +6,7 @@
  */
 export const STORAGE_KEY = 'eas-cpg-tracker-v2';
 export const BACKEND_URL =
-  'https://script.google.com/macros/s/AKfycbzbScTinBe66s-qwNsUVVLRc5BtH2yIDJwXnAlfDX6Ah2hcMHoy7hrsmVepqiUL5HXfEw/exec';
+  'https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec';
 
 export const REQUEST_TIMEOUT_MS = 20000;
 export const SYNC_DELAY_AFTER_EDIT_MS = 900;

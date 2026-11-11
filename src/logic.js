@@ -37,6 +37,20 @@ export function countStatuses(guidelines, entries) {
   return counts;
 }
 
+/**
+ * Sizes of the two coloured arcs of a completion ring, as percentages (0 to 100) of the circle.
+ * Takes the status counts and the total; returns { completePercent, reviewPercent, isClosed }.
+ * `isClosed` is true only when every guideline is Complete (an empty group is never closed).
+ */
+export function ringArcs(counts, total) {
+  if (!total) return { completePercent: 0, reviewPercent: 0, isClosed: false };
+  return {
+    completePercent: (counts[STATUS.COMPLETE] / total) * 100,
+    reviewPercent: (counts[STATUS.REVIEW] / total) * 100,
+    isClosed: counts[STATUS.COMPLETE] === total,
+  };
+}
+
 // Searching the body text is slow, so the lower-case text of each guideline is made once.
 const bodyTextCache = new WeakMap();
 

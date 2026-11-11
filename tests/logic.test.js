@@ -10,6 +10,7 @@ import {
   nextTimestamp,
   syncStatusText,
   flattenGuidelines,
+  ringArcs,
 } from '../src/logic.js';
 
 const sampleGuidelines = [
@@ -87,4 +88,20 @@ test('syncStatusText', () => {
 test('flattenGuidelines adds the section name', () => {
   const flat = flattenGuidelines({ sections: [{ name: 'S', items: [{ id: 'x' }] }] });
   assert.deepEqual(flat, [{ id: 'x', sec: 'S' }]);
+});
+
+test('ringArcs sizes the green and orange arcs and detects a closed ring', () => {
+  const counts = { i: 5, v: 2, c: 3 };
+  assert.deepEqual(ringArcs(counts, 10), {
+    completePercent: 30,
+    reviewPercent: 20,
+    isClosed: false,
+  });
+  assert.equal(ringArcs({ i: 0, v: 0, c: 4 }, 4).isClosed, true);
+  assert.equal(ringArcs({ i: 4, v: 0, c: 0 }, 4).completePercent, 0);
+  assert.deepEqual(ringArcs({ i: 0, v: 0, c: 0 }, 0), {
+    completePercent: 0,
+    reviewPercent: 0,
+    isClosed: false,
+  });
 });

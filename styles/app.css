@@ -116,29 +116,114 @@ h1 {
   margin: 0 0 0.9rem;
 }
 
-/* Progress bar, filters and search */
-.progress-bar {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--colour-line);
+/* Completion rings (overall and per section), filters and search */
+.overall-progress {
   display: flex;
-  overflow: hidden;
+  align-items: center;
+  gap: 1rem;
   margin: 0.3rem 0 0.4rem;
 }
-.progress-bar__segment {
-  display: block;
+.completion-ring {
+  position: relative;
+  flex: none;
+  display: inline-block;
+}
+.completion-ring--large {
+  width: 88px;
+  height: 88px;
+}
+.completion-ring--small {
+  width: 34px;
+  height: 34px;
+}
+.completion-ring svg {
+  width: 100%;
   height: 100%;
-  width: var(--share);
+  transform: rotate(-90deg);
 }
-.progress-bar__segment--complete {
-  background: var(--colour-green);
+.completion-ring__track,
+.completion-ring__arc {
+  fill: none;
+  stroke-width: 4.5;
 }
-.progress-bar__segment--review {
-  background: var(--colour-review);
+.completion-ring__track {
+  stroke: var(--colour-line);
+}
+.completion-ring__arc--complete {
+  stroke: var(--colour-green);
+}
+.completion-ring__arc--review {
+  stroke: var(--colour-review);
+}
+.completion-ring__tick {
+  fill: none;
+  stroke: var(--colour-green);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  /* The svg is rotated to start the arcs at the top, so turn the tick back upright. */
+  transform: rotate(90deg);
+  transform-origin: 20px 20px;
+}
+.completion-ring--closed .completion-ring__tick {
+  stroke-dashoffset: 0;
+}
+.completion-ring--large .completion-ring__tick {
+  display: none;
+}
+.completion-ring__percent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+/* Played once, when the ring has just reached 100%. Skipped for people who ask for less motion. */
+.completion-ring--just-closed {
+  animation: ring-close-pop 0.7s ease-out;
+}
+.completion-ring--just-closed .completion-ring__arc--complete {
+  animation: ring-close-fill 0.7s ease-out;
+}
+.completion-ring--just-closed .completion-ring__tick {
+  animation: ring-close-tick 0.5s ease-out 0.3s backwards;
+}
+@keyframes ring-close-fill {
+  from {
+    stroke-dasharray: 0 100;
+  }
+}
+@keyframes ring-close-pop {
+  0%,
+  55% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes ring-close-tick {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .completion-ring--just-closed,
+  .completion-ring--just-closed .completion-ring__arc--complete,
+  .completion-ring--just-closed .completion-ring__tick {
+    animation: none;
+  }
 }
 .progress-legend {
   display: flex;
-  gap: 1rem;
+  gap: 0.2rem 1rem;
   flex-wrap: wrap;
   font-size: 0.85rem;
   color: var(--colour-muted);
