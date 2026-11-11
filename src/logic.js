@@ -2,7 +2,7 @@
  * Pure logic: takes input and returns a result, touches no page, storage or network.
  * Depends on constants.js only. Tested in tests/logic.test.js.
  */
-import { STATUS, FILTER } from './constants.js';
+import { STATUS, FILTER, SUGGESTION_WEIGHT } from './constants.js';
 
 const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 
@@ -107,4 +107,33 @@ export function formatUpdatedDate(milliseconds) {
 export function syncStatusText({ lastSyncFailed, isOnline, pendingCount }) {
   if (lastSyncFailed || !isOnline) return 'Waiting for signal';
   return pendingCount > 0 ? 'Saving…' : 'Saved';
+}
+
+/**
+ * Picks the guidelines a random suggestion may come from: the one open section when exactly
+ * one section is open, otherwise every guideline. Takes the sections and the names of the
+ * sections that are open; returns a list of guidelines.
+ */
+export function suggestionCandidates(sections, openSectionNames) {
+  const openSections = sections.filter((section) => openSectionNames.includes(section.name));
+  const chosenSections = openSections.length === 1 ? openSections : sections;
+  return chosenSections.flatMap((section) => section.items);
+}
+
+/**
+ * Picks one guideline at random, favouring Incomplete, then Needs review, then Complete
+ * (weights in SUGGESTION_WEIGHT). `randomNumber` is a number from 0 up to but not including 1;
+ * it is passed in so tests can control it. Returns undefined when there are no guidelines.
+ */
+export function pickSuggestion(candidates, entries, randomNumber) {
+  const weights = candidates.map(
+    (guideline) => SUGGESTION_WEIGHT[getStatus(entries, guideline.id)],
+  );
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  let remaining = randomNumber * totalWeight;
+  for (let index = 0; index < candidates.length; index++) {
+    remaining -= weights[index];
+    if (remaining < 0) return candidates[index];
+  }
+  return candidates[candidates.length - 1];
 }

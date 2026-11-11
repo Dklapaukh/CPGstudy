@@ -19,6 +19,14 @@ export const DEFAULT_HEADER_COLOUR = '#00693C';
 
 export const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
 export const FILTER = { ALL: 'all', INCOMPLETE: 'inc', REVIEW: 'rev', COMPLETE: 'done' };
+// How much more likely a guideline is to be suggested, by status: Incomplete first, then
+// Needs review, then Complete. Higher number means more likely.
+export const SUGGESTION_WEIGHT = {
+  [STATUS.INCOMPLETE]: 6,
+  [STATUS.REVIEW]: 3,
+  [STATUS.COMPLETE]: 1,
+};
+
 export const SCREEN = { LOGIN: 'login', MENTOR: 'mentor', TRACKER: 'tracker' };
 
 // First item of each content block in the guideline data.
