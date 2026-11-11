@@ -1,5 +1,12 @@
 # Change log
 
+- 2026-11-11: Feature 6, stage B (Decision Y2). Converter from the EAS PDF to
+  `content/guidelines.js`, no AI (`scripts/pdfPages.js`, `scripts/pdfContent.js`,
+  `scripts/contentUpdate.js`, `scripts/build-guidelines.js`, 10 tests). The 24.09.2026 PDF
+  rebuilds 170 of 180 guidelines exactly; unchanged guidelines keep their published text
+  (`content/pdf-rebuild.json`). The daily pull request now includes the rebuilt content,
+  `content/related.js` and `version.json`. Workflows moved to Node 24 actions (v5) and a fixed
+  Ubuntu 24.04 image. New development dependency `mupdf`.
 - 2026-11-11: Feature 6, stage A (Decision D2). Daily GitHub Action downloads the EAS PDF and
   opens a pull request when the export date or any guideline's version entry changes. New
   `scripts/pdfScan.js` (pure, 6 tests), `scripts/check-pdf.js`, `content/pdf-status.json`
