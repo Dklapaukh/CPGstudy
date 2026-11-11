@@ -5,19 +5,22 @@
  * bullet markers, table rules). No AI and no randomness: one PDF always gives the same content.
  * The rules copy how the current content/guidelines.js was made, so the 24.09.2026 PDF rebuilds
  * it; see tests/pdfContent.test.js and README "Rebuilding the content from the PDF".
- * No dependencies.
+ * A content block is a list such as ['b', text, level, colour]; every kind of block is listed
+ * at the top of scripts/contentCheck.js.
+ * Depends on scripts/pdfRows.js (rows of text) and scripts/pdfTables.js (tables).
  */
 
-// Page layout of every guideline page, in PDF points from the top left corner.
-const BODY_TOP = 75; // the coloured title band ends at 68
-const BODY_BOTTOM = 800; // the footer rule starts at 807
+import { BODY_BOTTOM, BODY_TOP, WHITE, groupRows, rowHtml, textIsInside } from './pdfRows.js';
+import { pageTables } from './pdfTables.js';
+
+// Page layout, in PDF points from the top left corner (see also scripts/pdfRows.js).
 const PAGE_LEFT_MARGIN = 15;
 const TITLE_FONT_SIZE = 20;
+const TITLE_SIZE_TOLERANCE = 0.5;
+// The title band runs from the top edge of the page to 68. Its bottom edge is lower than this,
+// which tells it from the thin shapes that also start at the top edge.
+const TITLE_BAND_MIN_BOTTOM = 40;
 
-// Rows: spans whose tops are this close are one row. Tops, not baselines, so that a superscript
-// joins its row while a subscript (its top is lower) becomes a row of its own, as in the content.
-const ROW_TOLERANCE = 3;
-const DESCENT = 0.365;
 // A row joins the block above when it is no further below it than this and starts at the same x.
 const MAX_JOIN_GAP = 20;
 const SAME_X_TOLERANCE = 1.5;
@@ -38,89 +41,14 @@ const PANEL_MIN_HEIGHT = 15;
 const KEY_MIN_SIZE = 18;
 const KEY_MAX_SIZE = 26;
 
-const WHITE = '#FFFFFF';
 const PAGE_GREY = '#EEEEEE';
 // The "More Information" band is grey and its title is kept as a plain paragraph.
 const MORE_INFORMATION_GREY = '#C7C8CA';
-
-/** True when a font name is one of the bold weights used in the PDF. */
-function isBoldFont(fontName) {
-  return /Heavy|Black|Bold|Semibold|Medium/.test(fontName);
-}
-
-/** Escapes text for the content's HTML strings (only "<" occurs in the guidelines). */
-function escapeText(text) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-}
 
 /** The level of a left edge against a list of edges: 0 before the first edge, and so on. */
 function levelOf(x, edges) {
   const index = edges.findIndex((edge) => x < edge);
   return index === -1 ? edges.length : index;
-}
-
-/** True when a point lies inside a rect. */
-function contains(rect, x, y) {
-  return x >= rect.x0 - 0.5 && x <= rect.x1 + 0.5 && y >= rect.y0 - 0.5 && y <= rect.y1 + 0.5;
-}
-
-/** Groups the spans of a page body into rows, top to bottom, each sorted left to right. */
-export function groupRows(spans) {
-  const sorted = [...spans].sort((first, second) => first.top - second.top || first.x - second.x);
-  const rows = [];
-  for (const span of sorted) {
-    const row = rows.at(-1);
-    if (row && span.top - row.y <= ROW_TOLERANCE) row.spans.push(span);
-    else rows.push({ y: span.top, spans: [span] });
-  }
-  for (const row of rows) {
-    row.spans.sort((first, second) => first.x - second.x);
-    row.x = row.spans[0].x;
-    row.baseline = row.spans[0].y;
-    // Vertical middle of the first span's text box (the font's descent is 0.365 of its size).
-    row.middle = (row.spans[0].top + row.baseline + DESCENT * row.spans[0].size) / 2;
-  }
-  return rows;
-}
-
-/**
- * The pieces of text in a row, left to right. Characters are put in x order first, so a
- * superscript that is drawn separately lands inside the word run it belongs to, splitting it
- * (as in "the 5 th intercostal space"). Returns [{ text, bold }].
- */
-function rowPieces(row) {
-  const characters = row.spans.flatMap((span, spanIndex) =>
-    Array.from(span.t).map((character, index) => ({
-      character,
-      x: span.xs ? span.xs[index] : span.x,
-      spanIndex,
-    })),
-  );
-  characters.sort((first, second) => first.x - second.x || first.spanIndex - second.spanIndex);
-  const pieces = [];
-  let previousSpan = -1;
-  for (const { character, spanIndex } of characters) {
-    if (spanIndex !== previousSpan) {
-      pieces.push({ text: '', bold: isBoldFont(row.spans[spanIndex].font) });
-      previousSpan = spanIndex;
-    }
-    pieces.at(-1).text += character;
-  }
-  return pieces;
-}
-
-/** HTML of one row: bold pieces wrapped in <b>, every piece separated by a space. */
-export function rowHtml(row) {
-  const pieces = rowPieces(row).map((piece) => {
-    const text = escapeText(piece.text).replace(/\s+/g, ' ').trim();
-    return piece.bold && text ? `<b>${text}</b>` : text;
-  });
-  // Bold pieces next to each other in one row become one bold run.
-  return pieces
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .replace(/<\/b> <b>/g, ' ')
-    .trim();
 }
 
 /** The parts of a page: its shapes sorted into kinds. */
@@ -170,7 +98,7 @@ function markerOfRow(row, markers) {
 /** The key square under the first span of a row, if the row starts a key item. */
 function keyOfRow(row, keys) {
   const first = row.spans[0];
-  return keys.find((key) => contains(key, first.x + 1, first.y - 2));
+  return keys.find((key) => textIsInside(key, first.x, first.y));
 }
 
 /**
@@ -178,12 +106,16 @@ function keyOfRow(row, keys) {
  * holds its row itself, so the box keeps only the rows below the band.
  */
 function panelOfRow(row, panels) {
-  const holding = panels.filter((panel) => contains(panel, row.x + 1, row.baseline - 2));
+  const holding = panels.filter((panel) => textIsInside(panel, row.x, row.baseline));
   const band = holding.find((panel) => panel.y1 - panel.y0 <= HEADING_MAX_HEIGHT);
   return band || holding[0];
 }
 
-/** Starts a new block for a row. Returns { block, x, y, panel }. */
+/**
+ * Starts a new block for a row. Returns { block, x, y, panel }, where x is the left edge that
+ * the next rows of the block must share. A key block also has labelX (the left edge of its
+ * label), and its x is null while a label on a row of its own waits for its text.
+ */
 function startBlock(row, shapes) {
   const panel = panelOfRow(row, shapes.panels);
   const key = keyOfRow(row, shapes.keys);
@@ -251,176 +183,10 @@ function wrapPanels(items, tables) {
   return blocks.map((entry) => entry.block);
 }
 
-// Tables are drawn as thin grey rules around every cell.
-const TABLE_RULE_COLOUR = '#B2B2B2';
-const RULE_MAX_THICKNESS = 1.5;
-const GRID_TOLERANCE = 1.5;
-const MIN_TABLE_LINES = 3;
-
-/** True when two rects touch or overlap (with a small margin). */
-function touches(first, second) {
-  const margin = GRID_TOLERANCE;
-  return (
-    first.x0 <= second.x1 + margin &&
-    second.x0 <= first.x1 + margin &&
-    first.y0 <= second.y1 + margin &&
-    second.y0 <= first.y1 + margin
-  );
-}
-
-/** Groups touching rules into tables. Returns a list of rule lists. */
-function groupRules(rules) {
-  const groups = [];
-  for (const rule of rules) {
-    const joined = groups.filter((group) => group.some((other) => touches(rule, other)));
-    const merged = [rule, ...joined.flat()];
-    for (const group of joined) groups.splice(groups.indexOf(group), 1);
-    groups.push(merged);
-  }
-  return groups;
-}
-
-/** Sorted distinct values, treating values closer than the grid tolerance as one. */
-function distinctEdges(values) {
-  const sorted = [...values].sort((first, second) => first - second);
-  return sorted.filter((value, index) => index === 0 || value - sorted[index - 1] > GRID_TOLERANCE);
-}
-
-/**
- * The part of a span between two x positions (a header such as "EMT Paramedic ICP CCP" is one
- * span across four cells). Returns a span with only those characters.
- */
-function clipSpan(span, left, right) {
-  const characters = Array.from(span.t);
-  const xs = span.xs || characters.map(() => span.x);
-  const keep = characters.map((_, index) => xs[index] >= left - 0.5 && xs[index] < right);
-  const first = keep.indexOf(true);
-  return {
-    ...span,
-    t: characters.filter((_, index) => keep[index]).join(''),
-    xs: xs.filter((_, index) => keep[index]),
-    x: first === -1 ? span.x : xs[first],
-  };
-}
-
-/** One table cell: its text (lines joined by <br>), background colour and white-text flag. */
-function tableCell(box, spans, fills) {
-  const inside = spans
-    .filter((span) => span.y - 2 >= box.y0 && span.y - 2 <= box.y1)
-    .map((span) => clipSpan(span, box.x0, box.x1))
-    .filter((span) => span.t.trim());
-  // Only a fill covering the whole cell is its background (not a dot or tick drawn inside it).
-  const fill = fills
-    .filter(
-      (rect) => contains(rect, box.x0 + 1, box.y0 + 1) && contains(rect, box.x1 - 1, box.y1 - 1),
-    )
-    .at(-1);
-  return {
-    t: groupRows(inside)
-      .map((row) => rowHtml(row))
-      .join('<br>'),
-    bg: fill ? fill.col : null,
-    w: inside.length > 0 && inside[0].col === WHITE,
-  };
-}
-
-/** True when one of the rules runs along the given edge (vertical when x0 === x1). */
-function hasRule(rules, x0, y0, x1, y1) {
-  const middleX = (x0 + x1) / 2;
-  const middleY = (y0 + y1) / 2;
-  return rules.some(
-    (rule) => contains(rule, middleX, middleY) && touches(rule, { x0, y0, x1, y1 }),
-  );
-}
-
-/**
- * The cell boxes of a table grid, row by row. A cell with no rule on its left is part of the
- * cell on its left, and one with no rule above is part of the cell above: it is null and the
- * cell it belongs to grows over it (as merged cells are kept in the content).
- */
-function tableGrid(rules, columns, lines) {
-  const grid = [];
-  for (let row = 0; row < lines.length - 1; row++) {
-    const boxes = [];
-    for (let column = 0; column < columns.length - 1; column++) {
-      const box = {
-        x0: columns[column],
-        x1: columns[column + 1],
-        y0: lines[row],
-        y1: lines[row + 1],
-      };
-      const openLeft = column > 0 && !hasRule(rules, box.x0, box.y0, box.x0, box.y1);
-      const openTop = row > 0 && !hasRule(rules, box.x0, box.y0, box.x1, box.y0);
-      const owner = openLeft
-        ? ownerOf(grid, boxes, row, column - 1)
-        : openTop
-          ? ownerOf(grid, boxes, row - 1, column)
-          : null;
-      if (owner) {
-        owner.x1 = Math.max(owner.x1, box.x1);
-        owner.y1 = Math.max(owner.y1, box.y1);
-        boxes.push(null);
-      } else {
-        boxes.push(box);
-      }
-    }
-    grid.push(boxes);
-  }
-  return grid;
-}
-
-/** The box a grid position belongs to: itself, or the merged cell that covers it. */
-function ownerOf(grid, currentRow, row, column) {
-  const rowBoxes = row === grid.length ? currentRow : grid[row];
-  for (let index = column; index >= 0; index--) {
-    if (rowBoxes[index]) return rowBoxes[index];
-  }
-  return row > 0 ? ownerOf(grid, currentRow, row - 1, column) : null;
-}
-
-/**
- * Finds the tables of a page. Returns a list of { top, box, block } where block is
- * ['tbl', rows of cells] and box is the area the table covers.
- */
-export function pageTables(page) {
-  const thin = (rect) =>
-    rect.x1 - rect.x0 <= RULE_MAX_THICKNESS || rect.y1 - rect.y0 <= RULE_MAX_THICKNESS;
-  const rules = page.rects.filter(
-    (rect) =>
-      !rect.stroke &&
-      rect.col === TABLE_RULE_COLOUR &&
-      thin(rect) &&
-      rect.y0 > BODY_TOP &&
-      rect.y1 < BODY_BOTTOM,
-  );
-  const fills = page.rects.filter((rect) => !rect.stroke && !thin(rect) && rect.col !== WHITE);
-  const tables = [];
-  for (const group of groupRules(rules)) {
-    const columns = distinctEdges(
-      group.filter((rule) => rule.x1 - rule.x0 <= RULE_MAX_THICKNESS).map((rule) => rule.x0),
-    );
-    const lines = distinctEdges(
-      group.filter((rule) => rule.y1 - rule.y0 <= RULE_MAX_THICKNESS).map((rule) => rule.y0),
-    );
-    // A single row of cells is kept as text, as in the content.
-    if (columns.length < 2 || lines.length < MIN_TABLE_LINES) continue;
-    const grid = tableGrid(group, columns, lines);
-    // A grid whose first row is one cell across the whole width (a chart with a title band) is
-    // kept as a heading and text, as in the content.
-    if (grid[0].slice(1).every((box) => box === null)) continue;
-    const rows = grid.map((boxes) =>
-      boxes.map((box) => (box ? tableCell(box, page.spans, fills) : null)),
-    );
-    const box = { x0: columns[0], x1: columns.at(-1), y0: lines[0], y1: lines.at(-1) };
-    tables.push({ top: lines[0], box, block: ['tbl', rows] });
-  }
-  return tables;
-}
-
 /** Content blocks of one page body, top to bottom. */
 export function pageBlocks(page) {
   const tables = pageTables(page);
-  const inTable = (span) => tables.some((table) => contains(table.box, span.x + 1, span.y - 2));
+  const inTable = (span) => tables.some((table) => textIsInside(table.box, span.x, span.y));
   const bodySpans = page.spans.filter(
     (span) => span.y > BODY_TOP && span.y < BODY_BOTTOM && span.t.trim() && !inTable(span),
   );
@@ -445,7 +211,7 @@ export function pageBlocks(page) {
 /** The title of a guideline: the large white text in the band at the top of its first page. */
 export function pageTitle(page) {
   const titleSpans = page.spans.filter(
-    (span) => span.y < BODY_TOP && Math.abs(span.size - TITLE_FONT_SIZE) < 0.5,
+    (span) => span.y < BODY_TOP && Math.abs(span.size - TITLE_FONT_SIZE) < TITLE_SIZE_TOLERANCE,
   );
   // The title is set in pieces (for example "Providing T" + "reatment"), so touching pieces join
   // without a space.
@@ -459,7 +225,7 @@ export function pageTitle(page) {
 /** The colour of the title band at the top of a page. */
 export function headerColour(page) {
   const band = page.rects.find(
-    (rect) => !rect.stroke && rect.y0 <= 0 && rect.y1 < BODY_TOP && rect.y1 > 40,
+    (rect) => !rect.stroke && rect.y0 <= 0 && rect.y1 < BODY_TOP && rect.y1 > TITLE_BAND_MIN_BOTTOM,
   );
   return band ? band.col : null;
 }

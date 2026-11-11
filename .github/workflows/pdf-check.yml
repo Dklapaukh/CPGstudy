@@ -3,6 +3,7 @@
 # version entry has changed, it rebuilds the content from the PDF (scripts/build-guidelines.js,
 # no AI), rebuilds content/related.js, sets the date in version.json, runs `npm run check` and
 # opens a pull request with all of it and a report. Nothing is published until you merge.
+# When nothing has changed it confirms that the converter still rebuilds the recorded content.
 # Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
 name: pdf-check
 on:
@@ -29,6 +30,13 @@ jobs:
       - name: Compare with the last scan
         id: scan
         run: node scripts/check-pdf.js "$RUNNER_TEMP/EAS.pdf" "$RUNNER_TEMP/report.md"
+      # On a day with no new PDF: a red run here means the converter's output has changed (or the
+      # PDF changed without a new export date), found before it can reach a content update.
+      - name: Confirm the converter still gives the recorded content
+        if: steps.scan.outputs.changed == 'false'
+        run: |
+          npm install
+          node scripts/build-guidelines.js "$RUNNER_TEMP/EAS.pdf" --check
       - name: Check whether a pull request already exists for this PDF
         if: steps.scan.outputs.changed == 'true'
         id: branch

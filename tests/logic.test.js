@@ -6,6 +6,7 @@ import {
   getStatus,
   countStatuses,
   guidelineMatches,
+  guidelineSearchText,
   mergeRemoteEntries,
   nextTimestamp,
   syncStatusText,
@@ -54,6 +55,23 @@ test('guidelineMatches applies status filter, title search and body search', () 
   assert.equal(guidelineMatches(alpha, 'i', 'all', 'first'), true);
   assert.equal(guidelineMatches(alpha, 'i', 'all', 'adrenaline'), true);
   assert.equal(guidelineMatches(alpha, 'i', 'all', 'oxygen'), false);
+  assert.equal(guidelineMatches(alpha, 'i', 'all', '  Give  ADRENALINE '), true);
+});
+
+test('guidelineSearchText holds the words of every block and none of the markup (R8)', () => {
+  const guideline = {
+    b: [
+      ['h', 'Dose', '#00693C'],
+      ['b', 'Give <b>adrenaline</b> if SpO2 &lt; 94%', 1, '#00693C'],
+      ['k', 'I', 'Identify<br>yourself', '#00693C'],
+      ['box', [['p', 'Boxed &amp; safe', 0]], '#00693C'],
+      ['tbl', [[{ t: 'Cell one', bg: null, w: false }, null]]],
+    ],
+  };
+  assert.equal(
+    guidelineSearchText(guideline),
+    'dose give adrenaline if spo2 < 94% i identify yourself boxed & safe cell one',
+  );
 });
 
 test('mergeRemoteEntries: newest time wins and ties keep the local entry', () => {

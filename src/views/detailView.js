@@ -101,6 +101,16 @@ export function refreshDetailFromState() {
   refreshQueueViews();
 }
 
+const COMMENT_POINT_SELECTOR = '.bullet-row, .key-row';
+
+/** The text of every point of the open guideline that can take a comment, in page order. */
+export function commentPointTexts() {
+  return [...app.querySelectorAll(COMMENT_POINT_SELECTOR)].map((row) => {
+    const span = row.querySelector('span');
+    return span ? span.textContent : '';
+  });
+}
+
 /**
  * Highlights the points that have a comment in the notes, and marks a heading when any point
  * under it has one. Called after every draw and every notes change (no timer needed).
@@ -108,9 +118,9 @@ export function refreshDetailFromState() {
 export function updateCommentHighlights() {
   const notes = byId('notes-input');
   const notesText = notes ? notes.value : '';
-  app.querySelectorAll('.bullet-row, .key-row').forEach((row) => {
-    const span = row.querySelector('span');
-    row.classList.toggle('has-comment', notesHaveComment(notesText, span && span.textContent));
+  const pointTexts = commentPointTexts();
+  app.querySelectorAll(COMMENT_POINT_SELECTOR).forEach((row, index) => {
+    row.classList.toggle('has-comment', notesHaveComment(notesText, pointTexts[index], pointTexts));
   });
   app.querySelectorAll('.heading-section').forEach((section) => {
     const heading = section.previousElementSibling;

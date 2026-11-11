@@ -2,7 +2,7 @@
  * Pure logic: takes input and returns a result, touches no page, storage or network.
  * Depends on constants.js only. Tested in tests/logic.test.js.
  */
-import { STATUS, FILTER, SUGGESTION_WEIGHT } from './constants.js';
+import { BLOCK, STATUS, FILTER, SUGGESTION_WEIGHT } from './constants.js';
 
 const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 
@@ -51,24 +51,56 @@ export function ringArcs(counts, total) {
   };
 }
 
-// Searching the body text is slow, so the lower-case text of each guideline is made once.
-const bodyTextCache = new WeakMap();
-
-function getBodyText(guideline) {
-  if (!bodyTextCache.has(guideline)) {
-    bodyTextCache.set(guideline, JSON.stringify(guideline.b).toLowerCase());
+/** The strings of text inside one content block (see BLOCK in constants.js for the kinds). */
+function blockTexts(block) {
+  const [kind] = block;
+  if (kind === BLOCK.BOX) return block[1].flatMap(blockTexts);
+  if (kind === BLOCK.TABLE) {
+    return block[1]
+      .flat()
+      .filter(Boolean)
+      .map((cell) => cell.t);
   }
-  return bodyTextCache.get(guideline);
+  if (kind === BLOCK.KEY) return [block[1], block[2]];
+  return [block[1]];
 }
 
-/** True when the guideline passes the status filter and the (lower-case) search text. */
+/**
+ * The body of a guideline as plain lower-case text for searching: the words a person sees, with
+ * the markup removed, so that "b" or "tbl" no longer matches every guideline and a phrase is
+ * found even when part of it is bold.
+ */
+export function guidelineSearchText(guideline) {
+  return guideline.b
+    .flatMap(blockTexts)
+    .join(' ')
+    .replace(/<br>/g, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+// Making the search text is slow, so it is made once for each guideline, when first needed.
+const searchTextCache = new WeakMap();
+
+function getSearchText(guideline) {
+  if (!searchTextCache.has(guideline)) {
+    searchTextCache.set(guideline, guidelineSearchText(guideline));
+  }
+  return searchTextCache.get(guideline);
+}
+
+/** True when the guideline passes the status filter and the search text (as typed). */
 export function guidelineMatches(guideline, status, filter, searchText) {
   if (filter === FILTER.INCOMPLETE && status !== STATUS.INCOMPLETE) return false;
   if (filter === FILTER.REVIEW && status !== STATUS.REVIEW) return false;
   if (filter === FILTER.COMPLETE && status !== STATUS.COMPLETE) return false;
-  if (!searchText) return true;
+  const wanted = searchText.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!wanted) return true;
   const heading = `${guideline.n} ${guideline.t} ${guideline.sec}`.toLowerCase();
-  return heading.includes(searchText) || getBodyText(guideline).includes(searchText);
+  return heading.includes(wanted) || getSearchText(guideline).includes(wanted);
 }
 
 /**

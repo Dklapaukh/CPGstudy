@@ -1,5 +1,17 @@
 # Change log
 
+- 2026-11-11: Open review items. R4: a comment's snippet grows past 70 characters when another
+  point of the guideline starts the same way, so each point has its own highlight (older
+  comments still highlight). R8: search uses the plain words of a guideline, waits 150 ms after
+  typing stops, and no longer drops a typed space or capital from the search box. R11:
+  secondary text #565c58, green #1a7d53, orange #b35900 (all at least 4.5:1), base text 15 px.
+  R13: `scripts/contentCheck.js` refuses unexpected markup on every rebuild and in
+  `npm run check`. C4: the backend refuses the placeholder mentor passcode (redeploy
+  `backend/Code.gs`). C5: size at which to revisit noted in the README. R12 (patient-information
+  notice): not wanted. Converter tidy-up with no change in output: `scripts/pdfRows.js` and
+  `scripts/pdfTables.js` split from `scripts/pdfContent.js`, `mergeRebuilt` split into small
+  functions, named constants; `--check` and the daily run now confirm the converter still gives
+  the recorded rebuild. 78 tests.
 - 2026-11-11: Feature 6, stage B (Decision Y2). Converter from the EAS PDF to
   `content/guidelines.js`, no AI (`scripts/pdfPages.js`, `scripts/pdfContent.js`,
   `scripts/contentUpdate.js`, `scripts/build-guidelines.js`, 10 tests). The 24.09.2026 PDF

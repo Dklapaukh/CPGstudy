@@ -10,6 +10,7 @@ import {
   recordEdit,
   showSelectedStatus,
   updateCommentHighlights,
+  commentPointTexts,
   toggleHeading,
 } from './views/detailView.js';
 import { refreshQueueViews, shownRelatedIds } from './views/queueView.js';
@@ -18,12 +19,20 @@ import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
 import { applyUpdate } from './updateState.js';
-import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS } from './constants.js';
+import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
 const app = document.getElementById('app');
 const byId = (id) => document.getElementById(id);
 
 /* ---------- Passcode screen ---------- */
+
+/** The message for a sign-in that the backend refused, from the error code in its reply. */
+function signInErrorMessage(reply) {
+  const error = reply && reply.error;
+  if (error === 'placeholder-passcode') return MESSAGES.PLACEHOLDER_PASSCODE;
+  if (error && error !== 'not-found') return MESSAGES.GENERIC_ERROR;
+  return MESSAGES.CODE_NOT_RECOGNISED;
+}
 
 async function submitPasscode() {
   const code = byId('passcode-input').value.trim();
@@ -39,8 +48,7 @@ async function submitPasscode() {
       state.mentorPasscode = code;
       showMentor({ name: reply.name });
     } else {
-      const failed = reply && reply.error && reply.error !== 'not-found';
-      showLogin(failed ? MESSAGES.GENERIC_ERROR : MESSAGES.CODE_NOT_RECOGNISED, code);
+      showLogin(signInErrorMessage(reply), code);
     }
   } catch {
     showLogin(MESSAGES.NO_SIGNAL, code);
@@ -167,7 +175,7 @@ function addComment(button) {
   const notes = byId('notes-input');
   if (!notes) return;
   const pointText = button.parentNode.querySelector('span');
-  const snippet = makeSnippet(pointText ? pointText.textContent : '');
+  const snippet = makeSnippet(pointText ? pointText.textContent : '', commentPointTexts());
   const answer = window.prompt(`Your comment on:\n${snippet}`, '');
   if (answer === null || !answer.trim()) return;
   notes.value = appendComment(notes.value, snippet, answer.trim());
@@ -178,10 +186,14 @@ function addComment(button) {
   }, COMMENT_CONFIRMATION_MS);
 }
 
-function changeSearchText(input) {
-  state.searchText = input.value.trim().toLowerCase();
+/** Redraws the list for the search text, keeping the caret where the person is typing. */
+function redrawListForSearch() {
+  const input = byId('search-input');
+  if (!input) return; // the person has left the list screen
+  const hadFocus = document.activeElement === input;
   const caret = input.selectionStart;
   renderList();
+  if (!hadFocus) return;
   const newInput = byId('search-input');
   newInput.focus();
   try {
@@ -189,6 +201,16 @@ function changeSearchText(input) {
   } catch {
     // Some input types refuse a caret position. The caret then stays at the end.
   }
+}
+
+/**
+ * Records the search text as typed and redraws the list once typing has paused, so that the
+ * list is not rebuilt for every keystroke.
+ */
+function changeSearchText(input) {
+  state.searchText = input.value;
+  clearTimeout(state.searchTimer);
+  state.searchTimer = setTimeout(redrawListForSearch, SEARCH_PAUSE_MS);
 }
 
 /* ---------- Listeners ---------- */

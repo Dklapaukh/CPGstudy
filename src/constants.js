@@ -13,6 +13,8 @@ export const SYNC_DELAY_AFTER_EDIT_MS = 900;
 export const SYNC_DELAY_MORE_PENDING_MS = 500;
 export const SYNC_DELAY_AFTER_FAILURE_MS = 10000;
 export const BACKGROUND_SYNC_INTERVAL_MS = 30000;
+// The list is redrawn this long after typing in the search box stops (review item R8).
+export const SEARCH_PAUSE_MS = 150;
 export const COMMENT_CONFIRMATION_MS = 1500;
 export const COMMENT_SNIPPET_LENGTH = 70;
 export const DEFAULT_HEADER_COLOUR = '#00693C';
@@ -71,6 +73,8 @@ export const MESSAGES = {
   NO_SIGNAL: 'Couldn’t reach the server. Check your signal and try again.',
   CODE_NOT_RECOGNISED: 'That passcode wasn’t recognised',
   GENERIC_ERROR: 'Something went wrong. Please try again.',
+  PLACEHOLDER_PASSCODE:
+    'That is the placeholder mentor passcode. Change it in the Mentors tab of the Sheet first.',
   NOT_A_MENTOR_CODE: 'That passcode isn’t a mentor passcode.',
   LABEL_NEEDED: 'Please type a label first, for example Sam - 2026.',
   IS_A_MENTOR_CODE: 'That is a mentor passcode. Please type a tracker passcode.',

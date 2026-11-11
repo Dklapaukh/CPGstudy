@@ -2,7 +2,8 @@
 // acceptance test needs the 17 MB PDF: `node scripts/build-guidelines.js EAS.pdf --check`.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildAllGuidelines, pageBlocks, pageNumberOf, rowHtml } from '../scripts/pdfContent.js';
+import { buildAllGuidelines, pageBlocks, pageNumberOf } from '../scripts/pdfContent.js';
+import { rowHtml } from '../scripts/pdfRows.js';
 
 const BOOK = 'Avenir-Book';
 const HEAVY = 'Avenir-Heavy';

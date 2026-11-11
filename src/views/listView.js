@@ -125,7 +125,7 @@ function rowHtml(guideline) {
 }
 
 function sectionsHtml(newlyClosed) {
-  const isFiltering = state.filter !== FILTER.ALL || state.searchText;
+  const isFiltering = state.filter !== FILTER.ALL || state.searchText.trim();
   let html = '';
   let anyMatch = false;
   sections.forEach((section) => {
