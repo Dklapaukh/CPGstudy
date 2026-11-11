@@ -95,6 +95,13 @@ test('a tracker passcode shows 14 sections and 180 guidelines with counts', asyn
   assert.equal($('.tracker-label').textContent, 'Sam - 2026');
 });
 
+test('the Random guideline button opens a guideline', async () => {
+  click($('#random-guideline-button'));
+  assert.match(dom.window.location.hash, /^#.+/);
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
 test('filters and search narrow the list', async () => {
   click($$('.filter-chip')[3]);
   assert.match($('.empty-message').textContent, /Nothing matches/);

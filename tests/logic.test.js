@@ -11,6 +11,8 @@ import {
   syncStatusText,
   flattenGuidelines,
   ringArcs,
+  suggestionCandidates,
+  pickSuggestion,
 } from '../src/logic.js';
 
 const sampleGuidelines = [
@@ -104,4 +106,31 @@ test('ringArcs sizes the green and orange arcs and detects a closed ring', () =>
     reviewPercent: 0,
     isClosed: false,
   });
+});
+
+const sampleSections = [
+  { name: 'First', items: [sampleGuidelines[0], sampleGuidelines[1]] },
+  { name: 'Second', items: [sampleGuidelines[2]] },
+];
+
+test('suggestionCandidates uses the one open section, otherwise everything', () => {
+  assert.deepEqual(suggestionCandidates(sampleSections, ['Second']).map((g) => g.id), ['c']);
+  assert.equal(suggestionCandidates(sampleSections, []).length, 3);
+  assert.equal(suggestionCandidates(sampleSections, ['First', 'Second']).length, 3);
+});
+
+test('pickSuggestion favours Incomplete, then Needs review, then Complete', () => {
+  // a is Complete (weight 1), b is Review (3), c is Incomplete (6).
+  const entries = { a: { s: 'c' }, b: { s: 'v' } };
+  const pick = (randomNumber) => pickSuggestion(sampleGuidelines, entries, randomNumber).id;
+  assert.equal(pick(0), 'a'); // weights run a: 0-0.1, b: 0.1-0.4, c: 0.4-1
+  assert.equal(pick(0.09), 'a');
+  assert.equal(pick(0.1), 'b');
+  assert.equal(pick(0.39), 'b');
+  assert.equal(pick(0.4), 'c');
+  assert.equal(pick(0.9999), 'c');
+});
+
+test('pickSuggestion returns undefined for an empty list', () => {
+  assert.equal(pickSuggestion([], {}, 0.5), undefined);
 });
