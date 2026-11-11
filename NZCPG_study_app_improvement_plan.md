@@ -75,6 +75,7 @@ Work is done in as token-efficient a way as possible. Every message in a chat ma
 | 5 | Related-guideline review queue | Large | Optional (queue persistence) |
 | 6 | Check for guideline updates from the PDF | Large | Yes, plus a new build step |
 | 7 | Prompt the user to update the app | Medium | No |
+| 8 | Medicines quiz: flashcards with spaced repetition | Medium | No (stored as entries) |
 
 ---
 
@@ -293,7 +294,9 @@ Rule: unanswered questions are shown to the user in the chat with full option te
 | ID | Topic | Needed before |
 |---|---|---|
 | G, H, Decisions I, J, K | Code structure and refactor | Answered, see the log |
-| A, B, C, E, F | Feature behaviour | Features 1 and 2 (shelved, see the log); not needed for feature 3 |
+| A, B, C, F | Feature behaviour | Closed: features 1 and 2 scrapped 11 Nov 2026 |
+| E, Z1 to Z4 | Feature 8 (medicines quiz) | Answered 11 Nov 2026, see the log |
+| Z5 | Feature 8: quiz cards for the clinical guidelines, not only medicines | Open, you are thinking about it; not needed yet |
 | L, M, N, O, P | Feature 5 behaviour (review queue) | Answered 11 Nov 2026, see the log |
 | Q, R, S | Feature 5: where the queue is seen, its size limit, when it clears | Answered 11 Nov 2026, see the log |
 | T, U, V | Feature 7 behaviour (update prompt) | Answered 11 Nov 2026, see the log |
@@ -311,7 +314,9 @@ All answered (G, H, I, J, K). See the answered log.
 
 ### Decisions: feature behaviour
 
-**Shelved on 11 Nov 2026:** time-based reviews (features 1 and 2) are skipped for now, so Decisions A, B, C, E and F are not being asked. They stay below unchanged for when time-based reviews are picked up again. Decision C is moot for the rings as built (only Complete counts as green, Needs review as orange).
+**Scrapped on 11 Nov 2026:** features 1 and 2 (time-based reviews) are dropped. Decisions A, B, C and F are closed and kept below only as a record. Decision E was reworded for the medicines quiz and answered (see the log).
+
+**Open: Decision Z5 – Quiz cards for the clinical guidelines.** You are deciding whether the quiz should also cover the guidelines themselves (not only medicines). No options written yet; when you want it, say what you would like tested and the options will be drafted.
 
 **Decision A – How is a second review of an already-Complete guideline recorded?**
 
@@ -351,6 +356,18 @@ All answered (T, U, V). See the answered log.
 Decisions D and Y answered (see the log). No open questions.
 
 ### Answered log
+
+- 11 Nov 2026, feature 8 (medicines quiz) answers: **Decision E (reworded: where quiz progress is stored): Option 1**, through the backend as entries. **Z1: Option 1**, four buttons Again, Hard, Good, Easy (SM-2). **Z2: Option 2**, the medicine's own Dosage section plus the doses in the guidelines it points to, and each unique dose is its own card (only for dosage). **Z3: Option 2**, new cards per day adjustable 5 to 30, default 10. **Z4: medicines only for now** (all 45 medicines, all topics). Features 1 and 2 are scrapped. The old comprehensive-edition PDF is for checking the converter, next chat.
+- 11 Nov 2026, choices I made building feature 8 (say if you want any different):
+  - Cards are built from the content in the app on each start (no generated file), so a PDF update changes them automatically. 522 cards: 45 each for Indications and Contraindications, 44 each for Cautions, Common adverse effects, Usual onset, Usual duration and Mechanism, and 212 dosage cards (86 from each medicine's own Dosage section, 116 from the CPG 7.2 paediatric weight bands, 10 from the CPG 9.3 RSI tables).
+  - "Unique dose": each top-level dose bullet with a label before a colon ("For RSI: …") is a card, with its sub-points. Neighbouring bullets without a label are kept on one card, because they are usually a first dose and its repeat (Adenosine "6 mg", then the repeat). Bullets that only say "See the paediatric drug doses…" are not cards. Paediatric doses are one card per medicine per weight band (rows with "-" skipped); RSI is one card per table row.
+  - Medicines are matched in the dose tables by the first word of their title, with overrides in `TABLE_NAME_OVERRIDES` (Glucose Gel must not match "10% glucose IV"; Prednisone and Prednisolone; Sodium Bicarbonate; the two GTN forms).
+  - Progress is one entry per medicine (`quiz-<id>`), not one entry for everything, because the backend cuts notes at 5000 characters (a full set of 522 schedules would not fit) and so two phones only overwrite each other for the same medicine. A test checks the largest medicine fits. Adds up to 46 Data rows per tracker (relevant to C5).
+  - Again puts the card back 3 cards later in the same session and makes it due today. First answers: Hard and Good 1 day, Easy 4 days. Afterwards Good multiplies the interval by the ease (start 2.5), Hard by 1.2, Easy by ease × 1.3; ease changes −0.2 / −0.15 / 0 / +0.15, never below 1.3; intervals capped at 365 days. Each button shows its next interval.
+  - Due cards come first (oldest first), then new cards in guideline order (14.2 onward, topic order as you listed). Quiz ratings never change a guideline's Complete or Review status.
+  - A card keeps its schedule while its key stays the same. If a PDF update rewords a dose label, that one card starts again as new.
+  - **Content problem found:** Morphine (14.32) has only 12 blocks in `content/guidelines.js` and is missing Cautions, Dosage, adverse effects, onset and duration, so it has only 7 cards. Likely a converter or source PDF issue; check in the converter chat.
+  - Not checked on a real phone: the quiz layout and two phones sharing progress. Checked in phone-size Chromium: overview, card and answer screens, no errors.
 
 - 11 Nov 2026, feature 6 stage B: **Decision Y: Option 2** (the pull request uses the converter's version and lists it under "Check formatting"). You asked whether this covers new and deleted guidelines: it does now, as follows (my choices, say if you want any different):
   - Acceptance test against the 24.09.2026 PDF: **170 of 180 guidelines rebuild exactly**. The 10 that do not (1.3, 1.26, 2.5, 3.14, 3.15, 4.2, 5.4, 6.2, 9.7, 12.6) differ in small details the old content got from its original tool: where a subscript "2" lands, numbered list items, one bordered box, and two tables the old content kept as text (4.2 page 2, 1.26 EWS chart). Chasing them further would mean copying that tool's quirks.
@@ -613,3 +630,4 @@ Review items from section 9: all are now fixed, documented or closed by decision
 | 11 Nov 2026 | Items I1, I3 and Decision D2 recorded. Feature 6 stage A built on branch `feature-6-pdf-check` (pull request): `scripts/pdfScan.js` (pure, 6 tests), `scripts/check-pdf.js`, daily `.github/workflows/pdf-check.yml`, baseline `content/pdf-status.json` (180 guidelines, 156 version entries, all matching the content). `.prettierrc`, `.prettierignore`, `.gitignore` added. `npm run check` passes in full (59 tests, format and lint). README and change log updated. Decision Y asked. | You: merge the pull request, tick "Allow GitHub Actions to create and approve pull requests", run "pdf-check" once from the Actions tab (expect "No change"). Answer Decision Y, then build the converter (stage B) in a fresh chat with the attached PDF. |
 | 11 Nov 2026 | Decision Y2 recorded. Feature 6 stage B built on branch `feature-6-converter` (pull request): converter `scripts/pdfPages.js` (MuPDF) and `scripts/pdfContent.js`, merge and file writer `scripts/contentUpdate.js`, command `scripts/build-guidelines.js` (`--check`, `--baseline`), baseline `content/pdf-rebuild.json`. Acceptance test: 170 of 180 guidelines rebuild exactly from the 24.09.2026 PDF; the 10 others keep their published text until the PDF changes them. `pdf-check.yml` now commits the rebuilt content, `content/related.js`, `version.json` and the rebuild record, runs `npm run check` and reports it in the pull request; actions moved to v5 and `ubuntu-24.04`. `npm run check` passes (69 tests). | You: merge the pull request, then run "pdf-check" once from the Actions tab (expect "No change", and no Node 20 warning). The first real PDF update will test the whole path: read the "Check formatting" list in that pull request before merging. Next feature: features 1 and 2 (Decisions A to F) or the open review items (R4, R8, R11 to R13, C4, C5), in a fresh chat. |
 | 11 Nov 2026 | Open review items built on branch `review-items` (pull request): R4 unique comment snippets, R8 plain-text search with a 150 ms pause, R11 contrast and 15 px base text, R13 content checker, C4 placeholder passcode refused, C5 README note; R12 closed (not wanted). Converter reviewed (clear and efficient) and tidied with no intended change in output: `scripts/pdfRows.js` and `scripts/pdfTables.js` split out, `mergeRebuilt` split, named constants. `--check` and the daily run now confirm the recorded rebuild. `npm run check` passes (78 tests). Not checked: the look of the new colours and text size on a real phone; the converter against the real PDF. | You: before merging, run "pdf-check" from the Actions tab on the branch `review-items` (expect a green run with "The converter gives the recorded rebuild of this PDF"). Merge, redeploy `backend/Code.gs`, check colours, text size, search and comments on your phone. Next: features 1 and 2 (Decisions A to F, section 8), in a fresh chat. |
+| 11 Nov 2026 | Features 1 and 2 scrapped (A, B, C, F closed). Decisions E1, Z1-1, Z2-2 (one card per dose), Z3-2, Z4 medicines only recorded. Feature 8 built on branch `feature-quiz` (pull request): medicines quiz at `#quiz`, 522 cards built from the content, SM-2 spaced repetition with Again / Hard / Good / Easy, 5 to 30 new cards a day, progress saved as one backend entry per medicine (no backend change). New `src/quizCards.js`, `src/quizSchedule.js`, `src/quizState.js`, `src/views/quizView.js`, `tests/quiz.test.js`; README, change log, `version.json`. `npm run check` passes (91 tests). Found: Morphine 14.32 content is incomplete. | You: merge the pull request, try the quiz on your phone (a few cards, change the new-cards setting, check on a second phone). Next, in a fresh chat: check the converter against the old comprehensive-edition PDF and look into the Morphine 14.32 content. Decision Z5 (guideline cards) when you are ready. |

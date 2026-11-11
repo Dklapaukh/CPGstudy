@@ -93,3 +93,15 @@ export const MESSAGES = {
     'Study aid only. The guidelines here are an uncontrolled copy; for clinical use refer to ' +
     'the official guidelines.',
 };
+
+// Medicines quiz (flashcards with spaced repetition). Progress is stored through the backend as
+// one extra entry per medicine (QUIZ_ENTRY_PREFIX + guideline id), so a note stays far below the
+// backend's 5000-character limit and two phones only overwrite each other for the same medicine.
+export const QUIZ_HASH = 'quiz';
+export const QUIZ_ENTRY_PREFIX = 'quiz-';
+export const QUIZ_SETTINGS_ENTRY_ID = 'quiz-settings';
+export const QUIZ_SECTION_NAME = 'Medicines';
+export const QUIZ_NEW_PER_DAY = { MIN: 5, MAX: 30, STEP: 5, DEFAULT: 10 };
+// A card rated Again comes back after this many other cards in the same session.
+export const QUIZ_AGAIN_GAP = 3;
+export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy' };

@@ -16,6 +16,7 @@ import {
 import { updateSyncStatus } from '../sync.js';
 import { coverHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
+import { quizButtonHtml } from './quizView.js';
 import { footerHtml, drawUpdateStatus } from './updateView.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
 
@@ -173,6 +174,7 @@ export function renderList() {
   })}<div class="page-padding">${warning}${progressHtml(counts, guidelines.length, newlyClosed.has(OVERALL_RING_NAME))}
     <button class="random-button" id="random-guideline-button" type="button">
       Random guideline</button>
+    ${quizButtonHtml()}
     ${queueButtonHtml()}
     ${filtersHtml(counts, guidelines.length)}${sectionsHtml(newlyClosed)}${footerHtml()}</div>`;
   app.querySelectorAll('details.section-group').forEach((details) => {

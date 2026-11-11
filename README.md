@@ -14,6 +14,8 @@ through a Google Sheet.
 | `src/logic.js`, `src/comments.js`                         | Pure logic (merge, filters, comment lines). Tested.                              |
 | `src/queue.js`, `src/related.js`                          | Pure logic for the review queue and the related list. Tested.                    |
 | `src/queueState.js`                                       | Reading and saving the review queue in the state.                                |
+| `src/quizCards.js`, `src/quizSchedule.js`                 | Medicines quiz, pure logic: cards from the content, spaced repetition.           |
+| `src/quizState.js`, `src/views/quizView.js`               | Medicines quiz: saving schedules as entries, the `#quiz` screen.                 |
 | `content/related.js`, `content/related-overrides.js`      | Related-guideline links (built by script) and the hand-edited overrides.         |
 | `scripts/build-related.js`                                | `node scripts/build-related.js` rebuilds `content/related.js`.                   |
 | `src/state.js`                                            | The one state object and saving it on the phone.                                 |
@@ -49,6 +51,26 @@ through a Google Sheet.
 - The review queue is saved as one extra entry with the id `review-queue` in the tracker's
   data (its note holds the queue as JSON). It uses the normal save and sync path, so the backend
   needs no change. It appears as a row in the Data sheet; do not edit that row by hand.
+
+## Medicines quiz
+
+- The list screen's "Medicines quiz" button opens `#quiz`. Cards are built from the guidelines
+  every time the app starts (`src/quizCards.js`), so a content update changes them with no extra
+  step. Each medicine (section "Medicines", any guideline with an Indications heading) gets one
+  card for each of Indications, Contraindications, Cautions, Common adverse effects, Usual onset
+  of effect, Usual duration of effect and Mechanism of action, plus dosage cards: one per
+  labelled dose in its own Dosage section (unlabelled steps stay together), one per weight band
+  of CPG 7.2 (paediatric doses) and one per row of the CPG 9.3 RSI tables that names it.
+- Ratings: Again (back in a few cards), Hard, Good, Easy. Intervals follow SM-2 (named constants
+  at the top of `src/quizSchedule.js`). New cards per day: 5 to 30, default 10.
+- Progress is saved as one extra entry per medicine, id `quiz-<guideline id>` (its note holds
+  the schedules as JSON), and the setting as `quiz-settings`. Same save and sync path as the
+  guidelines, so no backend change; they follow the tracker to other phones and add up to 46
+  rows per tracker to the Data sheet. Two phones rating the same medicine at once: the newest
+  save wins for that medicine. Do not edit these rows by hand.
+- A card keeps its schedule while its key stays the same (topic name, dose label, weight band
+  or RSI row). If a dose label is reworded in a PDF update, that card starts again as new.
+- If the medicine table names change, check `TABLE_NAME_OVERRIDES` in `src/quizCards.js`.
 
 ## Publishing an update (feature 7)
 
@@ -148,4 +170,6 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - Related guidelines (at most 5) show under a guideline; "Add to review queue" and "Add all" fill the queue (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the queue; the list screen has a "Review queue (n)" button.
 - Comment button adds to the notes and highlights the point.
 - A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
+- Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
+  new-cards-per-day setting changes the count. Layout on a phone (by hand).
 - Switch tracker and sign out.

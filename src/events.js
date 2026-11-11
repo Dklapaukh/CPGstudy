@@ -19,6 +19,8 @@ import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
 import { applyUpdate } from './updateState.js';
+import { startSession, endSession, rateCurrentCard, saveNewPerDay } from './quizState.js';
+import { renderQuizScreen } from './views/quizView.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
 const app = document.getElementById('app');
@@ -213,6 +215,17 @@ function changeSearchText(input) {
   state.searchTimer = setTimeout(redrawListForSearch, SEARCH_PAUSE_MS);
 }
 
+/* ---------- Medicines quiz ---------- */
+
+/** Runs a change to the quiz session, then redraws the quiz screen. */
+const changeQuiz = (change) => (element) => {
+  change(element);
+  renderQuizScreen();
+};
+const showQuizAnswer = () => {
+  if (state.quiz) state.quiz.revealed = true;
+};
+
 /* ---------- Listeners ---------- */
 
 const clickActions = {
@@ -233,6 +246,10 @@ const clickActions = {
   'remove-from-queue': removeGuidelineFromQueue,
   comment: addComment,
   'toggle-heading': toggleHeading,
+  'quiz-start': changeQuiz(startSession),
+  'quiz-show-answer': changeQuiz(showQuizAnswer),
+  'quiz-rate': changeQuiz((button) => rateCurrentCard(button.dataset.rating)),
+  'quiz-end': changeQuiz(endSession),
 };
 
 /** Attaches every listener for the app container. Called once at start-up. */
@@ -248,6 +265,13 @@ export function attachEventListeners() {
     if (event.target.id === 'notes-input') {
       recordEdit(getStatus(state.entries, state.currentGuideline.id), event.target.value);
       updateCommentHighlights();
+    }
+  });
+
+  app.addEventListener('change', (event) => {
+    if (event.target.id === 'quiz-new-per-day') {
+      saveNewPerDay(event.target.value);
+      renderQuizScreen();
     }
   });
 

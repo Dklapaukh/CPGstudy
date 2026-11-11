@@ -16,6 +16,9 @@
     "src/navigation.js",
     "src/queue.js",
     "src/queueState.js",
+    "src/quizCards.js",
+    "src/quizSchedule.js",
+    "src/quizState.js",
     "src/related.js",
     "src/state.js",
     "src/sync.js",
@@ -26,6 +29,7 @@
     "src/views/loginView.js",
     "src/views/mentorView.js",
     "src/views/queueView.js",
+    "src/views/quizView.js",
     "src/views/templates.js",
     "src/views/updateView.js"
   ]

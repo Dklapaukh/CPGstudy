@@ -6,7 +6,7 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { SEARCH_PAUSE_MS } from '../src/constants.js';
+import { SEARCH_PAUSE_MS, SYNC_DELAY_AFTER_EDIT_MS } from '../src/constants.js';
 
 const TRACKER = 'maple-oak-reef-11';
 const MENTOR = 'mentor-secret';
@@ -234,6 +234,32 @@ test('the list screen opens the Review queue screen, where a guideline can be re
   const before = $$('.queue-item').length;
   click($('.queue-remove-button'));
   assert.equal($$('.queue-item').length, before - 1);
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
+test('the Medicines quiz shows a card, its answer, and saves the rating as a quiz entry', async () => {
+  assert.match($('.quiz-button').textContent, /^Medicines quiz \(10 today\)$/);
+  dom.window.location.hash = '#quiz';
+  await sleep(30);
+  assert.match($('.quiz-counts').textContent, /0 cards due · 10 new cards today/);
+  click($('[data-action="quiz-start"]'));
+  assert.match($('.quiz-prompt').textContent, /^Adenosine – Indications$/);
+  assert.equal($('.quiz-answer'), null, 'the answer is hidden until asked for');
+  click($('[data-action="quiz-show-answer"]'));
+  assert.ok($('.quiz-answer').textContent.trim().length > 0);
+  assert.equal($('.quiz-answer .comment-button'), null, 'answers have no comment buttons');
+  assert.equal($$('.rating-button').length, 4);
+  click($('[data-rating="good"]'));
+  assert.match($('.quiz-left').textContent, /^9 cards left$/);
+  await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
+  assert.ok(stored['quiz-cpg-14-2'], 'the rating is uploaded as the medicine quiz entry');
+  click($('[data-action="quiz-end"]'));
+  assert.match($('.quiz-counts').textContent, /9 new cards today/);
+  const select = $('#quiz-new-per-day');
+  select.value = '20';
+  select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.match($('.quiz-counts').textContent, /19 new cards today/);
   dom.window.location.hash = '';
   await sleep(30);
 });

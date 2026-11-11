@@ -23,6 +23,9 @@ export const state = {
   listScrollY: 0,
   openSections: {}, // section name -> true while open
   currentGuideline: null,
+  // Medicines quiz session { queue: [card ids], revealed, answered }, or null. Memory only; the
+  // card schedules themselves are entries (see quizState.js).
+  quiz: null,
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,
   updateInProgress: false,

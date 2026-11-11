@@ -865,3 +865,117 @@ td.table-cell--coloured {
 .app-footer p {
   margin: 0 0 0.5rem;
 }
+
+/* Medicines quiz: list screen button and the #quiz screen */
+.quiz-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.6rem;
+  min-height: 48px;
+  border: 1px solid var(--colour-green);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--colour-green);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.quiz-title {
+  margin: 0.6rem 0;
+  font-size: 1.3rem;
+}
+.quiz-counts,
+.quiz-finished {
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+.quiz-totals,
+.quiz-help,
+.quiz-left,
+.quiz-source {
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+}
+.quiz-prompt {
+  margin: 0.4rem 0 1rem;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+.quiz-start-button,
+.quiz-show-button {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--colour-green);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.quiz-end-button {
+  width: 100%;
+  margin-top: 1.5rem;
+  min-height: 44px;
+  border: 1px solid var(--colour-line);
+  border-radius: 14px;
+  background: var(--colour-control);
+  color: var(--colour-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.quiz-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.quiz-setting select {
+  min-height: 44px;
+  min-width: 5rem;
+  font-size: 1rem;
+}
+.quiz-answer {
+  border-top: 1px solid var(--colour-line);
+  padding: 0.6rem 0 0.4rem;
+  line-height: 1.45;
+}
+.quiz-answer p {
+  margin: 0.4rem 0;
+}
+.rating-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+.rating-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  border: 1px solid var(--colour-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--colour-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.rating-button--again {
+  border-color: var(--colour-review);
+  color: var(--colour-review);
+}
+.rating-button--good,
+.rating-button--easy {
+  border-color: var(--colour-green);
+  color: var(--colour-green);
+}
+.rating-interval {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--colour-muted);
+}

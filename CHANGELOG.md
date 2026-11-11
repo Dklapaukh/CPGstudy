@@ -1,5 +1,12 @@
 # Change log
 
+- 2026-11-11: Medicines quiz (`#quiz`): 522 flashcards built from the 45 medicine guidelines
+  (indications, contraindications, each dose including CPG 7.2 paediatric weight bands and CPG
+  9.3 RSI rows, cautions, adverse effects, onset, duration, mechanism), rated Again / Hard /
+  Good / Easy with SM-2 spaced repetition, 5 to 30 new cards a day (default 10). Progress saved
+  through the backend as one entry per medicine. New files `src/quizCards.js`,
+  `src/quizSchedule.js`, `src/quizState.js`, `src/views/quizView.js`, `tests/quiz.test.js`.
+
 - 2026-11-11: Open review items. R4: a comment's snippet grows past 70 characters when another
   point of the guideline starts the same way, so each point has its own highlight (older
   comments still highlight). R8: search uses the plain words of a guideline, waits 150 ms after
