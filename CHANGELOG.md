@@ -1,5 +1,10 @@
 # Change log
 
+- 2026-11-11: Feature 6, stage A (Decision D2). Daily GitHub Action downloads the EAS PDF and
+  opens a pull request when the export date or any guideline's version entry changes. New
+  `scripts/pdfScan.js` (pure, 6 tests), `scripts/check-pdf.js`, `content/pdf-status.json`
+  (baseline from the 24.09.2026 PDF: 180 guidelines, 156 version entries, all matching the
+  content). Added `.prettierrc`, `.prettierignore` and `.gitignore`. No app change.
 - 2026-11-11: Feature 7, update prompt. New `version.json` (export date and file list) is
   checked on open and on return to the app. A later export date shows a banner, "A new version
   of the guidelines is available. Update now."; tapping it re-downloads every file past the

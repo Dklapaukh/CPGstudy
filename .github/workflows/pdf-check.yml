@@ -1,0 +1,58 @@
+# Daily check for a new EAS guidelines PDF (feature 6, Decision D).
+# Downloads the PDF, runs scripts/check-pdf.js and, when the export date or any guideline's
+# version entry has changed, opens a pull request with the updated content/pdf-status.json and a
+# report of what changed. It never changes the guideline content and never publishes anything.
+# Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+name: pdf-check
+on:
+  schedule:
+    # 18:23 UTC is 7:23 am in New Zealand during daylight saving (6:23 am in winter).
+    - cron: '23 18 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  check-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pdftotext
+        run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils
+      - name: Download the EAS PDF
+        run: curl -fsSL --retry 3 -o "$RUNNER_TEMP/EAS.pdf" https://cpg.stjohn.org.nz/assets/pdf/EAS.pdf
+      - name: Compare with the last scan
+        id: scan
+        run: node scripts/check-pdf.js "$RUNNER_TEMP/EAS.pdf" "$RUNNER_TEMP/report.md"
+      - name: Open a pull request for the new PDF
+        if: steps.scan.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPORTED_ON: ${{ steps.scan.outputs.exported_on }}
+        run: |
+          branch="pdf-update-${EXPORTED_ON//./-}"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "A pull request branch for this PDF already exists: $branch"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add content/pdf-status.json
+          git commit -m "New EAS guidelines PDF exported $EXPORTED_ON"
+          git push origin "$branch"
+          {
+            echo "A new EAS guidelines PDF was found. Nothing in the app has changed yet."
+            echo
+            cat "$RUNNER_TEMP/report.md"
+            echo
+            echo "### Before merging"
+            echo "- [ ] Rebuild \`content/guidelines.js\` from the new PDF on this branch."
+            echo "- [ ] Run \`node scripts/build-related.js\` and set the date in \`version.json\`."
+            echo "- [ ] Run \`npm run check\` (it fails until the content matches this PDF)."
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --head "$branch" --title "New EAS guidelines PDF ($EXPORTED_ON)" \
+            --body-file "$RUNNER_TEMP/body.md"

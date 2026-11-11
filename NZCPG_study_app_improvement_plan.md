@@ -297,12 +297,12 @@ Rule: unanswered questions are shown to the user in the chat with full option te
 | L, M, N, O, P | Feature 5 behaviour (review queue) | Answered 11 Nov 2026, see the log |
 | Q, R, S | Feature 5: where the queue is seen, its size limit, when it clears | Answered 11 Nov 2026, see the log |
 | T, U, V | Feature 7 behaviour (update prompt) | Answered 11 Nov 2026, see the log |
-| D, items I1 and I3 | PDF update pipeline | Feature 6 (feature 7 was built without them: it works however `version.json` is updated) |
+| D, items I1 and I3 | PDF update pipeline | Answered 11 Nov 2026, see the log |
+| Y | Feature 6 stage B: guidelines the converter cannot rebuild exactly | The content converter (next step) |
 
-### Information needed (items I1 and I3 still open)
+### Information needed
 
-- **Item I1.** The direct link to the EAS download button, copied from the button itself (not the page address, and without the `?fbclid=` tracking part). I could not open it.
-- **Item I3.** Whether you have permission, or are willing to check, to download the PDF automatically on a schedule.
+All answered (I1 to I4). See the answered log.
 
 ### Decisions: code structure and readability
 
@@ -347,13 +347,24 @@ All answered (T, U, V). See the answered log.
 
 ### Decision: PDF update pipeline
 
-**Decision D – How far should the PDF update go?**
+Decision D answered (see the log).
 
-- Option 1: Detect and notify only. The app tells the user a new version exists, and you rebuild and publish it yourself.
-- Option 2: Semi-automatic. A scheduled job builds the new content, you approve it, and the app downloads it automatically.
-- Option 3: Fully automatic. The job builds and publishes with no approval step.
+**Decision Y – What happens to a guideline the converter cannot rebuild exactly?** (Asked 11 Nov 2026, for the converter step.)
+
+- Option 1: The pull request keeps that guideline's current text unchanged, lists it under "Needs a hand edit" with its new version-history line, and you edit it yourself before merging.
+- Option 2: The pull request uses the converter's version anyway and lists it under "Check formatting", so you compare it on your phone before merging.
+- Option 3: The pull request is not opened with content at all if any guideline fails; it only reports the change (as stage A does now).
 
 ### Answered log
+
+- 11 Nov 2026, feature 6: **Item I1:** `https://cpg.stjohn.org.nz/assets/pdf/EAS.pdf`. **Item I3:** yes, permission to download automatically. **Decision D: Option 2** (semi-automatic). You chose Option 3 unless Option 2 can be done without AI; it can (a plain script, same PDF gives the same result), so Option 2. Option 3 is only worth revisiting after the converter has rebuilt real updates exactly. **Question W:** you attached the 24.09.2026 PDF (727 pages, 17.9 MB, a merge of 180 single-guideline PDFs). **Question X:** add `.prettierrc` and `.prettierignore` (done, plus `.gitignore`).
+- 11 Nov 2026, feature 6 stage A built (choices I made, say if you want any different):
+  - Formatting: the PDF has fonts, colours and drawn boxes but no structure, so rebuilding `content/guidelines.js` from it can change formatting. **Stage A never touches the content.** The converter (stage B) is the next step and is only trusted once it rebuilds the attached 24.09.2026 PDF into the current `content/guidelines.js` exactly (that file is the test).
+  - The change signal is the export date plus each guideline's newest version entry, not the file fingerprint (stored for information only), so a re-exported identical PDF does not open a pull request.
+  - Checked against the attached PDF: all 180 guideline numbers match the content, and all 156 version entries match in date, version and "Update:" text. A version entry split by a page break (1.12) is handled.
+  - The Action runs daily at 18:23 UTC, opens one pull request per new export date (branch `pdf-update-dd-mm-yyyy`, skipped if it exists), and commits only `content/pdf-status.json`. The test that `pdf-status.json` matches the content makes `npm run check` fail on that pull request until the content is rebuilt, on purpose.
+  - Needs you, once: GitHub Settings, Actions, General, Workflow permissions, tick "Allow GitHub Actions to create and approve pull requests".
+  - The CPG website blocks downloads from Claude's workspace, so the download step has only been checked by you giving the file; the first GitHub run checks it for real.
 
 - No view tracking: only marking a guideline Complete or Review is recorded (revision 3).
 - The EAS download on the CPG site is the correct PDF source (the link itself is still needed, see I1).
@@ -584,3 +595,4 @@ to paste.
 | 11 Nov 2026 | Decisions L1, M2 plus add-to-queue button, N1, O2, P1 recorded. Found that the repository lacks `.prettierrc`, `.prettierignore` and `.github/` (never uploaded); replacements supplied. Feature 5 summary given for you to confirm; Decisions Q, R, S asked, unanswered. No feature 5 code yet. | You: add the three config files to the repository (GitHub, Add file, Create new file; the name `.github/workflows/checks.yml` creates the folders). Confirm the feature summary and answer Q, R, S. Then feature 5 is built (backend change first, then app). |
 | 11 Nov 2026 | Feature 5 built: related-guideline panel (top 5 with reasons), review queue (add, add all, remove, ticking off, auto-empty), queue strip on every guideline, Review queue screen and list-screen button. New files `src/queue.js`, `src/related.js`, `src/queueState.js`, `src/views/queueView.js`, `scripts/build-related.js`, `content/related.js` (generated), `content/related-overrides.js`; README, change log, CSS updated. No backend change needed (queue stored as the entry `review-queue`). `npm run check` passes (43 tests) using the config files supplied earlier. | You: copy the changed and new files into the repository, add `content/related.js` to `.prettierignore`, try it on your phone (add related guidelines, mark one Complete, open the Review queue screen, check on a second phone). Then pick feature 6 or 7 in a fresh chat with the full repository zip. |
 | 11 Nov 2026 | Decisions T1, U1, V1 recorded. Feature 7 built: `version.json`, `src/updates.js` (pure, 7 tests), `src/updateState.js`, `src/views/updateView.js`, banner in `index.html`, "Updated" tag and footer on the list screen, check on open and return to the app, CSS, README ("Publishing an update"), change log. No backend change. `npm run check` passes (53 tests) with the plan's recorded Prettier settings (dotfiles missing from the zip again). Checked in real Chromium: banner shows for a later date, Update now reloads, no errors. | You: copy the changed and new files into the repository (and add the `.prettierrc` and `.prettierignore` if they are really missing on GitHub). Test on your phone: temporarily set a later date in `version.json` on GitHub, open the app, tap Update now, then put the date back. Next: feature 6 needs items I1 and I3 and Decision D; or revisit features 1 and 2 (Decisions A to F). |
+| 11 Nov 2026 | Items I1, I3 and Decision D2 recorded. Feature 6 stage A built on branch `feature-6-pdf-check` (pull request): `scripts/pdfScan.js` (pure, 6 tests), `scripts/check-pdf.js`, daily `.github/workflows/pdf-check.yml`, baseline `content/pdf-status.json` (180 guidelines, 156 version entries, all matching the content). `.prettierrc`, `.prettierignore`, `.gitignore` added. `npm run check` passes in full (59 tests, format and lint). README and change log updated. Decision Y asked. | You: merge the pull request, tick "Allow GitHub Actions to create and approve pull requests", run "pdf-check" once from the Actions tab (expect "No change"). Answer Decision Y, then build the converter (stage B) in a fresh chat with the attached PDF. |
