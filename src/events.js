@@ -19,7 +19,14 @@ import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
 import { applyUpdate } from './updateState.js';
-import { startSession, endSession, rateCurrentCard, saveQuizSetting } from './quizState.js';
+import {
+  startSession,
+  endSession,
+  rateCurrentCard,
+  saveQuizSetting,
+  startPractice,
+  answerPracticeCard,
+} from './quizState.js';
 import { renderQuizScreen } from './views/quizView.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
@@ -250,6 +257,11 @@ const clickActions = {
   'quiz-show-answer': changeQuiz(showQuizAnswer),
   'quiz-rate': changeQuiz((button) => rateCurrentCard(button.dataset.rating)),
   'quiz-end': changeQuiz(endSession),
+  'quiz-practise': changeQuiz(() => {
+    const select = byId('quiz-practice-medicine');
+    if (select) startPractice(select.value);
+  }),
+  'quiz-practice-answer': changeQuiz((button) => answerPracticeCard(button.dataset.rating)),
 };
 
 /** Attaches every listener for the app container. Called once at start-up. */
@@ -273,6 +285,8 @@ export function attachEventListeners() {
       saveQuizSetting(event.target.dataset.setting, event.target.value);
       renderQuizScreen();
     }
+    // Remembered so a redraw (for example after a sync) keeps the medicine chosen.
+    if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
   });
 
   app.addEventListener('keydown', (event) => {

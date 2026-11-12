@@ -267,6 +267,35 @@ test('the Medicines quiz shows a card, its answer, and saves the rating as a qui
   await sleep(30);
 });
 
+test('Practise one medicine goes through its cards without changing the schedule', async () => {
+  dom.window.location.hash = '#quiz';
+  await sleep(30);
+  const counts = $('.quiz-counts').textContent;
+  const select = $('#quiz-practice-medicine');
+  const adrenaline = [...select.options].find((option) => /^Adrenaline \(/.test(option.text));
+  assert.match(adrenaline.text, /^Adrenaline \(22 cards\)$/);
+  select.value = adrenaline.value;
+  select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  click($('[data-action="quiz-practise"]'));
+  assert.match($('.quiz-left').textContent, /^Practice · 22 cards left$/);
+  assert.match($('.quiz-prompt').textContent, /^Adrenaline – Indications$/);
+  click($('[data-action="quiz-show-answer"]'));
+  assert.equal($$('.rating-button').length, 2);
+  click($('[data-action="quiz-practice-answer"][data-rating="again"]'));
+  assert.match($('.quiz-left').textContent, /22 cards left/, 'Again keeps the card');
+  click($('[data-action="quiz-show-answer"]'));
+  click($('[data-action="quiz-practice-answer"][data-rating="good"]'));
+  assert.match($('.quiz-left').textContent, /21 cards left/);
+  assert.match($('.quiz-end-button').textContent, /End practice/);
+  click($('[data-action="quiz-end"]'));
+  assert.equal($('.quiz-counts').textContent, counts, 'daily study unchanged');
+  assert.equal($('#quiz-practice-medicine').value, adrenaline.value, 'choice kept');
+  await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
+  assert.equal(stored['quiz-cpg-14-3'], undefined, 'practice answers are not uploaded');
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
 async function checkAgain() {
   const { state } = await import('../src/state.js');
   state.lastUpdateCheckAt = 0;

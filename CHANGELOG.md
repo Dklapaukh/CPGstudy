@@ -1,5 +1,9 @@
 # Change log
 
+- 2026-11-12: Medicines quiz: "Practise one medicine" on the quiz screen. Pick any medicine and
+  go through all of its cards (Show answer, then Again or Got it). Practice is separate from the
+  daily study: answers are not saved and do not change when any card is due.
+
 - 2026-11-11: Medicines quiz by medicine. New medicines per day (1 to 10, default 2) replaces
   new cards per day, and each brings all of its cards; new review limit (10 to 200, default 30).
   Paediatric doses are no longer tested (CPG 7.2 and the paediatric RSI table dropped, child-only

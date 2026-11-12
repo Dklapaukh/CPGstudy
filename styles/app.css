@@ -951,6 +951,25 @@ td.table-cell--coloured {
   gap: 0.4rem;
   margin-top: 1rem;
 }
+.rating-buttons--practice {
+  grid-template-columns: repeat(2, 1fr);
+}
+.quiz-practice {
+  margin-top: 1.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--colour-line);
+}
+.quiz-practice h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0.4rem 0 0;
+}
+.quiz-practice select {
+  width: 100%;
+  min-height: 44px;
+  margin: 0.4rem 0 0.8rem;
+  font-size: 1rem;
+}
 .rating-button {
   display: flex;
   flex-direction: column;
