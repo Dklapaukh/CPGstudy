@@ -1,6 +1,6 @@
 /* The passcode screen. Draws markup only; clicks are handled in events.js. */
 import { escapeHtml } from '../logic.js';
-import { coverHtml } from './templates.js';
+import { coverHtml, aiNoticeHtml } from './templates.js';
 
 const app = document.getElementById('app');
 
@@ -23,5 +23,6 @@ export function renderLogin(message, passcodeValue, backLabel) {
     <input class="text-input" id="passcode-input" type="text" placeholder="Passcode"
       autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
       value="${escapeHtml(passcodeValue || '')}">
-    <button class="button" id="open-button" data-action="submit-passcode">Open</button></div>`;
+    <button class="button" id="open-button" data-action="submit-passcode">Open</button>
+    ${aiNoticeHtml()}</div>`;
 }

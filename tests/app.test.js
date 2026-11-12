@@ -179,8 +179,16 @@ test('the status buttons and notes come after the guideline text, before related
   }
 });
 
+test('there is no Incomplete button and the guideline shows it is not marked yet', () => {
+  assert.equal($$('[data-action="set-status"]').length, 2);
+  assert.equal($('[data-status="i"]'), null);
+  assert.match($('#marked-line').textContent, /^Not marked yet/);
+  assert.match($('.ai-notice').textContent, /made with AI.*official NZCPG app/);
+});
+
 test('changing status and notes saves, then shows Saved', async () => {
   click($('.status-button--complete'));
+  assert.match($('#marked-line').textContent, /^Marked complete \d{1,2} \w{3} \d{4} · press again/);
   assert.equal($('.status-button--complete').getAttribute('aria-pressed'), 'true');
   assert.equal($('.sync-status').textContent, 'Saving…');
   const notes = $('#notes-input');
@@ -213,6 +221,32 @@ test('going back to the list keeps the section state and shows the new count', a
   assert.match($('.completion-ring--large').getAttribute('aria-label'), /^1 of 180 complete/);
   assert.equal($$('.completion-ring--just-closed').length, 0);
   assert.match($('.guideline-row small').textContent, /has notes|CPG EAS/);
+  const marked = $('a[href="#cpg-1-2"] .marked-date');
+  assert.ok(marked, 'the marked guideline shows its date');
+  assert.match(marked.textContent, /^Marked complete \d{1,2} \w{3} \d{4}$/);
+  assert.equal($$('.marked-date').length, 1, 'unmarked guidelines show no date');
+  assert.ok(stored['marked-cpg-1-2'], 'the marked date is uploaded as its own entry');
+});
+
+test('editing notes or opening a guideline keeps the marked date; pressing again updates it', async () => {
+  const { state } = await import('../src/state.js');
+  state.entries['marked-cpg-1-2'].n = String(Date.UTC(2026, 0, 5, 0));
+  dom.window.location.hash = '#cpg-1-2';
+  await sleep(30);
+  const notes = $('#notes-input');
+  notes.value = 'more notes';
+  notes.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  assert.match($('#marked-line').textContent, /^Marked complete 5 Jan 2026/);
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.match($('a[href="#cpg-1-2"] .marked-date').textContent, /5 Jan 2026$/);
+  dom.window.location.hash = '#cpg-1-2';
+  await sleep(30);
+  click($('.status-button--complete'));
+  assert.doesNotMatch($('#marked-line').textContent, /5 Jan 2026/);
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.doesNotMatch($('a[href="#cpg-1-2"] .marked-date').textContent, /5 Jan 2026/);
 });
 
 test('related guidelines can be added to the review queue and are ticked off when marked', async () => {

@@ -22,6 +22,7 @@ import {
 } from './views/detailView.js';
 import { refreshQueueViews, shownRelatedIds } from './views/queueView.js';
 import { getQueue, saveQueue, tickOffQueuedGuideline } from './queueState.js';
+import { saveMarkedTime } from './markedState.js';
 import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus } from './logic.js';
@@ -169,10 +170,12 @@ function copyPasscode() {
 
 /* ---------- Guideline list and guideline page ---------- */
 
+/** Review or Complete was pressed: records the status and, every time, the date it was marked. */
 function changeStatus(button) {
   const notes = byId('notes-input');
   const status = button.dataset.status;
   recordEdit(status, notes.value);
+  if (status !== STATUS.INCOMPLETE) saveMarkedTime(state.currentGuideline.id, Date.now());
   showSelectedStatus(status);
   if (status !== STATUS.INCOMPLETE) tickOffQueuedGuideline(state.currentGuideline.id);
   refreshQueueViews();

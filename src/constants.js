@@ -38,6 +38,13 @@ export const SUGGESTION_WEIGHT = {
 // change: its note holds the queue as JSON and its status is always Incomplete.
 export const QUEUE_ENTRY_ID = 'review-queue';
 export const MAX_QUEUE_SIZE = 5;
+// The date a guideline was last marked Review or Complete is one extra entry per guideline
+// (MARKED_ENTRY_PREFIX + guideline id, note = time in milliseconds), so it needs no backend change
+// and editing the notes never moves it. Opening a guideline changes nothing.
+export const MARKED_ENTRY_PREFIX = 'marked-';
+
+// Where "Report a mistake or request" emails go. Leave empty to hide the email links.
+export const FEEDBACK_EMAIL = '';
 export const RELATED_LIST_SIZE = 5;
 export const QUEUE_HASH = 'queue';
 // Why a guideline is related, by the reason code stored in content/related.js.
@@ -92,6 +99,11 @@ export const MESSAGES = {
   STUDY_AID_NOTICE:
     'Study aid only. The guidelines here are an uncontrolled copy; for clinical use refer to ' +
     'the official guidelines.',
+  AI_NOTICE:
+    'This app was made with AI and may contain mistakes. Use it for study only. For clinical ' +
+    'work, always use the official NZCPG app.',
+  FEEDBACK_LINK: 'Report a mistake or request',
+  MARKED_PREFIX: { [STATUS.REVIEW]: 'Marked for review', [STATUS.COMPLETE]: 'Marked complete' },
 };
 
 // Medicines quiz (flashcards with spaced repetition). Progress is stored through the backend as

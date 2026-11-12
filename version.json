@@ -13,6 +13,7 @@
     "src/guidelines.js",
     "src/logic.js",
     "src/main.js",
+    "src/markedState.js",
     "src/navigation.js",
     "src/queue.js",
     "src/queueState.js",

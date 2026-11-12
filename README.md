@@ -180,6 +180,11 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - Filters (All, Incomplete, Needs review, Complete) and search.
 - Opening a guideline shows all content; headings fold and unfold; previous and next (by hand).
 - Changing status and notes saves, showing "Saving…" then "Saved".
+- A guideline page has only Review and Complete (no Incomplete). Pressing either, even when
+  already selected, sets the date shown on the guideline's row in the list (saved as the extra
+  entry `marked-<id>`); opening the guideline or editing its notes does not change that date.
+- The made-with-AI, study-only notice shows on the passcode, list and guideline screens. "Report
+  a mistake or request" email links show when `FEEDBACK_EMAIL` in `src/constants.js` is set.
 - Two devices on one passcode show the same data after a sync (by hand).
 - Offline: changes are kept and sent when signal returns (by hand).
 - Related guidelines (at most 5) show under a guideline; "Add to review queue" and "Add all" fill the queue (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the queue; the list screen has a "Review queue (n)" button.

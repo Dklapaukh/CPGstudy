@@ -354,6 +354,38 @@ details.section-group > summary .section-count {
   color: var(--colour-muted);
   font-size: 0.8rem;
 }
+/* Title and number take the free space; the marked date keeps a fixed column on the right. */
+.guideline-row__text {
+  flex: 1;
+  min-width: 0;
+}
+.marked-date {
+  flex: none;
+  min-width: 5.6rem;
+  margin-top: 0.15rem;
+  text-align: right;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.marked-date--complete {
+  color: var(--colour-green);
+}
+.marked-date--review {
+  color: var(--colour-review);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 .status-dot {
   flex: none;
   width: 18px;
@@ -405,9 +437,16 @@ details.section-group > summary .section-count {
 }
 .status-buttons {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.4rem;
-  margin: 0.9rem 0 0.6rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin: 0.9rem 0 0.4rem;
+}
+/* When the guideline was last marked, under the Review and Complete buttons. */
+.marked-line {
+  margin: 0 0 0.7rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--colour-muted);
 }
 .status-button {
   border: 0;
@@ -868,6 +907,40 @@ td.table-cell--coloured {
 }
 .app-footer p {
   margin: 0 0 0.5rem;
+}
+
+/* Made-with-AI notice (passcode, list and guideline screens) and the feedback email link */
+.ai-notice {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: 0 0 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  background: #f4f6f5;
+  color: var(--colour-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.ai-notice__icon {
+  flex: none;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 0.05rem;
+}
+.page-padding > .ai-notice:first-child {
+  margin-top: 0.8rem;
+}
+.button + .ai-notice {
+  margin-top: 1.2rem;
+}
+.feedback-link {
+  display: inline-block;
+  margin: 0.4rem 0 0.8rem;
+  padding: 0.3rem 0;
+  color: var(--colour-green);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 /* Medicines quiz: list screen button and the #quiz screen */

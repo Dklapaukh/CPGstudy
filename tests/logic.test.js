@@ -14,6 +14,8 @@ import {
   ringArcs,
   suggestionCandidates,
   pickSuggestion,
+  markedTime,
+  feedbackMailto,
 } from '../src/logic.js';
 
 const sampleGuidelines = [
@@ -168,4 +170,25 @@ test('pickSuggestion favours Incomplete, then Needs review, then Complete', () =
 
 test('pickSuggestion returns undefined for an empty list', () => {
   assert.equal(pickSuggestion([], {}, 0.5), undefined);
+});
+
+test('markedTime: the marked entry, else the last edit for older data, 0 when Incomplete', () => {
+  const entries = {
+    a: { s: 'c', n: 'notes edited later', t: 900 },
+    'marked-a': { s: 'i', n: '500', t: 500 },
+    b: { s: 'v', n: '', t: 700 },
+    c: { s: 'i', n: 'only notes', t: 800 },
+  };
+  assert.equal(markedTime(entries, 'a'), 500, 'editing notes later does not move the date');
+  assert.equal(markedTime(entries, 'b'), 700, 'marked before the marked entry existed');
+  assert.equal(markedTime(entries, 'c'), 0);
+  assert.equal(markedTime(entries, 'never-opened'), 0);
+});
+
+test('feedbackMailto fills in subject and body, and is empty without an address', () => {
+  assert.equal(feedbackMailto('', 'Hi', 'Body'), '');
+  assert.equal(
+    feedbackMailto('me@example.com', 'CPG 1.2 & more', 'Line 1\nLine 2'),
+    'mailto:me@example.com?subject=CPG%201.2%20%26%20more&body=Line%201%0ALine%202',
+  );
 });

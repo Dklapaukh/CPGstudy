@@ -1,5 +1,17 @@
 # Change log
 
+- 2026-11-12: Marked dates, made-with-AI notice and feedback email. Each guideline row in the
+  list shows, on the right in its status colour, the date it was last marked Review or Complete.
+  The guideline page loses the Incomplete button; pressing Review or Complete (even when already
+  selected) updates the date, and the line under the buttons says when it was marked. Opening a
+  guideline or editing its notes does not change the date. Stored as one extra entry per
+  guideline (`marked-<id>`, new `src/markedState.js`), so no backend change; guidelines marked
+  before this show the time of their last edit until marked again. A small notice on the passcode,
+  list and guideline screens says the app was made with AI, is for study only and that the
+  official NZCPG app should be used for clinical work. "Report a mistake or request" email links
+  (guideline page, pre-filled with the guideline, and list footer) appear once `FEEDBACK_EMAIL`
+  in `src/constants.js` is set. 101 tests.
+
 - 2026-11-12: Medicines quiz: "Practise one medicine" on the quiz screen. Pick any medicine and
   go through all of its cards (Show answer, then Again or Got it). Practice is separate from the
   daily study: answers are not saved and do not change when any card is due.

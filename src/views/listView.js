@@ -12,9 +12,11 @@ import {
   ringArcs,
   suggestionCandidates,
   pickSuggestion,
+  markedTime,
+  formatUpdatedDate,
 } from '../logic.js';
 import { updateSyncStatus } from '../sync.js';
-import { coverHtml } from './templates.js';
+import { coverHtml, aiNoticeHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
 import { quizButtonHtml } from './quizView.js';
 import { footerHtml, drawUpdateStatus } from './updateView.js';
@@ -122,7 +124,23 @@ function rowHtml(guideline) {
     ? ` <span class="updated-tag">${MESSAGES.UPDATED_TAG}</span>`
     : '';
   return `<a class="guideline-row" href="#${guideline.id}"><i class="status-dot${dotClass}"></i>
-    <div><b>${escapeHtml(guideline.t)}${updatedTag}</b><small>CPG EAS ${guideline.n}${notesNote}</small></div></a>`;
+    <div class="guideline-row__text"><b>${escapeHtml(guideline.t)}${updatedTag}</b><small>CPG EAS ${guideline.n}${notesNote}</small></div>${markedDateHtml(guideline.id, status)}</a>`;
+}
+
+/**
+ * The date a guideline was last marked Review or Complete, at the right of its row, in the
+ * status colour. Nothing for an Incomplete guideline.
+ */
+function markedDateHtml(guidelineId, status) {
+  const markedAt = markedTime(state.entries, guidelineId);
+  if (!markedAt) return '';
+  const kind = status === STATUS.COMPLETE ? 'complete' : 'review';
+  const date = formatUpdatedDate(markedAt);
+  const day = new Date(markedAt);
+  const pad = (number) => String(number).padStart(2, '0');
+  const isoDay = `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
+  return `<time class="marked-date marked-date--${kind}" datetime="${isoDay}"
+    title="${MESSAGES.MARKED_PREFIX[status]} ${date}"><span class="visually-hidden">${MESSAGES.MARKED_PREFIX[status]} </span>${date}</time>`;
 }
 
 function sectionsHtml(newlyClosed) {
@@ -171,7 +189,7 @@ export function renderList() {
     subtitleHtml:
       'Mentoring tracker · progress and notes are shared with everyone who has this passcode' +
       '<br><span class="sync-status"></span>',
-  })}<div class="page-padding">${warning}${progressHtml(counts, guidelines.length, newlyClosed.has(OVERALL_RING_NAME))}
+  })}<div class="page-padding">${warning}${aiNoticeHtml()}${progressHtml(counts, guidelines.length, newlyClosed.has(OVERALL_RING_NAME))}
     <button class="random-button" id="random-guideline-button" type="button">
       Random guideline</button>
     ${quizButtonHtml()}

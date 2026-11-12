@@ -2,7 +2,7 @@
  * Pure logic: takes input and returns a result, touches no page, storage or network.
  * Depends on constants.js only. Tested in tests/logic.test.js.
  */
-import { BLOCK, STATUS, FILTER, SUGGESTION_WEIGHT } from './constants.js';
+import { BLOCK, STATUS, FILTER, SUGGESTION_WEIGHT, MARKED_ENTRY_PREFIX } from './constants.js';
 
 const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 
@@ -133,6 +133,26 @@ export function formatUpdatedDate(milliseconds) {
     month: 'short',
     year: 'numeric',
   });
+}
+
+/**
+ * When a guideline was last marked Review or Complete, in milliseconds, or 0 when it is
+ * Incomplete. Uses the guideline's marked entry; a guideline marked before that entry existed
+ * falls back to the time of its last edit.
+ */
+export function markedTime(entries, guidelineId) {
+  if (getStatus(entries, guidelineId) === STATUS.INCOMPLETE) return 0;
+  const marked = entries[MARKED_ENTRY_PREFIX + guidelineId];
+  const markedAt = marked ? Number(marked.n) : 0;
+  if (markedAt > 0) return markedAt;
+  return entries[guidelineId].t || 0;
+}
+
+/** A mailto: link with the subject and body filled in, or '' when there is no address. */
+export function feedbackMailto(address, subject, body) {
+  if (!address) return '';
+  const query = `subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${address}?${query}`;
 }
 
 /** Text of the small save indicator. */

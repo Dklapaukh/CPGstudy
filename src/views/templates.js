@@ -3,10 +3,37 @@
  * Guideline text is trusted content built into the app (see README, "Content").
  * Colours that come from the content are passed as CSS custom properties, not as styles.
  */
-import { BLOCK } from '../constants.js';
+import { BLOCK, MESSAGES, FEEDBACK_EMAIL } from '../constants.js';
+import { escapeHtml, feedbackMailto } from '../logic.js';
+import { documentInfo } from '../../content/guidelines.js';
 
 const COMMENT_BUTTON = `<button class="comment-button" type="button" data-action="comment"
   aria-label="Comment on this point" title="Comment on this point">💬</button>`;
+
+const INFO_ICON = `<svg class="ai-notice__icon" viewBox="0 0 16 16" aria-hidden="true">
+  <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+  <path d="M8 7.2v4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+  <circle cx="8" cy="4.8" r="0.95" fill="currentColor"></circle></svg>`;
+
+/** The general "Report a mistake or request" email link, or '' when no address is set. */
+export function generalFeedbackLinkHtml() {
+  const href = feedbackMailto(
+    FEEDBACK_EMAIL,
+    'NZCPG study app: mistake or request',
+    `Guidelines exported: ${documentInfo.exportedOn}\n\nWhat is wrong or what would you like?\n`,
+  );
+  return href
+    ? `<a class="feedback-link" href="${escapeHtml(href)}">${MESSAGES.FEEDBACK_LINK}</a>`
+    : '';
+}
+
+/**
+ * The small notice that the app was made with AI and is for study only. Shown on the passcode,
+ * list and guideline screens; kept quiet (small, grey) so it never gets in the way of studying.
+ */
+export function aiNoticeHtml() {
+  return `<p class="ai-notice" role="note">${INFO_ICON}<span>${MESSAGES.AI_NOTICE}</span></p>`;
+}
 
 /** The green banner at the top of the login, mentor and list screens. */
 export function coverHtml({ labelHtml = '', buttonHtml = '', subtitleHtml }) {
