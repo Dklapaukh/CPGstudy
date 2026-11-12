@@ -1,5 +1,6 @@
 /*
- * The single guideline screen: status buttons, notes, folding headings and comment highlights.
+ * The single guideline screen: the guideline text with folding headings and comment highlights,
+ * then the status buttons and notes, then the review queue and related guidelines.
  * Drawn from the state. Depends on state.js, guidelines.js, logic.js, comments.js, templates.js.
  */
 import { state, saveSession } from '../state.js';
@@ -50,12 +51,13 @@ export function renderGuidelineDetail(index) {
       <div class="guideline-meta">CPG EAS ${guideline.n} St John New Zealand<br>
         Uncontrolled document exported ${documentInfo.exportedOn}<br>
         ${documentInfo.sourceLine}</div></div>
-    <div class="page-padding">${statusButtonsHtml(getStatus(state.entries, guideline.id))}
+    <div class="page-padding"><div class="guideline-body">${bodyHtml(guideline.b)}</div>
+      <section class="guideline-progress" aria-label="Your progress on this guideline">
+      ${statusButtonsHtml(getStatus(state.entries, guideline.id))}
       <textarea id="notes-input"
         placeholder="Notes for this guideline (what you covered, what to revisit)"
         >${escapeHtml(entry.n || '')}</textarea>
-      <div class="save-hint"><span id="updated-date">${updated}</span><span class="sync-status"></span></div>
-      <div class="guideline-body">${bodyHtml(guideline.b)}</div>
+      <div class="save-hint"><span id="updated-date">${updated}</span><span class="sync-status"></span></div></section>
       <div id="review-panels">${reviewPanelsHtml(guideline)}</div></div>
     <div class="neighbour-nav">${neighbourLinkHtml(guidelines[index - 1], false)}
       ${neighbourLinkHtml(guidelines[index + 1], true)}</div>`;

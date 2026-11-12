@@ -25,11 +25,45 @@ function clearHash() {
   }
 }
 
-/** Shows the passcode screen. */
+/**
+ * Shows the passcode screen. When a tracker is still open (Switch tracker), it stays loaded and
+ * the screen has a back link to it; the tracker is only left once another passcode is accepted.
+ */
 export function showLogin(message, passcodeValue) {
   state.screen = SCREEN.LOGIN;
   state.mentorPasscode = '';
-  renderLogin(message, passcodeValue);
+  renderLogin(message, passcodeValue, state.passcode ? state.label : null);
+}
+
+/** Goes back from the Switch tracker screen to the tracker that is still open. */
+export function returnToTracker() {
+  if (!state.passcode) return;
+  state.screen = SCREEN.TRACKER;
+  clearHash();
+  route();
+  syncNow(); // edits made before switching were paused while the passcode screen showed
+}
+
+/**
+ * Leaves the open tracker before another is opened from the Switch tracker screen. Asks first
+ * when edits are still waiting to upload. Returns false when the person chose to stay.
+ */
+export function leaveOpenTracker() {
+  if (!state.passcode) return true;
+  if (pendingCount() && !confirm(MESSAGES.UNSENT_CHANGES)) return false;
+  clearOpenTracker();
+  return true;
+}
+
+function clearOpenTracker() {
+  clearTimeout(state.syncTimer);
+  state.passcode = '';
+  state.label = '';
+  state.entries = {};
+  state.pendingChanges = {};
+  state.currentGuideline = null;
+  state.quiz = null;
+  clearSavedSession();
 }
 
 /** Shows the mentor screen. `details` is { name, created, message, labelValue, openValue }. */
@@ -84,14 +118,7 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
 /** Leaves the tracker. Asks first when edits are still waiting to upload (unless forced). */
 export function signOut(message) {
   if (!message && pendingCount() && !confirm(MESSAGES.UNSENT_CHANGES)) return;
-  clearTimeout(state.syncTimer);
-  state.passcode = '';
-  state.label = '';
-  state.entries = {};
-  state.pendingChanges = {};
-  state.currentGuideline = null;
-  state.quiz = null;
-  clearSavedSession();
+  clearOpenTracker();
   clearHash();
   showLogin(message);
 }
