@@ -443,6 +443,10 @@ textarea {
   padding: 0.8rem 1rem;
   resize: vertical;
 }
+/* Status buttons and notes sit after the guideline text, before the queue and related panels. */
+.guideline-progress {
+  border-top: 1px solid var(--colour-line);
+}
 .save-hint {
   font-size: 0.8rem;
   color: var(--colour-muted);

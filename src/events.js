@@ -4,7 +4,14 @@
  */
 import { state } from './state.js';
 import { sendRequest } from './api.js';
-import { showLogin, showMentor, beginTrackerSession, signOut, route } from './navigation.js';
+import {
+  showLogin,
+  showMentor,
+  beginTrackerSession,
+  returnToTracker,
+  leaveOpenTracker,
+  route,
+} from './navigation.js';
 import { renderList } from './views/listView.js';
 import {
   recordEdit,
@@ -51,9 +58,13 @@ async function submitPasscode() {
   button.textContent = 'Checking…';
   try {
     const reply = await sendRequest({ action: 'open', code });
-    if (reply && reply.ok && reply.role === 'tracker') {
+    const accepted = reply && reply.ok && (reply.role === 'tracker' || reply.role === 'mentor');
+    // The tracker still open behind Switch tracker is only left once the new passcode works.
+    if (accepted && !leaveOpenTracker()) {
+      showLogin('', code);
+    } else if (accepted && reply.role === 'tracker') {
       beginTrackerSession(code, reply.label, reply.data);
-    } else if (reply && reply.ok && reply.role === 'mentor') {
+    } else if (accepted) {
       state.mentorPasscode = code;
       showMentor({ name: reply.name });
     } else {
@@ -242,7 +253,8 @@ const clickActions = {
   'open-created-tracker': () => openTrackerFromMentor(state.mentorContext.created.code),
   'open-existing-tracker': openExistingTracker,
   'copy-passcode': copyPasscode,
-  'switch-tracker': () => signOut(),
+  'switch-tracker': () => showLogin(),
+  'back-to-tracker': returnToTracker,
   'set-filter': (element) => {
     state.filter = element.dataset.filter;
     renderList();
