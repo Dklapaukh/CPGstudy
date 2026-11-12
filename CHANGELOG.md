@@ -1,5 +1,10 @@
 # Change log
 
+- 2026-11-12: Guideline page: the status buttons and notes now come after the guideline text,
+  above the review queue and related guidelines. Switch tracker shows the passcode screen with
+  a "‹ Back to <tracker>" link; the open tracker stays saved until another passcode is accepted
+  (a wrong passcode keeps the back link). Checked: Adrenaline has 15 adult dose cards.
+
 - 2026-11-11: Medicines quiz by medicine. New medicines per day (1 to 10, default 2) replaces
   new cards per day, and each brings all of its cards; new review limit (10 to 200, default 30).
   Paediatric doses are no longer tested (CPG 7.2 and the paediatric RSI table dropped, child-only

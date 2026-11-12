@@ -166,6 +166,19 @@ test('opening a guideline shows it, folds headings and handles previous / next',
   assert.equal(second.getAttribute('aria-expanded'), 'true');
 });
 
+test('the status buttons and notes come after the guideline text, before related guidelines', () => {
+  const order = ['.guideline-body', '.status-buttons', '#notes-input', '.related-panel'];
+  const elements = order.map((selector) => $(selector));
+  elements.forEach((element, i) => assert.ok(element, order[i]));
+  for (let i = 1; i < elements.length; i++) {
+    const follows = elements[i - 1].compareDocumentPosition(elements[i]);
+    assert.ok(
+      follows & dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+      `${order[i]} after ${order[i - 1]}`,
+    );
+  }
+});
+
 test('changing status and notes saves, then shows Saved', async () => {
   click($('.status-button--complete'));
   assert.equal($('.status-button--complete').getAttribute('aria-pressed'), 'true');
@@ -320,8 +333,22 @@ test('a changed guideline is tagged Updated until it is opened', async () => {
   assert.equal($$('.updated-tag').length, 0);
 });
 
-test('switching tracker signs out and clears the saved tracker', async () => {
+test('Switch tracker has a back link to the open tracker, which stays saved until replaced', async () => {
+  dom.window.location.hash = '';
+  await sleep(30);
   click($('[data-action="switch-tracker"]'));
   assert.ok($('#passcode-input'));
+  assert.match($('[data-action="back-to-tracker"]').textContent, /Back to Sam - 2026/);
+  assert.notEqual(dom.window.localStorage.getItem('eas-cpg-tracker-v2'), null);
+  click($('[data-action="back-to-tracker"]'));
+  assert.ok($('[data-action="switch-tracker"]'), 'back on the list');
+  click($('[data-action="switch-tracker"]'));
+  await signIn('not-a-code');
+  assert.ok($('.warning-message'));
+  assert.ok($('[data-action="back-to-tracker"]'), 'a wrong passcode keeps the back link');
+  await signIn(MENTOR);
+  assert.match(doc.body.textContent, /Mentor screen/);
   assert.equal(dom.window.localStorage.getItem('eas-cpg-tracker-v2'), null);
+  click($('[data-action="mentor-sign-out"]'));
+  assert.equal($('[data-action="back-to-tracker"]'), null, 'no back link once signed out');
 });
