@@ -8,7 +8,7 @@
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
-import { sections } from './guidelines.js';
+import { sections, guidelines } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
 import { buildQuizCards } from './quizCards.js';
 import {
@@ -121,6 +121,45 @@ export function startSession() {
   state.quiz = { queue: [...plan.dueIds, ...plan.newIds], revealed: false, answered: 0 };
 }
 
+/** The medicines that have quiz cards, in guideline order: [{ id, name, cardCount }]. */
+export function quizMedicines() {
+  const medicines = [];
+  const byId = {};
+  for (const card of quizCards()) {
+    if (!byId[card.medicineId]) {
+      const guideline = guidelines.find((candidate) => candidate.id === card.medicineId);
+      byId[card.medicineId] = {
+        id: card.medicineId,
+        name: guideline ? guideline.t : card.medicineId,
+        cardCount: 0,
+      };
+      medicines.push(byId[card.medicineId]);
+    }
+    byId[card.medicineId].cardCount++;
+  }
+  return medicines;
+}
+
+/**
+ * Starts practising one medicine: all of its cards, in card order. Practice is separate from the
+ * daily study: answers are not saved and do not change when any card is due.
+ */
+export function startPractice(medicineId) {
+  const queue = quizCards()
+    .filter((card) => card.medicineId === medicineId)
+    .map((card) => card.id);
+  if (queue.length === 0) return;
+  state.quiz = { queue, revealed: false, answered: 0, practiceMedicineId: medicineId };
+}
+
+/** Moves a practice session on: Again puts the card back a few places on; Got it removes it. */
+export function answerPracticeCard(rating) {
+  if (!state.quiz || !state.quiz.practiceMedicineId || state.quiz.queue.length === 0) return;
+  state.quiz.queue = advanceSession(state.quiz.queue, rating, QUIZ_AGAIN_GAP);
+  state.quiz.revealed = false;
+  state.quiz.answered++;
+}
+
 /** Ends the session (the schedules already saved are kept). */
 export function endSession() {
   state.quiz = null;
@@ -142,7 +181,7 @@ export function previewRatings(card, ratings) {
 /** Records the rating of the current card, saves its schedule and moves the session on. */
 export function rateCurrentCard(rating) {
   const card = currentCard();
-  if (!card) return;
+  if (!card || state.quiz.practiceMedicineId) return;
   const schedules = medicineSchedules(card.medicineId);
   schedules[card.key] = nextSchedule(schedules[card.key] || null, rating, today());
   saveNoteEntry(medicineEntryId(card.medicineId), serialiseSchedules(schedules));

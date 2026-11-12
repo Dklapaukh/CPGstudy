@@ -12,6 +12,7 @@ import {
   currentCard,
   previewRatings,
   getQuizSettings,
+  quizMedicines,
   QUIZ_SETTINGS,
 } from '../quizState.js';
 import { intervalText } from '../quizSchedule.js';
@@ -63,15 +64,39 @@ function countsText(plan) {
   return `${plural(plan.dueIds.length, 'card')} due · ${medicines}${newCards} today`;
 }
 
+/** The "Practise one medicine" picker: any medicine, at any time, without changing the schedule. */
+function practicePickerHtml() {
+  const options = quizMedicines()
+    .map(
+      (medicine) =>
+        `<option value="${escapeHtml(medicine.id)}"${
+          medicine.id === state.practiceChoice ? ' selected' : ''
+        }>${escapeHtml(medicine.name)} (${plural(medicine.cardCount, 'card')})</option>`,
+    )
+    .join('');
+  return `<section class="quiz-practice" aria-labelledby="quiz-practice-heading">
+    <h2 id="quiz-practice-heading">Practise one medicine</h2>
+    <p class="quiz-help">Go through every card of one medicine. Practice doesn’t change your daily
+      study or when cards are due.</p>
+    <select id="quiz-practice-medicine" aria-label="Medicine to practise">${options}</select>
+    <button class="quiz-start-button" type="button" data-action="quiz-practise">Practise</button>
+    </section>`;
+}
+
+/** The line shown after a session ends. */
+function finishedHtml() {
+  if (!state.quiz || !state.quiz.answered) return '';
+  const medicine = quizMedicines().find((m) => m.id === state.quiz.practiceMedicineId);
+  const what = medicine ? `Practice of ${escapeHtml(medicine.name)} finished` : 'Session finished';
+  return `<p class="quiz-finished">${what}: ${plural(state.quiz.answered, 'answer')}.</p>`;
+}
+
 function overviewHtml() {
   const plan = currentStudyPlan();
   const cards = quizCards();
   const learnt = Object.keys(allSchedules()).length;
   const waiting = plan.dueIds.length + plan.newIds.length;
-  const finished =
-    state.quiz && state.quiz.answered
-      ? `<p class="quiz-finished">Session finished: ${plural(state.quiz.answered, 'answer')}.</p>`
-      : '';
+  const finished = finishedHtml();
   const startButton = waiting
     ? '<button class="quiz-start-button" type="button" data-action="quiz-start">Start</button>'
     : '<p class="empty-message">Nothing left to study today. Come back tomorrow.</p>';
@@ -83,7 +108,22 @@ function overviewHtml() {
     ${SETTING_SELECTS.map((select) => settingSelectHtml(select, settings)).join('')}
     <p class="quiz-help">Read the question, answer it in your head, then tap Show answer and rate
       how hard it was. Cards you find easy come back less often. Each new medicine brings all of
-      its cards; review cards are cards you have studied before that are due again.</p>`;
+      its cards; review cards are cards you have studied before that are due again.</p>
+    ${practicePickerHtml()}`;
+}
+
+// Practice answers are not saved, so there are only two buttons and no intervals.
+const PRACTICE_BUTTONS = [
+  { rating: RATING.AGAIN, label: 'Again', hint: 'I forgot it, ask again in a few cards' },
+  { rating: RATING.GOOD, label: 'Got it', hint: 'I remembered it' },
+];
+
+function practiceButtonsHtml() {
+  return PRACTICE_BUTTONS.map(
+    ({ rating, label, hint }) => `<button class="rating-button rating-button--${rating}"
+      type="button" data-action="quiz-practice-answer" data-rating="${rating}"
+      aria-label="${label}: ${hint}"><span>${label}</span></button>`,
+  ).join('');
 }
 
 function ratingButtonsHtml(card) {
@@ -100,7 +140,9 @@ function ratingButtonsHtml(card) {
 }
 
 function cardHtml(card) {
-  const left = `<p class="quiz-left">${plural(state.quiz.queue.length, 'card')} left</p>`;
+  const practising = Boolean(state.quiz.practiceMedicineId);
+  const mode = practising ? 'Practice · ' : '';
+  const left = `<p class="quiz-left">${mode}${plural(state.quiz.queue.length, 'card')} left</p>`;
   const prompt = `<h2 class="quiz-prompt">${escapeHtml(card.prompt)}</h2>`;
   if (!state.quiz.revealed) {
     return `${left}${prompt}<button class="quiz-show-button" type="button"
@@ -109,7 +151,9 @@ function cardHtml(card) {
   const answer = card.answerBlocks.map((block) => blockHtml(block, '')).join('');
   return `${left}${prompt}<div class="quiz-answer">${answer}</div>
     <p class="quiz-source">From ${escapeHtml(card.source)}</p>
-    <div class="rating-buttons">${ratingButtonsHtml(card)}</div>`;
+    <div class="rating-buttons${practising ? ' rating-buttons--practice' : ''}">${
+      practising ? practiceButtonsHtml() : ratingButtonsHtml(card)
+    }</div>`;
 }
 
 /** Draws the quiz screen. */
@@ -117,7 +161,9 @@ export function renderQuizScreen() {
   const card = currentCard();
   const body = card ? cardHtml(card) : overviewHtml();
   const end = card
-    ? '<button class="quiz-end-button" type="button" data-action="quiz-end">End session</button>'
+    ? `<button class="quiz-end-button" type="button" data-action="quiz-end">End ${
+        state.quiz.practiceMedicineId ? 'practice' : 'session'
+      }</button>`
     : '';
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding quiz-screen"><h1 class="quiz-title">Medicines quiz</h1>

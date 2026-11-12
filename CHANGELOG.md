@@ -1,5 +1,9 @@
 # Change log
 
+- 2026-11-12: Medicines quiz: "Practise one medicine" on the quiz screen. Pick any medicine and
+  go through all of its cards (Show answer, then Again or Got it). Practice is separate from the
+  daily study: answers are not saved and do not change when any card is due.
+
 - 2026-11-12: Guideline page: the status buttons and notes now come after the guideline text,
   above the review queue and related guidelines. Switch tracker shows the passcode screen with
   a "‹ Back to <tracker>" link; the open tracker stays saved until another passcode is accepted

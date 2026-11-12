@@ -75,6 +75,9 @@ through a Google Sheet.
   all of its cards, and a medicine started today keeps its remaining cards. Review cards per
   day: 10 to 200, default 30 (cards already studied that are due again; a card rated Again
   today always comes back).
+- "Practise one medicine" (quiz screen) goes through every card of a chosen medicine, any time.
+  Again brings a card back a few cards on; Got it removes it. Practice answers are not saved and
+  do not change the schedule.
 - Progress is saved as one extra entry per medicine, id `quiz-<guideline id>` (its note holds
   the schedules as JSON), and the two settings as `quiz-settings`. Same save and sync path as the
   guidelines, so no backend change; they follow the tracker to other phones and add up to 46

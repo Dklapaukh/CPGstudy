@@ -26,6 +26,7 @@ export const state = {
   // Medicines quiz session { queue: [card ids], revealed, answered }, or null. Memory only; the
   // card schedules themselves are entries (see quizState.js).
   quiz: null,
+  practiceChoice: '', // the medicine chosen in the quiz's "Practise one medicine" list
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,
   updateInProgress: false,
