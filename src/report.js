@@ -18,7 +18,7 @@ const app = document.getElementById('app');
 const SCREEN_NAMES = {
   [QUIZ_HASH]: 'Medicines quiz',
   [GUIDELINE_QUIZ_HASH]: 'Guideline quiz',
-  [QUEUE_HASH]: 'Review queue',
+  [QUEUE_HASH]: 'Guidelines to learn',
 };
 
 /** True when the report button should show (an address is set). */

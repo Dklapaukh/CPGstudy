@@ -1,5 +1,5 @@
 /*
- * The review queue and related-guideline panels, and the Review queue screen.
+ * The Guidelines to learn (review queue) and related-guideline panels, and its screen.
  * Drawn from the state. Depends on state.js, guidelines.js, logic.js, queue.js, related.js,
  * queueState.js and content/related.js. Does not import the guideline screen (it imports us).
  */
@@ -39,11 +39,7 @@ function relatedItems(guidelineId) {
 
 function addButtonHtml(guideline, queue) {
   const isQueued = queue.some((item) => item.id === guideline.id);
-  const text = isQueued
-    ? 'In queue'
-    : queueRoom(queue) === 0
-      ? 'Queue full'
-      : 'Add to review queue';
+  const text = isQueued ? 'In queue' : queueRoom(queue) === 0 ? 'Queue full' : 'Add to queue';
   const disabled = isQueued || queueRoom(queue) === 0 ? ' disabled' : '';
   return `<button class="queue-add-button" type="button" data-action="add-to-queue"
     data-id="${escapeHtml(guideline.id)}"
@@ -70,7 +66,7 @@ function relatedPanelHtml(guideline, queue) {
     <p class="related-panel__hint">Studying related guidelines together helps you remember them.</p>
     <ul class="related-list">${items.map((item) => relatedItemHtml(item, queue)).join('')}</ul>
     <button class="queue-add-all-button" type="button" data-action="add-all-to-queue"
-      ${canAddMore ? '' : 'disabled'}>Add all to review queue</button></section>`;
+      ${canAddMore ? '' : 'disabled'}>Add all to queue</button></section>`;
 }
 
 function queueItemHtml(item) {
@@ -82,7 +78,7 @@ function queueItemHtml(item) {
     <small>CPG EAS ${guideline.n} · ${STATUS_TEXT[status]}</small></span></a>${tick}
     <button class="queue-remove-button" type="button" data-action="remove-from-queue"
       data-id="${escapeHtml(item.id)}"
-      aria-label="${escapeHtml(`Remove ${guideline.t} from the review queue`)}">Remove</button></li>`;
+      aria-label="${escapeHtml(`Remove ${guideline.t} from guidelines to learn`)}">Remove</button></li>`;
 }
 
 /** The queue with its progress, for example "2 of 5 done". Empty text when nothing is queued. */
@@ -91,7 +87,7 @@ function queuePanelHtml(queue) {
   if (!items.length) return '';
   const { done, total } = queueProgress(items);
   return `<section class="queue-panel" aria-labelledby="queue-heading">
-    <h2 id="queue-heading">Review queue</h2>
+    <h2 id="queue-heading">Guidelines to learn</h2>
     <p class="queue-panel__progress">${done} of ${total} done</p>
     <ul class="queue-list">${items.map(queueItemHtml).join('')}</ul></section>`;
 }
@@ -102,17 +98,21 @@ export function reviewPanelsHtml(guideline) {
   return queuePanelHtml(queue) + relatedPanelHtml(guideline, queue);
 }
 
-/** The "Review queue (n)" button for the list screen. Empty text when nothing is queued. */
+/** The "To learn (n)" tab for the list screen's header. The count is left out when empty. */
 export function queueButtonHtml() {
   const count = getQueue().filter((item) => guidelineById(item.id)).length;
-  if (!count) return '';
-  return `<a class="queue-button" href="#queue">Review queue (${count})</a>`;
+  const countHtml = count ? ` <span class="home-tab__count">(${count})</span>` : '';
+  return `<a class="queue-button home-tab" href="#queue"
+    aria-label="Guidelines to learn${count ? `, ${count}` : ''}">To learn${countHtml}</a>`;
 }
 
-/** Draws the Review queue screen. */
+/** Draws the Guidelines to learn screen. */
 export function renderQueueScreen() {
   const panel = queuePanelHtml(getQueue());
-  const body = panel || '<p class="empty-message">Your review queue is empty.</p>';
+  const body =
+    panel ||
+    `<p class="empty-message">No guidelines to learn yet. Add them from Related guidelines on
+    any guideline page.</p>`;
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding queue-screen"><span class="sync-status"></span>${body}</div>`;
   window.scrollTo(0, 0);

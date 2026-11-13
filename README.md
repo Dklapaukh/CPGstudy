@@ -239,7 +239,7 @@ Automated in `tests/app.test.js` unless marked "by hand".
   a mistake or request" email links show when `FEEDBACK_EMAIL` in `src/constants.js` is set.
 - Two devices on one passcode show the same data after a sync (by hand).
 - Offline: changes are kept and sent when signal returns (by hand).
-- Related guidelines (at most 5) show under a guideline; "Add to review queue" and "Add all" fill the queue (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the queue; the list screen has a "Review queue (n)" button.
+- Related guidelines (at most 5) show under a guideline; "Add to queue" and "Add all to queue" fill the Guidelines to learn list (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the list; the list screen header has a "To learn (n)" tab.
 - Comment button adds to the notes and highlights the point.
 - A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the

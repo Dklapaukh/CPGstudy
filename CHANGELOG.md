@@ -1,5 +1,11 @@
 # Change log
 
+- 2026-11-13: New dark list screen header (Spotify-like): tabs for Home, Quiz and To learn; the
+  Quiz tab opens a choice of Medicines quiz or Guideline quiz; the Random guideline button is a
+  round button in line with the completion ring; filters and search sit at the bottom of the
+  header, just above the guidelines, which are unchanged. The review queue is now called
+  "Guidelines to learn" and its buttons say "Add to queue" and "Add all to queue". 122 tests.
+
 - 2026-11-13: Guideline quiz cards are moved with up and down arrows on the right or by dragging
   their grip (new `src/views/dragCards.js`); all cards start in "Your order". "Report a mistake or
   request" is now one button under every screen (new `src/report.js`), filled in with what is on

@@ -1,5 +1,6 @@
 /*
- * The guideline list screen: completion rings, filters, search and sections.
+ * The guideline list screen: a dark header (tabs, quiz choice, completion ring, random button,
+ * filters and search) above the sections, which are drawn as before.
  * Drawn entirely from the state. Depends on state.js, guidelines.js, logic.js, templates.js.
  */
 import { state } from '../state.js';
@@ -16,7 +17,7 @@ import {
   formatUpdatedDate,
 } from '../logic.js';
 import { updateSyncStatus } from '../sync.js';
-import { coverHtml, aiNoticeHtml } from './templates.js';
+import { aiNoticeHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
 import { quizButtonHtml } from './quizView.js';
 import { guidelineQuizButtonHtml } from './guidelineQuizView.js';
@@ -69,6 +70,12 @@ function ringHtml(counts, total, sizeClass, justClosed, centreHtml = '') {
     </svg>${centreHtml}</span>`;
 }
 
+const SHUFFLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.5c2 0 3.2 1
+  4.3 2.6l2.4 4.8c1.1 1.6 2.3 2.6 4.3 2.6H21M3 17h3.5c1.6 0 2.7-.7 3.6-1.8M14.6 8.8c.9-1.1
+  2-1.8 3.4-1.8H21M18 4l3 3-3 3M18 14l3 3-3 3" fill="none" stroke="currentColor"
+  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+
+/** The ring and its legend, with the round Random guideline button in line on the right. */
 function progressHtml(counts, total, justClosed) {
   const percent = Math.round((counts[STATUS.COMPLETE] / total) * 100);
   const centre = `<span class="completion-ring__percent">${percent}%</span>`;
@@ -76,7 +83,45 @@ function progressHtml(counts, total, justClosed) {
     ${ringHtml(counts, total, 'completion-ring--large', justClosed, centre)}
     <div class="progress-legend"><span>${counts[STATUS.COMPLETE]} of ${total} complete</span>
     <span>${counts[STATUS.REVIEW]} to review</span>
-    <span>${counts[STATUS.INCOMPLETE]} not done</span></div></div>`;
+    <span>${counts[STATUS.INCOMPLETE]} not done</span></div>
+    <button class="random-button" id="random-guideline-button" type="button"
+      aria-label="Random guideline" title="Random guideline">${SHUFFLE_ICON}</button></div>`;
+}
+
+// Whether the Quiz tab's choice (Medicines or Guideline) is open. Kept here so a redraw after
+// a sync does not close it.
+let quizChoiceOpen = false;
+
+/** The header tabs: Home (this screen), Quiz (opens the choice below) and To learn. */
+function tabsHtml() {
+  return `<nav class="home-tabs" aria-label="Sections of the app">
+    <a class="home-tab" href="#" aria-current="page">Home</a>
+    <button class="home-tab" id="quiz-tab" type="button" aria-expanded="${quizChoiceOpen}"
+      aria-controls="quiz-choice">Quiz</button>
+    ${queueButtonHtml()}</nav>
+    <div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
+    ${quizButtonHtml()}${guidelineQuizButtonHtml()}</div>`;
+}
+
+function addQuizTabListener() {
+  app.querySelector('#quiz-tab').addEventListener('click', (event) => {
+    quizChoiceOpen = !quizChoiceOpen;
+    event.currentTarget.setAttribute('aria-expanded', String(quizChoiceOpen));
+    app.querySelector('#quiz-choice').hidden = !quizChoiceOpen;
+  });
+}
+
+/** The dark header: tracker name and switch button, title, tabs and the progress card. */
+function homeHeaderHtml(counts, justClosed) {
+  return `<header class="home-header">
+    <div class="top-bar"><b class="tracker-label">${escapeHtml(state.label)}</b>
+    <button class="switch-button" data-action="switch-tracker">Switch tracker</button></div>
+    <h1>Clinical Practice Guidelines</h1>
+    <small class="home-header__subtitle">Emergency Ambulance Service · progress and notes are
+    shared with everyone who has this passcode<br><span class="sync-status"></span></small>
+    ${tabsHtml()}
+    <div class="home-card">${progressHtml(counts, guidelines.length, justClosed)}</div>
+    ${filtersHtml(counts, guidelines.length)}</header>`;
 }
 
 /**
@@ -183,24 +228,13 @@ export function renderList() {
   const warning = state.storageBlocked
     ? `<div class="warning-message">${MESSAGES.STORAGE_BLOCKED}</div>`
     : '';
-  app.innerHTML = `${coverHtml({
-    labelHtml: escapeHtml(state.label),
-    buttonHtml:
-      '<button class="switch-button" data-action="switch-tracker">Switch tracker</button>',
-    subtitleHtml:
-      'Mentoring tracker · progress and notes are shared with everyone who has this passcode' +
-      '<br><span class="sync-status"></span>',
-  })}<div class="page-padding">${warning}${aiNoticeHtml()}${progressHtml(counts, guidelines.length, newlyClosed.has(OVERALL_RING_NAME))}
-    <button class="random-button" id="random-guideline-button" type="button">
-      Random guideline</button>
-    ${quizButtonHtml()}
-    ${guidelineQuizButtonHtml()}
-    ${queueButtonHtml()}
-    ${filtersHtml(counts, guidelines.length)}${sectionsHtml(newlyClosed)}${footerHtml()}</div>`;
+  app.innerHTML = `${homeHeaderHtml(counts, newlyClosed.has(OVERALL_RING_NAME))}
+    <div class="page-padding">${warning}${aiNoticeHtml()}${sectionsHtml(newlyClosed)}${footerHtml()}</div>`;
   app.querySelectorAll('details.section-group').forEach((details) => {
     if (state.openSections[details.dataset.section]) details.open = true;
   });
   addRandomGuidelineButtonListener();
+  addQuizTabListener();
   updateSyncStatus();
   drawUpdateStatus();
 }

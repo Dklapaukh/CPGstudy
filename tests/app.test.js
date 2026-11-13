@@ -123,6 +123,16 @@ test('a tracker passcode shows 14 sections and 180 guidelines with counts', asyn
   assert.equal($('.tracker-label').textContent, 'Sam - 2026');
 });
 
+test('the Quiz tab opens the choice of Medicines or Guideline quiz', async () => {
+  assert.equal($('#quiz-choice').hidden, true);
+  click($('#quiz-tab'));
+  assert.equal($('#quiz-choice').hidden, false);
+  assert.equal($('#quiz-tab').getAttribute('aria-expanded'), 'true');
+  assert.equal($$('#quiz-choice .quiz-button').length, 2);
+  click($('#quiz-tab'));
+  assert.equal($('#quiz-choice').hidden, true);
+});
+
 test('the Random guideline button opens a guideline', async () => {
   click($('#random-guideline-button'));
   assert.match(dom.window.location.hash, /^#.+/);
@@ -271,11 +281,11 @@ test('related guidelines can be added to the review queue and are ticked off whe
   assert.equal(savedQueue.filter((queued) => queued.done).length, 1);
 });
 
-test('the list screen opens the Review queue screen, where a guideline can be removed', async () => {
+test('the To learn tab opens the Guidelines to learn screen, where a guideline can be removed', async () => {
   dom.window.location.hash = '';
   await sleep(30);
   const button = $('.queue-button');
-  assert.match(button.textContent, /^Review queue \(\d\)$/);
+  assert.match(button.textContent, /^To learn \(\d\)$/);
   dom.window.location.hash = '#queue';
   await sleep(30);
   const before = $$('.queue-item').length;
