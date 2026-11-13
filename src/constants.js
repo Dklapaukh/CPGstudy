@@ -43,8 +43,11 @@ export const MAX_QUEUE_SIZE = 5;
 // and editing the notes never moves it. Opening a guideline changes nothing.
 export const MARKED_ENTRY_PREFIX = 'marked-';
 
-// Where "Report a mistake or request" emails go. Leave empty to hide the email links.
-export const FEEDBACK_EMAIL = '';
+// Where "Report a mistake or request" emails go, as [name, domain]. The repository and the site
+// are public, so the address is never written whole: it is joined with "@" only when the report
+// button is tapped, so it is in neither the source nor the page for address-harvesting robots
+// to find. Set to [] to hide the report button.
+export const FEEDBACK_ADDRESS_PARTS = ['danya.klapaukh', 'gmail.com'];
 export const RELATED_LIST_SIZE = 5;
 export const QUEUE_HASH = 'queue';
 // Why a guideline is related, by the reason code stored in content/related.js.

@@ -2,8 +2,8 @@
  * The Guideline quiz screen (address #guideline-quiz) and its button on the list screen.
  * Drawn from the state: the guideline picker when no play is running, otherwise the current
  * step (an ordering round or a choice question), and the result at the end.
- * Cards are placed by tapping (Place next / Not in this guideline / Take back) rather than
- * dragged, because dragging is unreliable on phones and cannot be done with a screen reader.
+ * Cards start in one list in shuffled order and are moved by dragging their grip (see
+ * dragCards.js) or with the up and down arrows, which also work with a screen reader.
  * Depends on state.js, logic.js, guidelineQuizState.js, templates.js and constants.js.
  */
 import { state } from '../state.js';
@@ -11,6 +11,7 @@ import { escapeHtml, formatUpdatedDate } from '../logic.js';
 import { quizzedGuidelines, currentStep, bestScore, percentOf } from '../guidelineQuizState.js';
 import { blockHtml } from './templates.js';
 import { GUIDELINE_QUIZ_HASH } from '../constants.js';
+import { CARD_LIST } from '../guidelineQuizState.js';
 
 const app = document.getElementById('app');
 const BLANK = '____';
@@ -64,48 +65,62 @@ function pickerHtml() {
 
 /* ---------- Ordering round ---------- */
 
-/** A card's text with the buttons that move it. `moves` is [{ action, label }]. */
-function cardRowHtml(card, cardIndex, moves) {
-  const buttons = moves
-    .map(
-      ({ action, label }) => `<button class="order-move-button" type="button"
-        data-action="${action}" data-card="${cardIndex}">${label}</button>`,
-    )
-    .join('');
-  return `<li class="order-card"><span class="order-card-text">${escapeHtml(card.text)}</span>
-    <span class="order-card-buttons">${buttons}</span></li>`;
+const ARROW_UP =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg>';
+const ARROW_DOWN =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>';
+const GRIP = `<svg viewBox="0 0 24 24" aria-hidden="true">${[6, 12, 18]
+  .flatMap((y) => [9, 15].map((x) => `<circle cx="${x}" cy="${y}" r="1.6"></circle>`))
+  .join('')}</svg>`;
+// Shortened card text for button labels read by screen readers.
+const LABEL_LENGTH = 40;
+
+/**
+ * One card that can still be moved: a grip to drag it on the left, its text, a button to move it
+ * to the other list, and up and down arrows on the right. `position` and `count` are its place
+ * in its own list, so the arrows at either end are switched off.
+ */
+function movableCardHtml(card, cardIndex, position, count, isAside) {
+  const name = escapeHtml(card.text.slice(0, LABEL_LENGTH));
+  const other = isAside
+    ? `<button class="order-switch-button" type="button" data-action="guideline-quiz-return"
+        data-card="${cardIndex}">Put back in the order</button>`
+    : `<button class="order-switch-button" type="button" data-action="guideline-quiz-discard"
+        data-card="${cardIndex}">Not in this guideline</button>`;
+  const arrow = (action, svg, label, disabled) =>
+    `<button class="order-arrow" type="button" data-action="${action}" data-card="${cardIndex}"
+      aria-label="${label}: ${name}"${disabled ? ' disabled' : ''}>${svg}</button>`;
+  return `<li class="order-card order-card--movable" data-card="${cardIndex}">
+    <span class="order-grip" data-card="${cardIndex}" title="Drag to move">${GRIP}</span>
+    <span class="order-card-main"><span class="order-card-text">${escapeHtml(card.text)}</span>
+      ${other}</span>
+    <span class="order-arrows">${arrow('guideline-quiz-up', ARROW_UP, 'Move up', position === 0)}${arrow(
+      'guideline-quiz-down',
+      ARROW_DOWN,
+      'Move down',
+      position === count - 1,
+    )}</span></li>`;
 }
 
-const TAKE_BACK = [{ action: 'guideline-quiz-return', label: 'Take back' }];
-const PLACE = [
-  { action: 'guideline-quiz-place', label: 'Place next' },
-  { action: 'guideline-quiz-discard', label: 'Not in this guideline' },
-];
-
-/** The round while cards are still being placed. */
+/** The round while cards are being ordered. Every card is in one of the two lists. */
 function orderingHtml(step) {
   const quiz = state.guidelineQuiz;
-  const left = step.cards
-    .map((card, index) => ({ card, index }))
-    .filter(({ index }) => !quiz.placed.includes(index) && !quiz.discarded.includes(index));
-  const list = (indexes, moves) =>
-    indexes.map((index) => cardRowHtml(step.cards[index], index, moves)).join('');
-  const ready = left.length === 0;
-  return `<h3 class="order-heading">Your order</h3>
-    <ol class="order-list">${list(quiz.placed, TAKE_BACK) || '<li class="order-empty">Tap “Place next” on the first action.</li>'}</ol>
-    ${
-      left.length
-        ? `<h3 class="order-heading">Cards to place (${left.length})</h3>
-          <ul class="order-list order-list--pool">${left
-            .map(({ card, index }) => cardRowHtml(card, index, PLACE))
-            .join('')}</ul>`
-        : ''
-    }
+  const list = (indexes, isAside) =>
+    indexes
+      .map((index, position) =>
+        movableCardHtml(step.cards[index], index, position, indexes.length, isAside),
+      )
+      .join('');
+  return `<p class="quiz-help">Drag a card by its grip, or use the arrows. Move cards from other
+      guidelines to “Not in this guideline”.</p>
+    <h3 class="order-heading">Your order</h3>
+    <ol class="order-list" data-drop-list="${CARD_LIST.PLACED}">${list(quiz.placed, false)}</ol>
     <h3 class="order-heading">Not in this guideline</h3>
-    <ul class="order-list order-list--aside">${list(quiz.discarded, TAKE_BACK) || '<li class="order-empty">None yet.</li>'}</ul>
-    <button class="quiz-start-button" type="button" data-action="guideline-quiz-check"${
-      ready ? '' : ' disabled'
-    }>${ready ? 'Check' : 'Place every card to check'}</button>`;
+    <ul class="order-list order-list--aside" data-drop-list="${CARD_LIST.DISCARDED}">${
+      list(quiz.discarded, true) ||
+      '<li class="order-empty">Drag cards here that do not belong.</li>'
+    }</ul>
+    <button class="quiz-start-button" type="button" data-action="guideline-quiz-check">Check</button>`;
 }
 
 /** One marked card: right or wrong (in words, not only colour) and where it really belongs. */

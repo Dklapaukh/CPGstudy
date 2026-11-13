@@ -8,7 +8,6 @@ import { state } from '../state.js';
 import { formatCheckedTime } from '../updates.js';
 import { documentInfo } from '../../content/guidelines.js';
 import { MESSAGES } from '../constants.js';
-import { generalFeedbackLinkHtml } from './templates.js';
 
 function bannerHtml() {
   if (state.updateInProgress) {
@@ -26,8 +25,7 @@ function bannerHtml() {
 export function footerHtml() {
   return `<footer class="app-footer"><p>Guidelines exported ${documentInfo.exportedOn} ·
     last checked for updates <span class="update-checked-time"></span></p>
-    <p>${MESSAGES.STUDY_AID_NOTICE} ${documentInfo.sourceLine}</p>
-    ${generalFeedbackLinkHtml()}</footer>`;
+    <p>${MESSAGES.STUDY_AID_NOTICE} ${documentInfo.sourceLine}</p></footer>`;
 }
 
 /** Redraws the banner and the last-check time from the state. */

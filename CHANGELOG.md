@@ -1,5 +1,11 @@
 # Change log
 
+- 2026-11-13: Guideline quiz cards are moved with up and down arrows on the right or by dragging
+  their grip (new `src/views/dragCards.js`); all cards start in "Your order". "Report a mistake or
+  request" is now one button under every screen (new `src/report.js`), filled in with what is on
+  screen, including the quiz step. The address is kept in two parts and only joined when tapped.
+  121 tests.
+
 - 2026-11-13: Guideline quiz (`#guideline-quiz`, button on the list screen). Pick a guideline (or
   Random guideline) and put the actions at the top of it in order, one round per situation
   (for example Severe asthma), with 2 cards from other guidelines with the same medicines or

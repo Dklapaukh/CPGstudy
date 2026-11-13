@@ -5,20 +5,13 @@
  */
 import { state, saveSession } from '../state.js';
 import { guidelines } from '../guidelines.js';
-import {
-  getStatus,
-  escapeHtml,
-  formatUpdatedDate,
-  nextTimestamp,
-  markedTime,
-  feedbackMailto,
-} from '../logic.js';
+import { getStatus, escapeHtml, formatUpdatedDate, nextTimestamp, markedTime } from '../logic.js';
 import { notesHaveComment } from '../comments.js';
 import { scheduleSync, updateSyncStatus } from '../sync.js';
 import { bodyHtml, aiNoticeHtml } from './templates.js';
 import { reviewPanelsHtml, refreshQueueViews } from './queueView.js';
 import { documentInfo } from '../../content/guidelines.js';
-import { STATUS, MESSAGES, DEFAULT_HEADER_COLOUR, FEEDBACK_EMAIL } from '../constants.js';
+import { STATUS, MESSAGES, DEFAULT_HEADER_COLOUR } from '../constants.js';
 
 const app = document.getElementById('app');
 const byId = (id) => document.getElementById(id);
@@ -45,19 +38,6 @@ export function markedLineText(guidelineId) {
   if (!markedAt) return 'Not marked yet · press Review or Complete when studied';
   const prefix = MESSAGES.MARKED_PREFIX[getStatus(state.entries, guidelineId)];
   return `${prefix} ${formatUpdatedDate(markedAt)} · press again to update`;
-}
-
-/** Link to email a mistake or request about this guideline, or '' when no address is set. */
-function feedbackLinkHtml(guideline) {
-  const href = feedbackMailto(
-    FEEDBACK_EMAIL,
-    `NZCPG study app: CPG EAS ${guideline.n} ${guideline.t}`,
-    `Guideline: CPG EAS ${guideline.n} ${guideline.t}\n` +
-      `Guidelines exported: ${documentInfo.exportedOn}\n\nWhat is wrong or what would you like?\n`,
-  );
-  return href
-    ? `<a class="feedback-link" href="${escapeHtml(href)}">${MESSAGES.FEEDBACK_LINK}</a>`
-    : '';
 }
 
 function neighbourLinkHtml(guideline, isNext) {
@@ -88,7 +68,7 @@ export function renderGuidelineDetail(index) {
         placeholder="Notes for this guideline (what you covered, what to revisit)"
         >${escapeHtml(entry.n || '')}</textarea>
       <div class="save-hint"><span id="updated-date">${updated}</span><span class="sync-status"></span></div></section>
-      <div id="review-panels">${reviewPanelsHtml(guideline)}</div>${feedbackLinkHtml(guideline)}</div>
+      <div id="review-panels">${reviewPanelsHtml(guideline)}</div></div>
     <div class="neighbour-nav">${neighbourLinkHtml(guidelines[index - 1], false)}
       ${neighbourLinkHtml(guidelines[index + 1], true)}</div>`;
   window.scrollTo(0, 0);
