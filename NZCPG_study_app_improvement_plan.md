@@ -33,6 +33,10 @@ Work is done in as token-efficient a way as possible. Every message in a chat ma
 ### Code quality
 
 10. All new and changed code follows the style guide in section 10, so that a human programmer can audit it without help.
+
+### Publishing changes
+
+11. **Claude commits and pushes every update straight to `main` itself** (your standing instruction, 14 Nov 2026). No feature branches, no pull requests and no asking first. Before each push, `npm run check` must pass and `CHANGELOG.md` gets an entry. GitHub Pages serves `main`, so a push is live once Pages redeploys. The daily PDF-check Action still opens pull requests for new guideline content, because that content needs your review.
 11. A refactor changes how code is written, not what it does. Behaviour changes are made separately.
 
 ---
@@ -617,7 +621,7 @@ task needs. Do not read content/guidelines.js: it is 1.3 MB of guideline data.
 Task for this chat: [one task, for example "Answer Decisions A to F, then build features 1 and 2"].
 
 Be as token efficient as possible. Ask me any relevant unanswered questions in one message with
-the full text of every option. Run `npm run check` before finishing. At the end, update sections 8
+the full text of every option. Run `npm run check`, then commit and push straight to main (section 0, rule 11). At the end, update sections 8
 and 13 of the plan, and tell me whether the next step is cheaper in a fresh chat, with the prompt
 to paste.
 ```
@@ -645,3 +649,4 @@ Review items from section 9: all are now fixed, documented or closed by decision
 | 11 Nov 2026 | Decisions Z6 to Z11 recorded. Converter checked: still the recorded rebuild of the EAS PDF; the old comprehensive edition is a different format with no Morphine and is rejected by the converter's guard. Morphine 14.32 is truncated in the source PDF itself. Quiz changes on branch `quiz-by-medicine` (pull request): new medicines per day (1 to 10, default 2) with all their cards, review limit (10 to 200, default 30), no paediatric doses, adult doses per indication from the guidelines for Adrenaline, Midazolam and Morphine (identical ones shared), dose cards "Medicine – Indication – Dose". New `src/quizDoses.js`; README, change log, `version.json`. `npm run check` passes (95 tests). Not checked on a real phone. | You: merge the pull request, try the quiz on your phone and skim the Adrenaline, Midazolam and Morphine dose cards; say which indication cards to drop. Check the Morphine page on cpg.stjohn.org.nz now and then (Z11). Decision Z5 (guideline cards) when you are ready. |
 | 13 Nov 2026 | Decisions Z5 and Z12 to Z16 recorded. Feature 9 built on branch `guideline-quiz` (pull request): guideline quiz at `#guideline-quiz`, 85 treatment guidelines, 137 ordering rounds with 2 distractors each, number questions (wrong values from the guidelines, ten times, sometimes a wrong unit), situation, red-flag and move-to questions, best score per guideline saved as `quiz-order-<id>` (no backend change). New `src/guidelineQuizRounds.js`, `src/guidelineQuizNumbers.js`, `src/guidelineQuizPlay.js`, `src/guidelineQuizState.js`, `src/views/guidelineQuizView.js`, `tests/guidelineQuiz.test.js`; README, change log, `version.json`, CSS. `npm run check` passes (118 tests). Checked in Chrome at phone size; not on a real phone. | You: merge the pull request, play a few guidelines on your phone. Review the number rules (Z14) and red-flag wrong answers: note any question whose wrong answer is actually right, or whose round order is not meaningful, and say which rounds or guidelines to drop. |
 | 13 Nov 2026 | Your instructions: ordering cards get up/down arrows on the right and can be dragged (grip on the left; all cards start in "Your order"); the report button on every screen, address set. My choice of protection: address stored in two parts and joined only when tapped (not in source or page), no form or server so nothing to flood. Branch `ordering-and-report` (pull request). New `src/report.js`, `src/views/dragCards.js`. `npm run check` passes (121 tests). Dragging checked in Chrome with a mouse; not on a real phone. | You: merge, try dragging on your phone (by the grip) and send one test report from a quiz question. |
+| 14 Nov 2026 | Settings moved to a cog button right of Switch tracker; filter pills on one line; dark mode extended to the guideline text (only coloured table cells, the flag tables, keep the PDF colours). New standing rule: Claude pushes every update straight to `main` (section 0, rule 11; also in `CLAUDE.md` and the README). 124 tests pass. | Check the header and dark-mode guideline text on your phone. |

@@ -42,6 +42,8 @@ through a Google Sheet.
 
 - Needs a web server: ES modules do not load from a file opened directly. Locally: `npx serve .`.
 - Publishing: GitHub Pages serving the `main` branch root. The address stays the same.
+- Claude commits and pushes every update straight to `main` (no branches or pull requests),
+  after `npm run check` passes and with a `CHANGELOG.md` entry. See `CLAUDE.md`.
 - `npm install` once, then `npm run check` (formatting, error checking, tests). GitHub runs it on
   every push.
 

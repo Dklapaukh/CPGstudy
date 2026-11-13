@@ -297,6 +297,32 @@ h1 {
   color: var(--header-accent);
   border: 1px solid var(--header-border);
 }
+.top-bar__buttons {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+/* Settings: a round cog button to the right of Switch tracker, matching its pill border. */
+.settings-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--header-border);
+  border-radius: 50%;
+  color: var(--header-accent);
+  text-decoration: none;
+}
+.settings-button svg {
+  width: 20px;
+  height: 20px;
+}
+.settings-button:active {
+  transform: scale(0.96);
+}
 .home-tabs {
   display: flex;
   gap: 0.5rem;
@@ -396,7 +422,18 @@ h1 {
 .home-tab:active {
   transform: scale(0.96);
 }
+/* The four filters always sit on one line: they share the width, and shrink their text on
+   narrow phones rather than wrapping. */
+.home-header .filter-chips {
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
 .home-header .filter-chip {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.4rem 0.3rem;
+  font-size: clamp(0.66rem, 2.95vw, 0.9rem);
+  white-space: nowrap;
   background: var(--header-control);
   border: 1px solid var(--header-border);
   color: var(--header-text);
@@ -518,8 +555,8 @@ h1 {
   font-weight: 600;
 }
 
-/* Dark mode (Settings). The guideline text keeps its white page so the colours from the PDF
-   read exactly as before; everything around it turns dark. */
+/* Dark mode (Settings). The guideline text turns dark too; only the coloured table cells (the
+   flag tables) keep their exact colours from the PDF, with dark text as before. */
 :root[data-theme='dark'] {
   --colour-background: #121212;
   --colour-surface: #1c1f1d;
@@ -533,10 +570,30 @@ h1 {
   --colour-wrong-soft: #3b1f1d;
   color-scheme: dark;
 }
-:root[data-theme='dark'] .guideline-body,
-:root[data-theme='dark'] .quiz-answer {
+:root[data-theme='dark'] .guideline-body {
+  background: var(--colour-surface);
+  color: var(--colour-text);
+}
+:root[data-theme='dark'] .colour-box {
+  background: color-mix(in srgb, var(--block-colour) 22%, var(--colour-surface));
+  border-left: 4px solid var(--block-colour);
+}
+:root[data-theme='dark'] td {
+  border-color: #4a514d;
+}
+:root[data-theme='dark'] td.table-cell--coloured {
   color: #121212;
-  color-scheme: light;
+}
+:root[data-theme='dark'] td.table-header-cell {
+  color: #fff;
+}
+:root[data-theme='dark'] .bullet-row.has-comment,
+:root[data-theme='dark'] .key-row.has-comment {
+  background: #3a3115;
+  box-shadow: 0 0 0 0.3rem #3a3115;
+}
+:root[data-theme='dark'] .has-comment .comment-button {
+  color: #f2c46d;
 }
 :root[data-theme='dark'] .guideline-row,
 :root[data-theme='dark'] .passcode-display,

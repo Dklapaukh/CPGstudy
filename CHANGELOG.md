@@ -1,5 +1,11 @@
 # Change log
 
+- 2026-11-14: Settings is now a round cog button to the right of Switch tracker (no longer a
+  tab). The four filter pills (All, Incomplete, Needs review, Complete) always sit on one line,
+  shrinking their text on narrow phones. Dark mode now covers the guideline text too: the page,
+  colour boxes and plain table cells turn dark, and only the coloured table cells (the flag
+  tables) keep their exact PDF colours. 124 tests.
+
 - 2026-11-13: The list screen header is white with green, and its pills have a subtle border.
   New Settings tab (`#settings`, new `src/views/settingsView.js` and `src/settingsState.js`):
   dark mode (this phone only, saved in localStorage; the guideline text keeps its white page so

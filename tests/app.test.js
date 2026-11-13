@@ -476,7 +476,7 @@ test('the Settings screen turns on dark mode and sets the review days with the w
   darkSwitch.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   dom.window.location.hash = '';
   await sleep(30);
-  assert.ok($('a.home-tab[href="#settings"]'), 'the list header has the Settings tab');
+  assert.ok($('a.settings-button[href="#settings"]'), 'the list header has the Settings button');
 });
 
 test('the report button shows on every screen and describes what is on it', async () => {
