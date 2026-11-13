@@ -103,8 +103,11 @@ through a Google Sheet.
   heading. Any other heading, or a short unindented "If …"/"When …" line, starts a new situation;
   each situation with 2 or more actions is a round. Two distractors are added: actions of other
   guidelines naming a medicine the round names, then actions of related guidelines
-  (`content/related.js`), never worded the same as this guideline. Cards are placed by tapping
-  (Place next, Not in this guideline, Take back). Marking: one mark per card in the longest run
+  (`content/related.js`), never worded the same as this guideline. All cards start in "Your
+  order", shuffled. A card is moved by dragging its grip (left, `src/views/dragCards.js`, pointer
+  events so touch and mouse both work; only the grip drags, so the page still scrolls) or with
+  its up and down arrows (right), and to "Not in this guideline" and back by dragging or with its
+  button. Marking: one mark per card in the longest run
   in the right order, one per distractor put aside. After Check the guideline's order is shown
   with the lines under each action. Child-only sentences are removed from card text.
 - Number questions (up to 3 a play): a value with a unit in an action line is blanked. Wrong
@@ -123,6 +126,18 @@ through a Google Sheet.
 - Only the best score (percent and date) per guideline is saved, as one extra entry
   `quiz-order-<guideline id>`: same save and sync path, no backend change, up to 85 more rows per
   tracker in the Data sheet. Ending a play early saves nothing.
+
+## Report a mistake or request
+
+- A "Report a mistake or request" button is under every screen (`index.html`, `src/report.js`).
+  It opens the student's email app with the subject and body filled in from what is on screen:
+  the guideline; the medicines quiz card and its source; or the guideline quiz step with its
+  cards or its question, choices and the app's answer (so generated questions can be checked).
+- Protection, as the repository and site are public: the address is stored as two parts in
+  `FEEDBACK_ADDRESS_PARTS` and joined with "@" only when the button is tapped, so it appears
+  neither in the source nor in the page for address-harvesting robots (a test checks this).
+  The app sends nothing itself (no form, no server), so there is nothing to flood; an email
+  filter on the subject "NZCPG study app:" deals with anything else. `[]` hides the button.
 
 ## Publishing an update (feature 7)
 
@@ -229,6 +244,8 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
   new-cards-per-day setting changes the count. Layout on a phone (by hand).
-- Guideline quiz: rounds can be placed, taken back and checked; a perfect play scores 100% and
+- The report button is under every screen and the page holds no whole email address.
+- Guideline quiz: cards move with the arrows and to and from "Not in this guideline", dragging
+  by the grip works on a phone (by hand); a perfect play scores 100% and
   saves `quiz-order-<id>`; the picker shows the best score. Layout on a phone (by hand).
 - Switch tracker and sign out.

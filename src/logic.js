@@ -148,6 +148,23 @@ export function markedTime(entries, guidelineId) {
   return entries[guidelineId].t || 0;
 }
 
+/** The feedback address joined from its parts (see FEEDBACK_ADDRESS_PARTS), or ''. */
+export const joinAddress = (parts) => (parts.length === 2 ? parts.join('@') : '');
+
+/**
+ * Subject and body of a report email. `context` is { title, lines }: title names what was on
+ * screen ("CPG EAS 3.8 Ventricular Tachycardia") and lines give the details. The guidelines'
+ * export date is added so a report can be matched to the content it was about.
+ */
+export function reportMessage(context, exportedOn) {
+  return {
+    subject: `NZCPG study app: ${context.title}`,
+    body:
+      `${[...context.lines, `Guidelines exported: ${exportedOn}`].join('\n')}\n\n` +
+      'What is wrong or what would you like?\n',
+  };
+}
+
 /** A mailto: link with the subject and body filled in, or '' when there is no address. */
 export function feedbackMailto(address, subject, body) {
   if (!address) return '';

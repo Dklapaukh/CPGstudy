@@ -938,10 +938,20 @@ td.table-cell--coloured {
 .button + .ai-notice {
   margin-top: 1.2rem;
 }
+.report-footer {
+  max-width: 44rem;
+  margin: -3rem auto 0; /* into the app's bottom padding, so it sits just under each screen */
+  padding: 0 1rem 1.2rem;
+}
 .feedback-link {
   display: inline-block;
-  margin: 0.4rem 0 0.8rem;
+  min-height: 44px;
+  margin: 0;
   padding: 0.3rem 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
   color: var(--colour-green);
   font-size: 0.85rem;
   font-weight: 500;
@@ -1135,20 +1145,97 @@ td.table-cell--coloured {
   color: var(--colour-muted);
   font-size: 0.85rem;
 }
-.order-card-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+.order-card--movable {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.3rem;
+  padding: 0.3rem 0.3rem 0.3rem 0;
 }
-.order-move-button {
-  min-height: 44px;
-  padding: 0 0.9rem;
-  border: 1px solid var(--colour-green);
-  border-radius: 10px;
-  background: #fff;
+.order-grip {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  color: var(--colour-muted);
+  cursor: grab;
+  touch-action: none; /* dragging the grip moves the card instead of scrolling the page */
+}
+.order-grip svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: currentColor;
+}
+.order-card-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.3rem 0;
+}
+.order-switch-button {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--colour-green);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  text-decoration: underline;
   cursor: pointer;
+}
+.order-arrows {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+}
+.order-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--colour-line);
+  border-radius: 10px;
+  background: var(--colour-control);
+  color: var(--colour-text);
+  cursor: pointer;
+}
+.order-arrow svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.order-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.order-card--dragging {
+  z-index: 10;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  cursor: grabbing;
+}
+.order-gap {
+  margin-bottom: 0.5rem;
+  border: 2px dashed var(--colour-green);
+  border-radius: 12px;
+  list-style: none;
+}
+.order-list--aside {
+  min-height: 3.5rem;
+  padding: 0.4rem;
+  border: 1px dashed var(--colour-line);
+  border-radius: 12px;
+}
+.order-list--aside .order-card {
+  background: #f8f9f8;
 }
 .order-empty {
   color: var(--colour-muted);
@@ -1213,4 +1300,17 @@ td.table-cell--coloured {
 .choice-button--wrong {
   border-color: var(--colour-wrong);
   background: var(--colour-wrong-soft);
+}
+/* Movable cards fill the width (no list numbers) and no text gets selected while dragging. */
+.order-list[data-drop-list] {
+  padding-left: 0;
+  list-style: none;
+}
+.order-list--aside[data-drop-list] {
+  padding: 0.4rem;
+}
+.order-grip,
+.order-card--dragging {
+  user-select: none;
+  -webkit-user-select: none;
 }

@@ -38,7 +38,8 @@ import {
 import { renderQuizScreen } from './views/quizView.js';
 import {
   startGuidelineQuiz,
-  placeCard,
+  moveCardTo,
+  moveCardBy,
   discardCard,
   returnCard,
   checkRound,
@@ -48,6 +49,8 @@ import {
   quizzedGuidelines,
 } from './guidelineQuizState.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
+import { canReport, openReport } from './report.js';
+import { startCardDrag } from './views/dragCards.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
 const app = document.getElementById('app');
@@ -323,7 +326,8 @@ const clickActions = {
   'quiz-practice-answer': changeQuiz((button) => answerPracticeCard(button.dataset.rating)),
   'guideline-quiz-start': changeGuidelineQuiz(startChosenGuidelineQuiz, true),
   'guideline-quiz-random': changeGuidelineQuiz(startRandomGuidelineQuiz, true),
-  'guideline-quiz-place': changeGuidelineQuiz((button) => placeCard(cardIndexOf(button))),
+  'guideline-quiz-up': changeGuidelineQuiz((button) => moveCardBy(cardIndexOf(button), -1)),
+  'guideline-quiz-down': changeGuidelineQuiz((button) => moveCardBy(cardIndexOf(button), 1)),
   'guideline-quiz-discard': changeGuidelineQuiz((button) => discardCard(cardIndexOf(button))),
   'guideline-quiz-return': changeGuidelineQuiz((button) => returnCard(cardIndexOf(button))),
   'guideline-quiz-check': changeGuidelineQuiz(checkRound),
@@ -342,6 +346,14 @@ export function attachEventListeners() {
     const element = event.target.closest('[data-action]');
     if (element && clickActions[element.dataset.action])
       clickActions[element.dataset.action](element);
+  });
+
+  // Dragging a guideline quiz card by its grip (the arrows do the same without dragging).
+  app.addEventListener('pointerdown', (event) => {
+    if (!event.target.closest('.order-grip')) return;
+    startCardDrag(event, (cardIndex, listName, position) =>
+      changeGuidelineQuiz(() => moveCardTo(cardIndex, listName, position))(),
+    );
   });
 
   app.addEventListener('input', (event) => {
@@ -388,5 +400,11 @@ export function attachEventListeners() {
   // The update banner sits outside the app container (see views/updateView.js).
   byId('update-banner').addEventListener('click', (event) => {
     if (event.target.closest('[data-action="apply-update"]')) applyUpdate();
+  });
+
+  const reportFooter = byId('report-footer');
+  reportFooter.hidden = !canReport();
+  reportFooter.addEventListener('click', (event) => {
+    if (event.target.closest('[data-action="report"]')) openReport();
   });
 }

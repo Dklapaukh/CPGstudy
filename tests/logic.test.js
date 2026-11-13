@@ -16,6 +16,8 @@ import {
   pickSuggestion,
   markedTime,
   feedbackMailto,
+  joinAddress,
+  reportMessage,
 } from '../src/logic.js';
 
 const sampleGuidelines = [
@@ -191,4 +193,24 @@ test('feedbackMailto fills in subject and body, and is empty without an address'
     feedbackMailto('me@example.com', 'CPG 1.2 & more', 'Line 1\nLine 2'),
     'mailto:me@example.com?subject=CPG%201.2%20%26%20more&body=Line%201%0ALine%202',
   );
+});
+
+test('the report address is only joined from its two parts; the message names the screen', () => {
+  assert.equal(joinAddress(['me', 'example.com']), 'me@example.com');
+  assert.equal(joinAddress([]), '');
+  const { subject, body } = reportMessage(
+    { title: 'CPG EAS 3.8 VT', lines: ['Guideline: CPG EAS 3.8 VT'] },
+    '24.09.2026',
+  );
+  assert.equal(subject, 'NZCPG study app: CPG EAS 3.8 VT');
+  assert.equal(
+    body,
+    'Guideline: CPG EAS 3.8 VT\nGuidelines exported: 24.09.2026\n\nWhat is wrong or what would you like?\n',
+  );
+});
+
+test('the source never holds the whole feedback address', async () => {
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync('src/constants.js', 'utf8');
+  assert.doesNotMatch(source, /[\w.]+@[\w-]+\.\w+/);
 });

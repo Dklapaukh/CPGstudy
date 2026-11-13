@@ -343,23 +343,29 @@ test('Practise one medicine goes through its cards without changing the schedule
   await sleep(30);
 });
 
-/** Plays the current ordering round perfectly: the actions in order, the distractors aside. */
+/** Plays the current ordering round perfectly with the buttons: distractors aside, then arrows. */
 function playRoundPerfectly(step) {
+  step.cards.forEach((card, index) => {
+    if (card.isDistractor) click($(`[data-action="guideline-quiz-discard"][data-card="${index}"]`));
+  });
   const used = new Set();
-  for (const action of step.real) {
+  step.real.forEach((action, target) => {
     const index = step.cards.findIndex(
       (card, i) => !card.isDistractor && !used.has(i) && card.text === action.text,
     );
     used.add(index);
-    click($(`[data-action="guideline-quiz-place"][data-card="${index}"]`));
-  }
-  step.cards.forEach((card, index) => {
-    if (card.isDistractor) click($(`[data-action="guideline-quiz-discard"][data-card="${index}"]`));
+    const positionOf = () =>
+      $$('[data-drop-list="placed"] > .order-card').findIndex(
+        (item) => Number(item.dataset.card) === index,
+      );
+    while (positionOf() > target)
+      click($(`[data-action="guideline-quiz-up"][data-card="${index}"]`));
   });
 }
 
-test('the Guideline quiz orders cards, marks them, and saves the best score', async () => {
+test('the Guideline quiz orders cards with arrows, marks them, and saves the best score', async () => {
   const { state } = await import('../src/state.js');
+  const { reportContext } = await import('../src/report.js');
   dom.window.location.hash = '#guideline-quiz';
   await sleep(30);
   const select = $('#guideline-quiz-choice');
@@ -370,14 +376,27 @@ test('the Guideline quiz orders cards, marks them, and saves the best score', as
   select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   click($('[data-action="guideline-quiz-start"]'));
   assert.match($('.quiz-prompt').textContent, /Put the actions in order/);
-  assert.ok($('[data-action="guideline-quiz-check"]').disabled, 'Check waits for every card');
-  // Place one card and take it back.
-  click($('[data-action="guideline-quiz-place"]'));
+  const first = $$('[data-drop-list="placed"] > .order-card');
   assert.equal(
-    $$('.order-list:not(.order-list--pool) [data-action="guideline-quiz-return"]').length,
-    1,
+    first.length,
+    state.guidelineQuiz.steps[0].cards.length,
+    'every card starts in the order',
   );
-  click($('[data-action="guideline-quiz-return"]'));
+  assert.ok(
+    first[0].querySelector('[data-action="guideline-quiz-up"]').disabled,
+    'no up at the top',
+  );
+  assert.ok(first[0].querySelector('.order-grip'), 'each card has a grip to drag');
+  // Down then up puts a card back; a card put aside can be put back.
+  const index = Number(first[0].dataset.card);
+  click($(`[data-action="guideline-quiz-down"][data-card="${index}"]`));
+  assert.equal(Number($$('[data-drop-list="placed"] > .order-card')[1].dataset.card), index);
+  click($(`[data-action="guideline-quiz-up"][data-card="${index}"]`));
+  click($(`[data-action="guideline-quiz-discard"][data-card="${index}"]`));
+  assert.equal($$('[data-drop-list="discarded"] > .order-card').length, 1);
+  click($(`[data-action="guideline-quiz-return"][data-card="${index}"]`));
+  assert.equal($$('[data-drop-list="discarded"] > .order-card').length, 0);
+  assert.match(reportContext().lines.join('\n'), /Ordering round/, 'a report names the round');
   while (state.guidelineQuiz && !state.guidelineQuiz.finished) {
     const quiz = state.guidelineQuiz;
     const step = quiz.steps[quiz.index];
@@ -387,6 +406,7 @@ test('the Guideline quiz orders cards, marks them, and saves the best score', as
       assert.match($('.quiz-counts').textContent, /^(\d+) of \1 right$/);
       assert.ok($('.order-answers'), 'the guideline order is shown after Check');
     } else {
+      assert.match(reportContext().lines.join('\n'), /Answer given by the app: /);
       click(
         $(
           `[data-action="guideline-quiz-pick"][data-choice="${step.choices.indexOf(step.answer)}"]`,
@@ -404,6 +424,19 @@ test('the Guideline quiz orders cards, marks them, and saves the best score', as
   dom.window.location.hash = '';
   await sleep(30);
   assert.ok($('a[href="#guideline-quiz"]'), 'the list screen has the Guideline quiz button');
+});
+
+test('the report button shows on every screen and describes what is on it', async () => {
+  const { reportContext } = await import('../src/report.js');
+  assert.equal($('#report-footer').hidden, false);
+  assert.equal($('#report-footer').textContent.trim(), 'Report a mistake or request');
+  assert.doesNotMatch(doc.documentElement.innerHTML, /klapaukh@/, 'no whole address in the page');
+  assert.deepEqual(reportContext().lines, ['Screen: Guideline list']);
+  dom.window.location.hash = '#cpg-3-8';
+  await sleep(30);
+  assert.equal(reportContext().title, 'CPG EAS 3.8 Ventricular Tachycardia');
+  dom.window.location.hash = '';
+  await sleep(30);
 });
 
 async function checkAgain() {

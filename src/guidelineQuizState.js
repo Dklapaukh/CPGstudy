@@ -110,12 +110,20 @@ export function startGuidelineQuiz(guidelineId, random = Math.random) {
     index: 0,
     score: 0,
     finished: false,
-    ...freshStep(),
+    ...freshStep(steps[0]),
   };
 }
 
-/** The parts of the session that start again for every step. */
-const freshStep = () => ({ placed: [], discarded: [], marked: null, picked: null });
+/**
+ * The parts of the session that start again for every step. An ordering round starts with every
+ * card in "Your order", in the shuffled order of step.cards.
+ */
+const freshStep = (step) => ({
+  placed: step && step.kind === 'order' ? step.cards.map((_, index) => index) : [],
+  discarded: [],
+  marked: null,
+  picked: null,
+});
 
 /** True while the current ordering round can still be changed. */
 const canMove = () => {
@@ -123,36 +131,47 @@ const canMove = () => {
   return Boolean(step && step.kind === 'order' && !state.guidelineQuiz.marked);
 };
 
-/** Puts a card at the end of "Your order". */
-export function placeCard(cardIndex) {
-  if (!canMove()) return;
-  const quiz = state.guidelineQuiz;
-  quiz.discarded = quiz.discarded.filter((index) => index !== cardIndex);
-  if (!quiz.placed.includes(cardIndex)) quiz.placed.push(cardIndex);
-}
+// The two lists a card can be in: "Your order" and "Not in this guideline".
+export const CARD_LIST = { PLACED: 'placed', DISCARDED: 'discarded' };
 
-/** Puts a card in "Not in this guideline". */
-export function discardCard(cardIndex) {
-  if (!canMove()) return;
+/**
+ * Moves a card to `position` in a list (CARD_LIST), taking it out of wherever it was. Used by
+ * dragging, the arrows and the "Not in this guideline" / "Put back" buttons. A position past the
+ * end puts it last.
+ */
+export function moveCardTo(cardIndex, listName, position) {
+  if (!canMove() || !Object.values(CARD_LIST).includes(listName)) return;
   const quiz = state.guidelineQuiz;
-  quiz.placed = quiz.placed.filter((index) => index !== cardIndex);
-  if (!quiz.discarded.includes(cardIndex)) quiz.discarded.push(cardIndex);
-}
-
-/** Takes a card back out of "Your order" or "Not in this guideline". */
-export function returnCard(cardIndex) {
-  if (!canMove()) return;
-  const quiz = state.guidelineQuiz;
+  if (!quiz.placed.includes(cardIndex) && !quiz.discarded.includes(cardIndex)) return;
   quiz.placed = quiz.placed.filter((index) => index !== cardIndex);
   quiz.discarded = quiz.discarded.filter((index) => index !== cardIndex);
+  const list = quiz[listName];
+  list.splice(Math.max(0, Math.min(position, list.length)), 0, cardIndex);
 }
 
-/** Marks the current round once every card has been placed or put aside. */
+/** Moves a card one place up (-1) or down (+1) in its list; nothing at either end. */
+export function moveCardBy(cardIndex, step) {
+  const quiz = state.guidelineQuiz;
+  if (!quiz) return;
+  const listName = quiz.placed.includes(cardIndex) ? CARD_LIST.PLACED : CARD_LIST.DISCARDED;
+  const position = quiz[listName].indexOf(cardIndex) + step;
+  if (position < 0 || position >= quiz[listName].length) return;
+  moveCardTo(cardIndex, listName, position);
+}
+
+/** Puts a card at the end of "Not in this guideline". */
+export const discardCard = (cardIndex) =>
+  moveCardTo(cardIndex, CARD_LIST.DISCARDED, Number.MAX_SAFE_INTEGER);
+
+/** Puts a card from "Not in this guideline" back at the end of "Your order". */
+export const returnCard = (cardIndex) =>
+  moveCardTo(cardIndex, CARD_LIST.PLACED, Number.MAX_SAFE_INTEGER);
+
+/** Marks the current round (every card is always in one of the two lists). */
 export function checkRound() {
   if (!canMove()) return;
   const quiz = state.guidelineQuiz;
   const step = currentStep();
-  if (quiz.placed.length + quiz.discarded.length < step.cards.length) return;
   quiz.marked = markRound(
     step.cards,
     step.real.map((card) => card.text),
@@ -181,7 +200,7 @@ export function nextStep() {
   const answered = quiz.marked || quiz.picked !== null;
   if (!answered) return;
   quiz.index += 1;
-  Object.assign(quiz, freshStep());
+  Object.assign(quiz, freshStep(quiz.steps[quiz.index]));
   if (quiz.index >= quiz.steps.length) {
     quiz.finished = true;
     saveIfBest(quiz.guidelineId, percentOf(quiz.score, quiz.total));
