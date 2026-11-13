@@ -59,7 +59,7 @@ const PAEDIATRICS_SECTION_NAME = 'Paediatrics';
 const PAEDIATRIC_TABLE_PATTERN = /paediatric/i;
 // Guidelines outside the Paediatrics section that are only about children, so every dose in
 // them is a child dose even where the line does not say so.
-const CHILD_ONLY_GUIDELINE_TITLES = ['Croup', 'Bronchiolitis'];
+export const CHILD_ONLY_GUIDELINE_TITLES = ['Croup', 'Bronchiolitis'];
 
 // How a medicine is named in other guidelines, where its title's first word is not enough
 // (for example "Glucose Gel" must not match "10% glucose IV"). Lower case.

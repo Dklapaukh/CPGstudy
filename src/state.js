@@ -27,6 +27,10 @@ export const state = {
   // card schedules themselves are entries (see quizState.js).
   quiz: null,
   practiceChoice: '', // the medicine chosen in the quiz's "Practise one medicine" list
+  // Guideline quiz play { guidelineId, steps, index, score, placed, discarded, marked, picked },
+  // or null. Memory only; the best scores are entries (see guidelineQuizState.js).
+  guidelineQuiz: null,
+  guidelineQuizChoice: '', // the guideline chosen on the guideline quiz screen
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,
   updateInProgress: false,
