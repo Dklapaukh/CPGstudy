@@ -12,13 +12,20 @@ import { documentInfo } from '../content/guidelines.js';
 import { joinAddress, reportMessage, feedbackMailto } from './logic.js';
 import { currentCard } from './quizState.js';
 import { currentStep } from './guidelineQuizState.js';
-import { FEEDBACK_ADDRESS_PARTS, QUIZ_HASH, GUIDELINE_QUIZ_HASH, QUEUE_HASH } from './constants.js';
+import {
+  FEEDBACK_ADDRESS_PARTS,
+  QUIZ_HASH,
+  GUIDELINE_QUIZ_HASH,
+  QUEUE_HASH,
+  SETTINGS_HASH,
+} from './constants.js';
 
 const app = document.getElementById('app');
 const SCREEN_NAMES = {
   [QUIZ_HASH]: 'Medicines quiz',
   [GUIDELINE_QUIZ_HASH]: 'Guideline quiz',
   [QUEUE_HASH]: 'Guidelines to learn',
+  [SETTINGS_HASH]: 'Settings',
 };
 
 /** True when the report button should show (an address is set). */

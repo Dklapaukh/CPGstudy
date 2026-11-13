@@ -129,3 +129,11 @@ export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy'
 // (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id), so it needs no backend change.
 export const GUIDELINE_QUIZ_HASH = 'guideline-quiz';
 export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';
+
+// Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
+// "Mark for review N days after Complete" belongs to the tracker, so mentor and learner share it:
+// one extra entry (APP_SETTINGS_ENTRY_ID, note = JSON), so it needs no backend change. 0 is off.
+export const SETTINGS_HASH = 'settings';
+export const THEME_STORAGE_KEY = 'eas-cpg-theme-v1';
+export const APP_SETTINGS_ENTRY_ID = 'app-settings';
+export const REVIEW_AFTER_DAYS = { MIN: 0, MAX: 180, DEFAULT: 0 };

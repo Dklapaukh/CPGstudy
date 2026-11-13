@@ -13,8 +13,17 @@ import { renderGuidelineDetail, refreshDetailFromState } from './views/detailVie
 import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
 import { renderQuizScreen } from './views/quizView.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
+import { renderSettingsScreen } from './views/settingsView.js';
+import { applyAutoReview } from './settingsState.js';
 import { markGuidelineSeen } from './updateState.js';
-import { SCREEN, MESSAGES, QUEUE_HASH, QUIZ_HASH, GUIDELINE_QUIZ_HASH } from './constants.js';
+import {
+  SCREEN,
+  MESSAGES,
+  QUEUE_HASH,
+  QUIZ_HASH,
+  GUIDELINE_QUIZ_HASH,
+  SETTINGS_HASH,
+} from './constants.js';
 
 const app = document.getElementById('app');
 
@@ -81,6 +90,7 @@ export function showMentor(details) {
 /** Shows the list or the guideline named in the web address. */
 export function route() {
   if (state.screen !== SCREEN.TRACKER) return;
+  applyAutoReview(); // Complete guidelines past the "mark for review after" days
   const id = location.hash.slice(1);
   const index = guidelines.findIndex((guideline) => guideline.id === id);
   if (index >= 0) {
@@ -94,6 +104,9 @@ export function route() {
   } else if (id === QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderQuizScreen();
+  } else if (id === SETTINGS_HASH) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    renderSettingsScreen();
   } else if (id === GUIDELINE_QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderGuidelineQuizScreen();
@@ -134,7 +147,10 @@ export function signOut(message) {
 export function refreshScreen() {
   if (state.screen !== SCREEN.TRACKER) return;
   const scrollY = window.scrollY;
-  if (state.currentGuideline && app.querySelector('.guideline-body')) {
+  applyAutoReview(); // new data may hold a newer setting or an older Complete
+  if (app.querySelector('.settings-screen')) {
+    // Nothing to redraw: redrawing would move the wheel while it is being turned.
+  } else if (state.currentGuideline && app.querySelector('.guideline-body')) {
     refreshDetailFromState();
   } else if (app.querySelector('.queue-screen')) {
     refreshQueueViews();

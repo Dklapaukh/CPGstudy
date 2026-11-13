@@ -436,6 +436,49 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
   assert.ok($('a[href="#guideline-quiz"]'), 'the list screen has the Guideline quiz button');
 });
 
+test('Complete guidelines are due for review the set number of days after they were marked', async () => {
+  const { dueForReviewIds } = await import('../src/settingsState.js');
+  const day = 24 * 60 * 60 * 1000;
+  const list = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const entries = {
+    a: { s: 'c', t: 1 },
+    'marked-a': { s: 'i', n: String(10 * day) },
+    b: { s: 'c', t: 1 },
+    'marked-b': { s: 'i', n: String(15 * day) },
+    c: { s: 'v', t: 1 },
+    'marked-c': { s: 'i', n: String(day) },
+  };
+  assert.deepEqual(dueForReviewIds(list, entries, 7, 17 * day), ['a']);
+  assert.deepEqual(dueForReviewIds(list, entries, 0, 100 * day), [], '0 days is off');
+});
+
+test('the Settings screen turns on dark mode and sets the review days with the wheel', async () => {
+  dom.window.location.hash = '#settings';
+  await sleep(30);
+  const darkSwitch = $('#dark-mode-switch');
+  darkSwitch.checked = true;
+  darkSwitch.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.equal(dom.window.document.documentElement.dataset.theme, 'dark');
+  const wheel = $('#review-days-wheel');
+  assert.equal(wheel.getAttribute('aria-valuenow'), '0');
+  const press = (key) =>
+    wheel.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key, bubbles: true }));
+  press('ArrowDown');
+  press('ArrowDown');
+  assert.equal(wheel.getAttribute('aria-valuetext'), '2 days');
+  await sleep(300);
+  const savedSession = JSON.parse(dom.window.localStorage.getItem('eas-cpg-tracker-v2'));
+  assert.equal(JSON.parse(savedSession.s['app-settings'].n).reviewAfterDays, 2);
+  press('Home');
+  await sleep(300);
+  assert.equal(wheel.getAttribute('aria-valuetext'), 'Off');
+  darkSwitch.checked = false;
+  darkSwitch.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.ok($('a.home-tab[href="#settings"]'), 'the list header has the Settings tab');
+});
+
 test('the report button shows on every screen and describes what is on it', async () => {
   const { reportContext } = await import('../src/report.js');
   assert.equal($('#report-footer').hidden, false);

@@ -264,20 +264,22 @@ h1 {
   margin-bottom: 0.8rem;
 }
 
-/* List screen header: dark, Spotify-like. Everything below it (the sections) keeps the light
-   style. Colours: text #fff 18.7:1 and #b3b3b3 9.4:1 on #121212; black on the green 11.5:1. */
+/* List screen header: tabs, quiz choice, progress card, filters and search. Built on the
+   theme colours, so it follows dark mode. Pills have a subtle border. */
 .home-header {
-  --header-bg: #121212;
-  --header-card: #1f1f1f;
-  --header-control: #2a2a2a;
-  --header-text: #fff;
-  --header-muted: #b3b3b3;
-  --header-accent: #1ed760;
-  --header-review: #ffa42b;
+  --header-bg: var(--colour-background);
+  --header-card: var(--colour-surface);
+  --header-control: var(--colour-surface);
+  --header-border: var(--colour-line);
+  --header-text: var(--colour-text);
+  --header-muted: var(--colour-muted);
+  --header-accent: var(--colour-green);
+  --header-review: var(--colour-review);
   background: var(--header-bg);
   color: var(--header-text);
   padding: 1rem 0.8rem 0.4rem;
   margin-bottom: 1rem;
+  border-bottom: 1px solid var(--header-border);
 }
 .home-header h1 {
   font-size: 1.3rem;
@@ -292,7 +294,8 @@ h1 {
   line-height: 1.4;
 }
 .home-header .switch-button {
-  border-color: #535353;
+  color: var(--header-accent);
+  border: 1px solid var(--header-border);
 }
 .home-tabs {
   display: flex;
@@ -307,7 +310,7 @@ h1 {
   gap: 0.25rem;
   min-height: 40px;
   padding: 0 1rem;
-  border: 0;
+  border: 1px solid var(--header-border);
   border-radius: 999px;
   background: var(--header-control);
   color: var(--header-text);
@@ -319,14 +322,17 @@ h1 {
 }
 .home-tab[aria-current='page'] {
   background: var(--header-accent);
-  color: #000;
+  border-color: var(--header-accent);
+  color: #fff;
 }
 .home-tab[aria-expanded='true'] {
-  background: var(--header-text);
-  color: #000;
+  background: var(--colour-green-soft);
+  border-color: var(--header-accent);
+  color: var(--header-text);
 }
 .home-tab__count {
   color: var(--header-accent);
+  font-weight: 600;
 }
 .quiz-choice {
   display: grid;
@@ -342,9 +348,9 @@ h1 {
   align-items: flex-end;
   min-height: 76px;
   padding: 0.8rem;
-  border-radius: 8px;
-  border-left: 4px solid var(--header-accent);
-  background: var(--header-card);
+  border: 1px solid var(--header-border);
+  border-radius: 10px;
+  background: var(--colour-green-soft);
   color: var(--header-text);
   font-weight: 600;
   line-height: 1.3;
@@ -352,20 +358,12 @@ h1 {
 }
 .home-card {
   background: var(--header-card);
-  border-radius: 10px;
+  border: 1px solid var(--header-border);
+  border-radius: 12px;
   padding: 0.8rem;
 }
 .home-header .overall-progress {
   margin: 0;
-}
-.home-header .completion-ring__track {
-  stroke: #333;
-}
-.home-header .completion-ring__arc--complete {
-  stroke: var(--header-accent);
-}
-.home-header .completion-ring__arc--review {
-  stroke: var(--header-review);
 }
 .home-header .progress-legend {
   flex: 1;
@@ -387,7 +385,7 @@ h1 {
   border: 0;
   border-radius: 50%;
   background: var(--header-accent);
-  color: #000;
+  color: #fff;
   cursor: pointer;
 }
 .random-button svg {
@@ -400,16 +398,167 @@ h1 {
 }
 .home-header .filter-chip {
   background: var(--header-control);
+  border: 1px solid var(--header-border);
   color: var(--header-text);
 }
 .home-header .filter-chip[aria-pressed='true'] {
-  background: var(--header-text);
-  color: #000;
+  background: var(--header-accent);
+  border-color: var(--header-accent);
+  color: #fff;
 }
 .home-header .text-input {
-  background: var(--header-text);
-  color: #000;
-  border-radius: 8px;
+  background: var(--colour-control);
+  border: 1px solid var(--header-border);
+  color: var(--header-text);
+}
+
+/* Settings screen (#settings): a switch and a wheel like the iPhone's */
+.settings-group {
+  margin: 1rem 0;
+  padding: 0.2rem 1rem;
+  border: 1px solid var(--colour-line);
+  border-radius: 12px;
+  background: var(--colour-surface);
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 52px;
+  margin: 0;
+  font-weight: 500;
+}
+.settings-row--stacked {
+  display: block;
+  padding: 0.8rem 0 0.4rem;
+  min-height: 0;
+}
+.settings-hint {
+  color: var(--colour-muted);
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0.8rem;
+}
+.switch {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 51px;
+  height: 31px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--colour-line);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.switch:before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s;
+}
+.switch:checked {
+  background: var(--colour-green);
+}
+.switch:checked:before {
+  transform: translateX(20px);
+}
+.switch:focus-visible,
+.wheel__list:focus-visible {
+  outline: 2px solid var(--colour-green);
+  outline-offset: 2px;
+}
+.wheel {
+  position: relative;
+  height: 200px; /* 5 items of 40px: two above and two below the chosen one */
+  perspective: 600px;
+}
+.wheel__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 80px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--colour-control);
+  pointer-events: none;
+}
+.wheel__list {
+  position: relative;
+  height: 100%;
+  margin: 0;
+  padding: 80px 0;
+  list-style: none;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+  mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+  transform-style: preserve-3d;
+}
+.wheel__list::-webkit-scrollbar {
+  display: none;
+}
+.wheel__item {
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 1.15rem;
+  scroll-snap-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+.wheel__item--chosen {
+  font-weight: 600;
+}
+
+/* Dark mode (Settings). The guideline text keeps its white page so the colours from the PDF
+   read exactly as before; everything around it turns dark. */
+:root[data-theme='dark'] {
+  --colour-background: #121212;
+  --colour-surface: #1c1f1d;
+  --colour-text: #eceeed;
+  --colour-muted: #a9b0ac;
+  --colour-line: #343a37;
+  --colour-green: #1a7d53;
+  --colour-green-soft: #16332a;
+  --colour-review: #c86a12;
+  --colour-control: #262b29;
+  --colour-wrong-soft: #3b1f1d;
+  color-scheme: dark;
+}
+:root[data-theme='dark'] .guideline-body,
+:root[data-theme='dark'] .quiz-answer {
+  color: #121212;
+  color-scheme: light;
+}
+:root[data-theme='dark'] .guideline-row,
+:root[data-theme='dark'] .passcode-display,
+:root[data-theme='dark'] .queue-add-all-button,
+:root[data-theme='dark'] .rating-button,
+:root[data-theme='dark'] .order-card,
+:root[data-theme='dark'] .order-list--aside .order-card,
+:root[data-theme='dark'] .choice-button,
+:root[data-theme='dark'] .ai-notice {
+  background: var(--colour-surface);
+  color: var(--colour-text);
+}
+:root[data-theme='dark'] .warning-message {
+  background: #3a2614;
+  color: #f2b27a;
+}
+:root[data-theme='dark'] .feedback-link,
+:root[data-theme='dark'] .home-tab__count,
+:root[data-theme='dark'] .home-header .switch-button,
+:root[data-theme='dark'] .marked-date--complete,
+:root[data-theme='dark'] .updated-tag {
+  color: #4cc38a;
 }
 
 /* Guideline list */

@@ -240,6 +240,7 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - Two devices on one passcode show the same data after a sync (by hand).
 - Offline: changes are kept and sent when signal returns (by hand).
 - Related guidelines (at most 5) show under a guideline; "Add to queue" and "Add all to queue" fill the Guidelines to learn list (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the list; the list screen header has a "To learn (n)" tab.
+- Settings (`#settings`, a tab in the list screen header): dark mode for this phone, and "Mark guidelines for review N days after they're marked Complete" (wheel, 0 = off, up to 180), saved with the tracker as the `app-settings` entry and applied whenever a screen is drawn or new data arrives.
 - Comment button adds to the notes and highlights the point.
 - A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the

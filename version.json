@@ -27,6 +27,7 @@
     "src/quizState.js",
     "src/related.js",
     "src/report.js",
+    "src/settingsState.js",
     "src/state.js",
     "src/sync.js",
     "src/updateState.js",
@@ -39,6 +40,7 @@
     "src/views/mentorView.js",
     "src/views/queueView.js",
     "src/views/quizView.js",
+    "src/views/settingsView.js",
     "src/views/templates.js",
     "src/views/updateView.js"
   ]

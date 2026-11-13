@@ -1,5 +1,5 @@
 /*
- * The guideline list screen: a dark header (tabs, quiz choice, completion ring, random button,
+ * The guideline list screen: a header (tabs, quiz choice, completion ring, random button,
  * filters and search) above the sections, which are drawn as before.
  * Drawn entirely from the state. Depends on state.js, guidelines.js, logic.js, templates.js.
  */
@@ -92,13 +92,14 @@ function progressHtml(counts, total, justClosed) {
 // a sync does not close it.
 let quizChoiceOpen = false;
 
-/** The header tabs: Home (this screen), Quiz (opens the choice below) and To learn. */
+/** The header tabs: Home (this screen), Quiz (opens the choice below), To learn and Settings. */
 function tabsHtml() {
   return `<nav class="home-tabs" aria-label="Sections of the app">
     <a class="home-tab" href="#" aria-current="page">Home</a>
     <button class="home-tab" id="quiz-tab" type="button" aria-expanded="${quizChoiceOpen}"
       aria-controls="quiz-choice">Quiz</button>
-    ${queueButtonHtml()}</nav>
+    ${queueButtonHtml()}
+    <a class="home-tab" href="#settings">Settings</a></nav>
     <div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
     ${quizButtonHtml()}${guidelineQuizButtonHtml()}</div>`;
 }
@@ -111,7 +112,7 @@ function addQuizTabListener() {
   });
 }
 
-/** The dark header: tracker name and switch button, title, tabs and the progress card. */
+/** The header: tracker name and switch button, title, tabs and the progress card. */
 function homeHeaderHtml(counts, justClosed) {
   return `<header class="home-header">
     <div class="top-bar"><b class="tracker-label">${escapeHtml(state.label)}</b>

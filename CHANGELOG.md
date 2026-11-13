@@ -1,5 +1,14 @@
 # Change log
 
+- 2026-11-13: The list screen header is white with green, and its pills have a subtle border.
+  New Settings tab (`#settings`, new `src/views/settingsView.js` and `src/settingsState.js`):
+  dark mode (this phone only, saved in localStorage; the guideline text keeps its white page so
+  the PDF colours read as before), and "Mark guidelines for review N days after they're marked
+  Complete" set with an iPhone-style wheel from Off (0, the default) to 180 days. That setting is
+  saved with the tracker as one extra entry (`app-settings`), so mentor and learner share it and
+  no backend change is needed. When a Complete guideline passes the set days it goes back to
+  Needs review, with its notes kept and its marked date set to that day. 124 tests.
+
 - 2026-11-13: New dark list screen header (Spotify-like): tabs for Home, Quiz and To learn; the
   Quiz tab opens a choice of Medicines quiz or Guideline quiz; the Random guideline button is a
   round button in line with the completion ring; filters and search sit at the bottom of the
