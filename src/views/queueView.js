@@ -1,5 +1,6 @@
 /*
- * The Guidelines to learn (review queue) and related-guideline panels, and its screen.
+ * The related-guideline panel for the guideline screen, and the Guidelines to learn (review
+ * queue) screen.
  * Drawn from the state. Depends on state.js, guidelines.js, logic.js, queue.js, related.js,
  * queueState.js and content/related.js. Does not import the guideline screen (it imports us).
  */
@@ -92,10 +93,12 @@ function queuePanelHtml(queue) {
     <ul class="queue-list">${items.map(queueItemHtml).join('')}</ul></section>`;
 }
 
-/** Both panels for the guideline screen. */
+/**
+ * The panel for the guideline screen: related guidelines only. The Guidelines to learn list is
+ * kept off the guideline page (owner's choice, 14 Nov 2026) and shows on its own screen.
+ */
 export function reviewPanelsHtml(guideline) {
-  const queue = getQueue();
-  return queuePanelHtml(queue) + relatedPanelHtml(guideline, queue);
+  return relatedPanelHtml(guideline, getQueue());
 }
 
 /** The "To learn (n)" tab for the list screen's header. The count is left out when empty. */

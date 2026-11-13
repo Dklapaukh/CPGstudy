@@ -31,6 +31,9 @@ export const state = {
   // or null. Memory only; the best scores are entries (see guidelineQuizState.js).
   guidelineQuiz: null,
   guidelineQuizChoice: '', // the guideline chosen on the guideline quiz screen
+  // Where the student was on a guideline when they pressed its Quiz button, so the quiz can
+  // return there: { guidelineId, scrollY, openHeadings (true or false per heading) }, or null.
+  guidelineQuizReturn: null,
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,
   updateInProgress: false,

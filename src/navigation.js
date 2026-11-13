@@ -9,7 +9,11 @@ import { pendingCount, syncNow } from './sync.js';
 import { renderLogin } from './views/loginView.js';
 import { renderMentor } from './views/mentorView.js';
 import { renderList } from './views/listView.js';
-import { renderGuidelineDetail, refreshDetailFromState } from './views/detailView.js';
+import {
+  renderGuidelineDetail,
+  refreshDetailFromState,
+  restoreGuidelinePlace,
+} from './views/detailView.js';
 import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
 import { renderQuizScreen } from './views/quizView.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
@@ -87,6 +91,20 @@ export function showMentor(details) {
   renderMentor(details);
 }
 
+/**
+ * Coming back to the guideline whose Quiz pill opened the quiz: ends the play (a finished one is
+ * already saved) and puts the guideline back where the student was. Going anywhere else drops
+ * the saved place, so it is never restored later by surprise.
+ */
+function handleQuizReturn(id) {
+  const place = state.guidelineQuizReturn;
+  if (!place || id === GUIDELINE_QUIZ_HASH) return;
+  state.guidelineQuizReturn = null;
+  if (id !== place.guidelineId) return;
+  state.guidelineQuiz = null;
+  restoreGuidelinePlace(place);
+}
+
 /** Shows the list or the guideline named in the web address. */
 export function route() {
   if (state.screen !== SCREEN.TRACKER) return;
@@ -98,6 +116,7 @@ export function route() {
     if (!app.querySelector('.guideline-body')) state.listScrollY = window.scrollY;
     markGuidelineSeen(id); // the "Updated" tag lasts until the guideline is opened (feature 7)
     renderGuidelineDetail(index);
+    handleQuizReturn(id);
   } else if (id === QUEUE_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderQueueScreen();
@@ -115,6 +134,7 @@ export function route() {
     renderList();
     window.scrollTo(0, state.listScrollY);
   }
+  if (index < 0) handleQuizReturn(id);
 }
 
 /** Opens a tracker after the passcode was accepted. */

@@ -1,5 +1,13 @@
 # Change log
 
+- 2026-11-14: Guideline page: the "Guidelines to learn" list is no longer shown under a
+  guideline (it stays on the To learn screen; "Add to queue" still works). A third pill, Quiz,
+  sits beside Review and Complete on the 85 guidelines that have a guideline quiz: it starts
+  that guideline's quiz. At the end an animated ring fills to the percentage score while the
+  number counts up (CSS only; none for people who ask for less motion), and "Back to the
+  guideline" returns to the same scroll position with the same headings unfolded. The top link
+  and "End quiz" also lead back to the guideline. 127 tests.
+
 - 2026-11-14: List screen: Switch tracker moved to the Settings screen (with the tracker name);
   the "Emergency Ambulance Service · progress and notes are shared…" line and the "Saved"
   indicator removed from the list (Saved still shows on the other screens); the title now reads

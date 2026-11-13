@@ -269,16 +269,23 @@ test('related guidelines can be added to the review queue and are ticked off whe
   await sleep(30);
   const relatedCount = $$('.related-item').length;
   assert.ok(relatedCount > 0 && relatedCount <= 5);
-  assert.equal($('.queue-panel'), null);
   click($('.queue-add-button'));
-  assert.match($('.queue-panel__progress').textContent, /^0 of 1 done/);
   assert.equal($('.queue-add-button').disabled, true);
+  assert.equal(
+    $('.queue-panel'),
+    null,
+    'the Guidelines to learn list is not on the guideline page',
+  );
   click($('[data-action="add-all-to-queue"]'));
+  dom.window.location.hash = '#queue';
+  await sleep(30);
   assert.match($('.queue-panel__progress').textContent, new RegExp(`^0 of ${relatedCount} done`));
   const firstQueuedId = $('.queue-item__link').getAttribute('href').slice(1);
   dom.window.location.hash = `#${firstQueuedId}`;
   await sleep(30);
   click($('[data-action="set-status"][data-status="c"]'));
+  dom.window.location.hash = '#queue';
+  await sleep(30);
   assert.match($('.queue-panel__progress').textContent, new RegExp(`^1 of ${relatedCount} done`));
   await sleep(1200);
   const savedQueue = JSON.parse(stored['review-queue'].n);
@@ -439,6 +446,59 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
   dom.window.location.hash = '';
   await sleep(30);
   assert.ok($('a[href="#guideline-quiz"]'), 'the list screen has the Guideline quiz button');
+});
+
+test('the Quiz pill opens the guideline quiz and finishing returns to the same place', async () => {
+  const { state } = await import('../src/state.js');
+  dom.window.location.hash = '#cpg-3-8';
+  await sleep(30);
+  assert.equal($$('.status-buttons > button').length, 3, 'Review, Complete and Quiz');
+  // Unfold the second heading and scroll, then open the quiz from the pill.
+  click($$('.heading-section')[1].previousElementSibling);
+  let scrolledTo = null;
+  dom.window.scrollTo = (x, y) => {
+    scrolledTo = y;
+  };
+  Object.defineProperty(dom.window, 'scrollY', { value: 420, configurable: true });
+  click($('[data-action="quiz-this-guideline"]'));
+  await sleep(30);
+  assert.equal(dom.window.location.hash, '#guideline-quiz');
+  assert.match($('.quiz-left').textContent, /^Ventricular Tachycardia · step 1/);
+  assert.equal($('.back-link').getAttribute('href'), '#cpg-3-8');
+  while (!state.guidelineQuiz.finished) {
+    const step = state.guidelineQuiz.steps[state.guidelineQuiz.index];
+    if (step.kind === 'order') {
+      playRoundPerfectly(step);
+      click($('[data-action="guideline-quiz-check"]'));
+    } else {
+      const right = step.choices.indexOf(step.answer);
+      click($(`[data-action="guideline-quiz-pick"][data-choice="${right}"]`));
+    }
+    click($('[data-action="guideline-quiz-next"]'));
+  }
+  assert.equal($('.score-ring').getAttribute('aria-label'), 'Score 100%');
+  assert.equal($('.score-ring').style.getPropertyValue('--score-target'), '100');
+  const back = $('a.quiz-start-button');
+  assert.equal(back.getAttribute('href'), '#cpg-3-8');
+  dom.window.location.hash = back.getAttribute('href');
+  await sleep(30);
+  assert.ok($('.guideline-body'), 'back on the guideline');
+  assert.equal($$('.heading-section')[1].hidden, false, 'the unfolded heading stays unfolded');
+  assert.equal(scrolledTo, 420, 'scrolled back to where the student was');
+  assert.equal(state.guidelineQuiz, null);
+  assert.equal(state.guidelineQuizReturn, null);
+  dom.window.scrollTo = () => {};
+  Object.defineProperty(dom.window, 'scrollY', { value: 0, configurable: true });
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
+test('guidelines without a guideline quiz have no Quiz pill', async () => {
+  dom.window.location.hash = '#cpg-1-2';
+  await sleep(30);
+  assert.equal($('[data-action="quiz-this-guideline"]'), null);
+  dom.window.location.hash = '';
+  await sleep(30);
 });
 
 test('Complete guidelines are due for review the set number of days after they were marked', async () => {

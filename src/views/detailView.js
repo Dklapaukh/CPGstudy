@@ -10,6 +10,7 @@ import { notesHaveComment } from '../comments.js';
 import { scheduleSync, updateSyncStatus } from '../sync.js';
 import { bodyHtml, aiNoticeHtml } from './templates.js';
 import { reviewPanelsHtml, refreshQueueViews } from './queueView.js';
+import { quizzedGuidelines } from '../guidelineQuizState.js';
 import { documentInfo } from '../../content/guidelines.js';
 import { STATUS, MESSAGES, DEFAULT_HEADER_COLOUR } from '../constants.js';
 
@@ -23,13 +24,25 @@ const STATUS_BUTTONS = [
   [STATUS.COMPLETE, 'complete', 'Complete'],
 ];
 
-function statusButtonsHtml(currentStatus) {
+/** True when the guideline quiz has a play for this guideline (treatment guidelines only). */
+const hasGuidelineQuiz = (guidelineId) =>
+  quizzedGuidelines().some((quizzed) => quizzed.id === guidelineId);
+
+/**
+ * The Review and Complete pills, plus a Quiz pill that opens this guideline's quiz when it has
+ * one. The Quiz pill is not a status, so it has no pressed state.
+ */
+function statusButtonsHtml(guidelineId, currentStatus) {
   const buttons = STATUS_BUTTONS.map(
     ([code, name, text]) => `<button class="status-button status-button--${name}"
       data-action="set-status" data-status="${code}"
       aria-pressed="${currentStatus === code}">${text}</button>`,
   ).join('');
-  return `<div class="status-buttons" role="group" aria-label="Status">${buttons}</div>`;
+  const quizButton = hasGuidelineQuiz(guidelineId)
+    ? `<button class="status-button status-button--quiz" type="button"
+      data-action="quiz-this-guideline">Quiz</button>`
+    : '';
+  return `<div class="status-buttons" role="group" aria-label="Status">${buttons}${quizButton}</div>`;
 }
 
 /** The line under the status buttons: when the guideline was last marked, or how to mark it. */
@@ -62,7 +75,7 @@ export function renderGuidelineDetail(index) {
         ${documentInfo.sourceLine}</div></div>
     <div class="page-padding">${aiNoticeHtml()}<div class="guideline-body">${bodyHtml(guideline.b)}</div>
       <section class="guideline-progress" aria-label="Your progress on this guideline">
-      ${statusButtonsHtml(getStatus(state.entries, guideline.id))}
+      ${statusButtonsHtml(guideline.id, getStatus(state.entries, guideline.id))}
       <p class="marked-line" id="marked-line">${markedLineText(guideline.id)}</p>
       <textarea id="notes-input"
         placeholder="Notes for this guideline (what you covered, what to revisit)"
@@ -147,6 +160,29 @@ export function updateCommentHighlights() {
       );
     }
   });
+}
+
+/**
+ * Where the student is on the open guideline: its id, the scroll position and which headings
+ * are unfolded. Saved before the Quiz pill opens the quiz, so the quiz can come back here.
+ */
+export function currentGuidelinePlace() {
+  return {
+    guidelineId: state.currentGuideline.id,
+    scrollY: window.scrollY,
+    openHeadings: [...app.querySelectorAll('.heading-section')].map((section) => !section.hidden),
+  };
+}
+
+/** Puts the open guideline back to a place saved by currentGuidelinePlace. */
+export function restoreGuidelinePlace(place) {
+  app.querySelectorAll('.heading-section').forEach((section, index) => {
+    if (index >= place.openHeadings.length) return;
+    section.hidden = !place.openHeadings[index];
+    const heading = section.previousElementSibling;
+    if (heading) heading.setAttribute('aria-expanded', place.openHeadings[index]);
+  });
+  window.scrollTo(0, place.scrollY);
 }
 
 /** Folds or unfolds the content under a heading. */

@@ -19,6 +19,7 @@ import {
   updateCommentHighlights,
   commentPointTexts,
   toggleHeading,
+  currentGuidelinePlace,
 } from './views/detailView.js';
 import { refreshQueueViews, shownRelatedIds } from './views/queueView.js';
 import { getQueue, saveQueue, tickOffQueuedGuideline } from './queueState.js';
@@ -52,7 +53,13 @@ import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { canReport, openReport } from './report.js';
 import { startCardDrag } from './views/dragCards.js';
 import { openCommentPanel } from './views/commentPanel.js';
-import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
+import {
+  MESSAGES,
+  STATUS,
+  COMMENT_CONFIRMATION_MS,
+  SEARCH_PAUSE_MS,
+  GUIDELINE_QUIZ_HASH,
+} from './constants.js';
 
 const app = document.getElementById('app');
 const byId = (id) => document.getElementById(id);
@@ -310,6 +317,18 @@ function startRandomGuidelineQuiz() {
   startGuidelineQuiz(picked.id);
 }
 
+/**
+ * The Quiz pill on a guideline: remembers where the student is on the page, starts that
+ * guideline's quiz and opens the quiz screen. Coming back is handled by route().
+ */
+function quizOpenGuideline() {
+  if (!state.currentGuideline) return;
+  state.guidelineQuizReturn = currentGuidelinePlace();
+  state.guidelineQuizChoice = state.currentGuideline.id;
+  startGuidelineQuiz(state.currentGuideline.id);
+  location.hash = GUIDELINE_QUIZ_HASH;
+}
+
 /* ---------- Listeners ---------- */
 
 const clickActions = {
@@ -340,6 +359,7 @@ const clickActions = {
     if (select) startPractice(select.value);
   }),
   'quiz-practice-answer': changeQuiz((button) => answerPracticeCard(button.dataset.rating)),
+  'quiz-this-guideline': quizOpenGuideline,
   'guideline-quiz-start': changeGuidelineQuiz(startChosenGuidelineQuiz, true),
   'guideline-quiz-random': changeGuidelineQuiz(startRandomGuidelineQuiz, true),
   'guideline-quiz-up': changeGuidelineQuiz((button) => moveCardBy(cardIndexOf(button), -1)),

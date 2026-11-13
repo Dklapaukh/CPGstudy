@@ -210,17 +210,56 @@ function choiceStepHtml(step) {
 
 /* ---------- Result and screen ---------- */
 
+/**
+ * The score as a ring that fills up while its percent counts up (both done in CSS, see
+ * .score-ring in app.css). The percent is also in the label, for screen readers.
+ */
+function scoreRingHtml(percent) {
+  return `<div class="score-ring" role="img" aria-label="Score ${percent}%"
+    style="--score-target:${percent}"></div>`;
+}
+
 function finishedHtml() {
   const quiz = state.guidelineQuiz;
+  const percent = percentOf(quiz.score, quiz.total);
   const saved = bestScore(quiz.guidelineId);
   const best = saved
     ? `<p class="quiz-totals">Best: ${saved.best}% (${formatUpdatedDate(saved.at)})</p>`
     : '';
-  return `<p class="quiz-finished">Finished: ${quiz.score} of ${quiz.total} (${percentOf(
-    quiz.score,
-    quiz.total,
-  )}%)</p>${best}
-    <button class="quiz-start-button" type="button" data-action="guideline-quiz-again">Play again</button>`;
+  const place = state.guidelineQuizReturn;
+  // Opened from a guideline: going back to it is the main button, Play again the second.
+  const actions = place
+    ? `<a class="quiz-start-button quiz-link-button" href="#${escapeHtml(place.guidelineId)}"
+        >Back to the guideline</a>
+      <button class="quiz-end-button" type="button" data-action="guideline-quiz-again">Play again</button>`
+    : `<button class="quiz-start-button" type="button" data-action="guideline-quiz-again">Play again</button>`;
+  return `${scoreRingHtml(percent)}
+    <p class="quiz-finished">Finished: ${quiz.score} of ${quiz.total} (${percent}%)</p>${best}
+    ${actions}`;
+}
+
+/**
+ * The button under the play. Opened from a guideline's Quiz pill it is a link back to that
+ * guideline (route() then puts the page back where the student was); otherwise it ends the play.
+ */
+function endButtonHtml(quiz) {
+  const place = state.guidelineQuizReturn;
+  if (place && quiz.finished) return ''; // the finished screen has its own Back button
+  if (place) {
+    return `<a class="quiz-end-button quiz-link-button" href="#${escapeHtml(place.guidelineId)}"
+      >End quiz (score not saved)</a>`;
+  }
+  return `<button class="quiz-end-button" type="button" data-action="guideline-quiz-end">${
+    quiz.finished ? 'Choose another guideline' : 'End quiz (score not saved)'
+  }</button>`;
+}
+
+/** The link at the top: back to the guideline the quiz was opened from, or to the list. */
+function backLinkHtml() {
+  const place = state.guidelineQuizReturn;
+  return place
+    ? `<a class="back-link" href="#${escapeHtml(place.guidelineId)}">‹ Back to the guideline</a>`
+    : '<a class="back-link" href="#">‹ All guidelines</a>';
 }
 
 /** Draws the guideline quiz screen. */
@@ -235,12 +274,8 @@ export function renderGuidelineQuizScreen() {
     } · score ${quiz.score}</p>`;
     body = progress + (step.kind === 'order' ? orderStepHtml(step) : choiceStepHtml(step));
   }
-  const end = quiz
-    ? `<button class="quiz-end-button" type="button" data-action="guideline-quiz-end">${
-        quiz.finished ? 'Choose another guideline' : 'End quiz (score not saved)'
-      }</button>`
-    : '';
-  app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
+  const end = quiz ? endButtonHtml(quiz) : '';
+  app.innerHTML = `${backLinkHtml()}
     <div class="page-padding quiz-screen guideline-quiz-screen"><h1 class="quiz-title">Guideline quiz</h1>
     <span class="sync-status"></span>${body}${end}</div>`;
 }

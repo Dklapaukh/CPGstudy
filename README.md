@@ -99,7 +99,9 @@ through a Google Sheet.
 ## Guideline quiz (feature 9)
 
 - The list screen's "Guideline quiz" button opens `#guideline-quiz`. Pick a guideline (or
-  Random guideline) and Start. Everything is built from `content/guidelines.js` when a play
+  Random guideline) and Start. A quizzed guideline's own page also has a Quiz pill beside Review
+  and Complete: it starts that guideline's quiz, and "Back to the guideline" (shown with the
+  animated score ring at the end) returns to the same scroll position and unfolded headings. Everything is built from `content/guidelines.js` when a play
   starts, with no AI, so a content update changes the quiz with no extra step.
 - Which guidelines: those outside Medicines that have a Backup, Referral and transport or Red
   flags heading, or "action list"/"checklist" in the title (85 today). Information-only
@@ -245,7 +247,7 @@ Automated in `tests/app.test.js` unless marked "by hand".
   a mistake or request" email links show when `FEEDBACK_EMAIL` in `src/constants.js` is set.
 - Two devices on one passcode show the same data after a sync (by hand).
 - Offline: changes are kept and sent when signal returns (by hand).
-- Related guidelines (at most 5) show under a guideline; "Add to queue" and "Add all to queue" fill the Guidelines to learn list (at most 5); marking a queued guideline Complete or Review ticks it off; the last tick empties the list; the list screen header has a "To learn (n)" tab.
+- Related guidelines (at most 5) show under a guideline; "Add to queue" and "Add all to queue" fill the Guidelines to learn list (at most 5, shown only on the To learn screen, not on guideline pages); marking a queued guideline Complete or Review ticks it off; the last tick empties the list; the list screen header has a "To learn (n)" tab.
 - Settings (`#settings`, a tab in the list screen header): dark mode for this phone, and "Mark guidelines for review N days after they're marked Complete" (wheel, 0 = off, up to 180), saved with the tracker as the `app-settings` entry and applied whenever a screen is drawn or new data arrives.
 - Comment button adds to the notes and highlights the point.
 - A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
@@ -254,5 +256,7 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - The report button is under every screen and the page holds no whole email address.
 - Guideline quiz: cards move with the arrows and to and from "Not in this guideline", dragging
   by the grip works on a phone (by hand); a perfect play scores 100% and
-  saves `quiz-order-<id>`; the picker shows the best score. Layout on a phone (by hand).
+  saves `quiz-order-<id>`; the picker shows the best score. Layout on a phone (by hand). The
+  Quiz pill on a guideline opens its quiz; finishing shows the score ring and "Back to the
+  guideline" returns to the same place; guidelines with no quiz have no Quiz pill.
 - Switch tracker and sign out.
