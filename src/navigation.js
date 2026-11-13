@@ -12,8 +12,9 @@ import { renderList } from './views/listView.js';
 import { renderGuidelineDetail, refreshDetailFromState } from './views/detailView.js';
 import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
 import { renderQuizScreen } from './views/quizView.js';
+import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { markGuidelineSeen } from './updateState.js';
-import { SCREEN, MESSAGES, QUEUE_HASH, QUIZ_HASH } from './constants.js';
+import { SCREEN, MESSAGES, QUEUE_HASH, QUIZ_HASH, GUIDELINE_QUIZ_HASH } from './constants.js';
 
 const app = document.getElementById('app');
 
@@ -63,6 +64,7 @@ function clearOpenTracker() {
   state.pendingChanges = {};
   state.currentGuideline = null;
   state.quiz = null;
+  state.guidelineQuiz = null;
   clearSavedSession();
 }
 
@@ -92,6 +94,10 @@ export function route() {
   } else if (id === QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderQuizScreen();
+  } else if (id === GUIDELINE_QUIZ_HASH) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    renderGuidelineQuizScreen();
+    window.scrollTo(0, 0);
   } else {
     renderList();
     window.scrollTo(0, state.listScrollY);
@@ -104,6 +110,7 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
   state.label = label || '';
   state.entries = mergeRemoteEntries({}, remoteEntries || {}).entries;
   state.quiz = null;
+  state.guidelineQuiz = null;
   state.pendingChanges = {};
   saveSession();
   state.mentorPasscode = '';
@@ -131,6 +138,9 @@ export function refreshScreen() {
     refreshDetailFromState();
   } else if (app.querySelector('.queue-screen')) {
     refreshQueueViews();
+  } else if (app.querySelector('.guideline-quiz-screen')) {
+    // Only the picker is redrawn (best scores may have arrived): a play is never interrupted.
+    if (!state.guidelineQuiz) renderGuidelineQuizScreen();
   } else if (app.querySelector('.quiz-screen')) {
     // Only the overview is redrawn: redrawing a card would hide an answer being read.
     if (!state.quiz || state.quiz.queue.length === 0) renderQuizScreen();

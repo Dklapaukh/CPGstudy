@@ -1,5 +1,15 @@
 # Change log
 
+- 2026-11-13: Guideline quiz (`#guideline-quiz`, button on the list screen). Pick a guideline (or
+  Random guideline) and put the actions at the top of it in order, one round per situation
+  (for example Severe asthma), with 2 cards from other guidelines with the same medicines or
+  related guidelines to put in "Not in this guideline". Then up to 3 number questions (the number
+  blanked, wrong choices from the same unit elsewhere in the guidelines or ten times, sometimes a
+  wrong unit), and questions on what changes treatment: which situation an action is for, red
+  flags, and which guideline to move to. All built from the content, no AI. The best score per
+  guideline is saved as `quiz-order-<id>`. New `src/guidelineQuiz*.js`,
+  `src/views/guidelineQuizView.js`, `tests/guidelineQuiz.test.js`. 118 tests.
+
 - 2026-11-12: Marked dates, made-with-AI notice and feedback email. Each guideline row in the
   list shows, on the right in its status colour, the date it was last marked Review or Complete.
   The guideline page loses the Incomplete button; pressing Review or Complete (even when already

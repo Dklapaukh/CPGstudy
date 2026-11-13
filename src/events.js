@@ -36,6 +36,18 @@ import {
   answerPracticeCard,
 } from './quizState.js';
 import { renderQuizScreen } from './views/quizView.js';
+import {
+  startGuidelineQuiz,
+  placeCard,
+  discardCard,
+  returnCard,
+  checkRound,
+  pickChoice,
+  nextStep,
+  endGuidelineQuiz,
+  quizzedGuidelines,
+} from './guidelineQuizState.js';
+import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
 const app = document.getElementById('app');
@@ -247,6 +259,38 @@ const showQuizAnswer = () => {
   if (state.quiz) state.quiz.revealed = true;
 };
 
+/* ---------- Guideline quiz ---------- */
+
+/**
+ * Runs a change to the guideline quiz, then redraws it. `toTop` scrolls to the top for a new
+ * step; moving a card keeps the scroll position so the list does not jump under the finger.
+ */
+const changeGuidelineQuiz =
+  (change, toTop = false) =>
+  (element) => {
+    change(element);
+    const scrollY = window.scrollY;
+    renderGuidelineQuizScreen();
+    window.scrollTo(0, toTop ? 0 : scrollY);
+  };
+const cardIndexOf = (button) => Number(button.dataset.card);
+
+/** Starts the guideline chosen in the dropdown. */
+function startChosenGuidelineQuiz() {
+  const select = byId('guideline-quiz-choice');
+  if (!select) return;
+  state.guidelineQuizChoice = select.value;
+  startGuidelineQuiz(select.value);
+}
+
+/** Starts a guideline picked at random, and selects it in the dropdown for next time. */
+function startRandomGuidelineQuiz() {
+  const all = quizzedGuidelines();
+  const picked = all[Math.floor(Math.random() * all.length)];
+  state.guidelineQuizChoice = picked.id;
+  startGuidelineQuiz(picked.id);
+}
+
 /* ---------- Listeners ---------- */
 
 const clickActions = {
@@ -277,6 +321,19 @@ const clickActions = {
     if (select) startPractice(select.value);
   }),
   'quiz-practice-answer': changeQuiz((button) => answerPracticeCard(button.dataset.rating)),
+  'guideline-quiz-start': changeGuidelineQuiz(startChosenGuidelineQuiz, true),
+  'guideline-quiz-random': changeGuidelineQuiz(startRandomGuidelineQuiz, true),
+  'guideline-quiz-place': changeGuidelineQuiz((button) => placeCard(cardIndexOf(button))),
+  'guideline-quiz-discard': changeGuidelineQuiz((button) => discardCard(cardIndexOf(button))),
+  'guideline-quiz-return': changeGuidelineQuiz((button) => returnCard(cardIndexOf(button))),
+  'guideline-quiz-check': changeGuidelineQuiz(checkRound),
+  'guideline-quiz-pick': changeGuidelineQuiz((button) => pickChoice(Number(button.dataset.choice))),
+  'guideline-quiz-next': changeGuidelineQuiz(nextStep, true),
+  'guideline-quiz-again': changeGuidelineQuiz(
+    () => startGuidelineQuiz(state.guidelineQuiz.guidelineId),
+    true,
+  ),
+  'guideline-quiz-end': changeGuidelineQuiz(endGuidelineQuiz, true),
 };
 
 /** Attaches every listener for the app container. Called once at start-up. */
@@ -302,6 +359,7 @@ export function attachEventListeners() {
     }
     // Remembered so a redraw (for example after a sync) keeps the medicine chosen.
     if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
+    if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
   });
 
   app.addEventListener('keydown', (event) => {

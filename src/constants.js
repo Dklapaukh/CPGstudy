@@ -120,3 +120,9 @@ export const QUIZ_REVIEWS_PER_DAY = { MIN: 10, MAX: 200, STEP: 10, DEFAULT: 30 }
 // A card rated Again comes back after this many other cards in the same session.
 export const QUIZ_AGAIN_GAP = 3;
 export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy' };
+
+// Guideline quiz (feature 9): put a guideline's actions in order, then number and
+// course-of-treatment questions. Only the best score per guideline is saved, as one extra entry
+// (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id), so it needs no backend change.
+export const GUIDELINE_QUIZ_HASH = 'guideline-quiz';
+export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';

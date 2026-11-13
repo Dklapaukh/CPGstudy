@@ -11,6 +11,10 @@
   --colour-green-soft: #e3f1ea;
   --colour-review: #b35900;
   --colour-control: #edf1ef;
+  /* Wrong answers in the guideline quiz: border only, the text stays dark (right and wrong are
+     also said in words, so colour is never the only sign). */
+  --colour-wrong: #b3261e;
+  --colour-wrong-soft: #fbeaea;
   color-scheme: light;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
@@ -1074,4 +1078,139 @@ td.table-cell--coloured {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--colour-muted);
+}
+
+/* Guideline quiz: the #guideline-quiz screen (ordering rounds and choice questions) */
+#guideline-quiz-choice {
+  width: 100%;
+  min-height: 44px;
+  margin: 0.6rem 0 0.8rem;
+  font-size: 1rem;
+}
+.order-situation {
+  margin: -0.4rem 0 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-left: 4px solid var(--colour-green);
+  background: var(--colour-green-soft);
+  font-weight: 500;
+}
+.order-heading {
+  margin: 1rem 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.order-list {
+  margin: 0;
+  padding-left: 1.6rem;
+}
+.order-list--pool,
+.order-list--aside {
+  padding-left: 0;
+  list-style: none;
+}
+.order-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--colour-line);
+  border-radius: 12px;
+  background: #fff;
+  line-height: 1.4;
+}
+.order-card--right {
+  border-color: var(--colour-green);
+  background: var(--colour-green-soft);
+}
+.order-card--wrong {
+  border-color: var(--colour-wrong);
+  background: var(--colour-wrong-soft);
+}
+.order-mark {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.order-note {
+  color: var(--colour-muted);
+  font-size: 0.85rem;
+}
+.order-card-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.order-move-button {
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--colour-green);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--colour-green);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.order-empty {
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+  list-style: none;
+}
+.order-answers {
+  margin: 0;
+  padding-left: 1.6rem;
+}
+.order-answer {
+  margin-bottom: 0.4rem;
+}
+.quiz-start-button:disabled {
+  background: var(--colour-control);
+  color: var(--colour-muted);
+  cursor: default;
+}
+.guideline-quiz-screen .quiz-start-button {
+  margin-top: 0.8rem;
+}
+.choice-context {
+  color: var(--colour-muted);
+  font-size: 0.95rem;
+}
+.choice-line {
+  padding: 0.6rem 0.7rem;
+  border-radius: 12px;
+  background: var(--colour-control);
+  line-height: 1.45;
+}
+.choice-blank {
+  padding: 0 0.3rem;
+  border-bottom: 2px solid var(--colour-text);
+  font-weight: 600;
+}
+.choice-buttons {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+.choice-button {
+  min-height: 48px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--colour-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--colour-text);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+.choice-button:disabled {
+  cursor: default;
+  color: var(--colour-text);
+}
+.choice-button--right {
+  border-color: var(--colour-green);
+  background: var(--colour-green-soft);
+  font-weight: 600;
+}
+.choice-button--wrong {
+  border-color: var(--colour-wrong);
+  background: var(--colour-wrong-soft);
 }

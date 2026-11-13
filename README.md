@@ -5,35 +5,38 @@ through a Google Sheet.
 
 ## Structure
 
-| Path                                                          | Purpose                                                                                |
-| ------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `index.html`                                                  | Page shell. Loads the styles and `src/main.js`.                                        |
-| `styles/app.css`                                              | All styles. Class names say what the element is.                                       |
-| `content/guidelines.js`                                       | Guideline text as data, one guideline per line. Not edited by hand.                    |
-| `src/constants.js`                                            | Named constants: status codes, storage key, backend address, timings, messages.        |
-| `src/logic.js`, `src/comments.js`                             | Pure logic (merge, filters, comment lines). Tested.                                    |
-| `src/queue.js`, `src/related.js`                              | Pure logic for the review queue and the related list. Tested.                          |
-| `src/queueState.js`                                           | Reading and saving the review queue in the state.                                      |
-| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js` | Medicines quiz, pure logic: cards and adult doses from the content, spaced repetition. |
-| `src/quizState.js`, `src/views/quizView.js`                   | Medicines quiz: saving schedules as entries, the `#quiz` screen.                       |
-| `content/related.js`, `content/related-overrides.js`          | Related-guideline links (built by script) and the hand-edited overrides.               |
-| `scripts/build-related.js`                                    | `node scripts/build-related.js` rebuilds `content/related.js`.                         |
-| `src/state.js`                                                | The one state object and saving it on the phone.                                       |
-| `src/updates.js`, `src/updateState.js`                        | Update prompt: pure logic (tested), and checking, downloading and tags.                |
-| `version.json`                                                | Published export date and the list of app files (read by the update prompt).           |
-| `scripts/pdfScan.js`, `scripts/check-pdf.js`                  | Reads the EAS PDF: export date and newest version per guideline. Tested.               |
-| `content/pdf-status.json`                                     | Last PDF scan (fingerprint, export date, versions). Written by the script.             |
-| `scripts/pdfPages.js`, `scripts/pdfContent.js`                | Converter: reads the PDF's text and shapes, and turns them into content. Tested.       |
-| `scripts/pdfRows.js`, `scripts/pdfTables.js`                  | Converter parts: rows of text, and tables.                                             |
-| `scripts/contentCheck.js`                                     | Refuses content with unexpected markup; lists every block shape. Tested.               |
-| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`     | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.               |
-| `content/pdf-rebuild.json`                                    | Fingerprint of each rebuilt guideline, and which ones are not rebuilt exactly.         |
-| `.github/workflows/pdf-check.yml`                             | Daily PDF check; opens a pull request with the rebuilt content.                        |
-| `src/api.js`, `src/sync.js`                                   | Talking to the backend; queued edits and merging.                                      |
-| `src/views/`                                                  | One file per screen: login, mentor, list, guideline.                                   |
-| `src/navigation.js`, `src/events.js`, `src/main.js`           | Screen changes, all clicks and typing, start-up.                                       |
-| `backend/Code.gs`                                             | The Google Apps Script service (see "Backend").                                        |
-| `tests/`                                                      | `npm test`. Includes a simulated-browser run of the whole app.                         |
+| Path                                                          | Purpose                                                                                   |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `index.html`                                                  | Page shell. Loads the styles and `src/main.js`.                                           |
+| `styles/app.css`                                              | All styles. Class names say what the element is.                                          |
+| `content/guidelines.js`                                       | Guideline text as data, one guideline per line. Not edited by hand.                       |
+| `src/constants.js`                                            | Named constants: status codes, storage key, backend address, timings, messages.           |
+| `src/logic.js`, `src/comments.js`                             | Pure logic (merge, filters, comment lines). Tested.                                       |
+| `src/queue.js`, `src/related.js`                              | Pure logic for the review queue and the related list. Tested.                             |
+| `src/queueState.js`                                           | Reading and saving the review queue in the state.                                         |
+| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js` | Medicines quiz, pure logic: cards and adult doses from the content, spaced repetition.    |
+| `src/quizState.js`, `src/views/quizView.js`                   | Medicines quiz: saving schedules as entries, the `#quiz` screen.                          |
+| `src/guidelineQuizRounds.js`, `src/guidelineQuizNumbers.js`   | Guideline quiz, pure logic: ordering rounds, distractors, marking; number questions.      |
+| `src/guidelineQuizPlay.js`                                    | Guideline quiz, pure logic: course-changing questions and building one play.              |
+| `src/guidelineQuizState.js`, `src/views/guidelineQuizView.js` | Guideline quiz: the play in memory, best scores as entries, the `#guideline-quiz` screen. |
+| `content/related.js`, `content/related-overrides.js`          | Related-guideline links (built by script) and the hand-edited overrides.                  |
+| `scripts/build-related.js`                                    | `node scripts/build-related.js` rebuilds `content/related.js`.                            |
+| `src/state.js`                                                | The one state object and saving it on the phone.                                          |
+| `src/updates.js`, `src/updateState.js`                        | Update prompt: pure logic (tested), and checking, downloading and tags.                   |
+| `version.json`                                                | Published export date and the list of app files (read by the update prompt).              |
+| `scripts/pdfScan.js`, `scripts/check-pdf.js`                  | Reads the EAS PDF: export date and newest version per guideline. Tested.                  |
+| `content/pdf-status.json`                                     | Last PDF scan (fingerprint, export date, versions). Written by the script.                |
+| `scripts/pdfPages.js`, `scripts/pdfContent.js`                | Converter: reads the PDF's text and shapes, and turns them into content. Tested.          |
+| `scripts/pdfRows.js`, `scripts/pdfTables.js`                  | Converter parts: rows of text, and tables.                                                |
+| `scripts/contentCheck.js`                                     | Refuses content with unexpected markup; lists every block shape. Tested.                  |
+| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`     | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                  |
+| `content/pdf-rebuild.json`                                    | Fingerprint of each rebuilt guideline, and which ones are not rebuilt exactly.            |
+| `.github/workflows/pdf-check.yml`                             | Daily PDF check; opens a pull request with the rebuilt content.                           |
+| `src/api.js`, `src/sync.js`                                   | Talking to the backend; queued edits and merging.                                         |
+| `src/views/`                                                  | One file per screen: login, mentor, list, guideline.                                      |
+| `src/navigation.js`, `src/events.js`, `src/main.js`           | Screen changes, all clicks and typing, start-up.                                          |
+| `backend/Code.gs`                                             | The Google Apps Script service (see "Backend").                                           |
+| `tests/`                                                      | `npm test`. Includes a simulated-browser run of the whole app.                            |
 
 ## Run, check and publish
 
@@ -86,6 +89,40 @@ through a Google Sheet.
 - A card keeps its schedule while its key stays the same (topic name, dose label, first
   guideline number of an indication card, or RSI row). If a dose label is reworded in a PDF update, that card starts again as new.
 - If medicine names in the guidelines change, check `TABLE_NAME_OVERRIDES` in `src/quizCards.js`.
+
+## Guideline quiz (feature 9)
+
+- The list screen's "Guideline quiz" button opens `#guideline-quiz`. Pick a guideline (or
+  Random guideline) and Start. Everything is built from `content/guidelines.js` when a play
+  starts, with no AI, so a content update changes the quiz with no extra step.
+- Which guidelines: those outside Medicines that have a Backup, Referral and transport or Red
+  flags heading, or "action list"/"checklist" in the title (85 today). Information-only
+  guidelines such as Documentation are left out.
+- Ordering rounds: the top-level bullets from the start of the guideline to the first Backup,
+  Referral and transport, Additional information, Red flags, Orange flags or Worsening advice
+  heading. Any other heading, or a short unindented "If …"/"When …" line, starts a new situation;
+  each situation with 2 or more actions is a round. Two distractors are added: actions of other
+  guidelines naming a medicine the round names, then actions of related guidelines
+  (`content/related.js`), never worded the same as this guideline. Cards are placed by tapping
+  (Place next, Not in this guideline, Take back). Marking: one mark per card in the longest run
+  in the right order, one per distractor put aside. After Check the guideline's order is shown
+  with the lines under each action. Child-only sentences are removed from card text.
+- Number questions (up to 3 a play): a value with a unit in an action line is blanked. Wrong
+  choices are same-unit values (same shape: a range for a range) found anywhere in the guidelines,
+  nearest first (within ten times), otherwise ten times and one tenth; half the time one choice is
+  the right number with a wrong unit (`WRONG_UNITS`). Never a value in the same line. Not asked for
+  Paediatrics, Croup, Bronchiolitis, child-only lines, lines for ages under 15 or the 0.9% of
+  "0.9% sodium chloride". **These rules are to be reviewed** (constants at the top of
+  `src/guidelineQuizNumbers.js`).
+- Course-changing questions: which situation an action belongs to (up to 2), which of four is a
+  red flag of this guideline (up to 2; the wrong ones are red flags of other guidelines that
+  share less than 60% of their words with this guideline's flags, so check for ones that are also
+  true here), and "If …, which guideline do you move to?" (up to 2). Conditions inside a sentence
+  ("… if the patient is not improving") are not asked: separating them needs language
+  understanding.
+- Only the best score (percent and date) per guideline is saved, as one extra entry
+  `quiz-order-<guideline id>`: same save and sync path, no backend change, up to 85 more rows per
+  tracker in the Data sheet. Ending a play early saves nothing.
 
 ## Publishing an update (feature 7)
 
@@ -192,4 +229,6 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
   new-cards-per-day setting changes the count. Layout on a phone (by hand).
+- Guideline quiz: rounds can be placed, taken back and checked; a perfect play scores 100% and
+  saves `quiz-order-<id>`; the picker shows the best score. Layout on a phone (by hand).
 - Switch tracker and sign out.
