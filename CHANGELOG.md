@@ -1,5 +1,15 @@
 # Change log
 
+- 2026-11-14: List screen: Switch tracker moved to the Settings screen (with the tracker name);
+  the "Emergency Ambulance Service · progress and notes are shared…" line and the "Saved"
+  indicator removed from the list (Saved still shows on the other screens); the title now reads
+  "Clinical Practice Guidelines / Study Version" and sits just above the filter pills. The 💬
+  comment button opens a comment panel (new `src/views/commentPanel.js`) instead of the
+  browser's prompt box, with "Report a mistake in this point" in it; the report includes the
+  point and any comment typed. Related guidelines: a guideline named in a guideline's
+  differential diagnosis section now always comes first (reason "Named in the differential
+  diagnosis"); `content/related.js` rebuilt. 125 tests.
+
 - 2026-11-14: Settings is now a round cog button to the right of Switch tracker (no longer a
   tab). The four filter pills (All, Incomplete, Needs review, Complete) always sit on one line,
   shrinking their text on narrow phones. Dark mode now covers the guideline text too: the page,

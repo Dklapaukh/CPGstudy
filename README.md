@@ -53,6 +53,10 @@ through a Google Sheet.
   in `content/related-overrides.js` and run `node scripts/build-related.js`. Scores and weights
   are named constants at the top of `scripts/build-related.js`. Rebuild after any change to
   `content/guidelines.js`.
+- Ranking: a guideline named in this guideline's differential diagnosis section (a top-level
+  bullet under a "differential diagnosis" heading, matched to a title, its bracketed
+  abbreviation, or the title without "Exacerbation of" / "Acute") always comes first. Then
+  chosen pairs, title mentions, shared medicines, numbering and section.
 - The review queue is saved as one extra entry with the id `review-queue` in the tracker's
   data (its note holds the queue as JSON). It uses the normal save and sync path, so the backend
   needs no change. It appears as a row in the Data sheet; do not edit that row by hand.

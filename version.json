@@ -32,6 +32,7 @@
     "src/sync.js",
     "src/updateState.js",
     "src/updates.js",
+    "src/views/commentPanel.js",
     "src/views/detailView.js",
     "src/views/dragCards.js",
     "src/views/guidelineQuizView.js",

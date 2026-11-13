@@ -25,9 +25,18 @@ const MAX_SECTION_SIZE_FOR_SCORE = 20;
 const SAME_SECTION_SCORE = 1;
 const NEXT_TO_SCORE = 1;
 const OVERRIDE_ADD_SCORE = 10;
+// A guideline named in this guideline's differential diagnosis section always comes first
+// (owner's rule, 14 Nov 2026), so its score is above any total the other signals can reach.
+const DIFFERENTIAL_SCORE = 100;
+const DIFFERENTIAL_HEADING_PATTERN = /differential diagnos/i;
+const DIFFERENTIAL_ITEM_LEVEL = 1; // the named diagnoses are the top-level bullets
+// Words in front of a title that a differential leaves out ("COPD", not "Exacerbation of COPD").
+const TITLE_LEADING_WORDS_PATTERN = /^(exacerbation of|acute)\s+/;
+const MIN_TITLE_FORM_LENGTH = 3;
 const LINKS_KEPT_PER_GUIDELINE = 10;
 // When several signals apply, the reason shown is the first of these that applies.
 const REASON_PRIORITY = [
+  'differential',
   'chosen',
   'mentions',
   'mentioned-by',
@@ -60,6 +69,80 @@ function titlePattern(title) {
     .toLowerCase();
   const escaped = plainTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`);
+}
+
+/** Lower-case plain text of one piece of guideline HTML. */
+function plainText(html) {
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/** True when `words` appears in `text` as whole words. */
+function hasWholeWords(text, words) {
+  const escaped = words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(text);
+}
+
+/**
+ * The forms a title can take when a differential names it: the title without its bracketed
+ * part, the bracketed abbreviation itself, and either without leading words such as
+ * "Exacerbation of". "Exacerbation of Chronic Obstructive Pulmonary Disease (COPD)" gives
+ * "copd" among others.
+ */
+function titleForms(title) {
+  const plain = plainText(title);
+  const forms = new Set([plain.replace(/\(.*?\)/g, '').trim()]);
+  (plain.match(/\((.*?)\)/g) || []).forEach((bracketed) => forms.add(bracketed.slice(1, -1)));
+  [...forms].forEach((form) => forms.add(form.replace(TITLE_LEADING_WORDS_PATTERN, '')));
+  return [...forms].filter((form) => form.length >= MIN_TITLE_FORM_LENGTH);
+}
+
+/**
+ * The diagnoses named in a guideline's differential diagnosis sections: the text of each
+ * top-level bullet under a "differential diagnosis" heading, up to its first full stop or colon
+ * ("Cardiogenic pulmonary oedema. Patients usually:" gives "cardiogenic pulmonary oedema").
+ */
+function differentialNames(guideline) {
+  const names = [];
+  let inDifferential = false;
+  guideline.b.forEach((block) => {
+    if (block[0] !== 'b') {
+      inDifferential = typeof block[1] === 'string' && DIFFERENTIAL_HEADING_PATTERN.test(block[1]);
+      return;
+    }
+    if (inDifferential && block[2] === DIFFERENTIAL_ITEM_LEVEL) {
+      names.push(plainText(block[1]).split(/[.:]/)[0].trim());
+    }
+  });
+  return names.filter(Boolean);
+}
+
+/**
+ * A guideline whose title matches a diagnosis in this guideline's differential is put first in
+ * this guideline's list. One direction only: the differential belongs to this guideline.
+ * A name matches when it contains a form of the title, or a form contains the name, as whole
+ * words ("atrial fibrillation (af)" matches "Atrial Fibrillation").
+ */
+function addDifferentialSignals(links, guidelines) {
+  const formsById = {};
+  guidelines.forEach((guideline) => {
+    formsById[guideline.id] = titleForms(guideline.t);
+  });
+  guidelines.forEach((guideline) => {
+    const names = differentialNames(guideline);
+    guidelines.forEach((other) => {
+      if (other.id === guideline.id) return;
+      const isNamed = names.some((name) =>
+        formsById[other.id].some((form) => hasWholeWords(name, form) || hasWholeWords(form, name)),
+      );
+      if (isNamed) addSignal(links, guideline.id, other.id, DIFFERENTIAL_SCORE, 'differential');
+    });
+  });
 }
 
 function chapterAndMinor(number) {
@@ -179,6 +262,8 @@ export function buildRelatedLinks(data, overrides) {
   addSharedMedicineSignals(links, guidelines, isMedicine, mentionedByGuideline);
   addPlaceSignals(links, data.sections);
   applyOverrides(links, overrides);
+  // After the overrides, so a removal cannot drop a guideline named in the differential.
+  addDifferentialSignals(links, guidelines);
   return pickBestLinks(links, guidelines);
 }
 

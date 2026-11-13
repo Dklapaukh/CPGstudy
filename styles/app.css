@@ -281,17 +281,20 @@ h1 {
   margin-bottom: 1rem;
   border-bottom: 1px solid var(--header-border);
 }
+/* The title sits just above the filter pills, with the edition on its own line. */
 .home-header h1 {
   font-size: 1.3rem;
   line-height: 1.2;
   font-weight: 700;
-  margin: 0 0 0.2rem;
+  margin: 1rem 0 0;
 }
-.home-header__subtitle {
-  display: block;
+.home-header__edition {
   color: var(--header-muted);
-  font-size: 0.78rem;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.home-header .filter-chips {
+  margin-top: 0.6rem;
 }
 .home-header .switch-button {
   color: var(--header-accent);
@@ -471,6 +474,20 @@ h1 {
   padding: 0.8rem 0 0.4rem;
   min-height: 0;
 }
+/* Switch tracker, moved here from the list screen's top bar. */
+.settings-switch-button {
+  flex: none;
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--colour-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--colour-green);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 .settings-hint {
   color: var(--colour-muted);
   font-size: 0.85rem;
@@ -611,6 +628,7 @@ h1 {
   color: #f2b27a;
 }
 :root[data-theme='dark'] .feedback-link,
+:root[data-theme='dark'] .settings-switch-button,
 :root[data-theme='dark'] .home-tab__count,
 :root[data-theme='dark'] .home-header .switch-button,
 :root[data-theme='dark'] .marked-date--complete,
@@ -1626,4 +1644,68 @@ td.table-cell--coloured {
 .order-card--dragging {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Comment panel: opened by a point's 💬 button, with "Report a mistake in this point" */
+.comment-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+.comment-panel[hidden] {
+  display: none;
+}
+.comment-panel__card {
+  width: 100%;
+  max-width: 32rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--colour-surface);
+  color: var(--colour-text);
+}
+.comment-panel__title {
+  margin: 0;
+  font-size: 1rem;
+}
+.comment-panel__point {
+  margin: 0.3rem 0 0.8rem;
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+}
+.comment-panel__input {
+  display: block;
+  font: inherit;
+  resize: vertical;
+}
+.comment-panel__buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.comment-panel__button {
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--colour-line);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--colour-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.comment-panel__button--save {
+  border-color: var(--colour-green);
+  background: var(--colour-green);
+  color: #fff;
+}
+.comment-panel .feedback-link {
+  margin-top: 0.4rem;
+}
+.comment-panel .feedback-link[hidden] {
+  display: none;
 }

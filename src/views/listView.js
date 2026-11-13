@@ -16,7 +16,6 @@ import {
   markedTime,
   formatUpdatedDate,
 } from '../logic.js';
-import { updateSyncStatus } from '../sync.js';
 import { aiNoticeHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
 import { quizButtonHtml } from './quizView.js';
@@ -111,24 +110,24 @@ function addQuizTabListener() {
   });
 }
 
-// A standard cog for the Settings button beside Switch tracker.
+// A standard cog for the Settings button at the right of the top bar.
 const COG_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
   stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/>
   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 
-/** The header: tracker name, switch and settings buttons, title, tabs and the progress card. */
+/**
+ * The header: tracker name and settings button, tabs, the progress card, then the title just
+ * above the filter pills. Switch tracker lives on the Settings screen.
+ */
 function homeHeaderHtml(counts, justClosed) {
   return `<header class="home-header">
     <div class="top-bar"><b class="tracker-label">${escapeHtml(state.label)}</b>
     <div class="top-bar__buttons">
-    <button class="switch-button" data-action="switch-tracker">Switch tracker</button>
     <a class="settings-button" href="#settings" aria-label="Settings" title="Settings">${COG_ICON}</a>
     </div></div>
-    <h1>Clinical Practice Guidelines</h1>
-    <small class="home-header__subtitle">Emergency Ambulance Service · progress and notes are
-    shared with everyone who has this passcode<br><span class="sync-status"></span></small>
     ${tabsHtml()}
     <div class="home-card">${progressHtml(counts, guidelines.length, justClosed)}</div>
+    <h1>Clinical Practice Guidelines<br><span class="home-header__edition">Study Version</span></h1>
     ${filtersHtml(counts, guidelines.length)}</header>`;
 }
 
@@ -243,6 +242,5 @@ export function renderList() {
   });
   addRandomGuidelineButtonListener();
   addQuizTabListener();
-  updateSyncStatus();
   drawUpdateStatus();
 }

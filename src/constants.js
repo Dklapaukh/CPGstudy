@@ -52,6 +52,7 @@ export const RELATED_LIST_SIZE = 5;
 export const QUEUE_HASH = 'queue';
 // Why a guideline is related, by the reason code stored in content/related.js.
 export const RELATED_REASON_TEXT = {
+  differential: 'Named in the differential diagnosis',
   mentions: 'Mentioned in this guideline',
   'mentioned-by': 'Mentions this guideline',
   'shared-medicines': 'Uses some of the same medicines',

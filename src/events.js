@@ -51,6 +51,7 @@ import {
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { canReport, openReport } from './report.js';
 import { startCardDrag } from './views/dragCards.js';
+import { openCommentPanel } from './views/commentPanel.js';
 import { MESSAGES, STATUS, COMMENT_CONFIRMATION_MS, SEARCH_PAUSE_MS } from './constants.js';
 
 const app = document.getElementById('app');
@@ -209,14 +210,29 @@ const addAllRelatedToQueue = () => changeQueue(addToQueue(getQueue(), shownRelat
 const removeGuidelineFromQueue = (button) =>
   changeQueue(removeFromQueue(getQueue(), button.dataset.id));
 
+/**
+ * Opens the comment panel for the point beside the tapped 💬 button. Saving adds the comment to
+ * the notes; the panel also offers "Report a mistake in this point".
+ */
 function addComment(button) {
+  if (!byId('notes-input')) return;
+  const pointText = button.parentNode.querySelector('span');
+  const text = pointText ? pointText.textContent.replace(/\s+/g, ' ').trim() : '';
+  openCommentPanel({
+    snippet: makeSnippet(text, commentPointTexts()),
+    pointText: text,
+    onSave: (comment) => saveComment(button, comment),
+    returnFocusTo: button,
+  });
+}
+
+/** Adds a comment from the panel to the notes and shows a tick on the point's button. */
+function saveComment(button, comment) {
   const notes = byId('notes-input');
-  if (!notes) return;
+  if (!notes) return; // the person has left the guideline
   const pointText = button.parentNode.querySelector('span');
   const snippet = makeSnippet(pointText ? pointText.textContent : '', commentPointTexts());
-  const answer = window.prompt(`Your comment on:\n${snippet}`, '');
-  if (answer === null || !answer.trim()) return;
-  notes.value = appendComment(notes.value, snippet, answer.trim());
+  notes.value = appendComment(notes.value, snippet, comment);
   notes.dispatchEvent(new Event('input', { bubbles: true }));
   button.textContent = '✓';
   setTimeout(() => {

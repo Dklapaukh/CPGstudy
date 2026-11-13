@@ -1,7 +1,8 @@
 /*
- * The Settings screen (#settings): dark mode, and a wheel (like the iPhone's) for how many days
- * after Complete a guideline is marked for review. The listeners are attached here, so this file
- * is self-contained. Depends on state.js, settingsState.js and constants.js.
+ * The Settings screen (#settings): the tracker with its Switch tracker button, dark mode, and a
+ * wheel (like the iPhone's) for how many days after Complete a guideline is marked for review.
+ * The listeners are attached here, so this file is self-contained. Depends on state.js,
+ * settingsState.js, logic.js and constants.js.
  */
 import { state } from '../state.js';
 import {
@@ -10,6 +11,7 @@ import {
   getReviewAfterDays,
   saveReviewAfterDays,
 } from '../settingsState.js';
+import { escapeHtml } from '../logic.js';
 import { REVIEW_AFTER_DAYS } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -37,12 +39,21 @@ function wheelHtml(days) {
       aria-valuetext="${dayText(days)}">${items.join('')}</ol></div>`;
 }
 
+/** The tracker's name with the Switch tracker button (moved here from the list screen). */
+function trackerGroupHtml() {
+  return `<section class="settings-group" aria-label="Tracker">
+    <div class="settings-row"><span>${escapeHtml(state.label)}</span>
+    <button class="settings-switch-button" type="button" data-action="switch-tracker">Switch
+    tracker</button></div></section>`;
+}
+
 /** Draws the Settings screen. */
 export function renderSettingsScreen() {
   const days = getReviewAfterDays();
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding settings-screen"><h1 class="quiz-title">Settings</h1>
     <span class="sync-status"></span>
+    ${trackerGroupHtml()}
     <section class="settings-group" aria-label="Appearance">
       <label class="settings-row"><span>Dark mode</span>
       <input class="switch" id="dark-mode-switch" type="checkbox" role="switch"

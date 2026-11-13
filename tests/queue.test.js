@@ -124,3 +124,43 @@ test('buildRelatedLinks applies manual additions and removals', () => {
   assert.ok(!links.a.some(([id]) => id === 'b'));
   assert.ok(!links.b.some(([id]) => id === 'a'));
 });
+
+test('buildRelatedLinks puts guidelines named in the differential diagnosis first', () => {
+  const data = {
+    sections: [
+      {
+        name: 'Respiratory',
+        items: [
+          {
+            id: 'asthma',
+            n: '2.1',
+            t: 'Exacerbation of Asthma',
+            b: [
+              ['p', 'See Stridor.', 0],
+              ['p', '<b>The differential diagnosis for asthma</b>', 0],
+              ['b', 'COPD. Patients usually:', 1, '#00693C'],
+              ['b', 'Have a history of smoking.', 2, '#00693C'],
+              ['b', 'Pneumonia. Patients usually have:', 1, '#00693C'],
+              ['p', 'Stridor is a different matter.', 0],
+            ],
+          },
+          {
+            id: 'copd',
+            n: '2.2',
+            t: 'Exacerbation of Chronic Obstructive Pulmonary Disease (COPD)',
+            b: [],
+          },
+          { id: 'stridor', n: '2.6', t: 'Stridor', b: [] },
+          { id: 'smoking', n: '2.9', t: 'History of Smoking', b: [] },
+        ],
+      },
+    ],
+  };
+  const links = buildRelatedLinks(data, { add: [], remove: [['asthma', 'copd']] });
+  // COPD is matched by its abbreviation and comes first, even though a removal names it.
+  assert.deepEqual([links.asthma[0][0], links.asthma[0][2]], ['copd', 'differential']);
+  assert.equal(links.asthma[1][0], 'stridor', 'mentioned outside the differential: not first');
+  // Only top-level bullets are diagnoses, and the signal goes one way only.
+  assert.ok(!links.asthma.some(([id, , reason]) => id === 'smoking' && reason === 'differential'));
+  assert.ok(!links.copd.some(([, , reason]) => reason === 'differential'));
+});

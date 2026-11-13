@@ -13,6 +13,44 @@
   <body>
     <div class="update-banner" id="update-banner" role="status" hidden></div>
     <div class="app-container" id="app"></div>
+    <div class="comment-panel" id="comment-panel" hidden>
+      <div
+        class="comment-panel__card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="comment-panel-title"
+      >
+        <h2 class="comment-panel__title" id="comment-panel-title">Comment on</h2>
+        <p class="comment-panel__point" id="comment-panel-point"></p>
+        <label class="visually-hidden" for="comment-panel-input">Your comment</label>
+        <textarea
+          class="text-input comment-panel__input"
+          id="comment-panel-input"
+          rows="3"
+          placeholder="Your comment"
+        ></textarea>
+        <div class="comment-panel__buttons">
+          <button class="comment-panel__button" type="button" data-action="cancel-comment">
+            Cancel
+          </button>
+          <button
+            class="comment-panel__button comment-panel__button--save"
+            type="button"
+            data-action="save-comment"
+          >
+            Save comment
+          </button>
+        </div>
+        <button
+          class="feedback-link"
+          id="comment-panel-report"
+          type="button"
+          data-action="report-point"
+        >
+          Report a mistake in this point
+        </button>
+      </div>
+    </div>
     <footer class="report-footer" id="report-footer" hidden>
       <button class="feedback-link" type="button" data-action="report">
         Report a mistake or request

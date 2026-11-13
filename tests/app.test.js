@@ -64,7 +64,6 @@ before(() => {
   });
   doc = dom.window.document;
   dom.window.scrollTo = () => {};
-  dom.window.prompt = () => 'Check dose';
   const realSetInterval = globalThis.setInterval;
   const globals = {
     window: dom.window,
@@ -215,9 +214,15 @@ test('changing status and notes saves, then shows Saved', async () => {
   assert.deepEqual(saved.p, {});
 });
 
-test('the comment button adds a line to the notes and highlights the point', async () => {
+test('the comment button opens a panel with a report button, and saving adds a note line', async () => {
   const button = $('.comment-button');
   click(button);
+  assert.equal($('#comment-panel').hidden, false);
+  assert.equal($('#comment-panel-report').hidden, false, 'reporting is offered with every comment');
+  assert.ok($('#comment-panel-point').textContent.length > 0);
+  $('#comment-panel-input').value = 'Check dose';
+  click($('[data-action="save-comment"]'));
+  assert.equal($('#comment-panel').hidden, true);
   assert.match($('#notes-input').value, /^covered dosing\n• .+ — Check dose$/);
   assert.ok($('.has-comment'));
   assert.equal(button.textContent, '✓');
@@ -548,12 +553,19 @@ test('a changed guideline is tagged Updated until it is opened', async () => {
 test('Switch tracker has a back link to the open tracker, which stays saved until replaced', async () => {
   dom.window.location.hash = '';
   await sleep(30);
+  assert.equal($('[data-action="switch-tracker"]'), null, 'Switch tracker is not on the list');
+  assert.match($('.home-header h1').textContent, /^Clinical Practice GuidelinesStudy Version$/);
+  assert.ok($('.home-card + h1 + .filter-chips'), 'the title sits just above the filter pills');
+  dom.window.location.hash = '#settings';
+  await sleep(30);
   click($('[data-action="switch-tracker"]'));
   assert.ok($('#passcode-input'));
   assert.match($('[data-action="back-to-tracker"]').textContent, /Back to Sam - 2026/);
   assert.notEqual(dom.window.localStorage.getItem('eas-cpg-tracker-v2'), null);
   click($('[data-action="back-to-tracker"]'));
-  assert.ok($('[data-action="switch-tracker"]'), 'back on the list');
+  assert.ok($('.home-header'), 'back on the list');
+  dom.window.location.hash = '#settings';
+  await sleep(30);
   click($('[data-action="switch-tracker"]'));
   await signIn('not-a-code');
   assert.ok($('.warning-message'));

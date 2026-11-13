@@ -1,5 +1,5 @@
 /*
- * "Report a mistake or request" (on every screen). The button sits under the app in index.html;
+ * "Report a mistake or request" (on every screen, and in the comment panel for one point). The button sits under the app in index.html;
  * tapping it opens the student's email app with a message about what is on screen: the
  * guideline, the medicine card or the guideline quiz step, so a mistake can be found and fixed.
  * Nothing is sent by the app itself: there is no form or server to abuse, and the address is
@@ -74,9 +74,16 @@ export function reportContext() {
   return { title: 'mistake or request', lines: [`Screen: ${screen}`] };
 }
 
-/** Opens the student's email app with a report about the current screen. */
-export function openReport() {
-  const { subject, body } = reportMessage(reportContext(), documentInfo.exportedOn);
+/**
+ * Opens the student's email app with a report about the current screen. `extraLines` are added
+ * after the screen's own lines (the comment panel adds the point and any comment typed).
+ */
+export function openReport(extraLines = []) {
+  const context = reportContext();
+  const { subject, body } = reportMessage(
+    { ...context, lines: [...context.lines, ...extraLines] },
+    documentInfo.exportedOn,
+  );
   const href = feedbackMailto(joinAddress(FEEDBACK_ADDRESS_PARTS), subject, body);
   if (href) window.location.href = href;
 }
