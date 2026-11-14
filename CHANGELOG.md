@@ -1,5 +1,11 @@
 # Change log
 
+- 2026-11-15: Guideline quiz: every finished play now saves its score as the most recent score,
+  as well as the best (note `{ best, at, last, lastAt }`; older notes use their best as the most
+  recent until played again). Starting a guideline quiz shows "Best: …% (date) · Most recent:
+  …% (date)". The list screen shows the most recent quiz score beside the marked date on each
+  guideline row. 127 tests.
+
 - 2026-11-14: Guideline page: the "Guidelines to learn" list is no longer shown under a
   guideline (it stays on the To learn screen; "Add to queue" still works). A third pill, Quiz,
   sits beside Review and Complete on the 85 guidelines that have a guideline quiz: it starts

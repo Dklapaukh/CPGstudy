@@ -1,7 +1,8 @@
 /*
  * The guideline list screen: a header (tabs, quiz choice, completion ring, random button,
  * filters and search) above the sections, which are drawn as before.
- * Drawn entirely from the state. Depends on state.js, guidelines.js, logic.js, templates.js.
+ * Drawn entirely from the state. Depends on state.js, guidelines.js, logic.js, templates.js and
+ * guidelineQuizState.js (the most recent quiz score on each row).
  */
 import { state } from '../state.js';
 import { guidelines, sections } from '../guidelines.js';
@@ -21,6 +22,7 @@ import { queueButtonHtml } from './queueView.js';
 import { quizButtonHtml } from './quizView.js';
 import { guidelineQuizButtonHtml } from './guidelineQuizView.js';
 import { footerHtml, drawUpdateStatus } from './updateView.js';
+import { lastScore } from '../guidelineQuizState.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -177,7 +179,20 @@ function rowHtml(guideline) {
     ? ` <span class="updated-tag">${MESSAGES.UPDATED_TAG}</span>`
     : '';
   return `<a class="guideline-row" href="#${guideline.id}"><i class="status-dot${dotClass}"></i>
-    <div class="guideline-row__text"><b>${escapeHtml(guideline.t)}${updatedTag}</b><small>CPG EAS ${guideline.n}${notesNote}</small></div>${markedDateHtml(guideline.id, status)}</a>`;
+    <div class="guideline-row__text"><b>${escapeHtml(guideline.t)}${updatedTag}</b><small>CPG EAS ${guideline.n}${notesNote}</small></div>${rowMetaHtml(guideline.id, status)}</a>`;
+}
+
+/**
+ * The right of a row: the most recent guideline quiz score (if played) beside the marked date
+ * (if marked). Nothing when there is neither.
+ */
+function rowMetaHtml(guidelineId, status) {
+  const recent = lastScore(guidelineId);
+  const score = recent
+    ? `<span class="row-quiz-score" title="Most recent guideline quiz score"><span class="visually-hidden">Most recent quiz score </span>${recent.last}%</span>`
+    : '';
+  const date = markedDateHtml(guidelineId, status);
+  return score || date ? `<span class="row-meta">${score}${date}</span>` : '';
 }
 
 /**

@@ -723,6 +723,20 @@ details.section-group > summary .section-count {
   flex: 1;
   min-width: 0;
 }
+.row-meta {
+  flex: none;
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+/* The most recent guideline quiz score, left of the marked date. */
+.row-quiz-score {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  color: var(--colour-muted);
+}
 .marked-date {
   flex: none;
   min-width: 5.6rem;

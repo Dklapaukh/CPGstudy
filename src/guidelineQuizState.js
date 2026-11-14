@@ -1,9 +1,10 @@
 /*
  * Guideline quiz (feature 9): the session in memory and the saved best scores. A play is built
  * by guidelineQuizPlay.js when it starts; state.guidelineQuiz holds where the student is in it.
- * Only the best score of each guideline is saved (Decision Z16, Option 1), as one extra entry
- * (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id, note = JSON { best, at }), so it is saved,
- * uploaded and merged by the same code as the guidelines and needs no backend change.
+ * The best and the most recent score of each guideline are saved (Decision Z16, Option 1, plus
+ * the latest score, 15 Nov 2026) as one extra entry (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id,
+ * note = JSON { best, at, last, lastAt }), so it is saved, uploaded and merged by the same code
+ * as the guidelines and needs no backend change.
  * Depends on state.js, sync.js, guidelines.js, logic.js, quizCards.js, quizDoses.js,
  * content/related.js and the three guidelineQuiz files.
  */
@@ -56,32 +57,61 @@ function playContext() {
   return cachedContext;
 }
 
-/* ---------- Best scores ---------- */
+/* ---------- Saved scores ---------- */
 
 const entryId = (guidelineId) => GUIDELINE_QUIZ_ENTRY_PREFIX + guidelineId;
 
-/** The saved best score of a guideline: { best (percent), at (milliseconds) }, or null. */
-export function bestScore(guidelineId) {
+/**
+ * The saved scores of a guideline: { best, at, last, lastAt } (percents and milliseconds), or
+ * null if it has not been played. Notes saved before 15 Nov 2026 hold only the best score, so
+ * their best stands in for the most recent until the guideline is played again.
+ */
+function savedScores(guidelineId) {
   const entry = state.entries[entryId(guidelineId)];
   if (!entry || !entry.n) return null;
   try {
     const saved = JSON.parse(entry.n);
-    return Number.isFinite(saved.best) ? saved : null;
+    if (!Number.isFinite(saved.best)) return null;
+    const hasLast = Number.isFinite(saved.last);
+    return {
+      best: saved.best,
+      at: saved.at,
+      last: hasLast ? saved.last : saved.best,
+      lastAt: hasLast ? saved.lastAt : saved.at,
+    };
   } catch {
     return null; // a note edited by hand in the Sheet: treated as no score, replaced next time
   }
 }
 
-/** Saves the score of a finished play if it beats (or equals, to update the date) the best. */
-function saveIfBest(guidelineId, percent) {
-  const saved = bestScore(guidelineId);
-  if (saved && saved.best > percent) return;
+/** The best score of a guideline: { best (percent), at (milliseconds) }, or null. */
+export function bestScore(guidelineId) {
+  const saved = savedScores(guidelineId);
+  return saved && { best: saved.best, at: saved.at };
+}
+
+/** The most recent score of a guideline: { last (percent), lastAt (milliseconds) }, or null. */
+export function lastScore(guidelineId) {
+  const saved = savedScores(guidelineId);
+  return saved && { last: saved.last, lastAt: saved.lastAt };
+}
+
+/** Saves a finished play as the most recent score, and as the best if it beats (or equals) it. */
+function saveScore(guidelineId, percent) {
+  const now = Date.now();
+  const saved = savedScores(guidelineId);
+  const isBest = !saved || percent >= saved.best;
   const id = entryId(guidelineId);
   const previous = state.entries[id];
   const entry = {
     s: STATUS.INCOMPLETE,
-    n: JSON.stringify({ best: percent, at: Date.now() }),
-    t: nextTimestamp(previous ? previous.t : 0, Date.now()),
+    n: JSON.stringify({
+      best: isBest ? percent : saved.best,
+      at: isBest ? now : saved.at,
+      last: percent,
+      lastAt: now,
+    }),
+    t: nextTimestamp(previous ? previous.t : 0, now),
   };
   state.entries[id] = entry;
   state.pendingChanges[id] = { ...entry };
@@ -193,7 +223,7 @@ export function pickChoice(choiceIndex) {
 /** The score as a whole percent. */
 export const percentOf = (score, total) => (total ? Math.round((score / total) * PERCENT) : 0);
 
-/** Moves to the next step; after the last one, saves the score if it is the best so far. */
+/** Moves to the next step; after the last one, saves the score (see saveScore). */
 export function nextStep() {
   const quiz = state.guidelineQuiz;
   if (!quiz || quiz.finished) return;
@@ -203,7 +233,7 @@ export function nextStep() {
   Object.assign(quiz, freshStep(quiz.steps[quiz.index]));
   if (quiz.index >= quiz.steps.length) {
     quiz.finished = true;
-    saveIfBest(quiz.guidelineId, percentOf(quiz.score, quiz.total));
+    saveScore(quiz.guidelineId, percentOf(quiz.score, quiz.total));
   }
 }
 

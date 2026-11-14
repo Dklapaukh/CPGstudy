@@ -385,7 +385,7 @@ function playRoundPerfectly(step) {
   });
 }
 
-test('the Guideline quiz orders cards with arrows, marks them, and saves the best score', async () => {
+test('the Guideline quiz orders cards with arrows, marks them, and saves the best and last score', async () => {
   const { state } = await import('../src/state.js');
   const { reportContext } = await import('../src/report.js');
   dom.window.location.hash = '#guideline-quiz';
@@ -440,12 +440,26 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
   }
   assert.match($('.quiz-finished').textContent, /\(100%\)$/);
   await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
-  assert.equal(JSON.parse(stored['quiz-order-cpg-3-8'].n).best, 100);
+  const note = JSON.parse(stored['quiz-order-cpg-3-8'].n);
+  assert.equal(note.best, 100);
+  assert.equal(note.last, 100, 'the most recent score is saved too');
   click($('[data-action="guideline-quiz-end"]'));
   assert.match($('#guideline-quiz-choice').selectedOptions[0].text, /best 100%$/);
+  click($('[data-action="guideline-quiz-start"]'));
+  assert.match(
+    $('.guideline-quiz-screen .quiz-totals').textContent,
+    /^Best: 100% \(.+\) · Most recent: 100% \(.+\)$/,
+    'starting a play shows the best and the most recent score',
+  );
+  click($('[data-action="guideline-quiz-end"]'));
   dom.window.location.hash = '';
   await sleep(30);
   assert.ok($('a[href="#guideline-quiz"]'), 'the list screen has the Guideline quiz button');
+  assert.match(
+    $('a[href="#cpg-3-8"] .row-quiz-score').textContent,
+    /100%$/,
+    'the list row shows the most recent quiz score',
+  );
 });
 
 test('the Quiz pill opens the guideline quiz and finishing returns to the same place', async () => {

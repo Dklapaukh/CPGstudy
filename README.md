@@ -131,9 +131,10 @@ through a Google Sheet.
   true here), and "If …, which guideline do you move to?" (up to 2). Conditions inside a sentence
   ("… if the patient is not improving") are not asked: separating them needs language
   understanding.
-- Only the best score (percent and date) per guideline is saved, as one extra entry
-  `quiz-order-<guideline id>`: same save and sync path, no backend change, up to 85 more rows per
-  tracker in the Data sheet. Ending a play early saves nothing.
+- The best and the most recent score (percent and date of each) per guideline are saved, as one
+  extra entry `quiz-order-<guideline id>`: same save and sync path, no backend change, up to 85 more rows per
+  tracker in the Data sheet. Ending a play early saves nothing. Starting a
+  play shows both scores, and the list screen shows the most recent one beside the marked date.
 
 ## Report a mistake or request
 
@@ -256,7 +257,7 @@ Automated in `tests/app.test.js` unless marked "by hand".
 - The report button is under every screen and the page holds no whole email address.
 - Guideline quiz: cards move with the arrows and to and from "Not in this guideline", dragging
   by the grip works on a phone (by hand); a perfect play scores 100% and
-  saves `quiz-order-<id>`; the picker shows the best score. Layout on a phone (by hand). The
+  saves `quiz-order-<id>`; the picker shows the best score, a new play shows best and most recent, the list row shows the most recent. Layout on a phone (by hand). The
   Quiz pill on a guideline opens its quiz; finishing shows the score ring and "Back to the
   guideline" returns to the same place; guidelines with no quiz have no Quiz pill.
 - Switch tracker and sign out.

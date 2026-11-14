@@ -8,7 +8,13 @@
  */
 import { state } from '../state.js';
 import { escapeHtml, formatUpdatedDate } from '../logic.js';
-import { quizzedGuidelines, currentStep, bestScore, percentOf } from '../guidelineQuizState.js';
+import {
+  quizzedGuidelines,
+  currentStep,
+  bestScore,
+  lastScore,
+  percentOf,
+} from '../guidelineQuizState.js';
 import { blockHtml } from './templates.js';
 import { GUIDELINE_QUIZ_HASH } from '../constants.js';
 import { CARD_LIST } from '../guidelineQuizState.js';
@@ -262,6 +268,19 @@ function backLinkHtml() {
     : '<a class="back-link" href="#">‹ All guidelines</a>';
 }
 
+/**
+ * The saved scores shown when a play starts: best and most recent, each with its date. Nothing
+ * for a guideline that has not been played.
+ */
+function savedScoresHtml(guidelineId) {
+  const best = bestScore(guidelineId);
+  const recent = lastScore(guidelineId);
+  if (!best || !recent) return '';
+  return `<p class="quiz-totals">Best: ${best.best}% (${formatUpdatedDate(best.at)}) · Most recent: ${
+    recent.last
+  }% (${formatUpdatedDate(recent.lastAt)})</p>`;
+}
+
 /** Draws the guideline quiz screen. */
 export function renderGuidelineQuizScreen() {
   const quiz = state.guidelineQuiz;
@@ -272,7 +291,8 @@ export function renderGuidelineQuizScreen() {
     const progress = `<p class="quiz-left">${escapeHtml(quiz.title)} · step ${quiz.index + 1} of ${
       quiz.steps.length
     } · score ${quiz.score}</p>`;
-    body = progress + (step.kind === 'order' ? orderStepHtml(step) : choiceStepHtml(step));
+    const saved = quiz.index === 0 ? savedScoresHtml(quiz.guidelineId) : '';
+    body = progress + saved + (step.kind === 'order' ? orderStepHtml(step) : choiceStepHtml(step));
   }
   const end = quiz ? endButtonHtml(quiz) : '';
   app.innerHTML = `${backLinkHtml()}
