@@ -1,263 +1,267 @@
-# NZCPG study app (EAS CPG Mentoring Tracker)
+# NZCPG study app
 
-A phone-first web app: guidelines list, per-guideline status and notes, shared with a mentor
-through a Google Sheet.
+A phone-first web app for studying the EAS clinical practice guidelines: the guidelines, a status
+and notes for each, two quizzes, and a tracker shared with a mentor through a Google Sheet.
+Published at <https://dklapaukh.github.io/CPGstudy/>. Study aid only, not for clinical use.
+
+Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan.md`.
 
 ## Structure
 
-| Path                                                          | Purpose                                                                                   |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `index.html`                                                  | Page shell. Loads the styles and `src/main.js`.                                           |
-| `styles/app.css`                                              | All styles. Class names say what the element is.                                          |
-| `content/guidelines.js`                                       | Guideline text as data, one guideline per line. Not edited by hand.                       |
-| `src/constants.js`                                            | Named constants: status codes, storage key, backend address, timings, messages.           |
-| `src/logic.js`, `src/comments.js`                             | Pure logic (merge, filters, comment lines). Tested.                                       |
-| `src/queue.js`, `src/related.js`                              | Pure logic for the review queue and the related list. Tested.                             |
-| `src/queueState.js`                                           | Reading and saving the review queue in the state.                                         |
-| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js` | Medicines quiz, pure logic: cards and adult doses from the content, spaced repetition.    |
-| `src/quizState.js`, `src/views/quizView.js`                   | Medicines quiz: saving schedules as entries, the `#quiz` screen.                          |
-| `src/guidelineQuizRounds.js`, `src/guidelineQuizNumbers.js`   | Guideline quiz, pure logic: ordering rounds, distractors, marking; number questions.      |
-| `src/guidelineQuizPlay.js`                                    | Guideline quiz, pure logic: course-changing questions and building one play.              |
-| `src/guidelineQuizState.js`, `src/views/guidelineQuizView.js` | Guideline quiz: the play in memory, best scores as entries, the `#guideline-quiz` screen. |
-| `content/related.js`, `content/related-overrides.js`          | Related-guideline links (built by script) and the hand-edited overrides.                  |
-| `scripts/build-related.js`                                    | `node scripts/build-related.js` rebuilds `content/related.js`.                            |
-| `src/state.js`                                                | The one state object and saving it on the phone.                                          |
-| `src/updates.js`, `src/updateState.js`                        | Update prompt: pure logic (tested), and checking, downloading and tags.                   |
-| `version.json`                                                | Published export date and the list of app files (read by the update prompt).              |
-| `scripts/pdfScan.js`, `scripts/check-pdf.js`                  | Reads the EAS PDF: export date and newest version per guideline. Tested.                  |
-| `content/pdf-status.json`                                     | Last PDF scan (fingerprint, export date, versions). Written by the script.                |
-| `scripts/pdfPages.js`, `scripts/pdfContent.js`                | Converter: reads the PDF's text and shapes, and turns them into content. Tested.          |
-| `scripts/pdfRows.js`, `scripts/pdfTables.js`                  | Converter parts: rows of text, and tables.                                                |
-| `scripts/contentCheck.js`                                     | Refuses content with unexpected markup; lists every block shape. Tested.                  |
-| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`     | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                  |
-| `content/pdf-rebuild.json`                                    | Fingerprint of each rebuilt guideline, and which ones are not rebuilt exactly.            |
-| `.github/workflows/pdf-check.yml`                             | Daily PDF check; opens a pull request with the rebuilt content.                           |
-| `src/api.js`, `src/sync.js`                                   | Talking to the backend; queued edits and merging.                                         |
-| `src/views/`                                                  | One file per screen: login, mentor, list, guideline.                                      |
-| `src/navigation.js`, `src/events.js`, `src/main.js`           | Screen changes, all clicks and typing, start-up.                                          |
-| `backend/Code.gs`                                             | The Google Apps Script service (see "Backend").                                           |
-| `tests/`                                                      | `npm test`. Includes a simulated-browser run of the whole app.                            |
+| Path                                                                 | Purpose                                                                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `index.html`, `styles/app.css`                                       | Page shell and all styles.                                                             |
+| `src/main.js`, `src/navigation.js`, `src/events.js`                  | Start-up, screen changes, all clicks and typing.                                       |
+| `src/constants.js`                                                   | Named constants: status codes, storage keys, backend address, timings, messages.       |
+| `src/state.js`                                                       | The one state object and saving it on the phone.                                       |
+| `src/api.js`, `src/sync.js`                                          | Talking to the backend; queued edits and merging.                                      |
+| `src/guidelines.js`, `src/logic.js`, `src/comments.js`               | The guideline list; pure logic (merge, filters, search, comment lines).                |
+| `src/markedState.js`, `src/settingsState.js`                         | Marked dates; dark mode and "mark for review after N days".                            |
+| `src/queue.js`, `src/queueState.js`, `src/related.js`                | Guidelines to learn (the queue) and the related list.                                  |
+| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`        | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                     |
+| `src/quizState.js`                                                   | Medicines quiz: session and saved schedules.                                           |
+| `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`              | Guideline quiz, pure logic: ordering rounds, number questions, building a play.        |
+| `src/guidelineQuizState.js`                                          | Guideline quiz: the play in memory and saved scores.                                   |
+| `src/report.js`                                                      | "Report a mistake or request" email.                                                   |
+| `src/updates.js`, `src/updateState.js`, `version.json`               | Update prompt: pure logic, checking and downloading, the published date and file list. |
+| `src/views/`                                                         | One file per screen or screen part.                                                    |
+| `content/guidelines.js`                                              | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.     |
+| `content/related.js`, `content/related-overrides.js`                 | Related-guideline links (built) and the hand-edited overrides.                         |
+| `content/pdf-status.json`, `content/pdf-rebuild.json`                | Last PDF scan; fingerprint of each rebuilt guideline. Written by scripts.              |
+| `scripts/pdfScan.js`, `scripts/check-pdf.js`                         | Reads the PDF's export date and each guideline's newest version entry.                 |
+| `scripts/pdfPages.js`, `pdfContent.js`, `pdfRows.js`, `pdfTables.js` | Converter from the PDF to content blocks.                                              |
+| `scripts/contentCheck.js`                                            | Refuses content with unexpected markup.                                                |
+| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`            | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.               |
+| `scripts/build-related.js`                                           | Rebuilds `content/related.js`.                                                         |
+| `backend/Code.gs`                                                    | The Google Apps Script service.                                                        |
+| `.github/workflows/`                                                 | `checks.yml` (every push) and `pdf-check.yml` (daily).                                 |
+| `tests/`                                                             | `npm test`. Includes a simulated-browser run of the whole app.                         |
 
 ## Run, check and publish
 
-- Needs a web server: ES modules do not load from a file opened directly. Locally: `npx serve .`.
-- Publishing: GitHub Pages serving the `main` branch root. The address stays the same.
-- Claude commits and pushes every update straight to `main` (no branches or pull requests),
-  after `npm run check` passes and with a `CHANGELOG.md` entry. See `CLAUDE.md`.
-- `npm install` once, then `npm run check` (formatting, error checking, tests). GitHub runs it on
+- Run locally: `npx serve .` (ES modules do not load from a file opened directly).
+- Check: `npm install` once, then `npm run check` (formatting, lint, tests). GitHub runs it on
   every push.
+- Publish: GitHub Pages serves the root of `main`. Claude pushes every update straight to `main`
+  after `npm run check` passes, with a `CHANGELOG.md` entry (see `CLAUDE.md`).
+- App code changes show no banner. Phones pick them up on a reload once GitHub Pages' cache
+  (about 10 minutes) has expired.
 
-## Related guidelines and the review queue
+## How data is saved
+
+Each tracker's data is a set of entries `{ s: status, n: note, t: time of last edit }`, kept on
+the phone and in the Sheet's Data tab, one row per entry. The newest `t` wins when two phones
+differ. Everything beyond a guideline's status and notes is stored as an extra entry on the same
+path, so new features need no backend change. Do not edit these rows by hand.
+
+| Entry id                    | Holds (in its note)                                   | Rows per tracker |
+| --------------------------- | ----------------------------------------------------- | ---------------- |
+| `<guideline id>`            | Status and the notes text                             | up to 180        |
+| `marked-<guideline id>`     | When the guideline was last marked Review or Complete | up to 180        |
+| `review-queue`              | The Guidelines to learn list, as JSON                 | 1                |
+| `app-settings`              | "Mark for review after N days", as JSON               | 1                |
+| `quiz-<medicine id>`        | That medicine's card schedules, as JSON               | up to 45         |
+| `quiz-settings`             | New medicines and review cards per day, as JSON       | 1                |
+| `quiz-order-<guideline id>` | Guideline quiz best and most recent score, as JSON    | up to 85         |
+
+The backend cuts a note at 5000 characters. A whole entry is replaced on save, so two phones
+changing the same entry before syncing keep only the newer one.
+
+## List, marking and settings
+
+- Header: tabs Home, Quiz (Medicines quiz or Guideline quiz) and To learn; a cog opens Settings;
+  a round button opens a random guideline (weights in `SUGGESTION_WEIGHT`; from the one open
+  section if exactly one is open).
+- A guideline page has Review and Complete (no Incomplete), plus Quiz when it has a guideline
+  quiz. Pressing Review or Complete, even when already selected, sets the marked date shown on
+  its list row. Opening a guideline or editing its notes does not.
+- Settings: dark mode (this phone only), "Mark guidelines for review N days after they're marked
+  Complete" (0 = off, up to 180; shared with the tracker), and Switch tracker.
+- Search uses the plain words of each guideline and redraws the list 150 ms after typing stops.
+- The 💬 button on a point adds a comment line to the notes and highlights the point. The line
+  starts with the first 70 characters of the point, or more when another point of the guideline
+  starts the same way (`src/comments.js`).
+
+## Related guidelines and Guidelines to learn
 
 - `content/related.js` is built, not edited. To change a link, add a pair to `add` or `remove`
-  in `content/related-overrides.js` and run `node scripts/build-related.js`. Scores and weights
-  are named constants at the top of `scripts/build-related.js`. Rebuild after any change to
-  `content/guidelines.js`.
+  in `content/related-overrides.js` and run `node scripts/build-related.js`. Rebuild after any
+  change to `content/guidelines.js`. Scores and weights are constants at the top of the script.
 - Ranking: a guideline named in this guideline's differential diagnosis section (a top-level
   bullet under a "differential diagnosis" heading, matched to a title, its bracketed
-  abbreviation, or the title without "Exacerbation of" / "Acute") always comes first. Then
-  chosen pairs, title mentions, shared medicines, numbering and section.
-- The review queue is saved as one extra entry with the id `review-queue` in the tracker's
-  data (its note holds the queue as JSON). It uses the normal save and sync path, so the backend
-  needs no change. It appears as a row in the Data sheet; do not edit that row by hand.
+  abbreviation, or the title without "Exacerbation of" / "Acute") comes first. Then chosen
+  pairs, title mentions, shared medicines, numbering and section. At most 5 are shown.
+- "Add to queue" and "Add all to queue" fill the Guidelines to learn list (at most 5, shown on
+  the To learn screen). Marking a queued guideline Complete or Review ticks it off; the last
+  tick empties the list.
 
 ## Medicines quiz
 
-- The list screen's "Medicines quiz" button opens `#quiz`. Cards are built from the guidelines
-  every time the app starts (`src/quizCards.js`), so a content update changes them with no extra
-  step. Each medicine (section "Medicines", any guideline with an Indications heading) gets one
-  card for each of Indications, Contraindications, Cautions, Common adverse effects, Usual onset
-  of effect, Usual duration of effect and Mechanism of action, plus adult dosage cards, asked as
-  "Medicine – Indication – Dose": one per labelled dose in its own Dosage section (unlabelled
-  steps stay together) and one per row of the CPG 9.3 adult RSI table that names it.
-- A medicine whose Dosage section says "See the individual guideline" or is missing (Adrenaline,
-  Midazolam, Morphine) gets one card per guideline that gives it an adult dose
-  (`src/quizDoses.js`); guidelines with exactly the same instructions share one card. A labelled
-  pointer to a named guideline ("IV for sedation post intubation: see the ‘post intubation’
-  guideline") gets that guideline's doses. A dose belongs to the nearest medicine named in its
-  line. The Paediatrics section, Croup and Bronchiolitis (`CHILD_ONLY_GUIDELINE_TITLES`) are
-  not searched.
-- Paediatric doses are never tested: lines and sentences only about a child (naming a child and
-  not an adult) are removed, with the lines indented under them.
-- Ratings: Again (back in a few cards), Hard, Good, Easy. Intervals follow SM-2 (named constants
-  at the top of `src/quizSchedule.js`). New medicines per day: 1 to 10, default 2; each brings
-  all of its cards, and a medicine started today keeps its remaining cards. Review cards per
-  day: 10 to 200, default 30 (cards already studied that are due again; a card rated Again
-  today always comes back).
-- "Practise one medicine" (quiz screen) goes through every card of a chosen medicine, any time.
-  Again brings a card back a few cards on; Got it removes it. Practice answers are not saved and
-  do not change the schedule.
-- Progress is saved as one extra entry per medicine, id `quiz-<guideline id>` (its note holds
-  the schedules as JSON), and the two settings as `quiz-settings`. Same save and sync path as the
-  guidelines, so no backend change; they follow the tracker to other phones and add up to 46
-  rows per tracker to the Data sheet. Two phones rating the same medicine at once: the newest
-  save wins for that medicine. Do not edit these rows by hand.
+- Cards are built from the guidelines each time the app starts (`src/quizCards.js`), so a
+  content update changes them with no extra step. Each medicine (section "Medicines", any
+  guideline with an Indications heading) gets one card for each of Indications,
+  Contraindications, Cautions, Common adverse effects, Usual onset of effect, Usual duration of
+  effect and Mechanism of action, plus adult dosage cards written "Medicine – Indication –
+  Dose": one per labelled dose in its own Dosage section (unlabelled steps stay together) and
+  one per row of the CPG 9.3 adult RSI table that names it.
+- A medicine whose Dosage section is missing or says "See the individual guideline"
+  (Adrenaline, Midazolam, Morphine) gets one card per guideline that gives it an adult dose
+  (`src/quizDoses.js`); guidelines with identical instructions share a card. A labelled pointer
+  to a named guideline ("IV for sedation post intubation: see the ‘post intubation’ guideline")
+  gets that guideline's doses. A dose belongs to the nearest medicine named in its line.
+- Paediatric doses are never tested. The Paediatrics section, Croup and Bronchiolitis
+  (`CHILD_ONLY_GUIDELINE_TITLES`) are not searched, and lines or sentences that name a child and
+  not an adult are removed with the lines indented under them.
+- Ratings: Again (back in a few cards), Hard, Good, Easy; intervals follow SM-2 (constants at
+  the top of `src/quizSchedule.js`). New medicines per day: 1 to 10, default 2; each brings all
+  of its cards. Review cards per day: 10 to 200, default 30; a card rated Again today always
+  comes back.
+- "Practise one medicine" goes through every card of a chosen medicine. Nothing is saved and the
+  schedule does not change.
 - A card keeps its schedule while its key stays the same (topic name, dose label, first
-  guideline number of an indication card, or RSI row). If a dose label is reworded in a PDF update, that card starts again as new.
-- If medicine names in the guidelines change, check `TABLE_NAME_OVERRIDES` in `src/quizCards.js`.
+  guideline number of an indication card, or RSI row). A dose label reworded in a PDF update
+  starts that card again as new.
+- If medicine names in the guidelines change, check `TABLE_NAME_OVERRIDES` in
+  `src/quizCards.js`.
 
-## Guideline quiz (feature 9)
+## Guideline quiz
 
-- The list screen's "Guideline quiz" button opens `#guideline-quiz`. Pick a guideline (or
-  Random guideline) and Start. A quizzed guideline's own page also has a Quiz pill beside Review
-  and Complete: it starts that guideline's quiz, and "Back to the guideline" (shown with the
-  animated score ring at the end) returns to the same scroll position and unfolded headings. Everything is built from `content/guidelines.js` when a play
-  starts, with no AI, so a content update changes the quiz with no extra step.
-- Which guidelines: those outside Medicines that have a Backup, Referral and transport or Red
-  flags heading, or "action list"/"checklist" in the title (85 today). Information-only
-  guidelines such as Documentation are left out.
+- Opened from the Quiz tab (pick a guideline or Random guideline) or from a guideline's Quiz
+  pill. From the pill, "Back to the guideline" returns to the same scroll position and unfolded
+  headings. Everything is built from `content/guidelines.js` when a play starts, with no AI.
+- Which guidelines: those outside Medicines with a Backup, Referral and transport or Red flags
+  heading, or "action list" / "checklist" in the title (85 today).
 - Ordering rounds: the top-level bullets from the start of the guideline to the first Backup,
   Referral and transport, Additional information, Red flags, Orange flags or Worsening advice
-  heading. Any other heading, or a short unindented "If …"/"When …" line, starts a new situation;
-  each situation with 2 or more actions is a round. Two distractors are added: actions of other
-  guidelines naming a medicine the round names, then actions of related guidelines
-  (`content/related.js`), never worded the same as this guideline. All cards start in "Your
-  order", shuffled. A card is moved by dragging its grip (left, `src/views/dragCards.js`, pointer
-  events so touch and mouse both work; only the grip drags, so the page still scrolls) or with
-  its up and down arrows (right), and to "Not in this guideline" and back by dragging or with its
-  button. Marking: one mark per card in the longest run
-  in the right order, one per distractor put aside. After Check the guideline's order is shown
-  with the lines under each action. Child-only sentences are removed from card text.
+  heading. Any other heading, or a short unindented "If …" / "When …" line, starts a new
+  situation; each situation with 2 or more actions is a round. Two distractors are added:
+  actions of other guidelines naming a medicine the round names, then actions of related
+  guidelines, never worded the same as this guideline. Cards are moved by dragging the grip
+  (`src/views/dragCards.js`) or with the arrows, and to "Not in this guideline" and back.
+  Marking: one mark per card in the longest run in the right order, one per distractor put
+  aside. Child-only sentences are removed from card text.
 - Number questions (up to 3 a play): a value with a unit in an action line is blanked. Wrong
-  choices are same-unit values (same shape: a range for a range) found anywhere in the guidelines,
-  nearest first (within ten times), otherwise ten times and one tenth; half the time one choice is
-  the right number with a wrong unit (`WRONG_UNITS`). Never a value in the same line. Not asked for
+  choices are same-unit values of the same shape from anywhere in the guidelines, nearest first
+  (within ten times), otherwise ten times and one tenth; half the time one choice is the right
+  number with a wrong unit (`WRONG_UNITS`). Never a value from the same line. Not asked for
   Paediatrics, Croup, Bronchiolitis, child-only lines, lines for ages under 15 or the 0.9% of
   "0.9% sodium chloride". **These rules are to be reviewed** (constants at the top of
   `src/guidelineQuizNumbers.js`).
-- Course-changing questions: which situation an action belongs to (up to 2), which of four is a
-  red flag of this guideline (up to 2; the wrong ones are red flags of other guidelines that
-  share less than 60% of their words with this guideline's flags, so check for ones that are also
-  true here), and "If …, which guideline do you move to?" (up to 2). Conditions inside a sentence
-  ("… if the patient is not improving") are not asked: separating them needs language
-  understanding.
-- The best and the most recent score (percent and date of each) per guideline are saved, as one
-  extra entry `quiz-order-<guideline id>`: same save and sync path, no backend change, up to 85 more rows per
-  tracker in the Data sheet. Ending a play early saves nothing. Starting a
-  play shows both scores, and the list screen shows the most recent one beside the marked date.
+- Course-changing questions (up to 2 of each): which situation an action belongs to; which of
+  four is a red flag of this guideline (the wrong ones are red flags of other guidelines sharing
+  less than 60% of their words with this guideline's flags, so some may also be true here);
+  and "If …, which guideline do you move to?". Conditions inside a sentence are not asked.
+- Finishing a play saves its score as the most recent, and as the best if it is. Ending early
+  saves nothing. Starting a play shows both; the list row shows the most recent.
 
 ## Report a mistake or request
 
-- A "Report a mistake or request" button is under every screen (`index.html`, `src/report.js`).
-  It opens the student's email app with the subject and body filled in from what is on screen:
-  the guideline; the medicines quiz card and its source; or the guideline quiz step with its
-  cards or its question, choices and the app's answer (so generated questions can be checked).
-- Protection, as the repository and site are public: the address is stored as two parts in
-  `FEEDBACK_ADDRESS_PARTS` and joined with "@" only when the button is tapped, so it appears
-  neither in the source nor in the page for address-harvesting robots (a test checks this).
-  The app sends nothing itself (no form, no server), so there is nothing to flood; an email
-  filter on the subject "NZCPG study app:" deals with anything else. `[]` hides the button.
+- A button under every screen, and in the comment panel for one point (`src/report.js`), opens
+  the student's email app with the subject and body filled in from what is on screen, including
+  a quiz question with its choices and the app's answer.
+- The repository and site are public, so the address is stored as two parts in
+  `FEEDBACK_ADDRESS_PARTS` and joined only when the button is tapped (a test checks the page
+  holds no whole address). The app sends nothing itself. `[]` hides the button. Filter email on
+  the subject "NZCPG study app:".
 
-## Publishing an update (feature 7)
+## Publishing new guidelines
 
-- The app reads `version.json` on open and whenever it comes back to the foreground (at most
-  once a minute). If `guidelinesExportedOn` is later than the export date in
-  `content/guidelines.js` it shows "A new version of the guidelines is available. Update now."
-- Tapping "Update now" downloads every file in the `files` list again, then reloads. Nothing
-  reloads by itself, so a note being typed is never interrupted. Unsent edits are kept.
-- After the update, each phone compares the old and new text and tags changed guidelines
-  "Updated" in the list until they are opened on that phone.
-- When you publish new guidelines: commit `content/guidelines.js`, the rebuilt
-  `content/related.js` and `version.json` with the new date **together**. `npm run check` fails
-  if the dates differ or if a file in `src/`, `src/views/`, `content/` is missing from `files`.
-- App code changes alone do not show the banner (Decision T). Phones pick them up on a normal
-  reload once GitHub Pages' cache (about 10 minutes) has expired.
+- The app reads `version.json` on open and on return to the foreground (at most once a minute).
+  If `guidelinesExportedOn` is later than the export date in `content/guidelines.js` it shows
+  "A new version of the guidelines is available. Update now."
+- "Update now" downloads every file in the `files` list again, then reloads. If any download
+  fails it shows a message and does not reload. Nothing reloads by itself. Unsent edits are kept.
+- After the update each phone compares the old and new text and tags changed guidelines
+  "Updated" until they are opened on that phone.
+- Commit `content/guidelines.js`, the rebuilt `content/related.js` and `version.json` with the
+  new date **together**. `npm run check` fails if the dates differ or a file in `src/`,
+  `src/views/` or `content/` is missing from `files`.
 
-## Checking for a new guidelines PDF (feature 6)
+## Daily check for a new guidelines PDF
 
 - Every morning a GitHub Action downloads `https://cpg.stjohn.org.nz/assets/pdf/EAS.pdf` and
-  runs `node scripts/check-pdf.js`. It is a plain script with no AI: the same PDF always gives
-  the same result. It reads the export date and each guideline's newest version-history entry.
-- If nothing changed it does nothing. If the export date or any version entry changed, it
-  rebuilds the content from the PDF (see below), rebuilds `content/related.js`, sets the date in
-  `version.json`, runs `npm run check` and opens a pull request named "New EAS guidelines PDF
-  (date)" with the report. Nothing in the app changes until you merge.
-- One-off setup on GitHub: Settings, Actions, General, Workflow permissions, tick "Allow GitHub
-  Actions to create and approve pull requests". Run it by hand from the Actions tab
-  ("pdf-check", "Run workflow"). Pull requests made by the Action do not start the normal
-  checks by themselves; push any commit to the branch to start them.
-- To run it on your computer: install poppler (`pdftotext`), then
+  runs `node scripts/check-pdf.js`: a plain script, no AI, so the same PDF always gives the same
+  result. It reads the export date and each guideline's newest version-history entry.
+- If either changed, it rebuilds the content (below), rebuilds `content/related.js`, sets the
+  date in `version.json`, runs `npm run check` and opens a pull request "New EAS guidelines PDF
+  (date)" with the report. Nothing in the app changes until the pull request is merged.
+- If nothing changed, it runs `--check`, which fails (a red run) if the converter no longer
+  gives the rebuild recorded in `content/pdf-rebuild.json`.
+- One-off setup: Settings, Actions, General, Workflow permissions, tick "Allow GitHub Actions to
+  create and approve pull requests". Run by hand: Actions tab, "pdf-check", "Run workflow".
+- It skips a PDF when a branch `pdf-update-<date>` already exists. Delete that branch if its
+  pull request was never opened or was closed.
+- Pull requests made by the Action do not start the normal checks; push any commit to the
+  branch to start them.
+- On your computer: install poppler (`pdftotext`), then
   `node scripts/check-pdf.js path/to/EAS.pdf report.md`.
 
 ## Rebuilding the content from the PDF
 
-- `scripts/pdfPages.js` reads every page with MuPDF (the `mupdf` npm package, a development
-  dependency only; it is AGPL-licensed and never shipped with the app). `scripts/pdfContent.js`
-  turns text and shapes into blocks: coloured bands become headings, taller coloured or outlined
-  boxes become boxes, chevrons become bullets, coloured squares with a letter become keys, grey
-  ruled grids become tables. No AI: the same PDF always gives the same content.
+- `scripts/pdfPages.js` reads every page with MuPDF (`mupdf`, a development dependency only;
+  AGPL-licensed, never shipped with the app). `scripts/pdfContent.js` turns text and shapes into
+  blocks: coloured bands become headings, taller coloured or outlined boxes become boxes,
+  chevrons become bullets, coloured squares with a letter become keys, grey ruled grids become
+  tables.
 - Acceptance test: `node scripts/build-guidelines.js path/to/EAS.pdf --check`. For the
   24.09.2026 PDF, 170 of 180 guidelines rebuild exactly; the other 10 (1.3, 1.26, 2.5, 3.14,
-  3.15, 4.2, 5.4, 6.2, 9.7, 12.6) differ in small layout details (subscripts, numbered lists, one
-  table the old content kept as text).
-- Decision Y (Option 2): a guideline whose rebuilt version is the same as last time keeps its
-  published text, so those 10 stay as they are until the PDF changes them. A changed guideline
-  takes the converter's version and keeps its id (progress is kept). It is listed under "Check
-  formatting" if it was one of the 10, or new. New guidelines go into the section of the
-  guideline before them in the PDF; removed ones are dropped (their saved progress stays in the
-  Sheet but is not shown). All of this is listed in the pull request.
-- If you change the converter, re-record the baseline from the PDF the content came from:
-  `node scripts/build-guidelines.js path/to/EAS.pdf --baseline` (otherwise every guideline
-  looks changed on the next update).
-- The converter only writes plain text (with `<` and `&` escaped), `<b>` and `<br>`, so content
-  from the PDF cannot add markup or scripts to the app. `scripts/contentCheck.js` enforces this:
-  the rebuild stops, and `npm run check` fails, if the content holds any other tag, entity,
-  colour format or block shape.
-- On days with no new PDF the daily run also runs `--check`, which fails (a red run) if the
-  converter no longer gives the rebuild recorded in `content/pdf-rebuild.json` for that PDF.
+  3.15, 4.2, 5.4, 6.2, 9.7, 12.6) differ in small layout details.
+- A guideline whose rebuild is the same as last time keeps its published text, so those 10 stay
+  as they are until the PDF changes them. A changed guideline takes the converter's version and
+  keeps its id, so progress is kept; it is listed under "Check formatting" if it is new or one
+  of the 10. New guidelines go into the section of the guideline before them in the PDF.
+  Removed ones are dropped: their progress stays in the Sheet but is not shown, and a renumbered
+  guideline counts as one removed and one new.
+- After changing the converter, re-record the baseline from the PDF the content came from:
+  `node scripts/build-guidelines.js path/to/EAS.pdf --baseline`. Otherwise every guideline looks
+  changed on the next update.
+- Guideline text is put on the page as markup without escaping. That is safe because the
+  converter writes only escaped text, `<b>` and `<br>`, and `scripts/contentCheck.js` stops the
+  rebuild and fails `npm run check` on any other tag, entity, colour format or block shape.
 
-## Content
+## Backend
 
-Guideline text is put on the page as markup without escaping. That is safe because
-`scripts/contentCheck.js` allows only `<b>`, `<br>`, `&lt;`, `&amp;`, hex colours and the six
-known block shapes, and it runs on every rebuild from the PDF and in `npm run check`.
-Search uses the plain words of each guideline (markup removed) and redraws the list 150 ms
-after typing stops. A comment line in the notes starts with the first 70 characters of its
-point, or more when another point of the guideline starts the same way (`src/comments.js`).
-The export date and source line shown on each guideline come from `content/guidelines.js`.
+A small Apps Script program attached to the Google Sheet. The app sends it the passcode and any
+edits; it checks the passcode against the `Mentors` and `Trackers` tabs, reads or writes the
+`Data` tab, and sends back this tracker's entries.
 
-## Backend (what the Apps Script does)
+- Update it: Sheet, Extensions, Apps Script, paste `backend/Code.gs`, then Deploy, Manage
+  deployments, edit, New version. The address stays the same. Needs the V8 runtime.
+- Passcodes are plain text in the Sheet, so keep its sharing limited. Replace the placeholder
+  mentor passcode created by `setup()`; the backend refuses it.
+- The passcode is also kept in the phone's browser and the backend address is in the page.
+  Anyone with a tracker passcode can read and change that tracker, so keep passcodes long.
+- Every request reads the whole `Data` tab. Revisit that (for example one tab per tracker) at
+  about 20,000 rows, roughly 40 full trackers, or when a sync takes more than 3 seconds.
 
-A small program attached to the Google Sheet. The app sends it the passcode and any edits; it
-checks the passcode against the `Mentors` and `Trackers` tabs, reads or writes the `Data` tab,
-and sends back this tracker's entries. To update it: Sheet, Extensions, Apps Script, paste
-`backend/Code.gs`, then Deploy, Manage deployments, edit, New version. The address stays the same.
-Passcodes are stored as plain text in the Sheet, so keep its sharing limited and replace the
-placeholder mentor passcode created by `setup()`: the backend refuses that passcode, and the
-app says to change it in the Mentors tab. The passcode is also kept in the phone's
-browser and the backend address is in the page; anyone with a tracker passcode can read and
-change that tracker, so keep passcodes long and unguessable.
-Every request reads the whole `Data` tab, for all trackers. That is fine at the current size;
-revisit it (for example one tab per tracker) at about 20,000 `Data` rows, roughly 110 full
-trackers, or when a sync takes more than 3 seconds.
+## Behaviour checklist
 
-## Behaviour checklist (same result before and after any tidy-up)
-
-Automated in `tests/app.test.js` unless marked "by hand".
+The same result is expected before and after any tidy-up. Automated in `tests/app.test.js`
+unless marked "by hand".
 
 - Sign in with a tracker passcode and a mentor passcode; a wrong passcode shows the message.
-- Mentor creates a tracker and sees the new passcode; opens an existing tracker.
+- Mentor creates a tracker and sees the new passcode; opens an existing tracker; signs out.
 - List shows 14 sections and 180 guidelines with correct counts; sections stay as left (by hand).
 - Filters (All, Incomplete, Needs review, Complete) and search.
 - Opening a guideline shows all content; headings fold and unfold; previous and next (by hand).
 - Changing status and notes saves, showing "Saving…" then "Saved".
-- A guideline page has only Review and Complete (no Incomplete). Pressing either, even when
-  already selected, sets the date shown on the guideline's row in the list (saved as the extra
-  entry `marked-<id>`); opening the guideline or editing its notes does not change that date.
-- The made-with-AI, study-only notice shows on the passcode, list and guideline screens. "Report
-  a mistake or request" email links show when `FEEDBACK_EMAIL` in `src/constants.js` is set.
-- Two devices on one passcode show the same data after a sync (by hand).
-- Offline: changes are kept and sent when signal returns (by hand).
-- Related guidelines (at most 5) show under a guideline; "Add to queue" and "Add all to queue" fill the Guidelines to learn list (at most 5, shown only on the To learn screen, not on guideline pages); marking a queued guideline Complete or Review ticks it off; the last tick empties the list; the list screen header has a "To learn (n)" tab.
-- Settings (`#settings`, a tab in the list screen header): dark mode for this phone, and "Mark guidelines for review N days after they're marked Complete" (wheel, 0 = off, up to 180), saved with the tracker as the `app-settings` entry and applied whenever a screen is drawn or new data arrives.
-- Comment button adds to the notes and highlights the point.
-- A later date in `version.json` shows the update banner; "Update now" downloads every file and reloads (a failed download shows a message and does not reload); a changed guideline is tagged "Updated" until opened; the list footer shows the export date, last check and study-aid notice.
-- Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
-  new-cards-per-day setting changes the count. Layout on a phone (by hand).
+- Review or Complete sets the marked date on the list row; opening or editing notes does not.
+- The made-with-AI, study-only notice shows on the passcode, list and guideline screens.
 - The report button is under every screen and the page holds no whole email address.
-- Guideline quiz: cards move with the arrows and to and from "Not in this guideline", dragging
-  by the grip works on a phone (by hand); a perfect play scores 100% and
-  saves `quiz-order-<id>`; the picker shows the best score, a new play shows best and most recent, the list row shows the most recent. Layout on a phone (by hand). The
-  Quiz pill on a guideline opens its quiz; finishing shows the score ring and "Back to the
-  guideline" returns to the same place; guidelines with no quiz have no Quiz pill.
-- Switch tracker and sign out.
+- Two phones on one passcode show the same data after a sync (by hand).
+- Offline: changes are kept and sent when signal returns (by hand).
+- Related guidelines (at most 5) show under a guideline; Add to queue, Add all to queue, ticking
+  off and emptying work; the header has a "To learn (n)" tab.
+- Settings: dark mode; the review-after-days wheel saves `app-settings` and is applied when a
+  screen is drawn or new data arrives; Switch tracker.
+- Comment button adds to the notes and highlights the point.
+- A later date in `version.json` shows the banner; "Update now" downloads every file and
+  reloads (a failed download shows a message and does not reload); a changed guideline is
+  tagged "Updated" until opened; the list footer shows the export date, last check and notice.
+- Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
+  new-medicines setting changes the count. Layout on a phone (by hand).
+- Guideline quiz: cards move with the arrows and to and from "Not in this guideline"; dragging
+  by the grip on a phone (by hand); a perfect play scores 100% and saves `quiz-order-<id>`; the
+  picker shows the best score, a new play shows best and most recent, the list row the most
+  recent; the Quiz pill opens the quiz and "Back to the guideline" returns to the same place;
+  guidelines with no quiz have no pill. Layout on a phone (by hand).

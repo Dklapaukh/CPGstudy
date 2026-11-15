@@ -126,8 +126,8 @@ export const QUIZ_AGAIN_GAP = 3;
 export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy' };
 
 // Guideline quiz (feature 9): put a guideline's actions in order, then number and
-// course-of-treatment questions. Only the best score per guideline is saved, as one extra entry
-// (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id), so it needs no backend change.
+// course-of-treatment questions. The best and most recent score per guideline are saved, as one
+// extra entry (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id), so it needs no backend change.
 export const GUIDELINE_QUIZ_HASH = 'guideline-quiz';
 export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';
 
