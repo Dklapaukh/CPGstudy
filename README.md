@@ -145,8 +145,7 @@ changing the same entry before syncing keep only the newer one.
   (within ten times), otherwise ten times and one tenth; half the time one choice is the right
   number with a wrong unit (`WRONG_UNITS`). Never a value from the same line. Not asked for
   Paediatrics, Croup, Bronchiolitis, child-only lines, lines for ages under 15 or the 0.9% of
-  "0.9% sodium chloride". **These rules are to be reviewed** (constants at the top of
-  `src/guidelineQuizNumbers.js`).
+  "0.9% sodium chloride". Constants are at the top of `src/guidelineQuizNumbers.js`.
 - Course-changing questions (up to 2 of each): which situation an action belongs to; which of
   four is a red flag of this guideline (the wrong ones are red flags of other guidelines sharing
   less than 60% of their words with this guideline's flags, so some may also be true here);
@@ -189,8 +188,15 @@ changing the same entry before syncing keep only the newer one.
   gives the rebuild recorded in `content/pdf-rebuild.json`.
 - One-off setup: Settings, Actions, General, Workflow permissions, tick "Allow GitHub Actions to
   create and approve pull requests". Run by hand: Actions tab, "pdf-check", "Run workflow".
-- It skips a PDF when a branch `pdf-update-<date>` already exists. Delete that branch if its
-  pull request was never opened or was closed.
+- It skips a PDF only while a pull request for it is open. A leftover branch with no open pull
+  request is deleted and built again, so closing a pull request without merging brings a new
+  one the next morning. The pull request is assigned to the repository owner.
+- Test run: Actions tab, "pdf-check", "Run workflow", tick "Test run" (or push a tag named
+  `test-pdf-check-<anything>`). It treats today's PDF as new and opens a pull request named
+  "TEST" from the branch `pdf-update-test`. Its "Files changed" should be empty. Close it and
+  delete the branch.
+- GitHub pauses scheduled workflows after 60 days without a commit: press "Enable workflow" on
+  the Actions tab.
 - Pull requests made by the Action do not start the normal checks; push any commit to the
   branch to start them.
 - On your computer: install poppler (`pdftotext`), then

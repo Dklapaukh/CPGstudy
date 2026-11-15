@@ -56,7 +56,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 6    | Daily check of the EAS PDF and rebuild of the content from it | Built                                    |
 | 7    | "Update now" prompt for new guidelines                        | Built                                    |
 | 8    | Medicines quiz (flashcards, spaced repetition)                | Built                                    |
-| 9    | Guideline quiz (ordering, number and course-changing questions) | Built; question rules to be reviewed   |
+| 9    | Guideline quiz (ordering, number and course-changing questions) | Built; red-flag questions to be removed |
 
 ### 8.2 Decisions in force
 
@@ -149,47 +149,52 @@ behaves are in the README.
 
 ### 8.3 Open decisions (owner)
 
-1. **Guideline quiz question quality.** Review the number rules (Z14) and the red-flag wrong
-   answers: note any question whose "wrong" answer is also right, and any round whose order is
-   not meaningful, and say which rounds or guidelines to drop.
-2. **Medicines quiz dose cards.** Skim the Adrenaline (15), Midazolam (5) and Morphine (3)
-   indication cards and say which to drop (for example Adrenaline – Bleeding following Trauma
-   gives the topical dilution).
-3. **Mentor question editor.** Options were given on 14 Nov 2026; none chosen, nothing built.
-4. **Quiz pill on guidelines with no quiz.** They show none now; the alternative is a disabled
-   pill.
-5. **Publishing St John's guideline text publicly.** The repository and site are public.
-   Permission was confirmed for downloading the PDF (I3), not recorded for republishing it.
-6. **Each item in 8.5**: fix, or accept.
+1. **Decision D again: how a new PDF is published** (asked 16 Nov 2026, unanswered). The owner
+   wants the app to update by itself when the guidelines change. Today a pull request opens and
+   nothing reaches phones until the owner merges it; then each phone shows a banner and updates
+   when "Update now" is tapped (Decision U).
+2. **Medicines quiz dose cards to drop.** The 23 Adrenaline, Midazolam and Morphine indication
+   cards were listed for the owner on 16 Nov 2026; no answer yet.
+
+Answered 16 Nov 2026:
+
+- **Guideline quiz, numbers:** the dose-number questions are good as they are (Z14 review
+  closed).
+- **Guideline quiz, red flags: not to be tested as a memory item**, because red flags are always
+  checked. **To do:** remove the "Which of these is a red flag" questions. Possible replacement,
+  to be designed with the owner: where a guideline gives the rationale for a red flag under a
+  heading that matches the flag, ask the student to match the rationale to the flag.
+- **Mentor question editor:** not needed, given how questions are built.
+- **Quiz pill:** guidelines with no quiz show no pill (a disabled pill would confuse).
+- **Publishing St John's text:** the owner has permission from their medical director.
+- **Real-phone checks:** all done and passed.
 
 ### 8.4 Open tasks (owner, by hand)
 
 1. **Redeploy `backend/Code.gs`** if not done since 11 Nov 2026 (README, "Backend"). Until then
    the live backend may still accept the placeholder mentor passcode. Not verifiable from here.
 2. **Check that the placeholder mentor passcode was changed** in the Mentors tab.
-3. **Real-phone checks never recorded as done:** sections staying open; two phones on one
-   passcode; offline edits sent later; ring animation; medicines quiz and guideline quiz layout;
-   dragging by the grip; dark mode on guideline text; header, Settings and comment panel; list
-   row scores; one test report email; an end-to-end update (set a later date in `version.json`,
-   tap Update now, put it back).
-4. **Email filter** on the subject "NZCPG study app:" for the report address.
-5. **Delete nine merged branches on GitHub** (`feature-6-converter`, `feature-6-pdf-check`,
-   `feature-quiz`, `guideline-quiz`, `layout-and-switch-back`, `ordering-and-report`,
-   `quiz-by-medicine`, `quiz-practise-medicine`, `review-items`) and turn on "Automatically
-   delete head branches" (see 8.5 item 4).
-6. **Morphine 14.32:** tell St John the PDF page is cut short, or check the page now and then.
-7. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
-   request before merging. That run is the first full test of the pipeline.
+3. **Email filter** on the subject "NZCPG study app:" for the report address.
+4. **Delete nine merged branches on GitHub** (all fully merged, checked 16 Nov 2026):
+   `feature-6-converter`, `feature-6-pdf-check`, `feature-quiz`, `guideline-quiz`,
+   `layout-and-switch-back`, `ordering-and-report`, `quiz-by-medicine`,
+   `quiz-practise-medicine`, `review-items`.
+5. **Morphine 14.32:** the owner is telling the guideline coordinator that the PDF page is cut
+   short.
+6. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
+   request before merging.
+7. **If commits stop for 60 days**, GitHub pauses the daily PDF check (8.5 item 5): press
+   "Enable workflow" on the Actions tab, "pdf-check".
 
-### 8.5 Features that can fail without telling anyone (found 15 Nov 2026, none fixed)
+### 8.5 Features that can fail without telling anyone (found 15 Nov 2026)
 
 | #   | What happens                                                                                                                                                                                                                                              | Where                                        |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | 1   | **Notes longer than 5000 characters are cut by the backend with no warning.** The phone that typed them keeps the full text and shows "Saved"; every other phone and the mentor get the cut version, and the tail is lost when one of them edits.          | `cleanChange_` in `backend/Code.gs`; the notes box has no length limit |
 | 2   | **"Saved" is shown even when the backend ignored a change.** The reply says how many changes were saved; the app never reads it. A change with an older time than the Sheet's, or an id the backend refuses, is dropped and then removed from the queue. | `syncNow` in `src/sync.js`                   |
 | 3   | **Unsent edits are deleted without asking** when a sync is answered "passcode not found" (a passcode changed or removed in the Sheet). The message is shown, but the edits are gone.                                                                      | `syncNow`, `signOut` in `src/navigation.js`  |
-| 4   | **The daily PDF check can skip a new PDF for ever while showing green.** It skips when a branch `pdf-update-<date>` exists. That branch is left behind if opening the pull request failed (permission not ticked), or the pull request was closed.        | `.github/workflows/pdf-check.yml`            |
-| 5   | **GitHub switches off scheduled workflows after 60 days with no repository activity**, so the PDF check stops once development stops. GitHub sends one email.                                                                                              | GitHub                                       |
+| 4   | **Fixed 16 Nov 2026.** The daily PDF check skipped a new PDF for ever, with a green run, when a branch `pdf-update-<date>` was left behind. It now skips only while a pull request for that PDF is open, and deletes a leftover branch and builds again. | `.github/workflows/pdf-check.yml` |
+| 5   | **GitHub switches off scheduled workflows after 60 days with no repository activity**, so the PDF check stops once commits stop. Not worked around: the usual keep-alive tricks exist to defeat this rule and may break GitHub's terms. See 8.4 task 7. | GitHub |
 | 6   | **A blank page with no message** when any app file fails to load: no signal on open (no service worker), or a phone loading a mix of old and new files in the roughly 10 minutes after a push. There is no error handler and no fallback text.            | `index.html`, `src/main.js`                  |
 | 7   | **App code updates are never announced** (Decision T). A phone that keeps the page open runs old code until it is reloaded.                                                                                                                                | `src/updateState.js`                         |
 | 8   | **A damaged saved entry is read as empty**, and the next save replaces it: a medicine's whole quiz schedule, the queue, a setting. Two phones rating the same medicine before syncing: the newer save replaces the other's ratings.                       | `parseSchedules`, `parseQueue`, `storedSettings` |
@@ -248,12 +253,11 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Status
 
-**15 Nov 2026.** Features 3 to 9 are built and live on `main`; 127 tests pass. No feature is in
-progress. The daily PDF check has been running green ("No change").
+**16 Nov 2026.** Features 3 to 9 are built and live on `main`. No feature is in progress.
 
-Last change: documentation review. The old plan was cut down to this file, the README and change
-log were corrected and shortened, two misplaced Prettier files were deleted, and sections 8.3 to
-8.5 were written (open decisions, owner tasks, silent failures). No app code changed.
+Last change: the daily PDF check was made safer and testable. It no longer skips a PDF because
+of a leftover branch, assigns the pull request to the owner (a notification), and has a test run
+(README, "Daily check").
 
-**Next step:** the owner goes through 8.3 to 8.5. Suggested first fixes, each small: 8.5 items
-1 to 4 and 6.
+**Next steps:** the owner answers 8.3 items 1 and 2. Then, in a fresh chat: remove the red-flag
+questions and design the rationale question (8.3), and fix 8.5 items 1 to 3 and 6.

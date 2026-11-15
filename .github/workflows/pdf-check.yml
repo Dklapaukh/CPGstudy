@@ -5,12 +5,26 @@
 # opens a pull request with all of it and a report. Nothing is published until you merge.
 # When nothing has changed it confirms that the converter still rebuilds the recorded content.
 # Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+#
+# Test run: pretends the last scan was of an older PDF, so every step of a real update runs
+# against today's PDF and a pull request named "TEST" is opened (branch pdf-update-test). Its
+# "Files changed" should be empty. Start one from the Actions tab (Run workflow, tick "Test
+# run") or by pushing a tag named test-pdf-check-<anything>. Close the pull request afterwards.
 name: pdf-check
 on:
   schedule:
     # 18:23 UTC is 7:23 am in New Zealand during daylight saving (6:23 am in winter).
     - cron: '23 18 * * *'
   workflow_dispatch:
+    inputs:
+      test_run:
+        description: 'Test run: pretend the PDF is new and open a TEST pull request'
+        type: boolean
+        default: false
+  push:
+    tags: ['test-pdf-check-*']
+env:
+  TEST_RUN: ${{ inputs.test_run == true || github.event_name == 'push' }}
 permissions:
   contents: write
   pull-requests: write
@@ -27,6 +41,10 @@ jobs:
         run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils
       - name: Download the EAS PDF
         run: curl -fsSL --retry 3 -o "$RUNNER_TEMP/EAS.pdf" https://cpg.stjohn.org.nz/assets/pdf/EAS.pdf
+      - name: Pretend the last scan was of an older PDF (test run only)
+        if: env.TEST_RUN == 'true'
+        run: |
+          sed -i 's/"exportedOn": "[^"]*"/"exportedOn": "01.01.2000"/' content/pdf-status.json
       - name: Compare with the last scan
         id: scan
         run: node scripts/check-pdf.js "$RUNNER_TEMP/EAS.pdf" "$RUNNER_TEMP/report.md"
@@ -37,20 +55,30 @@ jobs:
         run: |
           npm install
           node scripts/build-guidelines.js "$RUNNER_TEMP/EAS.pdf" --check
-      - name: Check whether a pull request already exists for this PDF
+      # Skips only while a pull request for this PDF is open. A branch with no open pull request
+      # (opening it failed, or it was closed without merging) is deleted and built again, so a
+      # leftover branch can never hide a new PDF.
+      - name: Check whether a pull request is already open for this PDF
         if: steps.scan.outputs.changed == 'true'
         id: branch
         env:
+          GH_TOKEN: ${{ github.token }}
           EXPORTED_ON: ${{ steps.scan.outputs.exported_on }}
         run: |
           branch="pdf-update-${EXPORTED_ON//./-}"
+          if [ "$TEST_RUN" = "true" ]; then branch="pdf-update-test"; fi
           echo "name=$branch" >> "$GITHUB_OUTPUT"
-          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
-            echo "A pull request branch for this PDF already exists: $branch"
+          open_count=$(gh pr list --head "$branch" --state open --json number --jq length)
+          if [ "$open_count" != "0" ]; then
+            echo "::notice::A pull request for this PDF is already open (branch $branch). Merge it to publish the update."
             echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "Deleting the leftover branch $branch (it has no open pull request)."
+            git push origin --delete "$branch"
+          fi
+          echo "exists=false" >> "$GITHUB_OUTPUT"
       - name: Rebuild the content from the PDF
         if: steps.scan.outputs.changed == 'true' && steps.branch.outputs.exists == 'false'
         run: |
@@ -76,9 +104,26 @@ jobs:
           git checkout -b "$BRANCH"
           git add content/pdf-status.json content/pdf-rebuild.json content/guidelines.js \
             content/related.js version.json
-          git commit -m "Guidelines rebuilt from the EAS PDF exported $EXPORTED_ON"
+          title="New EAS guidelines PDF ($EXPORTED_ON)"
+          commit_options=""
+          if [ "$TEST_RUN" = "true" ]; then
+            title="TEST of the guidelines PDF update (close without merging)"
+            commit_options="--allow-empty" # the same PDF rebuilt should change nothing
+          fi
+          git diff --cached --stat > "$RUNNER_TEMP/changed-files.txt"
+          git commit $commit_options -m "Guidelines rebuilt from the EAS PDF exported $EXPORTED_ON"
           git push origin "$BRANCH"
           {
+            if [ "$TEST_RUN" = "true" ]; then
+              echo "**This is a test run, not a new PDF.** It rebuilt the content from today's PDF"
+              echo "as if it were new. Files changed by the rebuild (none is the expected result):"
+              echo
+              echo '```'
+              cat "$RUNNER_TEMP/changed-files.txt"
+              echo '```'
+              echo "Close this pull request and delete its branch."
+              echo
+            fi
             echo "A new EAS guidelines PDF was found and the content was rebuilt from it."
             echo "Nothing is published until this pull request is merged."
             echo
@@ -101,5 +146,9 @@ jobs:
             echo "- [ ] Check the section of any new guideline."
             echo "- [ ] Merge. Phones then show \"A new version of the guidelines is available\"."
           } > "$RUNNER_TEMP/body.md"
-          gh pr create --head "$BRANCH" --title "New EAS guidelines PDF ($EXPORTED_ON)" \
-            --body-file "$RUNNER_TEMP/body.md"
+          url=$(gh pr create --head "$BRANCH" --title "$title" --body-file "$RUNNER_TEMP/body.md")
+          echo "Opened $url"
+          # Assigning the owner sends them a notification. Not essential, so a failure only warns.
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/${url##*/}/assignees" \
+            -f "assignees[]=$GITHUB_REPOSITORY_OWNER" > /dev/null ||
+            echo "::warning::Could not assign the pull request to $GITHUB_REPOSITORY_OWNER."

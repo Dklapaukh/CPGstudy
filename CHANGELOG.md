@@ -2,6 +2,10 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Daily PDF check: a leftover `pdf-update-<date>` branch no longer hides a new PDF
+  (it skips only while a pull request is open); the pull request is assigned to the owner; new
+  test run that treats today's PDF as new and opens a "TEST" pull request. Owner's answers of
+  16 Nov recorded in the plan (8.3). No app change.
 - 2026-11-15: Documentation review, no app change. The plan file cut from 83 KB to its working
   rules, decisions in force, style guide and status, with new lists of open decisions, owner
   tasks and features that can fail silently (sections 8.3 to 8.5). README corrected (file table,
