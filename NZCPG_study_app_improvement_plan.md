@@ -178,7 +178,8 @@ Answered 16 Nov 2026:
 4. **Delete nine merged branches on GitHub** (all fully merged, checked 16 Nov 2026):
    `feature-6-converter`, `feature-6-pdf-check`, `feature-quiz`, `guideline-quiz`,
    `layout-and-switch-back`, `ordering-and-report`, `quiz-by-medicine`,
-   `quiz-practise-medicine`, `review-items`.
+   `quiz-practise-medicine`, `review-items`; and the two left by the 16 Nov test run,
+   `pdf-update-test` and `test-pdf-check`. Claude's workspace cannot delete branches.
 5. **Morphine 14.32:** the owner is telling the guideline coordinator that the PDF page is cut
    short.
 6. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
