@@ -365,6 +365,36 @@ test('Practise one medicine goes through its cards without changing the schedule
   await sleep(30);
 });
 
+test('Practice level limits the quiz to the medicines of one ATP and is saved', async () => {
+  dom.window.location.hash = '#quiz';
+  await sleep(30);
+  const level = $('#quiz-practice-level');
+  assert.deepEqual(
+    [...level.options].map((option) => option.text),
+    ['All levels', 'EMT', 'Paramedic', 'ICP', 'CCP'],
+  );
+  assert.equal(level.value, '', 'all levels by default');
+  const medicineNames = () => [...$('#quiz-practice-medicine').options].map((o) => o.text);
+  const allCount = medicineNames().length;
+  level.value = 'EMT';
+  level.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  const emtNames = medicineNames();
+  assert.ok(emtNames.length < allCount);
+  assert.ok(
+    emtNames.some((name) => /^Aspirin /.test(name)),
+    'EMT medicines stay',
+  );
+  assert.ok(!emtNames.some((name) => /^(Adenosine|Fentanyl) /.test(name)), 'others hidden');
+  await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
+  assert.equal(JSON.parse(stored['quiz-settings'].n).practiceLevel, 'EMT', 'saved to the tracker');
+  const reset = $('#quiz-practice-level');
+  reset.value = '';
+  reset.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.equal(medicineNames().length, allCount);
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
 /** Plays the current ordering round perfectly with the buttons: distractors aside, then arrows. */
 function playRoundPerfectly(step) {
   step.cards.forEach((card, index) => {

@@ -4,13 +4,16 @@
  * settings are another (QUIZ_SETTINGS_ENTRY_ID), so they are saved, uploaded and merged by the same
  * code as the guidelines, work offline and follow the tracker to another phone.
  * The study session itself (state.quiz) is kept in memory only.
- * Depends on state.js, sync.js, guidelines.js, logic.js, quizCards.js and quizSchedule.js.
+ * Depends on state.js, sync.js, guidelines.js, logic.js, quizCards.js, quizSchedule.js,
+ * practiceLevels.js and content/practice-level-overrides.js.
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
 import { sections, guidelines } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
 import { buildQuizCards } from './quizCards.js';
+import { readPracticeLevelTable, medicinePracticeLevels } from './practiceLevels.js';
+import { practiceLevelOverrides } from '../content/practice-level-overrides.js';
 import {
   dayNumber,
   nextSchedule,
@@ -28,6 +31,8 @@ import {
   QUIZ_NEW_MEDICINES_PER_DAY,
   QUIZ_REVIEWS_PER_DAY,
   QUIZ_AGAIN_GAP,
+  ATP_GUIDELINE_ID,
+  ALL_PRACTICE_LEVELS,
 } from './constants.js';
 
 let cachedCards = null;
@@ -36,6 +41,31 @@ let cachedCards = null;
 export function quizCards() {
   if (!cachedCards) cachedCards = buildQuizCards(sections, QUIZ_SECTION_NAME);
   return cachedCards;
+}
+
+let cachedLevels = null;
+
+/** The 1.1 table's practice levels and each medicine's levels: { levels, byMedicine }. */
+function practiceLevelData() {
+  if (!cachedLevels) {
+    const atpGuideline = guidelines.find((guideline) => guideline.id === ATP_GUIDELINE_ID);
+    const table = atpGuideline ? readPracticeLevelTable(atpGuideline) : { levels: [], rows: [] };
+    const medicines = guidelines.filter((guideline) => guideline.sec === QUIZ_SECTION_NAME);
+    const byMedicine = medicinePracticeLevels(medicines, table, practiceLevelOverrides);
+    cachedLevels = { levels: table.levels, byMedicine };
+  }
+  return cachedLevels;
+}
+
+/** The practice levels a learner can choose, in table order, e.g. ['EMT', 'Paramedic', …]. */
+export const practiceLevels = () => practiceLevelData().levels;
+
+/** The cards of the medicines the chosen practice level may give (all cards when none chosen). */
+export function studyCards() {
+  const level = getQuizSettings().practiceLevel;
+  if (level === ALL_PRACTICE_LEVELS) return quizCards();
+  const { byMedicine } = practiceLevelData();
+  return quizCards().filter((card) => (byMedicine[card.medicineId] || []).includes(level));
 }
 
 /** Today as a local day number. */
@@ -63,11 +93,11 @@ function medicineSchedules(medicineId) {
   return entry ? parseSchedules(entry.n) : {};
 }
 
-/** Schedules of every card that has been answered, by card id. */
-export function allSchedules() {
+/** Schedules of every card in `cards` (default: all) that has been answered, by card id. */
+export function allSchedules(cards = quizCards()) {
   const byMedicine = {};
   const schedules = {};
-  for (const card of quizCards()) {
+  for (const card of cards) {
     if (!byMedicine[card.medicineId])
       byMedicine[card.medicineId] = medicineSchedules(card.medicineId);
     const schedule = byMedicine[card.medicineId][card.key];
@@ -94,26 +124,36 @@ function storedSettings() {
   }
 }
 
-/** The daily-limit settings: { newMedicinesPerDay, reviewsPerDay }, each within its range. */
+/** A stored practice level if it is one of the 1.1 table's levels, otherwise all levels. */
+const validPracticeLevel = (value) =>
+  practiceLevels().includes(value) ? value : ALL_PRACTICE_LEVELS;
+
+/**
+ * The quiz settings: { newMedicinesPerDay, reviewsPerDay, practiceLevel }, the limits each
+ * within its range and practiceLevel one of practiceLevels() or ALL_PRACTICE_LEVELS.
+ */
 export function getQuizSettings() {
   const stored = storedSettings();
-  const settings = {};
+  const settings = { practiceLevel: validPracticeLevel(stored.practiceLevel) };
   for (const [name, limits] of Object.entries(QUIZ_SETTINGS)) {
     settings[name] = clampSetting(stored[name], limits);
   }
   return settings;
 }
 
-/** Saves one daily-limit setting by name; unknown names are ignored. */
+/** Saves one quiz setting by name (a daily limit or 'practiceLevel'); unknown names are ignored. */
 export function saveQuizSetting(name, value) {
-  if (!QUIZ_SETTINGS[name]) return;
-  const settings = { ...getQuizSettings(), [name]: clampSetting(value, QUIZ_SETTINGS[name]) };
+  let checked;
+  if (name === 'practiceLevel') checked = validPracticeLevel(value);
+  else if (QUIZ_SETTINGS[name]) checked = clampSetting(value, QUIZ_SETTINGS[name]);
+  else return;
+  const settings = { ...getQuizSettings(), [name]: checked };
   saveNoteEntry(QUIZ_SETTINGS_ENTRY_ID, JSON.stringify(settings));
 }
 
-/** What can be studied today (see studyPlan in quizSchedule.js). */
+/** What can be studied today at the chosen practice level (see studyPlan in quizSchedule.js). */
 export const currentStudyPlan = () =>
-  studyPlan(quizCards(), allSchedules(), today(), getQuizSettings());
+  studyPlan(studyCards(), allSchedules(), today(), getQuizSettings());
 
 /** Starts a study session: due cards first, then today's new medicines' cards. */
 export function startSession() {
@@ -121,11 +161,14 @@ export function startSession() {
   state.quiz = { queue: [...plan.dueIds, ...plan.newIds], revealed: false, answered: 0 };
 }
 
-/** The medicines that have quiz cards, in guideline order: [{ id, name, cardCount }]. */
-export function quizMedicines() {
+/**
+ * The medicines that have quiz cards, in guideline order: [{ id, name, cardCount }]. Only those
+ * of the chosen practice level, unless `everyLevel` is true.
+ */
+export function quizMedicines(everyLevel = false) {
   const medicines = [];
   const byId = {};
-  for (const card of quizCards()) {
+  for (const card of everyLevel ? quizCards() : studyCards()) {
     if (!byId[card.medicineId]) {
       const guideline = guidelines.find((candidate) => candidate.id === card.medicineId);
       byId[card.medicineId] = {

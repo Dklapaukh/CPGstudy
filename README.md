@@ -61,7 +61,7 @@ path, so new features need no backend change. Do not edit these rows by hand.
 | `review-queue`              | The Guidelines to learn list, as JSON                 | 1                |
 | `app-settings`              | "Mark for review after N days", as JSON               | 1                |
 | `quiz-<medicine id>`        | That medicine's card schedules, as JSON               | up to 45         |
-| `quiz-settings`             | New medicines and review cards per day, as JSON       | 1                |
+| `quiz-settings`             | Daily limits and practice level (ATP), as JSON        | 1                |
 | `quiz-order-<guideline id>` | Guideline quiz best and most recent score, as JSON    | up to 85         |
 
 The backend cuts a note at 5000 characters. A whole entry is replaced on save, so two phones
@@ -118,6 +118,13 @@ changing the same entry before syncing keep only the newer one.
   comes back.
 - "Practise one medicine" goes through every card of a chosen medicine. Nothing is saved and the
   schedule does not change.
+- Practice level (ATP): All levels (default), EMT, Paramedic, ICP or CCP. A level limits daily
+  study, the card totals and the practice list to the medicines that ATP may give by any route,
+  read from the table in CPG 1.1 (`src/practiceLevels.js`). A row of that table belongs to a
+  medicine when every word of its name (the words before the first route or bracket, e.g.
+  "Magnesium IV") is in the medicine's title. Exceptions are in
+  `content/practice-level-overrides.js` (Glucose Gel, the two GTN guidelines); a test fails if a
+  medicine matches no row and has no override. Schedules of hidden medicines are kept.
 - A card keeps its schedule while its key stays the same (topic name, dose label, first
   guideline number of an indication card, or RSI row). A dose label reworded in a PDF update
   starts that card again as new.
@@ -264,7 +271,8 @@ unless marked "by hand".
   reloads (a failed download shows a message and does not reload); a changed guideline is
   tagged "Updated" until opened; the list footer shows the export date, last check and notice.
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
-  new-medicines setting changes the count. Layout on a phone (by hand).
+  new-medicines setting changes the count; Practice level EMT hides Adenosine and Fentanyl from
+  the practice list. Layout on a phone (by hand).
 - Guideline quiz: cards move with the arrows and to and from "Not in this guideline"; dragging
   by the grip on a phone (by hand); a perfect play scores 100% and saves `quiz-order-<id>`; the
   picker shows the best score, a new play shows best and most recent, the list row the most

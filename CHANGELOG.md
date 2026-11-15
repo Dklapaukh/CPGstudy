@@ -2,6 +2,9 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Medicines quiz: Practice level (ATP) setting (All levels, EMT, Paramedic, ICP,
+  CCP) limits daily study and the practice list to that ATP's medicines, read from the CPG 1.1
+  table. Saved with the daily limits.
 - 2026-11-16: Daily PDF check: a leftover `pdf-update-<date>` branch no longer hides a new PDF
   (it skips only while a pull request is open); the pull request is assigned to the owner; new
   test run that treats today's PDF as new and opens a "TEST" pull request. Owner's answers of

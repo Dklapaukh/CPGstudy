@@ -6,18 +6,19 @@
 import { state } from '../state.js';
 import { escapeHtml } from '../logic.js';
 import {
-  quizCards,
   allSchedules,
   currentStudyPlan,
   currentCard,
   previewRatings,
   getQuizSettings,
   quizMedicines,
+  practiceLevels,
+  studyCards,
   QUIZ_SETTINGS,
 } from '../quizState.js';
 import { intervalText } from '../quizSchedule.js';
 import { blockHtml } from './templates.js';
-import { RATING, QUIZ_HASH } from '../constants.js';
+import { RATING, QUIZ_HASH, ALL_PRACTICE_LEVELS } from '../constants.js';
 
 const app = document.getElementById('app');
 
@@ -57,6 +58,24 @@ function settingSelectHtml({ name, id, label }, settings) {
     <select id="${id}" data-setting="${name}">${options}</select></label>`;
 }
 
+/**
+ * The "Practice level" dropdown: all medicines, or only those the chosen ATP may give (from the
+ * table in guideline 1.1). Saved with the daily limits, so it follows the tracker.
+ */
+function practiceLevelSelectHtml(settings) {
+  const choices = [{ value: ALL_PRACTICE_LEVELS, label: 'All levels' }].concat(
+    practiceLevels().map((level) => ({ value: level, label: level })),
+  );
+  const options = choices
+    .map(({ value, label }) => {
+      const selected = value === settings.practiceLevel ? ' selected' : '';
+      return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(label)}</option>`;
+    })
+    .join('');
+  return `<label class="quiz-setting">Practice level (ATP)
+    <select id="quiz-practice-level" data-setting="practiceLevel">${options}</select></label>`;
+}
+
 /** The line of today's numbers, for example "12 cards due · 2 new medicines (31 cards) today". */
 function countsText(plan) {
   const medicines = plural(plan.newMedicineCount, 'new medicine');
@@ -86,15 +105,15 @@ function practicePickerHtml() {
 /** The line shown after a session ends. */
 function finishedHtml() {
   if (!state.quiz || !state.quiz.answered) return '';
-  const medicine = quizMedicines().find((m) => m.id === state.quiz.practiceMedicineId);
+  const medicine = quizMedicines(true).find((m) => m.id === state.quiz.practiceMedicineId);
   const what = medicine ? `Practice of ${escapeHtml(medicine.name)} finished` : 'Session finished';
   return `<p class="quiz-finished">${what}: ${plural(state.quiz.answered, 'answer')}.</p>`;
 }
 
 function overviewHtml() {
   const plan = currentStudyPlan();
-  const cards = quizCards();
-  const learnt = Object.keys(allSchedules()).length;
+  const cards = studyCards();
+  const learnt = Object.keys(allSchedules(cards)).length;
   const waiting = plan.dueIds.length + plan.newIds.length;
   const finished = finishedHtml();
   const startButton = waiting
@@ -102,6 +121,7 @@ function overviewHtml() {
     : '<p class="empty-message">Nothing left to study today. Come back tomorrow.</p>';
   const settings = getQuizSettings();
   return `${finished}
+    ${practiceLevelSelectHtml(settings)}
     <p class="quiz-counts">${countsText(plan)}</p>
     ${startButton}
     <p class="quiz-totals">${learnt} of ${cards.length} cards started</p>

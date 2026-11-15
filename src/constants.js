@@ -117,6 +117,10 @@ export const QUIZ_HASH = 'quiz';
 export const QUIZ_ENTRY_PREFIX = 'quiz-';
 export const QUIZ_SETTINGS_ENTRY_ID = 'quiz-settings';
 export const QUIZ_SECTION_NAME = 'Medicines';
+// Guideline 1.1, whose table lists the medicines of each practice level (ATP). The quiz can be
+// limited to one level; '' (the default) means every medicine.
+export const ATP_GUIDELINE_ID = 'cpg-1-1';
+export const ALL_PRACTICE_LEVELS = '';
 // Daily limits, set on the quiz screen (Decisions Z6 and Z7). New cards come a whole medicine
 // at a time; reviews are cards already studied that are due again.
 export const QUIZ_NEW_MEDICINES_PER_DAY = { MIN: 1, MAX: 10, STEP: 1, DEFAULT: 2 };

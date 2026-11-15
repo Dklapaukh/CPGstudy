@@ -134,6 +134,9 @@ behaves are in the README.
   elsewhere) get one adult-dose card per guideline that doses them, written "Medicine –
   Indication – Dose"; guidelines with identical instructions share a card.
 - No paediatric doses anywhere.
+- Z17 (owner, 16 Nov 2026): the quiz can be limited to one practice level (ATP) from the CPG
+  1.1 table: EMT, Paramedic, ICP or CCP. A medicine counts for a level if that level may give it
+  by any route (so EMTs still see Adrenaline's IV cards); cards are not filtered by route.
 - Z11: Morphine 14.32 is cut short in St John's PDF itself (ends after Contraindications); wait
   for St John to fix it.
 
@@ -257,6 +260,8 @@ Goal: a programmer who does not know the project can read any function once and 
 ## 13. Status
 
 **16 Nov 2026.** Features 3 to 9 are built and live on `main`. No feature is in progress.
+
+Latest: the Medicines quiz has a Practice level (ATP) filter (Z17), live on `main`.
 
 Last change: the daily PDF check was made safer and testable. It no longer skips a PDF because
 of a leftover branch, assigns the pull request to the owner (a notification), and has a test run
