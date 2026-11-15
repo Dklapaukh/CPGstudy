@@ -161,9 +161,11 @@ Answered 16 Nov 2026:
 - **Guideline quiz, numbers:** the dose-number questions are good as they are (Z14 review
   closed).
 - **Guideline quiz, red flags: not to be tested as a memory item**, because red flags are always
-  checked. **To do:** remove the "Which of these is a red flag" questions. Possible replacement,
-  to be designed with the owner: where a guideline gives the rationale for a red flag under a
-  heading that matches the flag, ask the student to match the rationale to the flag.
+  checked. **To do:** remove the "Which of these is a red flag" questions. The owner's idea of
+  matching a flag to its explanation was checked and **is not recommended**: only 4 guidelines
+  (6.10, 13.2, 13.6, 13.7) explain their red flags (a plain "Red flags" line under Additional
+  information), and the explanations do not pair one-to-one with the flags, so a script cannot
+  mark an answer reliably. Awaiting the owner's confirmation.
 - **Mentor question editor:** not needed, given how questions are built.
 - **Quiz pill:** guidelines with no quiz show no pill (a disabled pill would confuse).
 - **Publishing St John's text:** the owner has permission from their medical director.
