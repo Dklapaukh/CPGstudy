@@ -2,6 +2,9 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Plan for feature 11 (ATP filter by route and indication) and its three questions
+  (plan 8.3, 8.6). Red-flag questions kept (at most two a play already); rationale questions
+  withdrawn. No app change.
 - 2026-11-16: Medicines quiz: Practice level (ATP) setting (All levels, EMT, Paramedic, ICP,
   CCP) limits daily study and the practice list to that ATP's medicines, read from the CPG 1.1
   table. Saved with the daily limits.
