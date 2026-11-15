@@ -9,7 +9,7 @@
 # Test run: pretends the last scan was of an older PDF, so every step of a real update runs
 # against today's PDF and a pull request named "TEST" is opened (branch pdf-update-test). Its
 # "Files changed" should be empty. Start one from the Actions tab (Run workflow, tick "Test
-# run") or by pushing a tag named test-pdf-check-<anything>. Close the pull request afterwards.
+# run") or by pushing a branch named test-pdf-check. Close the pull request afterwards.
 name: pdf-check
 on:
   schedule:
@@ -22,7 +22,7 @@ on:
         type: boolean
         default: false
   push:
-    tags: ['test-pdf-check-*']
+    branches: ['test-pdf-check']
 env:
   TEST_RUN: ${{ inputs.test_run == true || github.event_name == 'push' }}
 permissions:

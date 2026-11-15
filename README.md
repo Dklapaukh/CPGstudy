@@ -191,8 +191,7 @@ changing the same entry before syncing keep only the newer one.
 - It skips a PDF only while a pull request for it is open. A leftover branch with no open pull
   request is deleted and built again, so closing a pull request without merging brings a new
   one the next morning. The pull request is assigned to the repository owner.
-- Test run: Actions tab, "pdf-check", "Run workflow", tick "Test run" (or push a tag named
-  `test-pdf-check-<anything>`). It treats today's PDF as new and opens a pull request named
+- Test run: Actions tab, "pdf-check", "Run workflow", tick "Test run" (or push a branch named `test-pdf-check`). It treats today's PDF as new and opens a pull request named
   "TEST" from the branch `pdf-update-test`. Its "Files changed" should be empty. Close it and
   delete the branch.
 - GitHub pauses scheduled workflows after 60 days without a commit: press "Enable workflow" on
