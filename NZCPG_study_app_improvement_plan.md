@@ -257,7 +257,9 @@ Goal: a programmer who does not know the project can read any function once and 
 
 Last change: the daily PDF check was made safer and testable. It no longer skips a PDF because
 of a leftover branch, assigns the pull request to the owner (a notification), and has a test run
-(README, "Daily check").
+(README, "Daily check"). **Test run passed 16 Nov 2026** (pull request 10, closed): download,
+scan, rebuild, `npm run check`, branch, pull request and assignment all worked, and rebuilding
+today's PDF changed no file. Not covered by the test: a PDF whose guidelines really differ.
 
 **Next steps:** the owner answers 8.3 items 1 and 2. Then, in a fresh chat: remove the red-flag
 questions and design the rationale question (8.3), and fix 8.5 items 1 to 3 and 6.
