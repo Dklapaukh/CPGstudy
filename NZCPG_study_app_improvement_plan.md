@@ -59,6 +59,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 9    | Guideline quiz (ordering, number and course-changing questions) | Built                                    |
 | 10   | Medicines quiz: practice level (ATP) filter, by medicine        | Built 16 Nov 2026 (Z17)                  |
 | 11   | Medicines quiz: ATP filter by route and indication              | Planned, see 8.6; waiting on 8.3 items 3 to 5 |
+| 12   | Manager view (`manager.html`): team and person statistics       | Built 16 Nov 2026; live once the owner does 8.4 task 8 |
 
 ### 8.2 Decisions in force
 
@@ -152,6 +153,43 @@ behaves are in the README.
   guideline"); nothing that would need AI.
 - Z16: best and most recent score per guideline saved as `quiz-order-<id>`.
 
+**Feature 12, manager view** (owner, 16 Nov 2026; the owner's letters A to C are written MV-A
+to MV-C here because D to Z are already in use above)
+
+- MV-A: the manager view is a second page, `manager.html`, in the same repository, reusing the
+  section data, tests and publishing.
+- MV-B: the admin assigns people by editing the Assignments tab of the Google Sheet (viewer
+  name, tracker label). There is no admin screen.
+- MV-C: mentors keep their current access (a tracker passcode opens the tracker with notes) and
+  also get the statistics view with their mentor passcode.
+- Backend: tabs Managers (name, passcode), Assignments and History. Each save adds a History
+  row when a guideline's status changes or a guideline quiz score is saved; notes are never
+  logged. The "stats" action answers a manager or mentor passcode with labels, statuses, quiz
+  scores and dates of assigned trackers only (mentors: also trackers they created), never
+  notes, comments or tracker passcodes; quiz notes are parsed on the server and only numbers
+  are returned.
+- Quiz attempt counts exist from launch onward only (before it, only best and latest were
+  stored).
+
+Choices made while building (Claude, 16 Nov 2026; say if any should change):
+
+- MV-D: History names a tracker by its passcode, as the Data tab does, because labels can
+  repeat or be renamed. It has a fifth column, Source, holding "back-fill" on rows made by
+  `setup()`, so those rows are left out of the attempt counts.
+- MV-E: back-fill writes, per `marked-` date, the guideline's present status at that date, and
+  per guideline quiz its best and latest score. It runs once and only adds dates earlier than
+  the first row already logged.
+- MV-F: guideline counts on the manager page leave out the Medicines section, which has its
+  own part of the person page. "Last active" is the newest save time on the tracker, so a
+  mentor's note edit counts too. A flashcard is "learnt" when its interval is a day or more
+  and "due" when its due day is today or earlier.
+- MV-G: the manager passcode is kept in the browser tab only (sessionStorage). Tracker labels
+  in Assignments match ignoring capitals; two trackers with the same label are both shown.
+- MV-H: the manager page's files are in `src/manager/` and are not listed in `version.json`,
+  so phones do not download them with a guideline update.
+- MV-I: "stats" sends every History row of the viewer's trackers and the page does the sums.
+  Revisit with C5 if the reply becomes slow.
+
 ### 8.3 Open decisions (owner)
 
 1. **Decision D again: how a new PDF is published** (asked 16 Nov 2026, unanswered). The owner
@@ -208,6 +246,10 @@ Answered 16 Nov 2026:
    request before merging.
 7. **If commits stop for 60 days**, GitHub pauses the daily PDF check (8.5 item 5): press
    "Enable workflow" on the Actions tab, "pdf-check".
+8. **Switch on the manager view** (README, "Manager view", steps 1 to 7): paste
+   `backend/Code.gs`, run `setup()`, redeploy as a new version at the same address, fill the
+   Managers and Assignments tabs, then check the page with the real Sheet. Until then the page
+   answers every passcode with "Something went wrong". This also completes task 1.
 
 ### 8.5 Features that can fail without telling anyone (found 15 Nov 2026)
 
@@ -323,9 +365,13 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Status
 
-**16 Nov 2026.** Features 3 to 9 are built and live on `main`. No feature is in progress.
+**16 Nov 2026.** Features 3 to 10 and 12 are built and live on `main`. No feature is in
+progress.
 
-Latest: the Medicines quiz has a Practice level (ATP) filter (Z17), live on `main`.
+Latest: the manager view (feature 12, decisions MV-A to MV-I) is on `main` at `manager.html`.
+It shows nothing until the owner does 8.4 task 8 (paste the backend, `setup()`, redeploy, fill
+the tabs). Tested with a stand-in Sheet and a simulated browser only, not yet with the real
+Sheet. Before it: the Medicines quiz Practice level (ATP) filter (Z17).
 
 Last change: the daily PDF check was made safer and testable. It no longer skips a PDF because
 of a leftover branch, assigns the pull request to the owner (a notification), and has a test run
@@ -333,6 +379,6 @@ of a leftover branch, assigns the pull request to the owner (a notification), an
 scan, rebuild, `npm run check`, branch, pull request and assignment all worked, and rebuilding
 today's PDF changed no file. Not covered by the test: a PDF whose guidelines really differ.
 
-**Next steps:** the owner answers 8.3 items 1 to 5. Then, in a fresh chat: build feature 11
+**Next steps:** the owner does 8.4 task 8 and answers 8.3 items 1 to 5. Then, in a fresh chat: build feature 11
 (8.6), and fix 8.5 items 1 to 3 and 6. The red-flag removal and the rationale question are no
 longer to do (8.3, 16 Nov 2026).

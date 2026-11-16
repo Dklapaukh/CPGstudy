@@ -4,38 +4,42 @@ A phone-first web app for studying the EAS clinical practice guidelines: the gui
 and notes for each, two quizzes, and a tracker shared with a mentor through a Google Sheet.
 Published at <https://dklapaukh.github.io/CPGstudy/>. Study aid only, not for clinical use.
 
+A second page, the manager view, shows managers and mentors the progress of the people assigned
+to them: <https://dklapaukh.github.io/CPGstudy/manager.html> (see "Manager view").
+
 Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan.md`.
 
 ## Structure
 
-| Path                                                                 | Purpose                                                                                |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `index.html`, `styles/app.css`                                       | Page shell and all styles.                                                             |
-| `src/main.js`, `src/navigation.js`, `src/events.js`                  | Start-up, screen changes, all clicks and typing.                                       |
-| `src/constants.js`                                                   | Named constants: status codes, storage keys, backend address, timings, messages.       |
-| `src/state.js`                                                       | The one state object and saving it on the phone.                                       |
-| `src/api.js`, `src/sync.js`                                          | Talking to the backend; queued edits and merging.                                      |
-| `src/guidelines.js`, `src/logic.js`, `src/comments.js`               | The guideline list; pure logic (merge, filters, search, comment lines).                |
-| `src/markedState.js`, `src/settingsState.js`                         | Marked dates; dark mode and "mark for review after N days".                            |
-| `src/queue.js`, `src/queueState.js`, `src/related.js`                | Guidelines to learn (the queue) and the related list.                                  |
-| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`        | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                     |
-| `src/quizState.js`                                                   | Medicines quiz: session and saved schedules.                                           |
-| `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`              | Guideline quiz, pure logic: ordering rounds, number questions, building a play.        |
-| `src/guidelineQuizState.js`                                          | Guideline quiz: the play in memory and saved scores.                                   |
-| `src/report.js`                                                      | "Report a mistake or request" email.                                                   |
-| `src/updates.js`, `src/updateState.js`, `version.json`               | Update prompt: pure logic, checking and downloading, the published date and file list. |
-| `src/views/`                                                         | One file per screen or screen part.                                                    |
-| `content/guidelines.js`                                              | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.     |
-| `content/related.js`, `content/related-overrides.js`                 | Related-guideline links (built) and the hand-edited overrides.                         |
-| `content/pdf-status.json`, `content/pdf-rebuild.json`                | Last PDF scan; fingerprint of each rebuilt guideline. Written by scripts.              |
-| `scripts/pdfScan.js`, `scripts/check-pdf.js`                         | Reads the PDF's export date and each guideline's newest version entry.                 |
-| `scripts/pdfPages.js`, `pdfContent.js`, `pdfRows.js`, `pdfTables.js` | Converter from the PDF to content blocks.                                              |
-| `scripts/contentCheck.js`                                            | Refuses content with unexpected markup.                                                |
-| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`            | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.               |
-| `scripts/build-related.js`                                           | Rebuilds `content/related.js`.                                                         |
-| `backend/Code.gs`                                                    | The Google Apps Script service.                                                        |
-| `.github/workflows/`                                                 | `checks.yml` (every push) and `pdf-check.yml` (daily).                                 |
-| `tests/`                                                             | `npm test`. Includes a simulated-browser run of the whole app.                         |
+| Path                                                                 | Purpose                                                                                        |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `index.html`, `styles/app.css`                                       | Page shell and all styles.                                                                     |
+| `src/main.js`, `src/navigation.js`, `src/events.js`                  | Start-up, screen changes, all clicks and typing.                                               |
+| `src/constants.js`                                                   | Named constants: status codes, storage keys, backend address, timings, messages.               |
+| `src/state.js`                                                       | The one state object and saving it on the phone.                                               |
+| `src/api.js`, `src/sync.js`                                          | Talking to the backend; queued edits and merging.                                              |
+| `src/guidelines.js`, `src/logic.js`, `src/comments.js`               | The guideline list; pure logic (merge, filters, search, comment lines).                        |
+| `src/markedState.js`, `src/settingsState.js`                         | Marked dates; dark mode and "mark for review after N days".                                    |
+| `src/queue.js`, `src/queueState.js`, `src/related.js`                | Guidelines to learn (the queue) and the related list.                                          |
+| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`        | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                             |
+| `src/quizState.js`                                                   | Medicines quiz: session and saved schedules.                                                   |
+| `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`              | Guideline quiz, pure logic: ordering rounds, number questions, building a play.                |
+| `src/guidelineQuizState.js`                                          | Guideline quiz: the play in memory and saved scores.                                           |
+| `src/report.js`                                                      | "Report a mistake or request" email.                                                           |
+| `src/updates.js`, `src/updateState.js`, `version.json`               | Update prompt: pure logic, checking and downloading, the published date and file list.         |
+| `src/views/`                                                         | One file per screen or screen part.                                                            |
+| `manager.html`, `styles/manager.css`, `src/manager/`                 | The manager view: `main.js` (sign in, drawing), `stats.js` (pure sums), `view.js`, `chart.js`. |
+| `content/guidelines.js`                                              | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.             |
+| `content/related.js`, `content/related-overrides.js`                 | Related-guideline links (built) and the hand-edited overrides.                                 |
+| `content/pdf-status.json`, `content/pdf-rebuild.json`                | Last PDF scan; fingerprint of each rebuilt guideline. Written by scripts.                      |
+| `scripts/pdfScan.js`, `scripts/check-pdf.js`                         | Reads the PDF's export date and each guideline's newest version entry.                         |
+| `scripts/pdfPages.js`, `pdfContent.js`, `pdfRows.js`, `pdfTables.js` | Converter from the PDF to content blocks.                                                      |
+| `scripts/contentCheck.js`                                            | Refuses content with unexpected markup.                                                        |
+| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`            | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                       |
+| `scripts/build-related.js`                                           | Rebuilds `content/related.js`.                                                                 |
+| `backend/Code.gs`                                                    | The Google Apps Script service.                                                                |
+| `.github/workflows/`                                                 | `checks.yml` (every push) and `pdf-check.yml` (daily).                                         |
+| `tests/`                                                             | `npm test`. Includes a simulated-browser run of the whole app.                                 |
 
 ## Run, check and publish
 
@@ -231,14 +235,86 @@ changing the same entry before syncing keep only the newer one.
   converter writes only escaped text, `<b>` and `<br>`, and `scripts/contentCheck.js` stops the
   rebuild and fails `npm run check` on any other tag, entity, colour format or block shape.
 
+## Manager view
+
+A separate page for managers and mentors: <https://dklapaukh.github.io/CPGstudy/manager.html>.
+It uses the same guideline data and backend as the study app and is published the same way.
+
+**What it shows**
+
+- Sign in with a manager passcode (Managers tab) or a mentor passcode (Mentors tab). The
+  passcode is kept until the browser tab is closed. Mentors keep everything they had: a tracker
+  passcode still opens the tracker with its notes in the study app.
+- **Team table**, one line per person: guidelines incomplete, for review and complete; guideline
+  quizzes done; last active (the last time anything was saved on the tracker, by the learner or
+  a mentor).
+- **Person page** (tap a name): guidelines overall and by section; each guideline quiz played
+  with its most recent and highest score and their dates; Medicines on their own (statuses,
+  flashcards learnt and due today); general numbers; charts.
+- **Over time**: a From and To date and two charts by week, guidelines marked complete and the
+  average guideline quiz score. On the team page they cover everyone; on a person page, that
+  person. "Show these numbers as a table" is under the charts.
+- Guideline counts leave out the Medicines section, because it has its own part of the page.
+- A manager sees only the trackers assigned to them. A mentor sees the trackers assigned to
+  them and the trackers they created.
+
+**What a manager can never see.** The page is sent numbers only: statuses, scores, counts and
+dates. Notes, comments and tracker passcodes never leave the Sheet through the manager view.
+
+**Quiz plays are counted from launch only.** Before the manager view, the app kept just the
+best and the most recent score of each guideline quiz, so "Plays counted" starts from the day
+step 4 below was done. Older dates in the charts come from the saved marked dates and those two
+scores.
+
+**Switching it on (once), step by step.** No programming needed; allow 10 minutes.
+
+1. **Open the script.** Open the Google Sheet. In the menu choose Extensions, then Apps Script.
+   A new browser tab opens showing a file called `Code.gs`.
+2. **Paste the new code.** In another tab open
+   <https://github.com/Dklapaukh/CPGstudy/blob/main/backend/Code.gs> and press the "Copy raw
+   file" button (two overlapping squares, top right of the code). Go back to the Apps Script
+   tab, click in the code, select all of it (Ctrl+A, or Cmd+A on a Mac), and paste (Ctrl+V or
+   Cmd+V) so the new code replaces the old. Press the Save button (the disk picture).
+3. **Run `setup`.** In the bar above the code is a small drop-down list of names; choose
+   `setup`, then press Run. If Google asks for permission, press Review permissions, choose your
+   account and press Allow. Wait for "Execution completed" at the bottom. The Sheet now has
+   three new tabs, `Managers`, `Assignments` and `History`, and `History` has been filled from
+   the dates already saved. Nothing in the old tabs is changed, and running `setup` again does
+   no harm.
+4. **Redeploy at the same address.** Top right, press Deploy, then **Manage deployments** (not
+   "New deployment": that would make a new address and the app would stop working). Press the
+   pencil (Edit). Under Version choose **New version**. Press Deploy, then Done. The address
+   stays the same, so nothing in the app needs changing.
+5. **Fill the `Managers` tab.** One line per manager: their name in column A, a passcode you
+   make up in column B. Make it long (four or more words), different from every other
+   passcode, and send it to that manager privately. Mentors need no line here: their mentor
+   passcode already works.
+6. **Fill the `Assignments` tab.** One line for each person a manager or mentor should see:
+   column A is the viewer's name exactly as written in the `Managers` (or `Mentors`) tab,
+   column B is the tracker's label exactly as written in column A of the `Trackers` tab (for
+   example `Sam - 2026`). Capital letters do not matter; spelling does. A viewer who should
+   see five people has five lines. To stop someone seeing a tracker, delete the line. If two
+   trackers have the same label, the viewer sees both.
+7. **Open the manager page**, <https://dklapaukh.github.io/CPGstudy/manager.html>, and sign in
+   with a manager passcode. Changes to the two tabs show after pressing Refresh.
+
+Leave the `History` tab alone: the backend adds a line each time a guideline's status changes
+or a guideline quiz is finished (tracker passcode, entry, value, time; "back-fill" marks the
+lines made in step 3). It never holds notes.
+
 ## Backend
 
 A small Apps Script program attached to the Google Sheet. The app sends it the passcode and any
 edits; it checks the passcode against the `Mentors` and `Trackers` tabs, reads or writes the
-`Data` tab, and sends back this tracker's entries.
+`Data` tab, and sends back this tracker's entries. For the manager view it also keeps the
+`History` tab and answers "stats" requests from the `Managers` and `Assignments` tabs.
 
-- Update it: Sheet, Extensions, Apps Script, paste `backend/Code.gs`, then Deploy, Manage
-  deployments, edit, New version. The address stays the same. Needs the V8 runtime.
+- Update it: Sheet, Extensions, Apps Script, paste `backend/Code.gs`, run `setup` if the
+  version adds tabs, then Deploy, Manage deployments, edit, New version. The address stays the
+  same. Needs the V8 runtime. Every step is spelt out under "Manager view".
+- A "stats" request reads the `Data` and `History` tabs whole and sends all of the viewer's
+  History lines; the page does the sums. `History` grows by one line per status change or quiz
+  play.
 - Passcodes are plain text in the Sheet, so keep its sharing limited. Replace the placeholder
   mentor passcode created by `setup()`; the backend refuses it.
 - The passcode is also kept in the phone's browser and the backend address is in the page.
@@ -260,6 +336,10 @@ unless marked "by hand".
 - Review or Complete sets the marked date on the list row; opening or editing notes does not.
 - The made-with-AI, study-only notice shows on the passcode, list and guideline screens.
 - The report button is under every screen and the page holds no whole email address.
+- Manager page (`tests/manager.test.js`, `tests/backend.test.js`): a wrong passcode shows the
+  message; a manager sees only assigned trackers and a mentor also their own; the reply holds
+  no notes or passcodes; a person page shows every part; the date range redraws the charts;
+  sign out clears the numbers. With the real Sheet: by hand.
 - Two phones on one passcode show the same data after a sync (by hand).
 - Offline: changes are kept and sent when signal returns (by hand).
 - Related guidelines (at most 5) show under a guideline; Add to queue, Add all to queue, ticking

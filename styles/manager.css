@@ -1,0 +1,180 @@
+/* Styles for the manager page (manager.html). Loaded after app.css and built on its colours,
+   so it follows dark mode. Wider than the study app: it is mostly tables, read on a computer. */
+.manager-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 0 4rem;
+}
+.manager-narrow {
+  max-width: 28rem;
+}
+.person-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0.6rem 0 0;
+  overflow-wrap: anywhere;
+}
+.stats-section {
+  margin-top: 0.4rem;
+}
+.stats-note {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0.9rem;
+}
+
+/* Tables of numbers: names on the left, numbers lined up on the right. */
+.stats-table {
+  font-size: 0.9rem;
+}
+.stats-table th,
+.stats-table td {
+  border: 0;
+  border-bottom: 1px solid var(--colour-line);
+  padding: 0.55rem 0.6rem;
+  text-align: left;
+  vertical-align: middle;
+}
+.stats-table thead th {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stats-table tbody th {
+  font-weight: 600;
+}
+.stats-table .stats-table__number,
+.stats-table thead th:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.person-link {
+  color: var(--colour-green);
+  font-weight: 700;
+  /* Tall enough to tap (44 px) without making the row look padded. */
+  display: inline-block;
+  padding: 0.7rem 0;
+  margin: -0.7rem 0;
+}
+:root[data-theme='dark'] .person-link {
+  color: #5fc79a;
+}
+
+/* Labelled numbers */
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+}
+.stat-tile {
+  background: var(--colour-control);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+}
+.stat-tile__label {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+}
+.stat-tile__value {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Date range and charts */
+.date-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+.date-range__field {
+  display: flex;
+  flex-direction: column;
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+}
+.date-range__input,
+.range-button {
+  min-height: 44px;
+  border: 1px solid var(--colour-line);
+  border-radius: 8px;
+  background: var(--colour-surface);
+  color: var(--colour-text);
+  padding: 0.4rem 0.7rem;
+}
+.range-button {
+  cursor: pointer;
+  font-weight: 600;
+}
+.chart-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 1.1rem 0 0.2rem;
+}
+.chart {
+  display: block;
+  width: 100%;
+  max-width: 46rem;
+  height: auto;
+}
+.chart__grid {
+  stroke: var(--colour-line);
+  stroke-width: 1;
+}
+.chart__baseline {
+  stroke: var(--colour-muted);
+  stroke-width: 1;
+}
+.chart__label {
+  fill: var(--colour-muted);
+  font-size: 11px;
+}
+.chart__bar,
+.chart__dot {
+  fill: var(--chart-mark);
+}
+.chart__dot {
+  stroke: var(--colour-background);
+  stroke-width: 2;
+}
+.chart__line {
+  stroke: var(--chart-mark);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.chart__hit {
+  fill: transparent;
+}
+.chart__slot:hover .chart__hit {
+  fill: var(--colour-control);
+}
+.chart {
+  /* One measure per chart, so one colour: the app's green, lighter on the dark background. */
+  --chart-mark: var(--colour-green);
+}
+:root[data-theme='dark'] .chart {
+  --chart-mark: #3fae80;
+}
+.chart-data {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+}
+.chart-data summary {
+  cursor: pointer;
+  color: var(--colour-muted);
+  padding: 0.7rem 0;
+}
+
+@media print {
+  .switch-button,
+  .date-range,
+  .chart-data summary {
+    display: none;
+  }
+}

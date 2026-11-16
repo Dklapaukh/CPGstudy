@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Manager view (feature 12): new page `manager.html` for managers and mentors with
+  a team table, a page per person (guidelines by section, guideline quiz scores, Medicines and
+  flashcards, general numbers) and charts by week over a date range. Backend: new tabs
+  `Managers`, `Assignments` and `History`; each save logs status changes and quiz scores (never
+  notes); new "stats" action that returns numbers only. **Needs `setup()` and a backend
+  redeploy** (README, "Manager view"). The study app itself is unchanged.
+
 - 2026-11-16: Plan for feature 11 (ATP filter by route and indication) and its three questions
   (plan 8.3, 8.6). Red-flag questions kept (at most two a play already); rationale questions
   withdrawn. No app change.
