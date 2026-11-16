@@ -1389,6 +1389,25 @@ td.table-cell--coloured {
 .quiz-answer p {
   margin: 0.4rem 0;
 }
+/* Answer lines only other practice levels may give: greyed, behind a bar and under a label that
+   names the levels, so grey is never the only sign. The muted colour keeps 4.5:1 contrast. */
+.other-level-line {
+  border-left: 3px solid var(--colour-line);
+  padding-left: 0.5rem;
+  color: var(--colour-muted);
+}
+.other-level-line .bullet-row,
+.other-level-line .key-row {
+  --block-colour: var(--colour-muted) !important;
+}
+.quiz-answer .other-level-label {
+  margin: 0.9rem 0 0;
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .rating-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

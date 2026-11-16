@@ -2,6 +2,12 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Medicines quiz, feature 11: with a practice level (ATP) chosen, dose cards follow
+  the routes and "(… only)" indication limits of the CPG 1.1 table. Lines for a higher level
+  are greyed under a label such as "ICP and CCP"; a card with no line for the level, and the
+  RSI table rows below CCP, are left out. New `scripts/practice-level-review.js` lists the
+  result per level; line corrections go in `content/practice-level-overrides.js`. Decisions Z18
+  to Z22.
 - 2026-11-16: Manager view (feature 12): new page `manager.html` for managers and mentors with
   a team table, a page per person (guidelines by section, guideline quiz scores, Medicines and
   flashcards, general numbers) and charts by week over a date range. Backend: new tabs

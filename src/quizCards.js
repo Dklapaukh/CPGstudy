@@ -4,12 +4,14 @@
  * content update changes the cards without any separate data file.
  * Depends on constants.js and quizDoses.js.
  *
- * A card is { id, medicineId, key, prompt, answerBlocks, source }:
+ * A card is { id, medicineId, key, prompt, answerBlocks, source, isDose, isRsi }:
  *   id           medicineId + '|' + key, unique, stable across content updates where possible
  *   key          short name inside the medicine, used to store the card's schedule
  *   prompt       plain text shown on the front, for example "Amiodarone – Cardiac arrest – Dose"
  *   answerBlocks content blocks shown on the back, in the guideline data format
  *   source       plain text naming the guideline the answer comes from, for example "CPG 14.3"
+ *   isDose       true for a dosage card (the practice level filter works on these only)
+ *   isRsi        true for a row of the CPG 9.3 RSI dose table
  *
  * Only adult doses are tested: lines only about a child are removed and the paediatric dose
  * tables are not used.
@@ -276,6 +278,7 @@ function rsiDoseCards(medicine, rsiGuideline) {
         prompt: `${medicine.t} – RSI (${table.title}): ${rowName} – ${DOSE_WORD}`,
         answerBlocks: [...weights, [BLOCK.TABLE, [row]]],
         source: `CPG ${rsiGuideline.n}`,
+        isRsi: true,
       });
     });
   });
@@ -312,6 +315,8 @@ function topicCard(medicine, topic) {
     prompt: `${medicine.t} – ${topic.heading}`,
     answerBlocks,
     source: `CPG ${medicine.n}`,
+    isDose: false,
+    isRsi: false,
   };
 }
 
@@ -319,8 +324,10 @@ function topicCard(medicine, topic) {
 function medicineCards(medicine, context) {
   const cards = [];
   for (const topic of QUIZ_TOPICS) {
-    if (topic.heading === DOSAGE_HEADING) cards.push(...doseCards(medicine, context));
-    else {
+    if (topic.heading === DOSAGE_HEADING) {
+      const dosage = doseCards(medicine, context);
+      cards.push(...dosage.map((card) => ({ isRsi: false, ...card, isDose: true })));
+    } else {
       const card = topicCard(medicine, topic);
       if (card) cards.push(card);
     }

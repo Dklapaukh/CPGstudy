@@ -37,6 +37,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `scripts/contentCheck.js`                                            | Refuses content with unexpected markup.                                                        |
 | `scripts/contentUpdate.js`, `scripts/build-guidelines.js`            | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                       |
 | `scripts/build-related.js`                                           | Rebuilds `content/related.js`.                                                                 |
+| `scripts/practice-level-review.js`                                   | Prints what each practice level is shown in the Medicines quiz, for checking.                  |
 | `backend/Code.gs`                                                    | The Google Apps Script service.                                                                |
 | `.github/workflows/`                                                 | `checks.yml` (every push) and `pdf-check.yml` (daily).                                         |
 | `tests/`                                                             | `npm test`. Includes a simulated-browser run of the whole app.                                 |
@@ -129,6 +130,19 @@ changing the same entry before syncing keep only the newer one.
   "Magnesium IV") is in the medicine's title. Exceptions are in
   `content/practice-level-overrides.js` (Glucose Gel, the two GTN guidelines); a test fails if a
   medicine matches no row and has no override. Schedules of hidden medicines are kept.
+- With a level chosen, dose cards are also filtered by route and indication (plan 8.6). Each
+  1.1 row gives its level a set of routes ("IN, IM, nebulised and topical"; "(all routes)") and,
+  from an "(… only)" bracket, a limit on indications ("cardiac arrest only"). An answer line's
+  routes are the route words in it (IM, IV, IN, IO, SC, PO, SL, MDI in capitals; nebulised,
+  topical, inhaled; an infusion is IV); a line with none takes those of the line it sits under,
+  otherwise of the lines under it, otherwise of the line before. A card's indication is the
+  middle of its prompt. A line a higher level may give is greyed under a label naming the levels
+  ("ICP and CCP"); a card with no line for the level is dropped, as are the CPG 9.3 RSI rows
+  below CCP. Topic cards stay whole. A line with two routes counts for a level that has either,
+  and a route 1.1 never names for the medicine hides nothing.
+- `node scripts/practice-level-review.js` prints, per level, every card dropped and every line
+  greyed. Run it after each PDF update; fix a wrong line in `practiceLevelLineOverrides`
+  (`content/practice-level-overrides.js`: card id, start of the line, levels), not in code.
 - A card keeps its schedule while its key stays the same (topic name, dose label, first
   guideline number of an indication card, or RSI row). A dose label reworded in a PDF update
   starts that card again as new.
@@ -352,7 +366,8 @@ unless marked "by hand".
   tagged "Updated" until opened; the list footer shows the export date, last check and notice.
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
   new-medicines setting changes the count; Practice level EMT hides Adenosine and Fentanyl from
-  the practice list. Layout on a phone (by hand).
+  the practice list and shows Adrenaline's asthma dose with its IV lines greyed under "ICP and
+  CCP". Layout on a phone (by hand).
 - Guideline quiz: cards move with the arrows and to and from "Not in this guideline"; dragging
   by the grip on a phone (by hand); a perfect play scores 100% and saves `quiz-order-<id>`; the
   picker shows the best score, a new play shows best and most recent, the list row the most

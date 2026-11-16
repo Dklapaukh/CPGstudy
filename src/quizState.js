@@ -12,8 +12,16 @@ import { scheduleSync } from './sync.js';
 import { sections, guidelines } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
 import { buildQuizCards } from './quizCards.js';
-import { readPracticeLevelTable, medicinePracticeLevels } from './practiceLevels.js';
-import { practiceLevelOverrides } from '../content/practice-level-overrides.js';
+import {
+  readPracticeLevelTable,
+  medicineGrants,
+  rsiLevels,
+  cardsForLevel,
+} from './practiceLevels.js';
+import {
+  practiceLevelOverrides,
+  practiceLevelLineOverrides,
+} from '../content/practice-level-overrides.js';
 import {
   dayNumber,
   nextSchedule,
@@ -43,29 +51,44 @@ export function quizCards() {
   return cachedCards;
 }
 
-let cachedLevels = null;
+let cachedAccess = null;
 
-/** The 1.1 table's practice levels and each medicine's levels: { levels, byMedicine }. */
-function practiceLevelData() {
-  if (!cachedLevels) {
+/**
+ * What the 1.1 table lets each level give: { levels, grantsByMedicine, rsiLevels,
+ * lineOverrides } (see cardForLevel in practiceLevels.js).
+ */
+function practiceLevelAccess() {
+  if (!cachedAccess) {
     const atpGuideline = guidelines.find((guideline) => guideline.id === ATP_GUIDELINE_ID);
     const table = atpGuideline ? readPracticeLevelTable(atpGuideline) : { levels: [], rows: [] };
     const medicines = guidelines.filter((guideline) => guideline.sec === QUIZ_SECTION_NAME);
-    const byMedicine = medicinePracticeLevels(medicines, table, practiceLevelOverrides);
-    cachedLevels = { levels: table.levels, byMedicine };
+    cachedAccess = {
+      levels: table.levels,
+      grantsByMedicine: medicineGrants(medicines, table, practiceLevelOverrides),
+      rsiLevels: rsiLevels(table),
+      lineOverrides: practiceLevelLineOverrides,
+    };
   }
-  return cachedLevels;
+  return cachedAccess;
 }
 
 /** The practice levels a learner can choose, in table order, e.g. ['EMT', 'Paramedic', …]. */
-export const practiceLevels = () => practiceLevelData().levels;
+export const practiceLevels = () => practiceLevelAccess().levels;
 
-/** The cards of the medicines the chosen practice level may give (all cards when none chosen). */
+// The cards of the last practice level asked for, so they are not filtered again on each draw.
+let cachedStudy = { level: null, cards: [] };
+
+/**
+ * The cards the chosen practice level studies (all cards when none is chosen): only medicines
+ * the level may give, and only dose cards with a line it may give (feature 11).
+ */
 export function studyCards() {
   const level = getQuizSettings().practiceLevel;
   if (level === ALL_PRACTICE_LEVELS) return quizCards();
-  const { byMedicine } = practiceLevelData();
-  return quizCards().filter((card) => (byMedicine[card.medicineId] || []).includes(level));
+  if (cachedStudy.level !== level) {
+    cachedStudy = { level, cards: cardsForLevel(quizCards(), level, practiceLevelAccess()) };
+  }
+  return cachedStudy.cards;
 }
 
 /** Today as a local day number. */
@@ -184,11 +207,12 @@ export function quizMedicines(everyLevel = false) {
 }
 
 /**
- * Starts practising one medicine: all of its cards, in card order. Practice is separate from the
- * daily study: answers are not saved and do not change when any card is due.
+ * Starts practising one medicine: all of its cards at the chosen practice level, in card order.
+ * Practice is separate from the daily study: answers are not saved and do not change when any
+ * card is due.
  */
 export function startPractice(medicineId) {
-  const queue = quizCards()
+  const queue = studyCards()
     .filter((card) => card.medicineId === medicineId)
     .map((card) => card.id);
   if (queue.length === 0) return;
@@ -208,10 +232,15 @@ export function endSession() {
   state.quiz = null;
 }
 
-/** The card at the front of the session, or null when the session is over. */
+/**
+ * The card at the front of the session as the chosen practice level sees it, or null when the
+ * session is over. A card that left the level mid-session (the level was changed on another
+ * phone) is still shown, whole.
+ */
 export function currentCard() {
   if (!state.quiz || state.quiz.queue.length === 0) return null;
-  return quizCards().find((card) => card.id === state.quiz.queue[0]) || null;
+  const isCurrent = (card) => card.id === state.quiz.queue[0];
+  return studyCards().find(isCurrent) || quizCards().find(isCurrent) || null;
 }
 
 /** The schedule the current card would get with each rating, by rating. */

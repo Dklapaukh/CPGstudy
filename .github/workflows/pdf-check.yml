@@ -144,6 +144,8 @@ jobs:
             echo "- [ ] Read the changes to each guideline under \"Check formatting\" (Files changed,"
             echo "      content/guidelines.js); after merging, open them in the app and compare with the PDF."
             echo "- [ ] Check the section of any new guideline."
+            echo "- [ ] On this branch run \`node scripts/practice-level-review.js\` and check what each"
+            echo "      practice level is shown in the Medicines quiz (plan 8.6)."
             echo "- [ ] Merge. Phones then show \"A new version of the guidelines is available\"."
           } > "$RUNNER_TEMP/body.md"
           url=$(gh pr create --head "$BRANCH" --title "$title" --body-file "$RUNNER_TEMP/body.md")

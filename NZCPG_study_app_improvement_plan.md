@@ -58,7 +58,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 8    | Medicines quiz (flashcards, spaced repetition)                | Built                                    |
 | 9    | Guideline quiz (ordering, number and course-changing questions) | Built                                    |
 | 10   | Medicines quiz: practice level (ATP) filter, by medicine        | Built 16 Nov 2026 (Z17)                  |
-| 11   | Medicines quiz: ATP filter by route and indication              | Planned, see 8.6; waiting on 8.3 items 3 to 5 |
+| 11   | Medicines quiz: ATP filter by route and indication              | Built 16 Nov 2026 (Z18 to Z22), see 8.6  |
 | 12   | Manager view (`manager.html`): team and person statistics       | Built 16 Nov 2026; live once the owner does 8.4 task 8 |
 
 ### 8.2 Decisions in force
@@ -139,7 +139,29 @@ behaves are in the README.
 - No paediatric doses anywhere.
 - Z17 (owner, 16 Nov 2026): the quiz can be limited to one practice level (ATP) from the CPG
   1.1 table: EMT, Paramedic, ICP or CCP. A medicine counts for a level if that level may give it
-  by any route (so EMTs still see Adrenaline's IV cards); cards are not filtered by route.
+  by any route. Since feature 11 its dose cards are also filtered by route and indication (Z18
+  to Z22); topic cards (Indications, Cautions and so on) stay whole.
+- Z18 (owner, 16 Nov 2026): a dose card with lines for a higher level keeps every line; those
+  lines are greyed under a label naming the levels that may give them, such as "ICP and CCP",
+  so the learner still sees what backup would give. A card with no line for the level is
+  dropped.
+- Z19 (owner, 16 Nov 2026): the limits in brackets in the CPG 1.1 table apply ("cardiac arrest
+  only", "analgesia only", the Midazolam IM and IV limits). A Paramedic sees Amiodarone's
+  cardiac arrest card and not its tachydysrhythmia card.
+- Z20 (16 Nov 2026, the recommended option, to be confirmed by the owner, 8.3 item 2): limits
+  come from CPG 1.1 only, not from a medicine's own "Authorised practice levels" lines. So
+  Hydrocortisone's dose card stays for Paramedics and Labetalol stays ICP and CCP.
+- Z21 (owner, 16 Nov 2026): none of the 23 Adrenaline, Midazolam and Morphine indication cards
+  is removed from the quiz. (The practice level filter still leaves out the ones a chosen
+  level may not give; see 8.3 item 3.)
+- Z22: how a line gets its level. Its routes are the route words in it (abbreviations in
+  capitals only; an infusion is IV); a line with none takes those of the line it sits under,
+  otherwise of the lines under it, otherwise of the line before. A line with two routes counts
+  for a level that has either. A route CPG 1.1 never names for the medicine (Enoxaparin IV)
+  hides nothing. The CPG 9.3 RSI table cards follow the "Rapid sequence intubation" row (CCP).
+  Wrong cases are corrected per line in `content/practice-level-overrides.js` (two entries: the
+  "adrenaline IV if deteriorating despite IM" line of Anaphylaxis, and Ondansetron's "one IV
+  dose in addition to one IM dose" line).
 - Z11: Morphine 14.32 is cut short in St John's PDF itself (ends after Contraindications); wait
   for St John to fix it.
 
@@ -196,27 +218,32 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
    wants the app to update by itself when the guidelines change. Today a pull request opens and
    nothing reaches phones until the owner merges it; then each phone shows a banner and updates
    when "Update now" is tapped (Decision U).
-2. **Medicines quiz dose cards to drop.** The 23 Adrenaline, Midazolam and Morphine indication
-   cards were listed for the owner on 16 Nov 2026; no answer yet.
-3. **Feature 11: what an answer shows when some of its lines are for a higher level.**
-   Option A (recommended): hide those lines and add one line under the answer, "Some lines are
-   for other practice levels and are hidden." The answer is only what the learner may give.
-   Option B: show them greyed out with a label such as "ICP and CCP", so the learner still sees
-   what backup would give.
-4. **Feature 11: indication limits.** Option A (recommended): apply the limits written in
-   brackets in the CPG 1.1 table, for example "Amiodarone IV (cardiac arrest only)" for
-   Paramedics, "Ketamine … (analgesia only)", the Midazolam IM and IV limits, so a Paramedic
-   sees Amiodarone's cardiac arrest card but not its tachydysrhythmia card. Option B: filter by
-   route only and keep every indication card of a route the level may use.
-5. **Feature 11: limits that are on a medicine's own page but not in CPG 1.1.** Hydrocortisone
-   (Paramedics: adrenal crisis, severe asthma, severe COPD only) and Labetalol (Paramedics only
-   after seeking clinical advice). Option A (recommended): use CPG 1.1 only, as for feature 10,
-   so Hydrocortisone's single dose card stays for Paramedics and Labetalol stays ICP and CCP.
+2. **Feature 11: confirm Decision Z20** (limits that are on a medicine's own page but not in
+   CPG 1.1). The owner asked for the recommended option or the options again; Option A is
+   built. Hydrocortisone (Paramedics: adrenal crisis, severe asthma, severe COPD only) and
+   Labetalol (Paramedics only after seeking clinical advice).
+   Option A (recommended, built): use CPG 1.1 only, as for feature 10, so Hydrocortisone's
+   single dose card stays for Paramedics and Labetalol stays ICP and CCP.
    Option B: also read each medicine's "Authorised practice levels" lines, with a hand-checked
    list of the phrases that mean a limit.
+3. **Feature 11: what "don't drop any of the cards from Adrenaline, Midazolam or Morphine"
+   covers** (asked 16 Nov 2026). Recorded as Z21: the 23 indication cards all stay in the quiz.
+   With a practice level chosen, the filter still leaves out the cards that level may not give
+   (EMT: 9 Adrenaline cards; Paramedic: 8 Adrenaline and 2 Midazolam cards).
+   Option A (built): keep it so; a level studies only the cards with a line it may give.
+   Option B: for these three medicines never leave a card out; a card with no line for the
+   level is shown fully greyed under its label (for example "ICP and CCP").
+4. **Feature 11: Midazolam for eclampsia at Paramedic level.** CPG 1.1 limits Paramedics to
+   "seizures, acute behavioural disturbance and care during last days of life", so the card
+   "Midazolam – Eclampsia – Dose" (CPG 8.4) is left out for Paramedics, because the word
+   "seizures" is not in its title.
+   Option A: an eclamptic seizure is a seizure: show the card to Paramedics (one entry in
+   `content/practice-level-overrides.js`).
+   Option B: leave it as built: Paramedics do not get the Eclampsia card.
 
 Answered 16 Nov 2026:
 
+- **Feature 11** (old items 2 to 5): recorded as Z18 to Z21 in 8.2.
 - **Guideline quiz, numbers:** the dose-number questions are good as they are (Z14 review
   closed).
 - **Guideline quiz, red flags (changed 16 Nov 2026):** keep the "Which of these is a red flag"
@@ -243,7 +270,8 @@ Answered 16 Nov 2026:
 5. **Morphine 14.32:** the owner is telling the guideline coordinator that the PDF page is cut
    short.
 6. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
-   request before merging.
+   request before merging, and run `node scripts/practice-level-review.js` on its branch to
+   check what each practice level is shown (the pull request's check list says so).
 7. **If commits stop for 60 days**, GitHub pauses the daily PDF check (8.5 item 5): press
    "Enable workflow" on the Actions tab, "pdf-check".
 8. **Switch on the manager view** (README, "Manager view", steps 1 to 7): paste
@@ -269,6 +297,9 @@ Answered 16 Nov 2026:
 | 12  | **CI installs whatever dependency versions are newest** (`package-lock.json` is ignored by git), so the checks or the PDF converter can change behaviour with no change in the repository. The daily `--check` run would show a converter change as red. | `.gitignore`, both workflows                 |
 
 ### 8.6 Plan: feature 11, ATP filter by route and indication (16 Nov 2026)
+
+**Built 16 Nov 2026** as planned, with the answers recorded as Z18 to Z22. The plan is kept
+because code comments refer to it.
 
 **Why.** Feature 10 filters whole medicines: a medicine counts for a level if that level may
 give it by any route. So an EMT studying Adrenaline also gets IV infusion doses and an RSI
@@ -365,20 +396,19 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Status
 
-**16 Nov 2026.** Features 3 to 10 and 12 are built and live on `main`. No feature is in
-progress.
+**16 Nov 2026.** Features 3 to 12 are built and live on `main`. No feature is in progress.
 
-Latest: the manager view (feature 12, decisions MV-A to MV-I) is on `main` at `manager.html`.
+Latest: feature 11, the Medicines quiz's practice level (ATP) filter now works by route and
+indication (Z18 to Z22). With a level chosen: EMT 3 cards with greyed lines and 9 dropped;
+Paramedic 3 and 18; ICP 4 dropped (RSI rows); CCP everything. The owner saw the review list
+(`node scripts/practice-level-review.js`) and it went live on `main` on 16 Nov 2026. Not yet
+looked at on a real phone: the greyed lines and their label.
+
+Before it: the manager view (feature 12, decisions MV-A to MV-I) is on `main` at `manager.html`.
 It shows nothing until the owner does 8.4 task 8 (paste the backend, `setup()`, redeploy, fill
 the tabs). Tested with a stand-in Sheet and a simulated browser only, not yet with the real
-Sheet. Before it: the Medicines quiz Practice level (ATP) filter (Z17).
+Sheet.
 
-Last change: the daily PDF check was made safer and testable. It no longer skips a PDF because
-of a leftover branch, assigns the pull request to the owner (a notification), and has a test run
-(README, "Daily check"). **Test run passed 16 Nov 2026** (pull request 10, closed): download,
-scan, rebuild, `npm run check`, branch, pull request and assignment all worked, and rebuilding
-today's PDF changed no file. Not covered by the test: a PDF whose guidelines really differ.
-
-**Next steps:** the owner does 8.4 task 8 and answers 8.3 items 1 to 5. Then, in a fresh chat: build feature 11
-(8.6), and fix 8.5 items 1 to 3 and 6. The red-flag removal and the rationale question are no
-longer to do (8.3, 16 Nov 2026).
+**Next steps:** the owner does 8.4 task 8 and answers 8.3 items 1 and 2 (item 2, Midazolam for
+eclampsia at Paramedic level, had no recommended option, so it stays as built: not shown). In a
+fresh chat: fix 8.5 items 1 to 3 and 6.

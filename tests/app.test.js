@@ -385,6 +385,22 @@ test('Practice level limits the quiz to the medicines of one ATP and is saved', 
     'EMT medicines stay',
   );
   assert.ok(!emtNames.some((name) => /^(Adenosine|Fentanyl) /.test(name)), 'others hidden');
+  // Feature 11: only the doses an EMT may give; lines for higher levels are greyed with a label.
+  assert.ok(emtNames.includes('Adrenaline (13 cards)'), 'the 9 IV-only dose cards are dropped');
+  const practice = $('#quiz-practice-medicine');
+  practice.value = [...practice.options].find((o) => /^Adrenaline /.test(o.text)).value;
+  practice.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  click($('[data-action="quiz-practise"]'));
+  while (!/Asthma/.test($('.quiz-prompt').textContent)) {
+    click($('[data-action="quiz-show-answer"]'));
+    click($('[data-action="quiz-practice-answer"][data-rating="good"]'));
+  }
+  click($('[data-action="quiz-show-answer"]'));
+  assert.equal($('.other-level-label').textContent, 'ICP and CCP');
+  assert.equal($$('.other-level-label').length, 1, 'one label for the run of greyed lines');
+  assert.equal($$('.other-level-line').length, 6, 'the IV lines');
+  assert.equal($$('.quiz-answer .bullet-row').length, 8, 'no line is removed');
+  click($('[data-action="quiz-end"]'));
   await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
   assert.equal(JSON.parse(stored['quiz-settings'].n).practiceLevel, 'EMT', 'saved to the tracker');
   const reset = $('#quiz-practice-level');
