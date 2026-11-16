@@ -148,12 +148,12 @@ behaves are in the README.
 - Z19 (owner, 16 Nov 2026): the limits in brackets in the CPG 1.1 table apply ("cardiac arrest
   only", "analgesia only", the Midazolam IM and IV limits). A Paramedic sees Amiodarone's
   cardiac arrest card and not its tachydysrhythmia card.
-- Z20 (16 Nov 2026, the recommended option, to be confirmed by the owner, 8.3 item 2): limits
+- Z20 (owner, 16 Nov 2026): limits
   come from CPG 1.1 only, not from a medicine's own "Authorised practice levels" lines. So
   Hydrocortisone's dose card stays for Paramedics and Labetalol stays ICP and CCP.
 - Z21 (owner, 16 Nov 2026): none of the 23 Adrenaline, Midazolam and Morphine indication cards
-  is removed from the quiz. (The practice level filter still leaves out the ones a chosen
-  level may not give; see 8.3 item 3.)
+  is removed from the quiz. With a practice level chosen, the filter still leaves out the ones
+  that level may not give (confirmed by the owner, 16 Nov 2026).
 - Z22: how a line gets its level. Its routes are the route words in it (abbreviations in
   capitals only; an infusion is IV); a line with none takes those of the line it sits under,
   otherwise of the lines under it, otherwise of the line before. A line with two routes counts
@@ -218,22 +218,7 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
    wants the app to update by itself when the guidelines change. Today a pull request opens and
    nothing reaches phones until the owner merges it; then each phone shows a banner and updates
    when "Update now" is tapped (Decision U).
-2. **Feature 11: confirm Decision Z20** (limits that are on a medicine's own page but not in
-   CPG 1.1). The owner asked for the recommended option or the options again; Option A is
-   built. Hydrocortisone (Paramedics: adrenal crisis, severe asthma, severe COPD only) and
-   Labetalol (Paramedics only after seeking clinical advice).
-   Option A (recommended, built): use CPG 1.1 only, as for feature 10, so Hydrocortisone's
-   single dose card stays for Paramedics and Labetalol stays ICP and CCP.
-   Option B: also read each medicine's "Authorised practice levels" lines, with a hand-checked
-   list of the phrases that mean a limit.
-3. **Feature 11: what "don't drop any of the cards from Adrenaline, Midazolam or Morphine"
-   covers** (asked 16 Nov 2026). Recorded as Z21: the 23 indication cards all stay in the quiz.
-   With a practice level chosen, the filter still leaves out the cards that level may not give
-   (EMT: 9 Adrenaline cards; Paramedic: 8 Adrenaline and 2 Midazolam cards).
-   Option A (built): keep it so; a level studies only the cards with a line it may give.
-   Option B: for these three medicines never leave a card out; a card with no line for the
-   level is shown fully greyed under its label (for example "ICP and CCP").
-4. **Feature 11: Midazolam for eclampsia at Paramedic level.** CPG 1.1 limits Paramedics to
+2. **Feature 11: Midazolam for eclampsia at Paramedic level.** CPG 1.1 limits Paramedics to
    "seizures, acute behavioural disturbance and care during last days of life", so the card
    "Midazolam – Eclampsia – Dose" (CPG 8.4) is left out for Paramedics, because the word
    "seizures" is not in its title.
@@ -243,7 +228,8 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
 
 Answered 16 Nov 2026:
 
-- **Feature 11** (old items 2 to 5): recorded as Z18 to Z21 in 8.2.
+- **Feature 11** (old items 2 to 5): recorded as Z18 to Z21 in 8.2; the owner accepted the
+  built options for Z20 and Z21.
 - **Guideline quiz, numbers:** the dose-number questions are good as they are (Z14 review
   closed).
 - **Guideline quiz, red flags (changed 16 Nov 2026):** keep the "Which of these is a red flag"
