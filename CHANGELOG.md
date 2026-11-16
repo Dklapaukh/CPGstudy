@@ -2,6 +2,8 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Plan only: the manager view is switched on and works with the real Sheet (8.4
+  tasks 1 and 8 done). No app change.
 - 2026-11-16: Manager view fix. The owner's check found no passcode worked: the backend address
   the app calls still runs the code from before the manager view (it answers "stats" with
   "bad-action"), so the redeploy did not reach that address. The page now says so and how to

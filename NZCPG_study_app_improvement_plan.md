@@ -244,15 +244,16 @@ Answered 16 Nov 2026:
 
 ### 8.4 Open tasks (owner, by hand)
 
-1. **Redeploy `backend/Code.gs`** if not done since 11 Nov 2026 (README, "Backend"). Until then
-   the live backend may still accept the placeholder mentor passcode. Not verifiable from here.
+1. Done 16 Nov 2026: `backend/Code.gs` redeployed (see task 8).
 2. **Check that the placeholder mentor passcode was changed** in the Mentors tab.
 3. **Email filter** on the subject "NZCPG study app:" for the report address.
 4. **Delete nine merged branches on GitHub** (all fully merged, checked 16 Nov 2026):
    `feature-6-converter`, `feature-6-pdf-check`, `feature-quiz`, `guideline-quiz`,
    `layout-and-switch-back`, `ordering-and-report`, `quiz-by-medicine`,
    `quiz-practise-medicine`, `review-items`; and the two left by the 16 Nov test run,
-   `pdf-update-test` and `test-pdf-check`. Claude's workspace cannot delete branches.
+   `pdf-update-test` and `test-pdf-check`. Claude's workspace cannot delete branches (git and
+   the GitHub API both refuse, checked 16 Nov 2026); the owner deletes them on
+   <https://github.com/Dklapaukh/CPGstudy/branches/all> (bin icon on each row, never `main`).
 5. **Morphine 14.32:** the owner is telling the guideline coordinator that the PDF page is cut
    short.
 6. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
@@ -260,130 +261,9 @@ Answered 16 Nov 2026:
    check what each practice level is shown (the pull request's check list says so).
 7. **If commits stop for 60 days**, GitHub pauses the daily PDF check (8.5 item 5): press
    "Enable workflow" on the Actions tab, "pdf-check".
-8. **Switch on the manager view** (README, "Manager view", steps 1 to 7): paste
-   `backend/Code.gs`, run `setup()`, redeploy as a new version at the same address, fill the
-   Managers and Assignments tabs, then check the page with the real Sheet. This also completes
-   task 1. **16 Nov 2026 check:** `setup()` ran and the tabs were filled, but no passcode
-   worked: the app's backend address still answers "stats" with "bad-action", i.e. runs the old
-   code, so the redeploy did not reach that address (probably "New deployment", or an edit
-   without "New version"). Still to do: paste `backend/Code.gs` again (it now has a version
-   line), redeploy per README step 4, open the backend address and check it reads "…version
-   with the manager view (16 Nov 2026)", then sign in on `manager.html`.
-
-### 8.5 Features that can fail without telling anyone (found 15 Nov 2026)
-
-| #   | What happens                                                                                                                                                                                                                                              | Where                                        |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| 1   | **Notes longer than 5000 characters are cut by the backend with no warning.** The phone that typed them keeps the full text and shows "Saved"; every other phone and the mentor get the cut version, and the tail is lost when one of them edits.          | `cleanChange_` in `backend/Code.gs`; the notes box has no length limit |
-| 2   | **"Saved" is shown even when the backend ignored a change.** The reply says how many changes were saved; the app never reads it. A change with an older time than the Sheet's, or an id the backend refuses, is dropped and then removed from the queue. | `syncNow` in `src/sync.js`                   |
-| 3   | **Unsent edits are deleted without asking** when a sync is answered "passcode not found" (a passcode changed or removed in the Sheet). The message is shown, but the edits are gone.                                                                      | `syncNow`, `signOut` in `src/navigation.js`  |
-| 4   | **Fixed 16 Nov 2026.** The daily PDF check skipped a new PDF for ever, with a green run, when a branch `pdf-update-<date>` was left behind. It now skips only while a pull request for that PDF is open, and deletes a leftover branch and builds again. | `.github/workflows/pdf-check.yml` |
-| 5   | **GitHub switches off scheduled workflows after 60 days with no repository activity**, so the PDF check stops once commits stop. Not worked around: the usual keep-alive tricks exist to defeat this rule and may break GitHub's terms. See 8.4 task 7. | GitHub |
-| 6   | **A blank page with no message** when any app file fails to load: no signal on open (no service worker), or a phone loading a mix of old and new files in the roughly 10 minutes after a push. There is no error handler and no fallback text.            | `index.html`, `src/main.js`                  |
-| 7   | **App code updates are never announced** (Decision T). A phone that keeps the page open runs old code until it is reloaded.                                                                                                                                | `src/updateState.js`                         |
-| 8   | **A damaged saved entry is read as empty**, and the next save replaces it: a medicine's whole quiz schedule, the queue, a setting. Two phones rating the same medicine before syncing: the newer save replaces the other's ratings.                       | `parseSchedules`, `parseQueue`, `storedSettings` |
-| 9   | **"Mark for review after N days" trusts the phone's date.** One phone with a wrong date moves Complete guidelines to Needs review for everyone on the tracker; there is no undo.                                                                           | `applyAutoReview` in `src/settingsState.js`  |
-| 10  | **Blocked or full phone storage** is reported on the list and guideline screens only. Quiz ratings, scores and settings made offline are then lost on closing, with no message on those screens.                                                          | `saveSession` in `src/state.js`              |
-| 11  | **The report button does nothing** on a phone with no email app set up.                                                                                                                                                                                    | `src/report.js`                              |
-| 12  | **CI installs whatever dependency versions are newest** (`package-lock.json` is ignored by git), so the checks or the PDF converter can change behaviour with no change in the repository. The daily `--check` run would show a converter change as red. | `.gitignore`, both workflows                 |
-
-### 8.6 Plan: feature 11, ATP filter by route and indication (16 Nov 2026)
-
-**Built 16 Nov 2026** as planned, with the answers recorded as Z18 to Z22. The plan is kept
-because code comments refer to it.
-
-**Why.** Feature 10 filters whole medicines: a medicine counts for a level if that level may
-give it by any route. So an EMT studying Adrenaline also gets IV infusion doses and an RSI
-row. The aim is that each level studies only the doses it may give.
-
-**Size of the problem (measured 16 Nov 2026).** 102 dose cards, 296 answer lines; 155 lines
-name a route. Only a few medicines have different routes or indications at different levels:
-Adrenaline (EMT: IM, IN, nebulised, topical; Paramedic: also IV in cardiac arrest; ICP: all),
-Amiodarone (Paramedic: cardiac arrest only), Ondansetron (EMT: IM only), Midazolam
-(Paramedic: limited indications), Ketamine (Paramedic: analgesia only), and the CPG 9.3 RSI
-table cards (Fentanyl, Ketamine, Rocuronium, Suxamethonium: CCP only, from the RSI row of
-1.1). Every other medicine has one set of levels for all its routes, so nothing changes for it.
-Topic cards (Indications, Contraindications and so on) stay whole for every level that may give
-the medicine.
-
-**Steps** (each with tests; pure logic in `src/practiceLevels.js`, after the 8.3 answers):
-
-1. **Routes and limits per level, from CPG 1.1.** Read each medicine row's routes (the words
-   after the name: "IN, IM, nebulised and topical"; "(all routes)" means any) and its bracketed
-   limit ("cardiac arrest only"). Result per medicine and level: { routes, indications } or
-   "any". Tested on the real table for the six medicines above.
-2. **The route of each answer line.** Route words: IM, IV, IN, IO, SC, PO, SL, MDI, nebulised,
-   topical, inhaled; "infusion" counts as IV. A line with no route word takes the route of the
-   line it sits under (lower indent), otherwise of the line before; a card with no route words
-   at all is left whole. Tested on Adrenaline (Asthma, Anaphylaxis), Ondansetron and Fentanyl.
-3. **The indication of a dose card**: the middle part of its prompt ("Adrenaline – Cardiac
-   Arrest – Dose"). It meets a limit when most of the limit's words are in it (as `isSameFlag`
-   does for red flags), so "care during last days of life" matches "Care During the Last Days
-   of Life". Only if 8.3 item 4 is Option A.
-4. **Filter a card for a level**: drop the card if no line is allowed (or its indication is
-   outside the limit, or it is an RSI table card below CCP); otherwise keep the allowed lines.
-   The card keeps its key, so its schedule is untouched.
-5. **Screen**: `studyCards()` returns the filtered cards; the answer shows only the kept lines
-   and the note of 8.3 item 3 (or greyed lines with a label). Card counts and the practice list
-   follow.
-6. **Review list for the owner before going live**: a script prints, for each level, every
-   card dropped and every line hidden, so the owner can check the result against the
-   guidelines (as for the 23 indication cards). Any wrong case is fixed with an entry in
-   `content/practice-level-overrides.js`, not in code.
-7. README (Medicines quiz), change log, decisions recorded as Z18 onwards, push.
-
-**Risks.** A line that names two routes ("IM and IV adrenaline should not be administered")
-counts as allowed if either route is allowed, so it is never hidden wrongly. A new PDF wording
-can move a line out of a route; step 6's script is run again on each PDF update, as part of
-the pull request check list (8.4 item 6).
-
----
-
-## 10. Style guide: how all code is written
-
-Goal: a programmer who does not know the project can read any function once and explain it.
-
-**Names and layout**
-
-1. Full descriptive names (`guidelineStatus`, not `st`); one-letter names only for loop counters.
-2. One statement per line; lines of at most 100 characters (Prettier enforces it).
-3. Descriptive CSS class names (`guideline-row`, `status-button--complete`). No styles written in
-   JavaScript.
-4. Named constants, not magic values: status codes, storage keys, timings, column numbers, colours.
-
-**Structure**
-
-5. Small functions that do one thing, normally under 30 lines.
-6. Logic apart from the screen: pure functions take input and return a result, and are tested
-   without a browser.
-7. One state object, one way to draw. No patching the page afterwards, no polling timers for
-   display changes.
-8. Content is data: guideline text lives in `content/` and is never typed into code.
-9. Modern JavaScript (`const`, `let`, arrow functions, modules). Never `var`.
-
-**Comments and documentation**
-
-10. Every file starts with a short header: its purpose and what it depends on.
-11. Every function has a one-to-three line comment: what it is for, what it takes and returns.
-12. Comments explain why, not what; a rule that came from a real need says so.
-13. The README describes the app as it is now. The change log gets a short dated entry per change.
-
-**Safety and quality**
-
-14. No silent errors: an empty `catch` says why it is safe, or the error is shown or logged.
-15. All text from outside is untrusted: escaped before it reaches the page; downloaded content is
-    validated before it is published.
-16. Accessibility: contrast of at least 4.5:1, tap targets of at least 44 px, a label on every
-    button, status never shown by colour alone.
-17. Every pure function has tests. Fixing a bug starts with a test that shows it.
-18. One purpose per change.
-
-**Apps Script (`backend/Code.gs`)**
-
-19. One column map, one definition of the status values, a comment on every function, no waiting
-    or sleeping while holding the lock, generic error messages to the app.
-
----
+8. Done 16 Nov 2026: manager view switched on. The first redeploy missed the app's address
+   (fixed by redeploying with Manage deployments, New version); the owner confirmed the page
+   works with the real Sheet.
 
 ## 13. Status
 
@@ -396,11 +276,9 @@ Paramedic 3 and 18; ICP 4 dropped (RSI rows); CCP everything. The owner saw the 
 looked at on a real phone: the greyed lines and their label.
 
 Before it: the manager view (feature 12, decisions MV-A to MV-I) is on `main` at `manager.html`.
-Owner's first check with the real Sheet (16 Nov 2026): no passcode worked, because the live
-backend address still runs the pre-manager-view code (checked from the live page: "stats" gets
-"bad-action"). Fixed on the app side: the page now names this case and how to redeploy, and
-the backend's address shows its version when opened. Still waiting on the redeploy (8.4 task 8).
+The owner switched it on and confirmed it works with the real Sheet (16 Nov 2026), after a
+fix: the first redeploy missed the app's address, and the page now names that case.
 
-**Next steps:** the owner does 8.4 task 8 and answers 8.3 items 1 and 2 (item 2, Midazolam for
+**Next steps:** the owner does 8.4 tasks 2 to 4 and answers 8.3 items 1 and 2 (item 2, Midazolam for
 eclampsia at Paramedic level, had no recommended option, so it stays as built: not shown). In a
 fresh chat: fix 8.5 items 1 to 3 and 6.
