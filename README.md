@@ -299,6 +299,13 @@ scores.
    "New deployment": that would make a new address and the app would stop working). Press the
    pencil (Edit). Under Version choose **New version**. Press Deploy, then Done. The address
    stays the same, so nothing in the app needs changing.
+   **Check it worked:** open
+   <https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec>
+   in a browser. It must say "CPG tracker service is running, version with the manager view
+   (16 Nov 2026)". If it says only "CPG tracker service is running", the app's address still
+   runs the old code: in Manage deployments make sure you edit the deployment whose Web app URL
+   is the address above, and choose New version. If the manager page says "still running an
+   older version of the backend", the same applies.
 5. **Fill the `Managers` tab.** One line per manager: their name in column A, a passcode you
    make up in column B. Make it long (four or more words), different from every other
    passcode, and send it to that manager privately. Mentors need no line here: their mentor

@@ -86,6 +86,10 @@ export const MESSAGES = {
   GENERIC_ERROR: 'Something went wrong. Please try again.',
   PLACEHOLDER_PASSCODE:
     'That is the placeholder mentor passcode. Change it in the Mentors tab of the Sheet first.',
+  // The backend address answered "stats" with "bad-action": it still runs the code from before
+  // the manager view, so no passcode can work until it is redeployed (README, "Manager view").
+  OLD_BACKEND:
+    'The app’s backend address is still running an older version of the backend, so no passcode can work yet. In Apps Script press Deploy, Manage deployments, the pencil, Version: New version, Deploy. Then try again.',
   NOT_A_MENTOR_CODE: 'That passcode isn’t a mentor passcode.',
   LABEL_NEEDED: 'Please type a label first, for example Sam - 2026.',
   IS_A_MENTOR_CODE: 'That is a mentor passcode. Please type a tracker passcode.',

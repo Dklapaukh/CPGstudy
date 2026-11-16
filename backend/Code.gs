@@ -23,6 +23,10 @@ const PLACEHOLDER_MENTOR_PASSCODE = 'change-this-to-a-long-passcode';
 // wrong clock cannot beat every later edit from other devices.
 const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
+// Shown when the web app address is opened in a browser, so the owner can check that a redeploy
+// reached the address the app uses. Change it whenever the requests the backend accepts change.
+const BACKEND_VERSION = 'version with the manager view (16 Nov 2026)';
+
 const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
 
 const SHEET = {
@@ -76,9 +80,9 @@ function setup() {
   }
 }
 
-/** Lets you open the web app address in a browser to check it is running. */
+/** Lets you open the web app address in a browser to check it is running, and which version. */
 function doGet() {
-  return ContentService.createTextOutput('CPG tracker service is running');
+  return ContentService.createTextOutput('CPG tracker service is running, ' + BACKEND_VERSION);
 }
 
 /** Receives every request from the app and returns the reply as JSON. */

@@ -203,6 +203,11 @@ const reply = {
     [0, 'quiz-order-cpg-2-1', 75, now - DAY, 0],
   ],
 };
+// 'old-backend' stands for a backend address still running code from before the manager view.
+const backendReply = (code) => {
+  if (code === 'manager-1') return reply;
+  return { ok: false, error: code === 'old-backend' ? 'bad-action' : 'not-found' };
+};
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const $ = (selector) => doc.querySelector(selector);
 const click = (element) => element.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
@@ -223,7 +228,7 @@ before(() => {
       const body = JSON.parse(options.body);
       requests.push(body);
       return {
-        json: async () => (body.code === 'manager-1' ? reply : { ok: false, error: 'not-found' }),
+        json: async () => backendReply(body.code),
       };
     },
   };
@@ -287,4 +292,12 @@ test('page: a failed refresh keeps the numbers; sign out clears them and the pas
   assert.ok($('#manager-passcode'));
   assert.equal(dom.window.sessionStorage.getItem('eas-cpg-manager-v1'), null);
   assert.equal(doc.body.textContent.includes('Sam'), false);
+});
+
+test('page: a backend without the "stats" action says to redeploy, not "Something went wrong"', async () => {
+  signalWorks = true;
+  await signIn('old-backend');
+  assert.match($('.warning-message').textContent, /older version of the backend/);
+  assert.match($('.warning-message').textContent, /Manage deployments/);
+  assert.ok($('#manager-passcode'));
 });

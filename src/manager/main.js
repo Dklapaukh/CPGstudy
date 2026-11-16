@@ -36,6 +36,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const BACKEND_MESSAGES = {
   'not-found': MESSAGES.CODE_NOT_RECOGNISED,
   'placeholder-passcode': MESSAGES.PLACEHOLDER_PASSCODE,
+  'bad-action': MESSAGES.OLD_BACKEND,
 };
 
 const app = document.getElementById('manager-app');

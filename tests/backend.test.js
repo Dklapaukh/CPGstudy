@@ -75,11 +75,15 @@ const environment = {
   Utilities: { sleep: () => sleeps++ },
   console: { error() {} },
 };
-const { doPost, setup } = new Function(
+const { doGet, doPost, setup } = new Function(
   ...Object.keys(environment),
-  `${source}; return { doPost, setup };`,
+  `${source}; return { doGet, doPost, setup };`,
 )(...Object.values(environment));
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
+
+test('opening the backend address says which version is live, so a redeploy can be checked', () => {
+  assert.match(doGet().text, /running, version with the manager view \(16 Nov 2026\)/);
+});
 
 test('open: tracker, mentor, and a wrong passcode that is delayed after the lock', () => {
   assert.deepEqual(

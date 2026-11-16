@@ -262,8 +262,13 @@ Answered 16 Nov 2026:
    "Enable workflow" on the Actions tab, "pdf-check".
 8. **Switch on the manager view** (README, "Manager view", steps 1 to 7): paste
    `backend/Code.gs`, run `setup()`, redeploy as a new version at the same address, fill the
-   Managers and Assignments tabs, then check the page with the real Sheet. Until then the page
-   answers every passcode with "Something went wrong". This also completes task 1.
+   Managers and Assignments tabs, then check the page with the real Sheet. This also completes
+   task 1. **16 Nov 2026 check:** `setup()` ran and the tabs were filled, but no passcode
+   worked: the app's backend address still answers "stats" with "bad-action", i.e. runs the old
+   code, so the redeploy did not reach that address (probably "New deployment", or an edit
+   without "New version"). Still to do: paste `backend/Code.gs` again (it now has a version
+   line), redeploy per README step 4, open the backend address and check it reads "…version
+   with the manager view (16 Nov 2026)", then sign in on `manager.html`.
 
 ### 8.5 Features that can fail without telling anyone (found 15 Nov 2026)
 
@@ -391,9 +396,10 @@ Paramedic 3 and 18; ICP 4 dropped (RSI rows); CCP everything. The owner saw the 
 looked at on a real phone: the greyed lines and their label.
 
 Before it: the manager view (feature 12, decisions MV-A to MV-I) is on `main` at `manager.html`.
-It shows nothing until the owner does 8.4 task 8 (paste the backend, `setup()`, redeploy, fill
-the tabs). Tested with a stand-in Sheet and a simulated browser only, not yet with the real
-Sheet.
+Owner's first check with the real Sheet (16 Nov 2026): no passcode worked, because the live
+backend address still runs the pre-manager-view code (checked from the live page: "stats" gets
+"bad-action"). Fixed on the app side: the page now names this case and how to redeploy, and
+the backend's address shows its version when opened. Still waiting on the redeploy (8.4 task 8).
 
 **Next steps:** the owner does 8.4 task 8 and answers 8.3 items 1 and 2 (item 2, Midazolam for
 eclampsia at Paramedic level, had no recommended option, so it stays as built: not shown). In a

@@ -2,6 +2,12 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-16: Manager view fix. The owner's check found no passcode worked: the backend address
+  the app calls still runs the code from before the manager view (it answers "stats" with
+  "bad-action"), so the redeploy did not reach that address. The page now says so and how to
+  redeploy, instead of "Something went wrong". Opening the backend address in a browser now
+  names the version ("…version with the manager view (16 Nov 2026)"), so a redeploy can be
+  checked. **Paste `backend/Code.gs` again and redeploy** (README, "Manager view", step 4).
 - 2026-11-16: Medicines quiz, feature 11: with a practice level (ATP) chosen, dose cards follow
   the routes and "(… only)" indication limits of the CPG 1.1 table. Lines for a higher level
   are greyed under a label such as "ICP and CCP"; a card with no line for the level, and the
