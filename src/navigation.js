@@ -8,7 +8,6 @@ import { mergeRemoteEntries } from './logic.js';
 import { pendingCount, syncNow } from './sync.js';
 import { sendRequest } from './api.js';
 import { renderLogin } from './views/loginView.js';
-import { renderMentor } from './views/mentorView.js';
 import { renderSignup } from './views/signupView.js';
 import { isDemoTracker, isDemoLabel } from './streakState.js';
 import { renderList } from './views/listView.js';
@@ -50,7 +49,6 @@ function clearHash() {
  */
 export function showLogin(message, passcodeValue) {
   state.screen = SCREEN.LOGIN;
-  state.mentorPasscode = '';
   renderLogin(message, passcodeValue, state.passcode ? state.label : null);
 }
 
@@ -96,16 +94,6 @@ export function showSignup(details = {}) {
   state.screen = SCREEN.LOGIN; // background syncing pauses, as on the passcode screen
   state.signupContext = { created: details.created || null, shownAt: Date.now() };
   renderSignup(details);
-}
-
-/** Shows the mentor screen. `details` is { name, created, message, labelValue, openValue }. */
-export function showMentor(details) {
-  state.screen = SCREEN.MENTOR;
-  state.mentorContext = {
-    name: details.name,
-    created: details.created || null,
-  };
-  renderMentor(details);
 }
 
 /**
@@ -164,7 +152,6 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
   state.guidelineQuiz = null;
   state.pendingChanges = {};
   saveSession();
-  state.mentorPasscode = '';
   state.screen = SCREEN.TRACKER;
   state.syncInProgress = false;
   state.lastSyncFailed = false;

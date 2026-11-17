@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 
 const source = readFileSync('backend/Code.gs', 'utf8');
 const tabs = {
+  // An old Mentors tab is left in the Sheet: its passcodes must no longer open anything.
   Mentors: [
     ['Name', 'Passcode'],
     ['Mia', 'Boss-1'],
@@ -93,31 +94,20 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with self sign-up and the demo \(18 Nov 2026\)/);
+  assert.match(doGet().text, /running, version without mentors \(18 Nov 2026\)/);
 });
 
-test('open: tracker, mentor, and a wrong passcode that is delayed after the lock', () => {
+test('open: a tracker, and a wrong or old mentor passcode that is delayed after the lock', () => {
   assert.deepEqual(
     { role: post({ action: 'open', code: ' TRACKER-1 ' }).role },
     { role: 'tracker' },
   );
-  assert.equal(post({ action: 'open', code: 'boss-1' }).name, 'Mia');
+  assert.equal(post({ action: 'open', code: 'boss-1' }).error, 'not-found');
   const before = sleeps;
   const wrong = post({ action: 'open', code: 'nope' });
   assert.equal(wrong.error, 'not-found');
   assert.equal(sleeps, before + 1);
   assert.equal('delayBeforeReply' in wrong, false);
-});
-
-test('the placeholder mentor passcode is refused even when it is in the Sheet (C4)', () => {
-  tabs.Mentors.push(['Your name', 'change-this-to-a-long-passcode']);
-  const placeholder = { code: 'Change-this-to-a-long-passcode' };
-  assert.equal(post({ action: 'open', ...placeholder }).error, 'placeholder-passcode');
-  assert.equal(
-    post({ action: 'create', label: 'Sam', ...placeholder }).error,
-    'placeholder-passcode',
-  );
-  tabs.Mentors.pop();
 });
 
 test('save: bad ids ignored, future times cut back, older edits lose', () => {
@@ -141,10 +131,8 @@ test('save: bad ids ignored, future times cut back, older edits lose', () => {
   assert.equal(older.data.g1.n, 'hi');
 });
 
-test('create: only mentors can; unknown actions and bad requests give generic errors', () => {
-  const made = post({ action: 'create', code: 'boss-1', label: 'Alex' });
-  assert.match(made.code, /^[a-z]+-[a-z]+-[a-z]+-\d\d$/);
-  assert.equal(post({ action: 'create', code: 'tracker-1', label: 'x' }).error, 'not-mentor');
+test('unknown actions, the removed create action and bad requests give generic errors', () => {
+  assert.equal(post({ action: 'create', code: 'boss-1', label: 'Alex' }).error, 'bad-action');
   assert.equal(post({ action: 'zzz', code: 'tracker-1' }).error, 'bad-action');
   assert.deepEqual(JSON.parse(doPost({ postData: { contents: 'not json' } }).text), {
     ok: false,
@@ -227,18 +215,20 @@ test('stats: a manager sees assigned trackers only, as numbers with no notes or 
   }
 });
 
-test('stats: a mentor also sees trackers they created; other passcodes are refused', () => {
-  const mentor = post({ action: 'stats', code: 'boss-1' });
-  assert.equal(mentor.role, 'mentor');
-  const labels = mentor.trackers.map((tracker) => tracker.label);
-  assert.ok(labels.includes('Sam') && labels.includes('Old'));
-  const old = mentor.trackers[labels.indexOf('Old')];
+test('stats: a manager sees back-filled History; tracker and old mentor passcodes are refused', () => {
+  tabs.Managers.push(['Kai', 'Manager-2']);
+  tabs.Assignments.push(['Kai', 'Old']);
+  const kai = post({ action: 'stats', code: 'manager-2' });
+  const labels = kai.trackers.map((tracker) => tracker.label);
+  assert.deepEqual(labels, ['Old'], 'assigned trackers only');
+  const old = kai.trackers[0];
   assert.deepEqual(old.marked, {
     'cpg-2-1': old.marked['cpg-2-1'],
     'cpg-2-2': old.marked['cpg-2-2'],
   });
-  const backfilled = mentor.history.filter((row) => row[4] === 1);
+  const backfilled = kai.history.filter((row) => row[4] === 1);
   assert.equal(backfilled.length, 3);
+  assert.equal(post({ action: 'stats', code: 'boss-1' }).error, 'not-found');
   const before = sleeps;
   assert.equal(post({ action: 'stats', code: 'tracker-1' }).error, 'not-found');
   assert.equal(sleeps, before + 1);

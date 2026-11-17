@@ -2,6 +2,12 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Mentors removed, now that people make their own accounts. The app has no mentor
+  screen (a mentor passcode is "not recognised"), the backend no longer reads the `Mentors`
+  tab or accepts "create", and the manager page takes manager passcodes only (assigned
+  trackers only). Existing trackers, including ones mentors made, work as before. Needs the
+  backend redeploy (8.4 task 10).
+
 - 2026-11-18: Demo and self sign-up. A phone that has never signed in opens on the tracker
   labelled `demo`, with a banner and a big Make an account button (and "I already have a
   passcode"). The passcode screen has the button too. Make an account asks for a name, makes a

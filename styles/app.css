@@ -59,7 +59,7 @@ h1 {
   padding: 0 0.8rem;
 }
 
-/* Cover banner (login, mentor and list screens) */
+/* Cover banner (login, sign-up and list screens) */
 .cover {
   background: var(--colour-green);
   color: #fff;
@@ -1079,7 +1079,7 @@ td.table-cell--coloured {
   flex: 1;
 }
 
-/* Messages, buttons and mentor screen */
+/* Messages, buttons and the new passcode box */
 .warning-message {
   background: #fdeedd;
   color: #a8510a;

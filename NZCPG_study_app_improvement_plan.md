@@ -332,7 +332,7 @@ Answered 16 Nov 2026:
 ### 8.4 Open tasks (owner, by hand)
 
 1. Done 16 Nov 2026: `backend/Code.gs` redeployed (see task 8).
-2. **Check that the placeholder mentor passcode was changed** in the Mentors tab.
+2. No longer needed (mentors removed 18 Nov 2026): the `Mentors` tab can be deleted.
 3. **Email filter** on the subject "NZCPG study app:" for the report address.
 4. **Delete nine merged branches on GitHub** (all fully merged, checked 16 Nov 2026):
    `feature-6-converter`, `feature-6-pdf-check`, `feature-quiz`, `guideline-quiz`,
@@ -353,9 +353,11 @@ Answered 16 Nov 2026:
    works with the real Sheet.
 9. **Switch on the editor page** (README, "Editor page", "Switching it on"): paste and redeploy
    `backend/Code.gs` and run `setup`, then fill the new `Editors` tab.
-10. **Switch on sign-up** (README, "Demo and sign-up", "Switching it on"): paste
+10. **Switch on sign-up and the demo** (README, "Demo and sign-up", "Switching it on"): paste
     `backend/Code.gs`, run `setup` and allow "Send email as you", redeploy as a new version,
-    and check a `Trackers` row is labelled `demo`.
+    and check a `Trackers` row is labelled `demo`. Until then first visits show the passcode
+    screen and Make an account fails. Anyone who used a mentor passcode on the manager page
+    needs a `Managers` row and `Assignments` rows.
 
 ## 10. Style guide: how all code is written
 
@@ -404,6 +406,11 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**18 Nov 2026 (mentors removed).** Owner's choice ("remove completely"): self sign-up replaces
+mentors. Gone: the app's mentor screen, mentor sign-in, the backend's "create" action, the
+`Mentors` tab, the placeholder passcode check, and the manager page's mentor role (managers
+see `Assignments` only). Tracker passcodes made by mentors keep working.
 
 **18 Nov 2026 (sign-up).** Feature 15 on `main`: first visits open the `demo` tracker with a
 Make an account banner; sign-up takes a name and makes a passcode; the owner is emailed for

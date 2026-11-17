@@ -44,7 +44,6 @@
     "src/views/guidelineQuizView.js",
     "src/views/listView.js",
     "src/views/loginView.js",
-    "src/views/mentorView.js",
     "src/views/queueView.js",
     "src/views/quizMarkup.js",
     "src/views/ratDrawings.js",

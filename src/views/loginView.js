@@ -17,7 +17,7 @@ export function renderLogin(message, passcodeValue, backLabel) {
       : `<a class="back-link" href="#" data-action="back-to-tracker">‹ Back${
           backLabel ? ` to ${escapeHtml(backLabel)}` : ''
         }</a>`;
-  app.innerHTML = `${back}${coverHtml({ subtitleHtml: 'Mentoring tracker · enter your passcode' })}
+  app.innerHTML = `${back}${coverHtml({ subtitleHtml: 'Study tracker · enter your passcode' })}
     <div class="page-padding">${warning}
     <p class="subtitle">Type the passcode you were given. It isn’t case sensitive.</p>
     <input class="text-input" id="passcode-input" type="text" placeholder="Passcode"

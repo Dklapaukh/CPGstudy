@@ -38,7 +38,7 @@ const SIGNED_IN_BUTTONS =
 export function signInHtml(message, isLoading) {
   return `${coverHtml('Study progress of your team')}
     <main class="page-padding manager-narrow">${warningHtml(message)}
-    <p class="subtitle">Type your manager or mentor passcode. It isn’t case sensitive.</p>
+    <p class="subtitle">Type your manager passcode. It isn’t case sensitive.</p>
     <label class="visually-hidden" for="manager-passcode">Passcode</label>
     <input class="text-input" id="manager-passcode" type="password" placeholder="Passcode"
       autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">

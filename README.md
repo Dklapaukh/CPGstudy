@@ -1,10 +1,11 @@
 # NZCPG study app
 
 A phone-first web app for studying the EAS clinical practice guidelines: the guidelines, a status
-and notes for each, two quizzes, and a tracker shared with a mentor through a Google Sheet.
+and notes for each, two quizzes, and a tracker saved in a Google Sheet. People make their own account (a passcode)
+in the app; first visits open a shared demo.
 Published at <https://dklapaukh.github.io/CPGstudy/>. Study aid only, not for clinical use.
 
-A second page, the manager view, shows managers and mentors the progress of the people assigned
+A second page, the manager view, shows managers the progress of the people assigned
 to them: <https://dklapaukh.github.io/CPGstudy/manager.html> (see "Manager view"). A third, the
 editor page, lets editors change the quiz questions:
 <https://dklapaukh.github.io/CPGstudy/editor.html> (see "Editor page").
@@ -258,17 +259,15 @@ changing the same entry before syncing keep only the newer one.
 
 ## Manager view
 
-A separate page for managers and mentors: <https://dklapaukh.github.io/CPGstudy/manager.html>.
+A separate page for managers: <https://dklapaukh.github.io/CPGstudy/manager.html>.
 It uses the same guideline data and backend as the study app and is published the same way.
 
 **What it shows**
 
-- Sign in with a manager passcode (Managers tab) or a mentor passcode (Mentors tab). The
-  passcode is kept until the browser tab is closed. Mentors keep everything they had: a tracker
-  passcode still opens the tracker with its notes in the study app.
+- Sign in with a manager passcode (Managers tab). The passcode is kept until the browser tab is
+  closed.
 - **Team table**, one line per person: guidelines incomplete, for review and complete; guideline
-  quizzes done; last active (the last time anything was saved on the tracker, by the learner or
-  a mentor).
+  quizzes done; last active (the last time anything was saved on the tracker).
 - **Person page** (tap a name): guidelines overall and by section; each guideline quiz played
   with its most recent and highest score and their dates; Medicines on their own (statuses,
   flashcards learnt and due today); general numbers; charts.
@@ -276,8 +275,8 @@ It uses the same guideline data and backend as the study app and is published th
   average guideline quiz score. On the team page they cover everyone; on a person page, that
   person. "Show these numbers as a table" is under the charts.
 - Guideline counts leave out the Medicines section, because it has its own part of the page.
-- A manager sees only the trackers assigned to them. A mentor sees the trackers assigned to
-  them and the trackers they created.
+- A manager sees only the trackers assigned to them in the `Assignments` tab. Self sign-ups
+  are not assigned to anyone until you add a line there.
 
 **What a manager can never see.** The page is sent numbers only: statuses, scores, counts and
 dates. Notes, comments and tracker passcodes never leave the Sheet through the manager view.
@@ -315,10 +314,9 @@ scores.
    older version of the backend", the same applies.
 5. **Fill the `Managers` tab.** One line per manager: their name in column A, a passcode you
    make up in column B. Make it long (four or more words), different from every other
-   passcode, and send it to that manager privately. Mentors need no line here: their mentor
-   passcode already works.
-6. **Fill the `Assignments` tab.** One line for each person a manager or mentor should see:
-   column A is the viewer's name exactly as written in the `Managers` (or `Mentors`) tab,
+   passcode, and send it to that manager privately.
+6. **Fill the `Assignments` tab.** One line for each person a manager should see:
+   column A is the manager's name exactly as written in the `Managers` tab,
    column B is the tracker's label exactly as written in column A of the `Trackers` tab (for
    example `Sam - 2026`). Capital letters do not matter; spelling does. A viewer who should
    see five people has five lines. To stop someone seeing a tracker, delete the line. If two
@@ -380,7 +378,7 @@ many edits need review.
 
 ## Demo and sign-up
 
-- **First visit:** a phone that has never opened a real tracker (or the mentor screen) starts
+- **First visit:** a phone that has never opened a real tracker starts
   on the tracker labelled `demo` (any case) in the `Trackers` tab, fetched with the backend's
   "demo" action. Its list has a banner with **Make an account** and **I already have a
   passcode**. With no signal, or no `demo` tracker, the passcode screen shows instead. Once a
@@ -399,13 +397,13 @@ many edits need review.
 - **Switching it on:** paste `backend/Code.gs` into Apps Script, press Run on `setup` once so
   Google asks for the new permission ("Send email as you"), allow it, then Deploy, Manage
   deployments, the pencil, Version: New version, Deploy. Opening the backend address should
-  say "version with self sign-up and the demo (18 Nov 2026)". Check there is a `Trackers` row
+  say "version without mentors (18 Nov 2026)" (or a later version). Check there is a `Trackers` row
   labelled `demo`.
 
 ## Backend
 
 A small Apps Script program attached to the Google Sheet. The app sends it the passcode and any
-edits; it checks the passcode against the `Mentors` and `Trackers` tabs, reads or writes the
+edits; it checks the passcode against the `Trackers` tab, reads or writes the
 `Data` tab, and sends back this tracker's entries. For the manager view it also keeps the
 `History` tab and answers "stats" requests from the `Managers` and `Assignments` tabs. For the
 editor page it reads and writes the `Edits` tab for passcodes in the `Editors` tab, and gives
@@ -417,8 +415,8 @@ the edits to the daily copy ("edits", no passcode: they are published anyway).
 - A "stats" request reads the `Data` and `History` tabs whole and sends all of the viewer's
   History lines; the page does the sums. `History` grows by one line per status change or quiz
   play.
-- Passcodes are plain text in the Sheet, so keep its sharing limited. Replace the placeholder
-  mentor passcode created by `setup()`; the backend refuses it.
+- Passcodes are plain text in the Sheet, so keep its sharing limited. Mentors were removed on
+  18 Nov 2026: an old `Mentors` tab is no longer read and can be deleted.
 - The passcode is also kept in the phone's browser and the backend address is in the page.
   Anyone with a tracker passcode can read and change that tracker, so keep passcodes long.
 - Every request reads the whole `Data` tab. Revisit that (for example one tab per tracker) at
@@ -429,8 +427,7 @@ the edits to the daily copy ("edits", no passcode: they are published anyway).
 The same result is expected before and after any tidy-up. Automated in `tests/app.test.js`
 unless marked "by hand".
 
-- Sign in with a tracker passcode and a mentor passcode; a wrong passcode shows the message.
-- Mentor creates a tracker and sees the new passcode; opens an existing tracker; signs out.
+- Sign in with a tracker passcode; a wrong (or old mentor) passcode shows the message.
 - A first visit opens the demo with Make an account; signing up shows the passcode and opens
   the new tracker (`tests/signup.test.js`).
 - List shows 14 sections and 180 guidelines with correct counts; sections stay as left (by hand).
@@ -441,7 +438,7 @@ unless marked "by hand".
 - The made-with-AI, study-only notice shows on the passcode, list and guideline screens.
 - The report button is under every screen and the page holds no whole email address.
 - Manager page (`tests/manager.test.js`, `tests/backend.test.js`): a wrong passcode shows the
-  message; a manager sees only assigned trackers and a mentor also their own; the reply holds
+  message; a manager sees only assigned trackers; the reply holds
   no notes or passcodes; a person page shows every part; the date range redraws the charts;
   sign out clears the numbers. With the real Sheet: by hand.
 - Two phones on one passcode show the same data after a sync (by hand).

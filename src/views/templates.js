@@ -21,7 +21,7 @@ export function aiNoticeHtml() {
   return `<p class="ai-notice" role="note">${INFO_ICON}<span>${MESSAGES.AI_NOTICE}</span></p>`;
 }
 
-/** The green banner at the top of the login, mentor and list screens. */
+/** The green banner at the top of the login, sign-up and list screens. */
 export function coverHtml({ labelHtml = '', buttonHtml = '', subtitleHtml }) {
   return `<div class="cover">
     <div class="top-bar"><b class="tracker-label">${labelHtml}</b>${buttonHtml}</div>

@@ -14,7 +14,6 @@ import { state, markSignedInBefore } from './state.js';
 import { sendRequest } from './api.js';
 import {
   showLogin,
-  showMentor,
   showSignup,
   beginTrackerSession,
   returnToTracker,
@@ -78,12 +77,11 @@ const byId = (id) => document.getElementById(id);
 /** The message for a sign-in that the backend refused, from the error code in its reply. */
 function signInErrorMessage(reply) {
   const error = reply && reply.error;
-  if (error === 'placeholder-passcode') return MESSAGES.PLACEHOLDER_PASSCODE;
   if (error && error !== 'not-found') return MESSAGES.GENERIC_ERROR;
   return MESSAGES.CODE_NOT_RECOGNISED;
 }
 
-/** Opens the tracker or mentor screen for the typed passcode, or says why it cannot. */
+/** Opens the tracker for the typed passcode, or says why it cannot. */
 async function submitPasscode() {
   const code = byId('passcode-input').value.trim();
   if (!code) return;
@@ -92,91 +90,18 @@ async function submitPasscode() {
   button.textContent = 'Checking…';
   try {
     const reply = await sendRequest({ action: 'open', code });
-    const accepted = reply && reply.ok && (reply.role === 'tracker' || reply.role === 'mentor');
+    const accepted = reply && reply.ok && reply.role === 'tracker';
     // The tracker still open behind Switch tracker is only left once the new passcode works.
     if (accepted && !leaveOpenTracker()) {
       showLogin('', code);
-    } else if (accepted && reply.role === 'tracker') {
-      beginTrackerSession(code, reply.label, reply.data);
     } else if (accepted) {
-      state.mentorPasscode = code;
-      markSignedInBefore();
-      showMentor({ name: reply.name });
+      beginTrackerSession(code, reply.label, reply.data);
     } else {
       showLogin(signInErrorMessage(reply), code);
     }
   } catch {
     showLogin(MESSAGES.NO_SIGNAL, code);
   }
-}
-
-/* ---------- Mentor screen ---------- */
-
-/** Creates a tracker with the typed name for the signed-in mentor, then shows its passcode. */
-async function createTracker() {
-  const { name, created } = state.mentorContext;
-  const label = byId('label-input').value.trim();
-  if (!label) {
-    showMentor({ name, created, message: MESSAGES.LABEL_NEEDED });
-    return;
-  }
-  const button = byId('create-button');
-  button.disabled = true;
-  button.textContent = 'Creating…';
-  const showAgain = (message) =>
-    showMentor({
-      name,
-      created,
-      message,
-      labelValue: label,
-      openValue: byId('open-code-input').value,
-    });
-  try {
-    const reply = await sendRequest({
-      action: 'create',
-      code: state.mentorPasscode,
-      label,
-    });
-    if (reply && reply.ok) {
-      showMentor({
-        name,
-        created: { code: reply.code, label: reply.label || label },
-      });
-    } else {
-      showAgain(
-        reply && reply.error === 'not-mentor' ? MESSAGES.NOT_A_MENTOR_CODE : MESSAGES.GENERIC_ERROR,
-      );
-    }
-  } catch {
-    showAgain(MESSAGES.NO_SIGNAL);
-  }
-}
-
-/** Opens a tracker by passcode from the mentor screen; a mentor passcode is refused there. */
-async function openTrackerFromMentor(code) {
-  const { name, created } = state.mentorContext;
-  try {
-    const reply = await sendRequest({ action: 'open', code });
-    if (reply && reply.ok && reply.role === 'tracker') {
-      beginTrackerSession(code, reply.label, reply.data);
-    } else if (reply && reply.ok && reply.role === 'mentor') {
-      showMentor({ name, created, message: MESSAGES.IS_A_MENTOR_CODE });
-    } else {
-      showMentor({ name, created, message: MESSAGES.CODE_NOT_RECOGNISED });
-    }
-  } catch {
-    showMentor({ name, created, message: MESSAGES.NO_SIGNAL });
-  }
-}
-
-/** Opens the tracker whose passcode is typed on the mentor screen. */
-function openExistingTracker() {
-  const code = byId('open-code-input').value.trim();
-  if (!code) return;
-  const button = byId('open-existing-button');
-  button.disabled = true;
-  button.textContent = 'Checking…';
-  openTrackerFromMentor(code);
 }
 
 /* ---------- Make an account ---------- */
@@ -234,7 +159,7 @@ function leaveSignup() {
   else showLogin();
 }
 
-/** Copies the passcode on show (new tracker or new account), falling back to a selection. */
+/** Copies the new account's passcode, falling back to a selection where the clipboard is blocked. */
 function copyPasscode() {
   const text = byId('new-passcode').textContent.trim();
   const button = byId('copy-button');
@@ -424,10 +349,6 @@ function toggleDemoStreak() {
 
 const clickActions = {
   'submit-passcode': submitPasscode,
-  'mentor-sign-out': () => showLogin(),
-  'create-tracker': createTracker,
-  'open-created-tracker': () => openTrackerFromMentor(state.mentorContext.created.code),
-  'open-existing-tracker': openExistingTracker,
   'copy-passcode': copyPasscode,
   'switch-tracker': () => showLogin(),
   'show-signup': () => showSignup(),
@@ -495,7 +416,6 @@ function handleChange(event) {
 /** Enter in a passcode or name box, and Enter or Space on a folding heading. */
 function handleKeydown(event) {
   if (event.key === 'Enter' && event.target.id === 'passcode-input') submitPasscode();
-  if (event.key === 'Enter' && event.target.id === 'open-code-input') openExistingTracker();
   if (event.key === 'Enter' && event.target.id === 'signup-name') submitSignup();
   const heading = event.target.closest && event.target.closest('[data-action="toggle-heading"]');
   if (heading && (event.key === 'Enter' || event.key === ' ')) {

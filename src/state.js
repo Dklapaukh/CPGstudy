@@ -9,8 +9,6 @@ export const state = {
   screen: SCREEN.LOGIN,
   passcode: '', // tracker passcode
   label: '', // tracker label
-  mentorPasscode: '',
-  mentorContext: { name: '', created: null }, // what the mentor screen is showing
   // What the Make an account screen is showing, and when its form was drawn (a bot check).
   signupContext: { created: null, shownAt: 0 },
   entries: {}, // guideline id -> { s, n, t }, the merged view of this tracker
@@ -86,7 +84,7 @@ export function clearSavedSession() {
   }
 }
 
-/** Notes that this phone has opened a real tracker or the mentor screen (not just the demo). */
+/** Notes that this phone has opened a real tracker (not just the demo). */
 export function markSignedInBefore() {
   try {
     localStorage.setItem(SIGNED_IN_BEFORE_KEY, '1');

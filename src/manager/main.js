@@ -1,5 +1,5 @@
 /*
- * Manager page (manager.html): sign in with a manager or mentor passcode, then a team table and a
+ * Manager page (manager.html): sign in with a manager passcode, then a team table and a
  * page per person. One state object, one way to draw: every change calls render().
  * The backend's "stats" reply holds numbers only (no notes, comments or tracker passcodes); the
  * guideline names and totals come from the same content files as the study app.

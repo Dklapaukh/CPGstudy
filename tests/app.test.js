@@ -9,7 +9,8 @@ import { JSDOM } from 'jsdom';
 import { SEARCH_PAUSE_MS, SYNC_DELAY_AFTER_EDIT_MS, DOUBLE_TAP_MS } from '../src/constants.js';
 
 const TRACKER = 'maple-oak-reef-11';
-const MENTOR = 'mentor-secret';
+const OTHER_TRACKER = 'other-tracker';
+const OLD_MENTOR = 'mentor-secret';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const requests = [];
 const stored = {};
@@ -31,9 +32,11 @@ function fakeBackend(body) {
       data: { ...stored },
     };
   }
-  if (body.action === 'open' && code === MENTOR) return { ok: true, role: 'mentor', name: 'Mia' };
+  if (body.action === 'open' && code === OTHER_TRACKER) {
+    return { ok: true, role: 'tracker', label: 'Kim', data: {} };
+  }
   if (body.action === 'open') return { ok: false, error: 'not-found' };
-  if (body.action === 'create') return { ok: true, code: 'new-code-1', label: body.label };
+  if (code === OTHER_TRACKER) return { ok: true, label: 'Kim', saved: 0, data: {} };
   if (code !== TRACKER) return { ok: false, error: 'not-found' };
   (body.changes || []).forEach((c) => {
     stored[c.id] = { s: c.s, n: c.n, t: c.t };
@@ -103,14 +106,9 @@ test('start-up shows the passcode screen and a wrong passcode shows the message'
   assert.equal($('#passcode-input').value, 'wrong');
 });
 
-test('a mentor passcode opens the mentor screen and can create a tracker', async () => {
-  await signIn(MENTOR);
-  assert.match($('.cover small').textContent, /Mentor screen · Mia/);
-  $('#label-input').value = 'Alex - 2026';
-  click($('#create-button'));
-  await sleep(50);
-  assert.equal($('#new-passcode').textContent, 'new-code-1');
-  click($('[data-action="mentor-sign-out"]'));
+test('an old mentor passcode is not recognised: there is no mentor screen any more', async () => {
+  await signIn(OLD_MENTOR);
+  assert.match($('.warning-message').textContent, /wasn’t recognised/);
   assert.ok($('#passcode-input'));
 });
 
@@ -739,9 +737,13 @@ test('Switch tracker has a back link to the open tracker, which stays saved unti
   await signIn('not-a-code');
   assert.ok($('.warning-message'));
   assert.ok($('[data-action="back-to-tracker"]'), 'a wrong passcode keeps the back link');
-  await signIn(MENTOR);
-  assert.match(doc.body.textContent, /Mentor screen/);
-  assert.equal(dom.window.localStorage.getItem('eas-cpg-tracker-v2'), null);
-  click($('[data-action="mentor-sign-out"]'));
-  assert.equal($('[data-action="back-to-tracker"]'), null, 'no back link once signed out');
+  await signIn(OTHER_TRACKER);
+  assert.match($('.tracker-label').textContent, /Kim/);
+  const saved = JSON.parse(dom.window.localStorage.getItem('eas-cpg-tracker-v2'));
+  assert.equal(saved.c, OTHER_TRACKER, 'the new tracker replaced the old one on this phone');
+  dom.window.location.hash = '#settings';
+  await sleep(30);
+  click($('[data-action="switch-tracker"]'));
+  assert.match($('[data-action="back-to-tracker"]').textContent, /Back to Kim/);
+  await signIn(TRACKER); // back to Sam's tracker for the tests that follow
 });

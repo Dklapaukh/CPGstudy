@@ -10,7 +10,6 @@ import { MESSAGES } from './constants.js';
 // Refusals that mean the passcode or the backend is wrong: the page signs out and says why.
 export const SIGN_OUT_MESSAGES = {
   'not-found': MESSAGES.CODE_NOT_RECOGNISED,
-  'placeholder-passcode': MESSAGES.PLACEHOLDER_PASSCODE,
   'bad-action': MESSAGES.OLD_BACKEND,
 };
 

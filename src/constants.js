@@ -9,7 +9,7 @@ export const BACKEND_URL =
   'https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec';
 
 export const REQUEST_TIMEOUT_MS = 20000;
-// Set once someone opens a tracker other than the demo (or the mentor screen) on this phone.
+// Set once someone opens a tracker other than the demo on this phone.
 // Until then the app opens on the demo tracker instead of the passcode screen.
 export const SIGNED_IN_BEFORE_KEY = 'eas-cpg-signed-in-v1';
 export const SYNC_DELAY_AFTER_EDIT_MS = 900;
@@ -71,7 +71,7 @@ export const UPDATE_STORAGE_KEY = 'eas-cpg-update-v1'; // separate from STORAGE_
 // Opening the app fires both start-up and "pageshow", so checks closer together are skipped.
 export const UPDATE_CHECK_MIN_INTERVAL_MS = 60000;
 
-export const SCREEN = { LOGIN: 'login', MENTOR: 'mentor', TRACKER: 'tracker' };
+export const SCREEN = { LOGIN: 'login', TRACKER: 'tracker' };
 
 // First item of each content block in the guideline data.
 export const BLOCK = {
@@ -87,15 +87,10 @@ export const MESSAGES = {
   NO_SIGNAL: 'Couldn’t reach the server. Check your signal and try again.',
   CODE_NOT_RECOGNISED: 'That passcode wasn’t recognised',
   GENERIC_ERROR: 'Something went wrong. Please try again.',
-  PLACEHOLDER_PASSCODE:
-    'That is the placeholder mentor passcode. Change it in the Mentors tab of the Sheet first.',
   // The backend address answered "stats" with "bad-action": it still runs the code from before
   // the manager view, so no passcode can work until it is redeployed (README, "Manager view").
   OLD_BACKEND:
     'The app’s backend address is still running an older version of the backend, so no passcode can work yet. In Apps Script press Deploy, Manage deployments, the pencil, Version: New version, Deploy. Then try again.',
-  NOT_A_MENTOR_CODE: 'That passcode isn’t a mentor passcode.',
-  LABEL_NEEDED: 'Please type a label first, for example Sam - 2026.',
-  IS_A_MENTOR_CODE: 'That is a mentor passcode. Please type a tracker passcode.',
   UNSENT_CHANGES:
     'Some changes haven’t uploaded yet. If you switch now they will be lost. Switch anyway?',
   STORAGE_BLOCKED:
@@ -148,7 +143,7 @@ export const GUIDELINE_QUIZ_HASH = 'guideline-quiz';
 export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';
 
 // Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
-// "Mark for review N days after Complete" belongs to the tracker, so mentor and learner share it:
+// "Mark for review N days after Complete" belongs to the tracker, so every phone using it shares it:
 // one extra entry (APP_SETTINGS_ENTRY_ID, note = JSON), so it needs no backend change. 0 is off.
 export const SETTINGS_HASH = 'settings';
 export const STATS_HASH = 'stats'; // the Data tab of Settings

@@ -1,7 +1,7 @@
 /*
- * CPG Mentoring Tracker: shared data service (Google Apps Script).
- * Tabs used in the Sheet: Mentors, Trackers, Data, Managers, Assignments, History, Editors,
- * Edits. Run setup()
+ * CPG study app: shared data service (Google Apps Script).
+ * Tabs used in the Sheet: Trackers, Data, Managers, Assignments, History, Editors, Edits. (An
+ * old Mentors tab is no longer read and can be deleted.) Run setup()
  * once, and again after pasting a version that adds tabs (it never changes existing rows).
  * Needs the V8 runtime (Project Settings, "Enable Chrome V8 runtime").
  * The status codes and entry fields (s, n, t) match src/constants.js in the app.
@@ -17,16 +17,13 @@ const WORD_LIST = WORDS.split(',');
 const MAX_NOTE_LENGTH = 5000;
 const LOCK_WAIT_MS = 20000;
 const WRONG_PASSCODE_DELAY_MS = 1500;
-// setup() writes this passcode for the first mentor. It is public (it is in this file), so it is
-// refused until it has been changed in the Mentors tab (review item C4).
-const PLACEHOLDER_MENTOR_PASSCODE = 'change-this-to-a-long-passcode';
 // A phone's clock may be a little fast. Edit times further ahead than this are cut back, so a
 // wrong clock cannot beat every later edit from other devices.
 const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with self sign-up and the demo (18 Nov 2026)';
+const BACKEND_VERSION = 'version without mentors (18 Nov 2026)';
 
 // The tracker with this label (any case) opens for first-time visitors (action "demo").
 const DEMO_LABEL = 'demo';
@@ -45,7 +42,6 @@ const MAX_NAME_LENGTH = 60;
 const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
 
 const SHEET = {
-  MENTORS: 'Mentors',
   TRACKERS: 'Trackers',
   DATA: 'Data',
   MANAGERS: 'Managers',
@@ -59,13 +55,12 @@ const SHEET = {
 // read from their notes; the notes themselves never leave the Sheet through "stats".
 const ENTRY_PREFIX = { MARKED: 'marked-', GUIDELINE_QUIZ: 'quiz-order-', FLASHCARDS: 'quiz-' };
 const QUIZ_SETTINGS_ENTRY_ID = 'quiz-settings';
-const ROLE = { MENTOR: 'mentor', MANAGER: 'manager' };
+const ROLE = { MANAGER: 'manager' };
 // Written in the History tab's Source column for rows made by setup() from older data, so
 // quiz attempts are only counted from the day History started.
 const BACKFILL_SOURCE = 'back-fill';
 
 // Column numbers (counting from 1) of each tab. Change a column here and nowhere else.
-const MENTOR_COLUMN = { NAME: 1, PASSCODE: 2 };
 const MANAGER_COLUMN = { NAME: 1, PASSCODE: 2 };
 const EDITOR_COLUMN = { NAME: 1, PASSCODE: 2 };
 const EDIT_COLUMN = { ID: 1, EDIT: 2, EDITOR: 3, UPDATED: 4 };
@@ -75,7 +70,6 @@ const TRACKER_COLUMN = { LABEL: 1, PASSCODE: 2, CREATED_BY: 3, CREATED: 4 };
 const DATA_COLUMN = { KEY: 1, PASSCODE: 2, GUIDELINE: 3, STATUS: 4, NOTE: 5, UPDATED: 6 };
 
 const HEADERS = {
-  Mentors: ['Name', 'Passcode'],
   Trackers: ['Label', 'Passcode', 'Created by', 'Created'],
   Data: ['Key', 'Tracker passcode', 'Guideline', 'Status', 'Note', 'Updated (ms)'],
   Managers: ['Name', 'Passcode'],
@@ -98,10 +92,6 @@ function setup() {
     getSheet_(name);
   });
   backfillHistory_();
-  const mentors = getSheet_(SHEET.MENTORS);
-  if (mentors.getLastRow() < 2) {
-    mentors.appendRow(['Your name', PLACEHOLDER_MENTOR_PASSCODE]);
-  }
 }
 
 /** Lets you open the web app address in a browser to check it is running, and which version. */
@@ -136,22 +126,18 @@ function doPost(e) {
 }
 
 /**
- * Works out the reply for one request: open, demo, signup, load, save, create, stats or one of
+ * Works out the reply for one request: open, demo, signup, load, save, stats or one of
  * the edits ones.
  */
 function handleRequest_(request) {
   const code = normalise_(request.code);
   const action = request.action;
 
-  if (code === PLACEHOLDER_MENTOR_PASSCODE) return { ok: false, error: 'placeholder-passcode' };
-
   if (action === 'open') {
     const tracker = findTracker_(code);
     if (tracker) {
       return { ok: true, role: 'tracker', label: tracker.label, data: readData_(code) };
     }
-    const mentor = findMentor_(code);
-    if (mentor) return { ok: true, role: 'mentor', name: mentor.name };
     return { ok: false, error: 'not-found', delayBeforeReply: true };
   }
 
@@ -173,16 +159,6 @@ function handleRequest_(request) {
     if (!findTracker_(code)) return { ok: false, error: 'not-found' };
     const saved = saveChanges_(code, request.changes || []);
     return { ok: true, saved: saved, data: readData_(code) };
-  }
-
-  if (action === 'create') {
-    const mentor = findMentor_(code);
-    if (!mentor) return { ok: false, error: 'not-mentor', delayBeforeReply: true };
-    const label = String(request.label || '').trim().slice(0, 60);
-    if (!label) return { ok: false, error: 'no-label' };
-    const newCode = newPasscode_();
-    getSheet_(SHEET.TRACKERS).appendRow([label, newCode, mentor.name, new Date().toISOString()]);
-    return { ok: true, code: newCode, label: label };
   }
 
   if (action === 'stats') {
@@ -345,10 +321,6 @@ function findTracker_(code) {
   return null;
 }
 
-function findMentor_(code) {
-  return findPerson_(SHEET.MENTORS, MENTOR_COLUMN, code);
-}
-
 function findManager_(code) {
   return findPerson_(SHEET.MANAGERS, MANAGER_COLUMN, code);
 }
@@ -365,17 +337,15 @@ function findPerson_(sheetName, columns, code) {
   return null;
 }
 
-/** Who may see the manager page with this passcode: { role, name }, or null. Mentors first. */
+/** Who may see the manager page with this passcode: { role, name }, or null. */
 function findViewer_(code) {
-  const mentor = findMentor_(code);
-  if (mentor) return { role: ROLE.MENTOR, name: mentor.name };
   const manager = findManager_(code);
   return manager ? { role: ROLE.MANAGER, name: manager.name } : null;
 }
 
 /**
  * The trackers a viewer may see, as [{ label, code }]: those named beside the viewer's name in
- * the Assignments tab and, for a mentor, those the mentor created. Names and labels are matched
+ * the Assignments tab. Names and labels are matched
  * ignoring capitals and outer spaces. The code is used here only and is never sent to the app.
  */
 function viewerTrackers_(viewer) {
@@ -392,11 +362,8 @@ function viewerTrackers_(viewer) {
   for (let i = 1; i < rows.length; i++) {
     const label = String(cell_(rows[i], TRACKER_COLUMN.LABEL));
     const isAssigned = assignedLabels[normalise_(label)] === true;
-    const isOwn =
-      viewer.role === ROLE.MENTOR &&
-      normalise_(cell_(rows[i], TRACKER_COLUMN.CREATED_BY)) === viewerName;
     const trackerCode = normalise_(cell_(rows[i], TRACKER_COLUMN.PASSCODE));
-    if (trackerCode && (isAssigned || isOwn)) trackers.push({ label: label, code: trackerCode });
+    if (trackerCode && isAssigned) trackers.push({ label: label, code: trackerCode });
   }
   return trackers;
 }
@@ -665,7 +632,7 @@ function newPasscode_() {
   let code;
   do {
     code = pickWord_() + '-' + pickWord_() + '-' + pickWord_() + '-' + (10 + Math.floor(Math.random() * 90));
-  } while (findTracker_(code) || findMentor_(code) || findManager_(code));
+  } while (findTracker_(code) || findManager_(code));
   return code;
 }
 
