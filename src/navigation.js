@@ -2,12 +2,15 @@
  * Moves between screens: sign in, sign out, the list and the guideline pages.
  * Depends on state.js, sync.js, guidelines.js and the screen files in views/.
  */
-import { state, saveSession, clearSavedSession } from './state.js';
+import { state, saveSession, clearSavedSession, markSignedInBefore } from './state.js';
 import { guidelines } from './guidelines.js';
 import { mergeRemoteEntries } from './logic.js';
 import { pendingCount, syncNow } from './sync.js';
+import { sendRequest } from './api.js';
 import { renderLogin } from './views/loginView.js';
 import { renderMentor } from './views/mentorView.js';
+import { renderSignup } from './views/signupView.js';
+import { isDemoTracker, isDemoLabel } from './streakState.js';
 import { renderList } from './views/listView.js';
 import {
   renderGuidelineDetail,
@@ -66,7 +69,8 @@ export function returnToTracker() {
  */
 export function leaveOpenTracker() {
   if (!state.passcode) return true;
-  if (pendingCount() && !confirm(MESSAGES.UNSENT_CHANGES)) return false;
+  // Unsent demo edits are not worth a question: the demo is shared and not anyone's progress.
+  if (pendingCount() && !isDemoTracker() && !confirm(MESSAGES.UNSENT_CHANGES)) return false;
   clearOpenTracker();
   return true;
 }
@@ -82,6 +86,16 @@ function clearOpenTracker() {
   state.quiz = null;
   state.guidelineQuiz = null;
   clearSavedSession();
+}
+
+/**
+ * Shows the Make an account screen. `details` is { message, nameValue, created }. The tracker
+ * behind it (usually the demo) stays loaded, as for Switch tracker, until the new one opens.
+ */
+export function showSignup(details = {}) {
+  state.screen = SCREEN.LOGIN; // background syncing pauses, as on the passcode screen
+  state.signupContext = { created: details.created || null, shownAt: Date.now() };
+  renderSignup(details);
 }
 
 /** Shows the mentor screen. `details` is { name, created, message, labelValue, openValue }. */
@@ -144,6 +158,7 @@ export function route() {
 export function beginTrackerSession(passcode, label, remoteEntries) {
   state.passcode = passcode;
   state.label = label || '';
+  if (!isDemoLabel(state.label)) markSignedInBefore();
   state.entries = mergeRemoteEntries({}, remoteEntries || {}).entries;
   state.quiz = null;
   state.guidelineQuiz = null;
@@ -160,7 +175,7 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
 
 /** Leaves the tracker. Asks first when edits are still waiting to upload (unless forced). */
 export function signOut(message) {
-  if (!message && pendingCount() && !confirm(MESSAGES.UNSENT_CHANGES)) return;
+  if (!message && pendingCount() && !isDemoTracker() && !confirm(MESSAGES.UNSENT_CHANGES)) return;
   clearOpenTracker();
   clearHash();
   showLogin(message);
@@ -186,5 +201,22 @@ export function refreshScreen() {
   } else if (!(document.activeElement && document.activeElement.id === 'search-input')) {
     renderList();
     window.scrollTo(0, scrollY);
+  }
+}
+
+/**
+ * First visit on this phone: shows the passcode screen, then opens the demo tracker once the
+ * backend sends it. Stays on the passcode screen when offline, when there is no demo tracker,
+ * or when the person has already started typing a passcode or moved on.
+ */
+export async function openDemo() {
+  showLogin();
+  try {
+    const reply = await sendRequest({ action: 'demo' });
+    const box = document.getElementById('passcode-input');
+    const untouched = state.screen === SCREEN.LOGIN && !state.passcode && box && !box.value;
+    if (reply && reply.ok && untouched) beginTrackerSession(reply.code, reply.label, reply.data);
+  } catch {
+    // No signal: the passcode screen, with its Make an account button, is already showing.
   }
 }

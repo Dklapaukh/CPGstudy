@@ -62,6 +62,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 12   | Manager view (`manager.html`): team and person statistics       | Built 16 Nov 2026; live once the owner does 8.4 task 8 |
 | 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live once the owner does 8.4 task 9 |
 | 14   | Study streak (rat in the top bar) and Settings > Data stats     | Built 17 Nov 2026 (ST-A to ST-C)         |
+| 15   | Demo on first visit and self sign-up (Make an account)          | Built 18 Nov 2026; live once the owner does 8.4 task 10 |
 
 ### 8.2 Decisions in force
 
@@ -352,6 +353,9 @@ Answered 16 Nov 2026:
    works with the real Sheet.
 9. **Switch on the editor page** (README, "Editor page", "Switching it on"): paste and redeploy
    `backend/Code.gs` and run `setup`, then fill the new `Editors` tab.
+10. **Switch on sign-up** (README, "Demo and sign-up", "Switching it on"): paste
+    `backend/Code.gs`, run `setup` and allow "Send email as you", redeploy as a new version,
+    and check a `Trackers` row is labelled `demo`.
 
 ## 10. Style guide: how all code is written
 
@@ -400,6 +404,12 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**18 Nov 2026 (sign-up).** Feature 15 on `main`: first visits open the `demo` tracker with a
+Make an account banner; sign-up takes a name and makes a passcode; the owner is emailed for
+each (no email, no account); bot checks are a hidden box, 3 s minimum and 20 an hour (Claude's
+choice, owner asked for "something to stop bots"). Needs 8.4 task 10. Open: the demo is shared
+by every visitor, so their marks mix; if that is a problem, the demo could be made read-only.
 
 **18 Nov 2026 (later).** On `main`, checked with `npm run check` and seen in headless Chrome at
 phone size (not yet on a phone): editing a question's text in place by tapping it (ED-H).

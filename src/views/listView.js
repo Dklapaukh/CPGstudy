@@ -24,6 +24,7 @@ import { guidelineQuizButtonHtml } from './guidelineQuizView.js';
 import { footerHtml, drawUpdateStatus } from './updateView.js';
 import { lastScore } from '../guidelineQuizState.js';
 import { streakButtonHtml } from './streakView.js';
+import { isDemoTracker } from '../streakState.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -243,6 +244,15 @@ function sectionsHtml(newlyClosed) {
 }
 
 /** Draws the list screen. */
+/** On the demo tracker: the Make an account button, and a way in for people with a passcode. */
+function demoBannerHtml() {
+  if (!isDemoTracker()) return '';
+  return `<div class="demo-banner"><p>${MESSAGES.DEMO_BANNER}</p>
+    <button class="button" data-action="show-signup">Make an account</button>
+    <button class="demo-banner__passcode" type="button" data-action="switch-tracker">
+      I already have a passcode</button></div>`;
+}
+
 export function renderList() {
   const counts = countStatuses(guidelines, state.entries);
   const closedNow = new Set();
@@ -255,7 +265,7 @@ export function renderList() {
   const warning = state.storageBlocked
     ? `<div class="warning-message">${MESSAGES.STORAGE_BLOCKED}</div>`
     : '';
-  app.innerHTML = `${homeHeaderHtml(counts, newlyClosed.has(OVERALL_RING_NAME))}
+  app.innerHTML = `${demoBannerHtml()}${homeHeaderHtml(counts, newlyClosed.has(OVERALL_RING_NAME))}
     <div class="page-padding">${warning}${aiNoticeHtml()}${sectionsHtml(newlyClosed)}${footerHtml()}</div>`;
   app.querySelectorAll('details.section-group').forEach((details) => {
     if (state.openSections[details.dataset.section]) details.open = true;

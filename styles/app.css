@@ -2757,3 +2757,36 @@ td.table-cell--coloured {
   outline: 2px solid #f5c451;
   outline-offset: -1px;
 }
+
+/* Demo tracker banner and Make an account (self sign-up) */
+.demo-banner {
+  background: var(--colour-green-soft);
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin: 0.8rem;
+}
+.demo-banner p {
+  margin: 0 0 0.6rem;
+}
+.demo-banner .button {
+  margin-bottom: 0.3rem;
+}
+.demo-banner__passcode {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 0;
+  color: var(--colour-text);
+  text-decoration: underline;
+  padding: 0.5rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+/* The bot trap: kept off screen rather than display: none, which some bots skip. */
+.signup-trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

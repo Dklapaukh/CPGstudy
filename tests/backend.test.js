@@ -16,6 +16,8 @@ const tabs = {
   Data: [['Key', 'P', 'G', 'S', 'N', 'U']],
 };
 let sleeps = 0;
+const emails = [];
+const cacheValues = {};
 
 /** A stand-in for one tab. Ranges are addressed like the real ones: a column name or numbers. */
 function fakeSheet(name) {
@@ -74,6 +76,14 @@ const environment = {
     MimeType: { JSON: 1 },
   },
   Utilities: { sleep: () => sleeps++ },
+  CacheService: {
+    getScriptCache: () => ({
+      get: (key) => cacheValues[key] ?? null,
+      put: (key, value) => (cacheValues[key] = value),
+    }),
+  },
+  MailApp: { sendEmail: (to, subject, body) => emails.push({ to, subject, body }) },
+  Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@example.com' }) },
   console: { error() {} },
 };
 const { doGet, doPost, setup } = new Function(
@@ -83,7 +93,7 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with the editor page \(17 Nov 2026\)/);
+  assert.match(doGet().text, /running, version with self sign-up and the demo \(18 Nov 2026\)/);
 });
 
 test('open: tracker, mentor, and a wrong passcode that is delayed after the lock', () => {
@@ -259,4 +269,55 @@ test('edits: editors sign in, save, replace and remove edits; anyone can read th
   assert.deepEqual(post({ action: 'edits' }).edits, { [id]: { prompt: 'B', was: {} } });
   assert.deepEqual(save(null).edits, {});
   assert.equal(tabs.Edits.length, 1);
+});
+
+test('demo: opens the tracker labelled demo in any case, and says not-found when there is none', () => {
+  assert.equal(post({ action: 'demo' }).error, 'not-found');
+  tabs.Trackers.push(['Demo', 'Demo-Code', 'Mia', 'x']);
+  const reply = post({ action: 'demo' });
+  assert.equal(reply.ok, true);
+  assert.equal(reply.code, 'demo-code');
+  assert.equal(reply.label, 'Demo');
+});
+
+test('signup: bot checks, the hourly cap, an email for each account, and a new tracker', () => {
+  const form = { action: 'signup', name: '  Alex   Smith ', website: '', formMs: 5000 };
+  assert.equal(post({ ...form, website: 'spam.example' }).error, 'bad-signup');
+  assert.equal(post({ ...form, formMs: 500 }).error, 'too-fast');
+  assert.equal(post({ ...form, formMs: undefined }).error, 'too-fast');
+  assert.equal(post({ ...form, name: ' 123 ' }).error, 'no-name');
+  assert.equal(post({ ...form, name: 'DEMO' }).error, 'no-name');
+  assert.equal(emails.length, 0);
+
+  const trackersBefore = tabs.Trackers.length;
+  const reply = post(form);
+  assert.equal(reply.ok, true);
+  assert.equal(reply.label, 'Alex Smith');
+  assert.match(reply.code, /^[a-z]+-[a-z]+-[a-z]+-\d+$/);
+  const row = tabs.Trackers[trackersBefore];
+  assert.deepEqual(row.slice(0, 3), ['Alex Smith', reply.code, 'Signed up in the app']);
+  assert.equal(emails.length, 1);
+  assert.equal(emails[0].to, 'owner@example.com');
+  assert.match(emails[0].subject, /Alex Smith/);
+  assert.equal(post({ action: 'open', code: reply.code }).role, 'tracker');
+
+  Object.keys(cacheValues).forEach((key) => (cacheValues[key] = '20'));
+  assert.equal(post(form).error, 'busy');
+  assert.equal(emails.length, 1);
+});
+
+test('signup: no account is made when the email cannot be sent', () => {
+  Object.keys(cacheValues).forEach((key) => delete cacheValues[key]);
+  const trackersBefore = tabs.Trackers.length;
+  const sendEmail = environment.MailApp.sendEmail;
+  environment.MailApp.sendEmail = () => {
+    throw new Error('not authorised');
+  };
+  try {
+    const reply = post({ action: 'signup', name: 'Kim', website: '', formMs: 5000 });
+    assert.equal(reply.error, 'server-error');
+    assert.equal(tabs.Trackers.length, trackersBefore);
+  } finally {
+    environment.MailApp.sendEmail = sendEmail;
+  }
 });

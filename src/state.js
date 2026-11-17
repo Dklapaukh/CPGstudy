@@ -3,7 +3,7 @@
  * Screens are drawn from this state. Depends on constants.js.
  * Saved format {c, l, s, p} is unchanged so people stay signed in after the refactor.
  */
-import { STORAGE_KEY, SCREEN, FILTER } from './constants.js';
+import { STORAGE_KEY, SIGNED_IN_BEFORE_KEY, SCREEN, FILTER } from './constants.js';
 
 export const state = {
   screen: SCREEN.LOGIN,
@@ -11,6 +11,8 @@ export const state = {
   label: '', // tracker label
   mentorPasscode: '',
   mentorContext: { name: '', created: null }, // what the mentor screen is showing
+  // What the Make an account screen is showing, and when its form was drawn (a bot check).
+  signupContext: { created: null, shownAt: 0 },
   entries: {}, // guideline id -> { s, n, t }, the merged view of this tracker
   pendingChanges: {}, // guideline id -> { s, n, t }, edits not yet uploaded
   syncInProgress: false,
@@ -81,5 +83,23 @@ export function clearSavedSession() {
     localStorage.removeItem(STORAGE_KEY);
   } catch {
     // Blocked storage: there is nothing saved to remove.
+  }
+}
+
+/** Notes that this phone has opened a real tracker or the mentor screen (not just the demo). */
+export function markSignedInBefore() {
+  try {
+    localStorage.setItem(SIGNED_IN_BEFORE_KEY, '1');
+  } catch {
+    // Blocked storage: the demo may open again next time, which is harmless.
+  }
+}
+
+/** True when this phone has signed in before, so the app should not open on the demo. */
+export function hasSignedInBefore() {
+  try {
+    return localStorage.getItem(SIGNED_IN_BEFORE_KEY) === '1';
+  } catch {
+    return true; // blocked storage: the passcode screen is the safe start
   }
 }

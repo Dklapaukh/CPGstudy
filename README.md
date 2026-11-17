@@ -378,6 +378,30 @@ many edits need review.
    one line per editor. Send each passcode privately.
 3. Open the editor page and sign in. Leave the `Edits` tab alone: the page writes it.
 
+## Demo and sign-up
+
+- **First visit:** a phone that has never opened a real tracker (or the mentor screen) starts
+  on the tracker labelled `demo` (any case) in the `Trackers` tab, fetched with the backend's
+  "demo" action. Its list has a banner with **Make an account** and **I already have a
+  passcode**. With no signal, or no `demo` tracker, the passcode screen shows instead. Once a
+  real tracker opens, the phone remembers it (`eas-cpg-signed-in-v1`) and never starts on the
+  demo again. The demo is shared: anything anyone marks in it is seen by everyone.
+- **Make an account** (on the demo banner and the passcode screen) asks for a name and the
+  backend's "signup" action adds a `Trackers` row: label = the name, a new passcode, Created by
+  "Signed up in the app". The passcode is shown with Copy and Start studying.
+- **Email:** the backend emails the Google account that deployed it, subject "CPG study app:
+  new account for …", for every sign-up. The email is sent first: if it fails, no account is
+  made. To remove an account, delete its `Trackers` row.
+- **Bot checks:** a box hidden off screen that people never see (filled in → refused), the form
+  must have been open at least 3 seconds, and at most 20 sign-ups per hour across everyone
+  (`SIGNUP_MAX_PER_HOUR` in `backend/Code.gs`). A name needs a letter and cannot be "demo".
+  If bots get past these, the next step is a Cloudflare Turnstile check (free, needs a key).
+- **Switching it on:** paste `backend/Code.gs` into Apps Script, press Run on `setup` once so
+  Google asks for the new permission ("Send email as you"), allow it, then Deploy, Manage
+  deployments, the pencil, Version: New version, Deploy. Opening the backend address should
+  say "version with self sign-up and the demo (18 Nov 2026)". Check there is a `Trackers` row
+  labelled `demo`.
+
 ## Backend
 
 A small Apps Script program attached to the Google Sheet. The app sends it the passcode and any
@@ -407,6 +431,8 @@ unless marked "by hand".
 
 - Sign in with a tracker passcode and a mentor passcode; a wrong passcode shows the message.
 - Mentor creates a tracker and sees the new passcode; opens an existing tracker; signs out.
+- A first visit opens the demo with Make an account; signing up shows the passcode and opens
+  the new tracker (`tests/signup.test.js`).
 - List shows 14 sections and 180 guidelines with correct counts; sections stay as left (by hand).
 - Filters (All, Incomplete, Needs review, Complete) and search.
 - Opening a guideline shows all content; headings fold and unfold; previous and next (by hand).

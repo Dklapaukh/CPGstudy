@@ -24,5 +24,7 @@ export function renderLogin(message, passcodeValue, backLabel) {
       autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
       value="${escapeHtml(passcodeValue || '')}">
     <button class="button" id="open-button" data-action="submit-passcode">Open</button>
+    <p class="subtitle">New here?</p>
+    <button class="button button--secondary" data-action="show-signup">Make an account</button>
     ${aiNoticeHtml()}</div>`;
 }

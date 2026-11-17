@@ -9,6 +9,9 @@ export const BACKEND_URL =
   'https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec';
 
 export const REQUEST_TIMEOUT_MS = 20000;
+// Set once someone opens a tracker other than the demo (or the mentor screen) on this phone.
+// Until then the app opens on the demo tracker instead of the passcode screen.
+export const SIGNED_IN_BEFORE_KEY = 'eas-cpg-signed-in-v1';
 export const SYNC_DELAY_AFTER_EDIT_MS = 900;
 export const SYNC_DELAY_MORE_PENDING_MS = 500;
 export const SYNC_DELAY_AFTER_FAILURE_MS = 10000;
@@ -98,6 +101,11 @@ export const MESSAGES = {
   STORAGE_BLOCKED:
     'This browser is blocking saved data, so changes can’t be kept on this phone while offline.',
   COPY_FALLBACK: 'Press and hold the code to copy it',
+  NAME_NEEDED: 'Please type your name first.',
+  SIGNUP_TOO_FAST: 'That was very quick. Please wait a moment and press Make my account again.',
+  SIGNUP_BUSY: 'Lots of accounts were made in the last hour. Please try again later.',
+  DEMO_BANNER:
+    'You’re trying the demo, which anyone can use. Make your own account to keep your progress.',
   SAVE_FAILED: 'Could not save on this browser',
   UPDATE_AVAILABLE: 'A new version of the guidelines is available.',
   UPDATE_BUTTON: 'Update now',

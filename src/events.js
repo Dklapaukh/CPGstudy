@@ -10,11 +10,12 @@ import {
   recordQuizFinished,
   forgetTodayForDemo,
 } from './streakState.js';
-import { state } from './state.js';
+import { state, markSignedInBefore } from './state.js';
 import { sendRequest } from './api.js';
 import {
   showLogin,
   showMentor,
+  showSignup,
   beginTrackerSession,
   returnToTracker,
   leaveOpenTracker,
@@ -99,6 +100,7 @@ async function submitPasscode() {
       beginTrackerSession(code, reply.label, reply.data);
     } else if (accepted) {
       state.mentorPasscode = code;
+      markSignedInBefore();
       showMentor({ name: reply.name });
     } else {
       showLogin(signInErrorMessage(reply), code);
@@ -177,9 +179,64 @@ function openExistingTracker() {
   openTrackerFromMentor(code);
 }
 
-/** Copies the new tracker's passcode, falling back to a selection where the clipboard is blocked. */
+/* ---------- Make an account ---------- */
+
+/** The message for a sign-up that the backend refused, from the error code in its reply. */
+function signupErrorMessage(reply) {
+  const error = reply && reply.error;
+  if (error === 'no-name') return MESSAGES.NAME_NEEDED;
+  if (error === 'too-fast') return MESSAGES.SIGNUP_TOO_FAST;
+  if (error === 'busy') return MESSAGES.SIGNUP_BUSY;
+  return MESSAGES.GENERIC_ERROR;
+}
+
+/** Sends the typed name (and the bot checks) to make an account, then shows its passcode. */
+async function submitSignup() {
+  const name = byId('signup-name').value.trim();
+  if (!name) {
+    showSignup({ message: MESSAGES.NAME_NEEDED });
+    return;
+  }
+  const button = byId('signup-button');
+  button.disabled = true;
+  button.textContent = 'Making your account…';
+  const shownAt = state.signupContext.shownAt;
+  try {
+    const reply = await sendRequest({
+      action: 'signup',
+      name,
+      website: byId('signup-website').value,
+      formMs: Date.now() - shownAt,
+    });
+    if (reply && reply.ok) {
+      markSignedInBefore();
+      showSignup({ created: { code: reply.code, label: reply.label || name } });
+    } else {
+      showSignup({ message: signupErrorMessage(reply), nameValue: name });
+    }
+  } catch {
+    showSignup({ message: MESSAGES.NO_SIGNAL, nameValue: name });
+  }
+  // A refused form keeps its first drawing time, so pressing again soon after is not "too fast".
+  if (!state.signupContext.created) state.signupContext.shownAt = shownAt;
+}
+
+/** Opens the account just made, leaving the demo (or other tracker) behind it. */
+function openSignupTracker() {
+  const { created } = state.signupContext;
+  if (!created || !leaveOpenTracker()) return;
+  beginTrackerSession(created.code, created.label, {});
+}
+
+/** Back from Make an account: to the tracker behind it, or else the passcode screen. */
+function leaveSignup() {
+  if (state.passcode) returnToTracker();
+  else showLogin();
+}
+
+/** Copies the passcode on show (new tracker or new account), falling back to a selection. */
 function copyPasscode() {
-  const text = state.mentorContext.created.code;
+  const text = byId('new-passcode').textContent.trim();
   const button = byId('copy-button');
   const showCopied = () => {
     button.textContent = 'Copied';
@@ -373,6 +430,10 @@ const clickActions = {
   'open-existing-tracker': openExistingTracker,
   'copy-passcode': copyPasscode,
   'switch-tracker': () => showLogin(),
+  'show-signup': () => showSignup(),
+  'submit-signup': submitSignup,
+  'open-signup-tracker': openSignupTracker,
+  'signup-back': leaveSignup,
   'streak-demo-tap': () => demoStreakTap(toggleDemoStreak),
   'back-to-tracker': returnToTracker,
   'set-filter': (element) => {
@@ -431,10 +492,11 @@ function handleChange(event) {
   if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
 }
 
-/** Enter in a passcode box, and Enter or Space on a folding heading. */
+/** Enter in a passcode or name box, and Enter or Space on a folding heading. */
 function handleKeydown(event) {
   if (event.key === 'Enter' && event.target.id === 'passcode-input') submitPasscode();
   if (event.key === 'Enter' && event.target.id === 'open-code-input') openExistingTracker();
+  if (event.key === 'Enter' && event.target.id === 'signup-name') submitSignup();
   const heading = event.target.closest && event.target.closest('[data-action="toggle-heading"]');
   if (heading && (event.key === 'Enter' || event.key === ' ')) {
     event.preventDefault();

@@ -26,7 +26,21 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with the editor page (17 Nov 2026)';
+const BACKEND_VERSION = 'version with self sign-up and the demo (18 Nov 2026)';
+
+// The tracker with this label (any case) opens for first-time visitors (action "demo").
+const DEMO_LABEL = 'demo';
+// Self sign-up (action "signup"). Bots are kept out three ways: a hidden box that people never
+// see but form-filling bots fill in, a form that must have been open a few seconds, and a cap on
+// sign-ups per hour. The owner is emailed about every sign-up; if the email fails, no account is
+// made, so the owner always hears about each one.
+const SIGNUP_CREATED_BY = 'Signed up in the app';
+const SIGNUP_MIN_FORM_MS = 3000;
+const SIGNUP_MAX_PER_HOUR = 20;
+const SIGNUP_COUNT_KEY = 'signups-';
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_HOUR_S = 60 * 60;
+const MAX_NAME_LENGTH = 60;
 
 const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
 
@@ -121,7 +135,10 @@ function doPost(e) {
   );
 }
 
-/** Works out the reply for one request: open, load, save, create, stats or one of the edits ones. */
+/**
+ * Works out the reply for one request: open, demo, signup, load, save, create, stats or one of
+ * the edits ones.
+ */
 function handleRequest_(request) {
   const code = normalise_(request.code);
   const action = request.action;
@@ -137,6 +154,14 @@ function handleRequest_(request) {
     if (mentor) return { ok: true, role: 'mentor', name: mentor.name };
     return { ok: false, error: 'not-found', delayBeforeReply: true };
   }
+
+  if (action === 'demo') {
+    const demo = findTrackerByLabel_(DEMO_LABEL);
+    if (!demo) return { ok: false, error: 'not-found' };
+    return { ok: true, code: demo.code, label: demo.label, data: readData_(demo.code) };
+  }
+
+  if (action === 'signup') return signUp_(request);
 
   if (action === 'load') {
     const tracker = findTracker_(code);
@@ -187,6 +212,61 @@ function handleRequest_(request) {
   if (action === 'edits') return { ok: true, edits: readEdits_() };
 
   return { ok: false, error: 'bad-action' };
+}
+
+/**
+ * Makes a tracker for a person signing themselves up, after the bot checks, and emails the owner.
+ * `request` is { name, website (the hidden box, empty for people), formMs (time the form was
+ * open) }. Replies { ok, code, label }, or { ok: false, error } with one of: no-name, too-fast,
+ * busy, bad-signup.
+ */
+function signUp_(request) {
+  if (String(request.website || '')) return { ok: false, error: 'bad-signup' };
+  if (!(Number(request.formMs) >= SIGNUP_MIN_FORM_MS)) return { ok: false, error: 'too-fast' };
+  const name = String(request.name || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_NAME_LENGTH);
+  // A name needs a letter, and "demo" would turn the new account into a second demo.
+  if (!/\p{L}/u.test(name) || normalise_(name) === DEMO_LABEL) {
+    return { ok: false, error: 'no-name' };
+  }
+
+  const cache = CacheService.getScriptCache();
+  const countKey = SIGNUP_COUNT_KEY + Math.floor(Date.now() / ONE_HOUR_MS);
+  const count = Number(cache.get(countKey)) || 0;
+  if (count >= SIGNUP_MAX_PER_HOUR) return { ok: false, error: 'busy' };
+
+  // The email goes first: if it fails (for example before the owner allowed email), the request
+  // fails and no account is made.
+  MailApp.sendEmail(
+    Session.getEffectiveUser().getEmail(),
+    'CPG study app: new account for ' + name,
+    name +
+      ' made an account in the CPG study app on ' +
+      new Date().toString() +
+      '.\n\nIts row is in the Trackers tab of the Sheet (Created by: ' +
+      SIGNUP_CREATED_BY +
+      '). Delete that row to remove the account.',
+  );
+  const code = newPasscode_();
+  getSheet_(SHEET.TRACKERS).appendRow([name, code, SIGNUP_CREATED_BY, new Date().toISOString()]);
+  cache.put(countKey, String(count + 1), ONE_HOUR_S);
+  return { ok: true, code: code, label: name };
+}
+
+/** The first tracker with this label (any case), as { label, code }, or null. */
+function findTrackerByLabel_(label) {
+  const rows = getSheet_(SHEET.TRACKERS).getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (normalise_(cell_(rows[i], TRACKER_COLUMN.LABEL)) === label) {
+      return {
+        label: String(cell_(rows[i], TRACKER_COLUMN.LABEL)),
+        code: normalise_(cell_(rows[i], TRACKER_COLUMN.PASSCODE)),
+      };
+    }
+  }
+  return null;
 }
 
 /** Every edit in the Edits tab as { question id: edit }. Rows that are not JSON are skipped. */

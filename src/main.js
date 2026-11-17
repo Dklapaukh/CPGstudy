@@ -1,12 +1,12 @@
 /*
- * Start-up: restores a saved tracker, connects the parts and starts background syncing and the
+ * Start-up: restores a saved tracker (or opens the demo on a first visit), connects the parts and starts background syncing and the
  * checks for new guidelines (feature 7).
  * Depends on every other file in src/.
  */
-import { state, restoreSession } from './state.js';
+import { state, restoreSession, hasSignedInBefore } from './state.js';
 import { setSyncHandlers, syncNow, updateSyncStatus } from './sync.js';
 import { attachEventListeners } from './events.js';
-import { route, showLogin, signOut, refreshScreen } from './navigation.js';
+import { route, showLogin, openDemo, signOut, refreshScreen } from './navigation.js';
 import { recordLoadedContent, checkForUpdate } from './updateState.js';
 import { applyTheme } from './theme.js';
 import { SCREEN, BACKGROUND_SYNC_INTERVAL_MS } from './constants.js';
@@ -40,8 +40,10 @@ function startApp() {
   if (state.screen === SCREEN.TRACKER) {
     route();
     syncNow();
-  } else {
+  } else if (hasSignedInBefore()) {
     showLogin();
+  } else {
+    openDemo(); // first visit: start on the demo tracker, with its Make an account button
   }
   checkForUpdate();
 }

@@ -2,6 +2,14 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Demo and self sign-up. A phone that has never signed in opens on the tracker
+  labelled `demo`, with a banner and a big Make an account button (and "I already have a
+  passcode"). The passcode screen has the button too. Make an account asks for a name, makes a
+  passcode and shows it with Copy and Start studying. The owner is emailed about every new
+  account; if the email cannot be sent no account is made. Bot checks: a hidden box bots fill
+  in, the form must be open 3 s, and at most 20 sign-ups an hour. New backend actions `demo`
+  and `signup`; needs a redeploy and allowing email (README, "Demo and sign-up").
+
 - 2026-11-18: Editor page: tap any text of a question (a card's question or answer, an ordering
   round's situation or one of its cards, a choice question's line or one of its choices) to
   change just that text in a box drawn in its place, then Save or Cancel (Escape cancels,
