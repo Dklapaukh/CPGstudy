@@ -1,10 +1,9 @@
 /*
  * The study streak's pictures: the rat in Pit Viper sunglasses in the top bar (sad while today's
  * quiz is still to do, powered up once it is done) and the full-screen celebration when the
- * first quiz of the day lights the streak. Depends on streakState.js and constants.js.
+ * first quiz of the day lights the streak. Depends on streakState.js.
  */
 import { currentStreak, streakDays, todayNumber, takeCelebration } from '../streakState.js';
-import { STREAK_CELEBRATION_MS } from '../constants.js';
 
 let svgCount = 0; // gives each drawing its own gradient id, as several can be on the page
 
@@ -62,7 +61,7 @@ export function streakButtonHtml() {
 
 /**
  * Shows the full-screen celebration if a quiz has just lit today's streak: the sad rat shakes,
- * powers up and the day count appears. Closes on a tap or after STREAK_CELEBRATION_MS.
+ * powers up and the day count appears. Stays until Continue is pressed.
  */
 export function showPendingCelebration() {
   if (!takeCelebration()) return;
@@ -80,12 +79,8 @@ export function showPendingCelebration() {
     <p class="streak-celebration__count">${count}</p>
     <p class="streak-celebration__text">${count === 1 ? 'day streak. Powered up.' : 'day streak. Still powered up.'}</p>
     <button class="streak-celebration__button" type="button">Continue</button>`;
-  const close = () => {
-    clearTimeout(timer);
-    overlay.remove();
-  };
-  const timer = setTimeout(close, STREAK_CELEBRATION_MS);
-  overlay.addEventListener('click', close);
+  const button = overlay.querySelector('button');
+  button.addEventListener('click', () => overlay.remove());
   document.body.append(overlay);
-  overlay.querySelector('button').focus();
+  button.focus();
 }

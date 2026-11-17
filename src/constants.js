@@ -152,4 +152,3 @@ export const REVIEW_AFTER_DAYS = { MIN: 0, MAX: 180, DEFAULT: 0 };
 // needs no backend change. About two years of days are kept, far below the note limit.
 export const STREAK_ENTRY_ID = 'study-streak';
 export const STREAK_DAYS_KEPT = 750;
-export const STREAK_CELEBRATION_MS = 4500; // the full-screen celebration closes itself after this

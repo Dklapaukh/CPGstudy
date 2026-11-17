@@ -2,6 +2,8 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Study streak: the full-screen power-up now stays until Continue is pressed. It
+  no longer closes by itself after 4.5 seconds or on a tap elsewhere on the screen.
 - 2026-11-17: Editor page layout now matches the study app. The list has the app's header
   (name with Refresh and Sign out, the title, a search box) and its folding sections and rows,
   with how many questions are edited on the right; "Needs review" is a section of its own. A

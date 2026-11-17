@@ -491,7 +491,9 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
     'the first quiz lights the streak',
   );
   click($('.streak-celebration'));
-  assert.equal($('.streak-celebration'), null, 'a tap closes the celebration');
+  assert.ok($('.streak-celebration'), 'a tap beside the button does not close the celebration');
+  click($('.streak-celebration__button'));
+  assert.equal($('.streak-celebration'), null, 'Continue closes the celebration');
   await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
   const note = JSON.parse(stored['quiz-order-cpg-3-8'].n);
   assert.equal(note.best, 100);
