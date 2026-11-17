@@ -2,6 +2,11 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Editor page layout now matches the study app. The list has the app's header
+  (name with Refresh and Sign out, the title, a search box) and its folding sections and rows,
+  with how many questions are edited on the right; "Needs review" is a section of its own. A
+  guideline opens under the app's coloured guideline header with the back link. Open sections
+  stay open after a redraw. The page no longer loads `manager.css`. No change to what it saves.
 - 2026-11-17: Study streak (feature 14): a rat in Pit Viper sunglasses sits in the top bar
   beside the Settings cog with the day count (same height, so the header does not grow). It is
   sad until a quiz is finished that day (a Medicines session or practice run to the end, or a

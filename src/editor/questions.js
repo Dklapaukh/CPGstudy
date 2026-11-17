@@ -15,7 +15,8 @@ import { relatedLinks } from '../../content/related.js';
 let cached = null;
 
 /**
- * The guidelines that have questions, in list order: [{ id, number, title, questions }], and
+ * The guidelines that have questions, in list order:
+ * [{ id, number, title, section, colour, questions }], and
  * every question by id. Built once, the first time it is needed.
  */
 export function questionBank() {
@@ -35,6 +36,8 @@ export function questionBank() {
       id: guideline.id,
       number: guideline.n,
       title: guideline.t,
+      section: guideline.sec,
+      colour: guideline.hc,
       questions: byGuideline[guideline.id],
     }));
   const byId = {};

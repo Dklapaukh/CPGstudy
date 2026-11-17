@@ -19,7 +19,7 @@ import {
 } from '../questionEdits.js';
 import { cardEdits } from '../../content/card-edits.js';
 import { questionBank } from './questions.js';
-import { signInHtml, homeHtml, guidelineHtml, guidelineRowsHtml, KIND_LABELS } from './view.js';
+import { signInHtml, homeHtml, guidelineHtml, guidelineRowsHtml } from './view.js';
 
 // The passcode is kept for this browser tab only, as on the manager page.
 const SESSION_KEY = 'eas-cpg-editor-v1';
@@ -39,6 +39,7 @@ const state = {
   isLoading: false,
   edits: {}, // the Sheet's edits, by question id
   search: '',
+  openSections: {}, // the list's open sections, by name, kept while the page is open
   openId: '', // the question whose form is open
 };
 
@@ -143,8 +144,7 @@ function reviewItems() {
     .filter((item) => item.review)
     .map((item) => {
       const guideline = byId[item.id]?.guideline;
-      const where = guideline ? `${guideline.number} ${guideline.title}` : item.guidelineId;
-      return { ...item, label: `${where}: ${KIND_LABELS[item.kind]}` };
+      return { ...item, where: guideline ? guideline.title : item.guidelineId };
     });
 }
 
@@ -192,7 +192,7 @@ function render() {
   const guideline = currentGuideline();
   app.innerHTML = guideline
     ? guidelineHtml(viewer, guideline, guidelineItems(guideline), state.openId)
-    : homeHtml(viewer, reviewItems(), guidelineRows(), state.search);
+    : homeHtml(viewer, reviewItems(), guidelineRows(), state);
 }
 
 /* ---------- Reading the form ---------- */
@@ -263,8 +263,21 @@ app.addEventListener('keydown', (event) => {
 app.addEventListener('input', (event) => {
   if (event.target.id !== 'editor-search') return;
   state.search = event.target.value;
-  document.getElementById('editor-rows').innerHTML = guidelineRowsHtml(guidelineRows());
+  document.getElementById('editor-rows').innerHTML = guidelineRowsHtml(
+    guidelineRows(),
+    state.openSections,
+    Boolean(state.search.trim()),
+  );
 });
+// A section opened or closed by hand stays so after a redraw. "toggle" does not bubble.
+app.addEventListener(
+  'toggle',
+  (event) => {
+    const { section } = event.target.dataset;
+    if (section && !state.search.trim()) state.openSections[section] = event.target.open;
+  },
+  true,
+);
 window.addEventListener('hashchange', () => {
   state.openId = '';
   render();

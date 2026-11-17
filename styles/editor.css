@@ -1,19 +1,26 @@
-/* Styles for the editor page (editor.html). Loaded after app.css and manager.css. */
-.editor-list {
-  list-style: none;
-  margin: 0.6rem 0 0;
-  padding: 0;
+/* Styles for the editor page (editor.html). Loaded after app.css, whose screens it reuses. */
+/* Small grey notes, as under the study app's screens. */
+.editor-note {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0.9rem;
 }
-.editor-list li {
-  border-bottom: 1px solid var(--colour-line);
+/* The label at the right of a list row: how many questions are edited, or what changed. */
+.row-meta .editor-badge {
+  margin: 0.15rem 0 0;
+}
+
+/* Guideline screen: the back link with Refresh and Sign out on the green bar above the header. */
+.editor-back-bar {
+  align-items: center;
+  background: var(--colour-green);
   display: flex;
-  flex-wrap: wrap;
-  gap: 0 0.6rem;
-  align-items: baseline;
-  padding: 0.7rem 0;
+  justify-content: space-between;
+  padding: 0.5rem 0.8rem 0 0;
 }
-.editor-list .stats-note {
-  margin: 0;
+.editor-back-bar .back-link {
+  flex: 1;
+  padding-top: 0.4rem;
 }
 
 /* One question: a bordered box with its fields, then the form or the review. */
