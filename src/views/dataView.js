@@ -2,7 +2,7 @@
  * The Data tab of Settings (#stats): a few light study stats, drawn from what is already saved
  * (the streak days, guideline statuses, guideline quiz best scores and Medicines card
  * schedules). Read only. Depends on state.js, guidelines.js, logic.js, streakState.js,
- * guidelineQuizState.js, quizState.js and streakView.js.
+ * guidelineQuizState.js, quizState.js and ratDrawings.js.
  */
 import { state } from '../state.js';
 import { guidelines } from '../guidelines.js';
@@ -17,7 +17,7 @@ import {
 } from '../streakState.js';
 import { quizzedGuidelines, bestScore } from '../guidelineQuizState.js';
 import { quizCards, allSchedules } from '../quizState.js';
-import { ratSvg } from './streakView.js';
+import { ratSvg } from './ratDrawings.js';
 import { STATUS } from '../constants.js';
 
 const ACTIVITY_WEEKS = 12;
