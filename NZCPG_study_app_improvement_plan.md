@@ -239,6 +239,16 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
 
 - ST-D (owner, 17 Nov 2026): the full-screen power-up stays until Continue is pressed; no
   timeout and no closing on a tap elsewhere.
+- ST-E (owner, 17 Nov 2026): new rat drawn from the owner's reference photo (inspiration, not a
+  copy): dark fur, shield sunglasses with a speckled mint frame and a yellow-to-red mirror lens.
+  No gold hair; the aura stays. Top-bar size unchanged (32 px). The power-up gained a charge-up,
+  flash, shock wave, spinning flame aura, light rays, rising sparks, a lens glint and the day
+  count ticking over.
+- ST-F (owner asked; Claude's choice of reset): on the tracker labelled `demo` (any case), a
+  double tap on the rat takes today off the streak (sad rat, yesterday's count kept), and the
+  next double tap puts it back with the full power-up. A single tap still opens the Data tab,
+  after 300 ms. Earlier days are kept, so the demo shows a real "still powered up" count; the
+  other choice, wiping the whole streak to 0, was not built. Other trackers are unchanged.
 
 **Code audit (17 Nov 2026; tidy-up only, rule 9)**
 
@@ -357,6 +367,10 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**17 Nov 2026 (night).** The new rat and power-up (ST-E) and the demo double tap (ST-F) are on
+`main`, checked with `npm run check` and frames of the power-up seen in headless Chrome. Not yet
+seen on a phone. **Next:** the owner tries the demo tracker's double tap on a phone.
 
 **17 Nov 2026 (evening).** Three changes on `main`, each checked with `npm run check`: the
 editor page layout (ED-F; seen in headless Chrome, not yet on a phone), the streak power-up

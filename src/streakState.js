@@ -10,7 +10,7 @@ import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
 import { nextTimestamp } from './logic.js';
 import { dayNumber } from './quizSchedule.js';
-import { STATUS, STREAK_ENTRY_ID, STREAK_DAYS_KEPT } from './constants.js';
+import { STATUS, STREAK_ENTRY_ID, STREAK_DAYS_KEPT, DEMO_TRACKER_LABEL } from './constants.js';
 
 /* ---------- Pure ---------- */
 
@@ -89,6 +89,9 @@ export function activityWeeks(days, today, weeks) {
   );
 }
 
+/** True when `label` is the demonstration tracker's label (any case, spaces ignored). */
+export const isDemoLabel = (label) => (label || '').trim().toLowerCase() === DEMO_TRACKER_LABEL;
+
 /* ---------- Saved days ---------- */
 
 export const todayNumber = () => dayNumber(Date.now(), new Date().getTimezoneOffset());
@@ -102,23 +105,39 @@ export const streakDays = () => {
 // Set when a finished quiz starts today's streak; the screen shows the celebration and clears it.
 let celebrationPending = false;
 
-/** Records today as a quiz day. The first quiz of the day queues the celebration. */
-export function recordQuizFinished() {
-  const today = todayNumber();
-  const days = streakDays();
-  if (days.includes(today)) return;
-  const kept = [...days, today].slice(-STREAK_DAYS_KEPT);
+/** Saves `days` as the streak entry, uploaded and merged like any other entry. */
+function saveStreakDays(days) {
   const previous = state.entries[STREAK_ENTRY_ID];
   const entry = {
     s: STATUS.INCOMPLETE,
-    n: JSON.stringify({ days: kept }),
+    n: JSON.stringify({ days }),
     t: nextTimestamp(previous ? previous.t : 0, Date.now()),
   };
   state.entries[STREAK_ENTRY_ID] = entry;
   state.pendingChanges[STREAK_ENTRY_ID] = { ...entry };
   saveSession();
   scheduleSync();
+}
+
+/** Records today as a quiz day. The first quiz of the day queues the celebration. */
+export function recordQuizFinished() {
+  const today = todayNumber();
+  const days = streakDays();
+  if (days.includes(today)) return;
+  saveStreakDays([...days, today].slice(-STREAK_DAYS_KEPT));
   celebrationPending = true;
+}
+
+/** True when the open tracker is the demonstration tracker. */
+export const isDemoTracker = () => isDemoLabel(state.label);
+
+/**
+ * Demo tracker only: takes today off the quiz days, so the rat is sad again and the next
+ * double tap can show the power-up. Earlier days are kept.
+ */
+export function forgetTodayForDemo() {
+  const today = todayNumber();
+  saveStreakDays(streakDays().filter((day) => day !== today));
 }
 
 /** True once after a quiz started today's streak. */

@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Study streak: a new rat (dark fur, shield sunglasses with a speckled mint frame and
+  a yellow-to-red mirror lens; no gold hair), same size in the top bar. The power-up now charges
+  up with closing rings and growing shakes, then a flash, shock wave and screen shake; the
+  powered-up rat bursts out in a spinning flame aura with light rays, rising sparks and a lens
+  glint, and the day count ticks over from yesterday's number. On the tracker labelled `demo`,
+  a double tap on the rat switches today's streak off and back on (with the power-up); a single
+  tap still opens the Data tab.
 - 2026-11-17: Code audit, a tidy-up with no change in behaviour. The manager and editor pages
   share `src/staffPage.js` (tab passcode, backend requests, refusal messages, warning box);
   dark mode moved to `src/theme.js`. The guideline quiz builds its list of quizzed guidelines

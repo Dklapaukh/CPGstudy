@@ -152,3 +152,8 @@ export const REVIEW_AFTER_DAYS = { MIN: 0, MAX: 180, DEFAULT: 0 };
 // needs no backend change. About two years of days are kept, far below the note limit.
 export const STREAK_ENTRY_ID = 'study-streak';
 export const STREAK_DAYS_KEPT = 750;
+// The tracker label used for demonstrations: a double tap on its rat switches today's streak
+// off and on (owner, 17 Nov 2026). Compared without case or surrounding spaces.
+export const DEMO_TRACKER_LABEL = 'demo';
+// Two taps closer together than this are a double tap; a single tap waits this long.
+export const DOUBLE_TAP_MS = 300;

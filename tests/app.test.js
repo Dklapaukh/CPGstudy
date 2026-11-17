@@ -6,7 +6,7 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { SEARCH_PAUSE_MS, SYNC_DELAY_AFTER_EDIT_MS } from '../src/constants.js';
+import { SEARCH_PAUSE_MS, SYNC_DELAY_AFTER_EDIT_MS, DOUBLE_TAP_MS } from '../src/constants.js';
 
 const TRACKER = 'maple-oak-reef-11';
 const MENTOR = 'mentor-secret';
@@ -486,7 +486,7 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
   }
   assert.match($('.quiz-finished').textContent, /\(100%\)$/);
   assert.equal(
-    $('.streak-celebration__count').textContent,
+    $('.streak-celebration__number--new').textContent,
     '1',
     'the first quiz lights the streak',
   );
@@ -628,6 +628,29 @@ test('the Data tab of Settings shows the streak and study stats', async () => {
   assert.ok($('#review-days-wheel'), 'the General tab has the settings');
   dom.window.location.hash = '';
   await sleep(30);
+});
+
+test('on the demo tracker a double tap on the rat switches the streak off and on', async () => {
+  const { state } = await import('../src/state.js');
+  const { renderList } = await import('../src/views/listView.js');
+  const realLabel = state.label;
+  state.label = ' Demo ';
+  renderList();
+  click($('button.streak-button'));
+  click($('button.streak-button'));
+  assert.equal($('.streak-button--active'), null, 'the first double tap makes the rat sad');
+  assert.equal($('.streak-button').textContent.trim(), '0');
+  click($('button.streak-button'));
+  click($('button.streak-button'));
+  assert.equal($('.streak-celebration__number--new').textContent, '1', 'the second powers up');
+  click($('.streak-celebration__button'));
+  click($('button.streak-button'));
+  await sleep(DOUBLE_TAP_MS + 50);
+  assert.equal(dom.window.location.hash, '#stats', 'a single tap still opens the Data tab');
+  state.label = realLabel;
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.ok($('a.streak-button'), 'other trackers keep the plain link');
 });
 
 test('the report button shows on every screen and describes what is on it', async () => {

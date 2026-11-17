@@ -2,7 +2,14 @@
  * All clicks, typing and key presses. Listeners are attached once to the app container and
  * find the button or box by its data-action or id, so redrawing a screen never re-attaches them.
  */
-import { showPendingCelebration } from './views/streakView.js';
+import { showPendingCelebration, demoStreakTap } from './views/streakView.js';
+import {
+  currentStreak,
+  streakDays,
+  todayNumber,
+  recordQuizFinished,
+  forgetTodayForDemo,
+} from './streakState.js';
 import { state } from './state.js';
 import { sendRequest } from './api.js';
 import {
@@ -339,6 +346,23 @@ function quizOpenGuideline() {
   location.hash = GUIDELINE_QUIZ_HASH;
 }
 
+/* ---------- Demo streak ---------- */
+
+/**
+ * Demo tracker, double tap on the rat: switches today's streak off (sad rat) or back on, which
+ * plays the power-up as a finished quiz would. Lets the owner show the celebration on demand.
+ */
+function toggleDemoStreak() {
+  if (currentStreak(streakDays(), todayNumber()).isActive) {
+    forgetTodayForDemo();
+    renderList();
+    return;
+  }
+  recordQuizFinished();
+  renderList();
+  showPendingCelebration();
+}
+
 /* ---------- Listeners ---------- */
 
 const clickActions = {
@@ -349,6 +373,7 @@ const clickActions = {
   'open-existing-tracker': openExistingTracker,
   'copy-passcode': copyPasscode,
   'switch-tracker': () => showLogin(),
+  'streak-demo-tap': () => demoStreakTap(toggleDemoStreak),
   'back-to-tracker': returnToTracker,
   'set-filter': (element) => {
     state.filter = element.dataset.filter;

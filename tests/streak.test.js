@@ -8,6 +8,7 @@ import {
   longestStreak,
   ratRank,
   activityWeeks,
+  isDemoLabel,
 } from '../src/streakState.js';
 
 test('parseStreakDays sorts, removes repeats and survives bad notes', () => {
@@ -42,4 +43,10 @@ test('activityWeeks ends on today, oldest week first', () => {
   assert.equal(weeks.length, 2);
   assert.deepEqual(weeks[1][6], { day: 100, done: true });
   assert.deepEqual(weeks[0][0], { day: 87, done: false });
+});
+
+test('isDemoLabel matches the demo label in any case and ignores spaces', () => {
+  assert.equal(isDemoLabel(' DEMO '), true);
+  assert.equal(isDemoLabel('Demo - 2026'), false);
+  assert.equal(isDemoLabel(''), false);
 });
