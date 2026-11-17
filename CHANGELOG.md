@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Study streak (feature 14): a rat in Pit Viper sunglasses sits in the top bar
+  beside the Settings cog with the day count (same height, so the header does not grow). It is
+  sad until a quiz is finished that day (a Medicines session or practice run to the end, or a
+  guideline quiz); the first quiz of the day shows a full-screen power-up, and the rat stays
+  powered up for the rest of the day. Settings now has General and Data tabs; Data (`#stats`,
+  also opened by the rat) shows the streak, longest streak, quiz days, a 12-week grid, a rank,
+  and guideline and Medicines numbers. Saved as one extra entry; no backend change.
 - 2026-11-17: Editor page (feature 13): new page `editor.html` where editors (new `Editors`
   tab) change quiz questions: wording, right and wrong answers, ordering steps, or leave a
   question out. Only the edits are stored: the page saves to a new `Edits` tab, and a daily

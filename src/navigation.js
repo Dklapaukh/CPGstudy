@@ -27,6 +27,7 @@ import {
   QUIZ_HASH,
   GUIDELINE_QUIZ_HASH,
   SETTINGS_HASH,
+  STATS_HASH,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -123,9 +124,9 @@ export function route() {
   } else if (id === QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderQuizScreen();
-  } else if (id === SETTINGS_HASH) {
+  } else if (id === SETTINGS_HASH || id === STATS_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
-    renderSettingsScreen();
+    renderSettingsScreen(id === STATS_HASH);
   } else if (id === GUIDELINE_QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderGuidelineQuizScreen();

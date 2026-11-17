@@ -143,6 +143,13 @@ export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';
 // "Mark for review N days after Complete" belongs to the tracker, so mentor and learner share it:
 // one extra entry (APP_SETTINGS_ENTRY_ID, note = JSON), so it needs no backend change. 0 is off.
 export const SETTINGS_HASH = 'settings';
+export const STATS_HASH = 'stats'; // the Data tab of Settings
 export const THEME_STORAGE_KEY = 'eas-cpg-theme-v1';
 export const APP_SETTINGS_ENTRY_ID = 'app-settings';
 export const REVIEW_AFTER_DAYS = { MIN: 0, MAX: 180, DEFAULT: 0 };
+
+// Study streak (feature 14): the days a quiz was finished, one extra entry (note = JSON), so it
+// needs no backend change. About two years of days are kept, far below the note limit.
+export const STREAK_ENTRY_ID = 'study-streak';
+export const STREAK_DAYS_KEPT = 750;
+export const STREAK_CELEBRATION_MS = 4500; // the full-screen celebration closes itself after this

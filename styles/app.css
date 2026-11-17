@@ -1814,3 +1814,297 @@ td.table-cell--coloured {
 .comment-panel .feedback-link[hidden] {
   display: none;
 }
+
+/* ---------- Study streak (feature 14) ---------- */
+
+/* The top-bar rat and day count: a pill as tall as the Settings cog, so the bar keeps its height. */
+.streak-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  height: 40px;
+  padding: 0 0.6rem 0 0.25rem;
+  border: 1px solid var(--header-border);
+  border-radius: 999px;
+  color: var(--header-muted);
+  font-weight: 800;
+  text-decoration: none;
+}
+.streak-button .rat {
+  width: 32px;
+  height: 32px;
+  filter: grayscale(0.4);
+}
+.streak-button--active {
+  color: #e08a00;
+  border-color: #f5c451;
+}
+.streak-button--active .rat {
+  filter: drop-shadow(0 0 3px rgba(255, 196, 0, 0.8));
+}
+.streak-button:active {
+  transform: scale(0.96);
+}
+
+/* The full-screen celebration: the sad rat shakes, a flash, then the powered-up rat and count. */
+.streak-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background: radial-gradient(circle at 50% 40%, #2b2140 0%, #0d0b14 70%);
+  color: #fff;
+  text-align: center;
+  animation: streak-fade-in 0.25s ease-out;
+}
+.streak-celebration__stage {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+.streak-celebration__rat,
+.streak-celebration__aura,
+.streak-celebration__flash {
+  position: absolute;
+  inset: 0;
+}
+.streak-celebration__rat .rat {
+  width: 100%;
+  height: 100%;
+}
+.streak-celebration__rat--sad {
+  animation:
+    streak-shake 0.12s linear 0.2s 7,
+    streak-out 0.1s linear 1.05s forwards;
+}
+.streak-celebration__rat--fired {
+  opacity: 0;
+  animation:
+    streak-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) 1.05s forwards,
+    streak-hover 1.4s ease-in-out 1.6s infinite;
+}
+.streak-celebration__aura {
+  inset: -40px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 60, 0.9) 0%,
+    rgba(255, 150, 0, 0.45) 35%,
+    transparent 68%
+  );
+  opacity: 0;
+  animation: streak-aura 0.9s ease-in-out 1.05s infinite alternate;
+}
+.streak-celebration__flash {
+  inset: -100vmax;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  animation: streak-flash 0.45s ease-out 0.95s;
+}
+.streak-celebration__count,
+.streak-celebration__text,
+.streak-celebration__button {
+  opacity: 0;
+  animation: streak-fade-in 0.4s ease-out 1.4s forwards;
+}
+.streak-celebration__count {
+  margin: 0.6rem 0 0;
+  font-size: 4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffc21a;
+  text-shadow: 0 0 18px rgba(255, 170, 0, 0.7);
+}
+.streak-celebration__text {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.streak-celebration__button {
+  margin-top: 1.4rem;
+  min-height: 44px;
+  padding: 0.5rem 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #ffc21a;
+  color: #1a1300;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+@keyframes streak-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px) rotate(-2deg);
+  }
+  75% {
+    transform: translateX(5px) rotate(2deg);
+  }
+}
+@keyframes streak-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes streak-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes streak-hover {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes streak-aura {
+  from {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+@keyframes streak-flash {
+  30% {
+    opacity: 0.85;
+  }
+}
+@keyframes streak-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .streak-celebration *,
+  .streak-celebration {
+    animation-duration: 0.01s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ---------- Settings tabs and the Data tab ---------- */
+
+.settings-tabs {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.25rem;
+  margin: 0.6rem 0 0;
+  border-radius: 999px;
+  background: var(--colour-control);
+}
+.settings-tab {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 999px;
+  color: var(--colour-muted);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+.settings-tab[aria-current='page'] {
+  background: var(--colour-surface);
+  color: var(--colour-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.stats-group {
+  padding: 0.8rem 1rem;
+}
+.stats-group__title {
+  margin: 0.2rem 0 0.6rem;
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  background: var(--colour-control);
+}
+.stat-tile__value {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+.stat-tile__value small {
+  color: var(--colour-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.stat-tile__label {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+}
+.stats-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.stats-streak .rat {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  filter: grayscale(0.4);
+}
+.stats-streak--active .rat {
+  filter: drop-shadow(0 0 4px rgba(255, 196, 0, 0.8));
+}
+.stats-streak .settings-hint {
+  display: block;
+  margin: 0.1rem 0 0;
+}
+.stats-streak__count {
+  font-size: 1.3rem;
+}
+/* Quiz days over the last weeks: one column per week, the newest on the right. */
+.activity {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 0.4rem;
+}
+.activity__week {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+.activity__day {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--colour-line);
+}
+.activity__day--done {
+  background: var(--colour-green);
+}
+.activity__day--today {
+  outline: 2px solid #f5c451;
+  outline-offset: -1px;
+}

@@ -1,8 +1,9 @@
 /*
  * The Settings screen (#settings): the tracker with its Switch tracker button, dark mode, and a
  * wheel (like the iPhone's) for how many days after Complete a guideline is marked for review.
+ * Its Data tab (#stats) shows the study stats (dataView.js).
  * The listeners are attached here, so this file is self-contained. Depends on state.js,
- * settingsState.js, logic.js and constants.js.
+ * settingsState.js, logic.js, dataView.js and constants.js.
  */
 import { state } from '../state.js';
 import {
@@ -12,7 +13,8 @@ import {
   saveReviewAfterDays,
 } from '../settingsState.js';
 import { escapeHtml } from '../logic.js';
-import { REVIEW_AFTER_DAYS } from '../constants.js';
+import { dataHtml } from './dataView.js';
+import { REVIEW_AFTER_DAYS, SETTINGS_HASH, STATS_HASH } from '../constants.js';
 
 const app = document.getElementById('app');
 const ITEM_HEIGHT = 40; // px, the same as .wheel__item in styles/app.css
@@ -47,13 +49,16 @@ function trackerGroupHtml() {
     tracker</button></div></section>`;
 }
 
-/** Draws the Settings screen. */
-export function renderSettingsScreen() {
-  const days = getReviewAfterDays();
-  app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
-    <div class="page-padding settings-screen"><h1 class="quiz-title">Settings</h1>
-    <span class="sync-status"></span>
-    ${trackerGroupHtml()}
+/** The two tabs at the top: General (the settings) and Data (the stats). */
+function tabsHtml(showData) {
+  const tab = (href, name, isCurrent) =>
+    `<a class="settings-tab" href="#${href}"${isCurrent ? ' aria-current="page"' : ''}>${name}</a>`;
+  return `<nav class="settings-tabs" aria-label="Settings sections">
+    ${tab(SETTINGS_HASH, 'General', !showData)}${tab(STATS_HASH, 'Data', showData)}</nav>`;
+}
+
+function generalHtml(days) {
+  return `${trackerGroupHtml()}
     <section class="settings-group" aria-label="Appearance">
       <label class="settings-row"><span>Dark mode</span>
       <input class="switch" id="dark-mode-switch" type="checkbox" role="switch"
@@ -65,9 +70,19 @@ export function renderSettingsScreen() {
       ${wheelHtml(days)}
       <p class="settings-hint" id="review-days-summary">${summaryText(days)}
       ${state.label ? 'Shared with everyone who has this passcode.' : ''}</p>
-    </section></div>`;
+    </section>`;
+}
+
+/** Draws the Settings screen; `showData` opens the Data tab (stats). */
+export function renderSettingsScreen(showData = false) {
+  const days = getReviewAfterDays();
+  app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
+    <div class="page-padding settings-screen"><h1 class="quiz-title">Settings</h1>
+    <span class="sync-status"></span>
+    ${tabsHtml(showData)}
+    ${showData ? dataHtml() : generalHtml(days)}</div>`;
   window.scrollTo(0, 0);
-  attachListeners(days);
+  if (!showData) attachListeners(days);
 }
 
 function attachListeners(startDays) {

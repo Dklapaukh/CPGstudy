@@ -10,6 +10,7 @@
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
+import { recordQuizFinished } from './streakState.js';
 import { sections } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
 import { relatedLinks } from '../content/related.js';
@@ -211,6 +212,7 @@ export function nextStep() {
   if (quiz.index >= quiz.steps.length) {
     quiz.finished = true;
     saveScore(quiz.guidelineId, percentOf(quiz.score, quiz.total));
+    recordQuizFinished();
   }
 }
 

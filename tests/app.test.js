@@ -485,6 +485,13 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
     click($('[data-action="guideline-quiz-next"]'));
   }
   assert.match($('.quiz-finished').textContent, /\(100%\)$/);
+  assert.equal(
+    $('.streak-celebration__count').textContent,
+    '1',
+    'the first quiz lights the streak',
+  );
+  click($('.streak-celebration'));
+  assert.equal($('.streak-celebration'), null, 'a tap closes the celebration');
   await sleep(SYNC_DELAY_AFTER_EDIT_MS + 200);
   const note = JSON.parse(stored['quiz-order-cpg-3-8'].n);
   assert.equal(note.best, 100);
@@ -501,6 +508,7 @@ test('the Guideline quiz orders cards with arrows, marks them, and saves the bes
   dom.window.location.hash = '';
   await sleep(30);
   assert.ok($('a[href="#guideline-quiz"]'), 'the list screen has the Guideline quiz button');
+  assert.equal($('.streak-button--active').textContent.trim(), '1', 'the top bar shows the streak');
   assert.match(
     $('a[href="#cpg-3-8"] .row-quiz-score').textContent,
     /100%$/,
@@ -537,6 +545,7 @@ test('the Quiz pill opens the guideline quiz and finishing returns to the same p
     click($('[data-action="guideline-quiz-next"]'));
   }
   assert.equal($('.score-ring').getAttribute('aria-label'), 'Score 100%');
+  assert.equal($('.streak-celebration'), null, 'only the first quiz of the day celebrates');
   assert.equal($('.score-ring').style.getPropertyValue('--score-target'), '100');
   const back = $('a.quiz-start-button');
   assert.equal(back.getAttribute('href'), '#cpg-3-8');
@@ -602,6 +611,21 @@ test('the Settings screen turns on dark mode and sets the review days with the w
   dom.window.location.hash = '';
   await sleep(30);
   assert.ok($('a.settings-button[href="#settings"]'), 'the list header has the Settings button');
+});
+
+test('the Data tab of Settings shows the streak and study stats', async () => {
+  dom.window.location.hash = '#stats';
+  await sleep(30);
+  assert.equal($('.settings-tab[aria-current="page"]').textContent, 'Data');
+  assert.equal($('.stats-streak__count').textContent, '1 day');
+  assert.equal($$('.activity__day--done').length, 1, "today's quiz day is filled in");
+  assert.ok($$('.stat-tile__label').some((label) => label.textContent === 'Perfect scores'));
+  click($('.settings-tab[href="#settings"]'));
+  dom.window.location.hash = '#settings';
+  await sleep(30);
+  assert.ok($('#review-days-wheel'), 'the General tab has the settings');
+  dom.window.location.hash = '';
+  await sleep(30);
 });
 
 test('the report button shows on every screen and describes what is on it', async () => {

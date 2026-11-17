@@ -61,6 +61,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 11   | Medicines quiz: ATP filter by route and indication              | Built 16 Nov 2026 (Z18 to Z22), see 8.6  |
 | 12   | Manager view (`manager.html`): team and person statistics       | Built 16 Nov 2026; live once the owner does 8.4 task 8 |
 | 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live once the owner does 8.4 task 9 |
+| 14   | Study streak (rat in the top bar) and Settings > Data stats     | Built 17 Nov 2026 (ST-A to ST-C)         |
 
 ### 8.2 Decisions in force
 
@@ -288,6 +289,15 @@ Answered 16 Nov 2026:
    `backend/Code.gs` and run `setup`, then fill the new `Editors` tab.
 
 ## 13. Status
+
+**17 Nov 2026 (later).** Feature 14, the study streak and the Data tab, is on `main`. Decisions:
+ST-A, a streak day is a local calendar day with at least one finished quiz (a Medicines study
+or practice session run to the end, or a guideline quiz play); a streak from yesterday still
+counts until today ends. ST-B, the days are one extra entry `study-streak` (no backend change;
+its id has no prefix the backend reads). ST-C, the Data tab shows streak, longest streak, quiz
+days, a 12-week grid, a light "rat rank", and guideline and Medicines numbers. Not yet seen on
+a real phone. **Next (owner, 17 Nov 2026):** change the editor page layout, then the code audit
+below.
 
 **17 Nov 2026.** Feature 13, the editor page (`editor.html`), is built and on `main` (ED-A to
 ED-E). It needs 8.4 task 9 before editors can sign in. The study app now applies published

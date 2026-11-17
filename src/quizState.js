@@ -9,6 +9,7 @@
  * content/card-edits.js.
  */
 import { state, saveSession } from './state.js';
+import { recordQuizFinished } from './streakState.js';
 import { scheduleSync } from './sync.js';
 import { sections, guidelines } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
@@ -229,6 +230,7 @@ export function answerPracticeCard(rating) {
   state.quiz.queue = advanceSession(state.quiz.queue, rating, QUIZ_AGAIN_GAP);
   state.quiz.revealed = false;
   state.quiz.answered++;
+  if (state.quiz.queue.length === 0) recordQuizFinished();
 }
 
 /** Ends the session (the schedules already saved are kept). */
@@ -264,4 +266,5 @@ export function rateCurrentCard(rating) {
   state.quiz.queue = advanceSession(state.quiz.queue, rating, QUIZ_AGAIN_GAP);
   state.quiz.revealed = false;
   state.quiz.answered++;
+  if (state.quiz.queue.length === 0) recordQuizFinished();
 }

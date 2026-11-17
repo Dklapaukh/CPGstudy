@@ -23,6 +23,7 @@ import { quizButtonHtml } from './quizView.js';
 import { guidelineQuizButtonHtml } from './guidelineQuizView.js';
 import { footerHtml, drawUpdateStatus } from './updateView.js';
 import { lastScore } from '../guidelineQuizState.js';
+import { streakButtonHtml } from './streakView.js';
 import { FILTER, STATUS, MESSAGES } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -124,7 +125,7 @@ const COG_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke
 function homeHeaderHtml(counts, justClosed) {
   return `<header class="home-header">
     <div class="top-bar"><b class="tracker-label">${escapeHtml(state.label)}</b>
-    <div class="top-bar__buttons">
+    <div class="top-bar__buttons">${streakButtonHtml()}
     <a class="settings-button" href="#settings" aria-label="Settings" title="Settings">${COG_ICON}</a>
     </div></div>
     ${tabsHtml()}

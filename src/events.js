@@ -2,6 +2,7 @@
  * All clicks, typing and key presses. Listeners are attached once to the app container and
  * find the button or box by its data-action or id, so redrawing a screen never re-attaches them.
  */
+import { showPendingCelebration } from './views/streakView.js';
 import { state } from './state.js';
 import { sendRequest } from './api.js';
 import {
@@ -280,6 +281,7 @@ function changeSearchText(input) {
 const changeQuiz = (change) => (element) => {
   change(element);
   renderQuizScreen();
+  showPendingCelebration();
 };
 const showQuizAnswer = () => {
   if (state.quiz) state.quiz.revealed = true;
@@ -298,6 +300,7 @@ const changeGuidelineQuiz =
     const scrollY = window.scrollY;
     renderGuidelineQuizScreen();
     window.scrollTo(0, toTop ? 0 : scrollY);
+    showPendingCelebration();
   };
 const cardIndexOf = (button) => Number(button.dataset.card);
 
