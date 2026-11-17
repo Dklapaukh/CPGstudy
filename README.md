@@ -5,7 +5,9 @@ and notes for each, two quizzes, and a tracker shared with a mentor through a Go
 Published at <https://dklapaukh.github.io/CPGstudy/>. Study aid only, not for clinical use.
 
 A second page, the manager view, shows managers and mentors the progress of the people assigned
-to them: <https://dklapaukh.github.io/CPGstudy/manager.html> (see "Manager view").
+to them: <https://dklapaukh.github.io/CPGstudy/manager.html> (see "Manager view"). A third, the
+editor page, lets editors change the quiz questions:
+<https://dklapaukh.github.io/CPGstudy/editor.html> (see "Editor page").
 
 Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan.md`.
 
@@ -29,6 +31,10 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/updates.js`, `src/updateState.js`, `version.json`               | Update prompt: pure logic, checking and downloading, the published date and file list.         |
 | `src/views/`                                                         | One file per screen or screen part.                                                            |
 | `manager.html`, `styles/manager.css`, `src/manager/`                 | The manager view: `main.js` (sign in, drawing), `stats.js` (pure sums), `view.js`, `chart.js`. |
+| `editor.html`, `styles/editor.css`, `src/editor/`                    | The editor page: `main.js` (sign in, saving), `questions.js` (every question), `view.js`.      |
+| `src/questionEdits.js`                                               | Editors' changes to quiz questions, pure logic: applying them, finding ones to review.         |
+| `content/card-edits.yaml`, `content/card-edits.js`                   | Published edits: readable record and what the app loads. Written by `sync-edits.js`.           |
+| `scripts/sync-edits.js`                                              | Copies the Sheet's Edits tab into the two files above (daily, `edits-sync.yml`).               |
 | `content/guidelines.js`                                              | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.             |
 | `content/related.js`, `content/related-overrides.js`                 | Related-guideline links (built) and the hand-edited overrides.                                 |
 | `content/pdf-status.json`, `content/pdf-rebuild.json`                | Last PDF scan; fingerprint of each rebuilt guideline. Written by scripts.                      |
@@ -39,7 +45,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `scripts/build-related.js`                                           | Rebuilds `content/related.js`.                                                                 |
 | `scripts/practice-level-review.js`                                   | Prints what each practice level is shown in the Medicines quiz, for checking.                  |
 | `backend/Code.gs`                                                    | The Google Apps Script service.                                                                |
-| `.github/workflows/`                                                 | `checks.yml` (every push) and `pdf-check.yml` (daily).                                         |
+| `.github/workflows/`                                                 | `checks.yml` (every push), `pdf-check.yml` and `edits-sync.yml` (daily).                       |
 | `tests/`                                                             | `npm test`. Includes a simulated-browser run of the whole app.                                 |
 
 ## Run, check and publish
@@ -323,12 +329,55 @@ Leave the `History` tab alone: the backend adds a line each time a guideline's s
 or a guideline quiz is finished (tracker passcode, entry, value, time; "back-fill" marks the
 lines made in step 3). It never holds notes.
 
+## Editor page
+
+A page for editors to change the quiz questions:
+<https://dklapaukh.github.io/CPGstudy/editor.html>. Questions are still built from the
+guidelines by the same code as the app; an edit replaces only what an editor changed.
+
+**What an editor can do.** Sign in with an editor passcode (Editors tab), find a guideline and,
+for each of its questions (Medicines quiz cards and every guideline quiz question):
+
+- change the question and the right answer (a card's answer: "- " starts a bullet, two spaces
+  before it indent it);
+- choose the wrong answers (empty means chosen at random each time, as before);
+- change an ordering round's steps;
+- leave a question out of the quiz;
+- undo an edit.
+
+**When edits go live.** Saving writes the edit to the Sheet's `Edits` tab at once (one row per
+question; the page marks it "Not in the app yet"). Every morning `edits-sync.yml` runs
+`scripts/sync-edits.js`, which copies the tab into `content/card-edits.yaml` (the readable
+record) and `content/card-edits.js` (what the app loads), runs `npm run check` and pushes to
+`main`. Phones get them on their next reload. To publish sooner, run "edits-sync" from the
+Actions tab. The bot's commits have no `CHANGELOG.md` entry; the git history records them.
+
+**After a guidelines update.** Questions with no edit simply follow the new guidelines. Each
+edit keeps a copy of what its question said when it was edited; when an update changes that
+(a different dose, step or wording) or removes the question, the edit is listed under "Needs
+review" and shown three ways: when edited, what learners see now, and what the guideline now
+gives. Until an editor chooses, learners keep the edit. "Keep the edit" accepts the new
+guideline under it; "Use the guideline's version" removes it. Question ids leave out numbers, so
+a changed dose keeps its edit for review instead of losing it. The daily copy also prints how
+many edits need review.
+
+**Switching it on (once).**
+
+1. Paste `backend/Code.gs` into Apps Script, run `setup` (it adds the `Editors` and `Edits`
+   tabs) and redeploy with Manage deployments, New version: steps 1 to 4 under "Manager view".
+   The backend address must then say "version with the editor page (17 Nov 2026)".
+2. **Fill the `Editors` tab:** a name in column A and a long passcode you make up in column B,
+   one line per editor. Send each passcode privately.
+3. Open the editor page and sign in. Leave the `Edits` tab alone: the page writes it.
+
 ## Backend
 
 A small Apps Script program attached to the Google Sheet. The app sends it the passcode and any
 edits; it checks the passcode against the `Mentors` and `Trackers` tabs, reads or writes the
 `Data` tab, and sends back this tracker's entries. For the manager view it also keeps the
-`History` tab and answers "stats" requests from the `Managers` and `Assignments` tabs.
+`History` tab and answers "stats" requests from the `Managers` and `Assignments` tabs. For the
+editor page it reads and writes the `Edits` tab for passcodes in the `Editors` tab, and gives
+the edits to the daily copy ("edits", no passcode: they are published anyway).
 
 - Update it: Sheet, Extensions, Apps Script, paste `backend/Code.gs`, run `setup` if the
   version adds tabs, then Deploy, Manage deployments, edit, New version. The address stays the

@@ -1,0 +1,97 @@
+/* Styles for the editor page (editor.html). Loaded after app.css and manager.css. */
+.editor-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+.editor-list li {
+  border-bottom: 1px solid var(--colour-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.6rem;
+  align-items: baseline;
+  padding: 0.7rem 0;
+}
+.editor-list .stats-note {
+  margin: 0;
+}
+
+/* One question: a bordered box with its fields, then the form or the review. */
+.editor-question {
+  border: 1px solid var(--colour-line);
+  border-radius: 0.6rem;
+  margin: 0.9rem 0;
+  padding: 0.8rem 0.9rem;
+}
+.editor-question__head {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+}
+.editor-badge {
+  background: var(--colour-green-soft);
+  border-radius: 1rem;
+  color: var(--colour-green);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+}
+.editor-fields {
+  margin: 0;
+}
+.editor-fields dt {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+.editor-fields dd {
+  margin: 0.1rem 0 0;
+}
+.editor-fields ol {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+.editor-text {
+  white-space: pre-wrap;
+}
+.editor-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.7rem 0 0.2rem;
+}
+.editor-box {
+  font: inherit;
+  resize: vertical;
+  width: 100%;
+}
+.editor-check {
+  display: block;
+  margin: 0.7rem 0;
+}
+.editor-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.editor-buttons .button {
+  width: auto;
+}
+
+/* Review: then, the edit and now, side by side on a wide screen, one under another on a phone. */
+.editor-columns {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+.editor-column h4 {
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0;
+}
+/* The banner's outline buttons, in green on the page. */
+.editor-buttons .switch-button {
+  border-color: var(--colour-green);
+  color: var(--colour-green);
+}

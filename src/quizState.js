@@ -5,13 +5,16 @@
  * code as the guidelines, work offline and follow the tracker to another phone.
  * The study session itself (state.quiz) is kept in memory only.
  * Depends on state.js, sync.js, guidelines.js, logic.js, quizCards.js, quizSchedule.js,
- * practiceLevels.js and content/practice-level-overrides.js.
+ * practiceLevels.js, questionEdits.js, content/practice-level-overrides.js and
+ * content/card-edits.js.
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
 import { sections, guidelines } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
 import { buildQuizCards } from './quizCards.js';
+import { applyCardEdits } from './questionEdits.js';
+import { cardEdits } from '../content/card-edits.js';
 import {
   readPracticeLevelTable,
   medicineGrants,
@@ -45,9 +48,10 @@ import {
 
 let cachedCards = null;
 
-/** Every quiz card, built from the guidelines the first time it is needed. */
+/** Every quiz card, built from the guidelines with editors' changes the first time it is needed. */
 export function quizCards() {
-  if (!cachedCards) cachedCards = buildQuizCards(sections, QUIZ_SECTION_NAME);
+  if (!cachedCards)
+    cachedCards = applyCardEdits(buildQuizCards(sections, QUIZ_SECTION_NAME), cardEdits);
   return cachedCards;
 }
 

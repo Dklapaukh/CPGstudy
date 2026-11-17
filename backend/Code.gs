@@ -1,6 +1,7 @@
 /*
  * CPG Mentoring Tracker: shared data service (Google Apps Script).
- * Tabs used in the Sheet: Mentors, Trackers, Data, Managers, Assignments, History. Run setup()
+ * Tabs used in the Sheet: Mentors, Trackers, Data, Managers, Assignments, History, Editors,
+ * Edits. Run setup()
  * once, and again after pasting a version that adds tabs (it never changes existing rows).
  * Needs the V8 runtime (Project Settings, "Enable Chrome V8 runtime").
  * The status codes and entry fields (s, n, t) match src/constants.js in the app.
@@ -25,7 +26,7 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with the manager view (16 Nov 2026)';
+const BACKEND_VERSION = 'version with the editor page (17 Nov 2026)';
 
 const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
 
@@ -36,6 +37,8 @@ const SHEET = {
   MANAGERS: 'Managers',
   ASSIGNMENTS: 'Assignments',
   HISTORY: 'History',
+  EDITORS: 'Editors',
+  EDITS: 'Edits',
 };
 
 // Extra entries the app keeps in the Data tab (src/constants.js). The manager page's numbers are
@@ -50,6 +53,8 @@ const BACKFILL_SOURCE = 'back-fill';
 // Column numbers (counting from 1) of each tab. Change a column here and nowhere else.
 const MENTOR_COLUMN = { NAME: 1, PASSCODE: 2 };
 const MANAGER_COLUMN = { NAME: 1, PASSCODE: 2 };
+const EDITOR_COLUMN = { NAME: 1, PASSCODE: 2 };
+const EDIT_COLUMN = { ID: 1, EDIT: 2, EDITOR: 3, UPDATED: 4 };
 const ASSIGNMENT_COLUMN = { VIEWER: 1, TRACKER: 2 };
 const HISTORY_COLUMN = { TRACKER: 1, ENTRY: 2, VALUE: 3, TIME: 4, SOURCE: 5 };
 const TRACKER_COLUMN = { LABEL: 1, PASSCODE: 2, CREATED_BY: 3, CREATED: 4 };
@@ -62,7 +67,12 @@ const HEADERS = {
   Managers: ['Name', 'Passcode'],
   Assignments: ['Viewer name', 'Tracker label'],
   History: ['Tracker passcode', 'Entry', 'Value', 'Time (ms)', 'Source'],
+  Editors: ['Name', 'Passcode'],
+  Edits: ['Question id', 'Edit (JSON)', 'Editor', 'Updated'],
 };
+// An edited question's id (src/guidelineQuizPlay.js, src/quizCards.js) and the longest edit kept.
+const EDIT_ID_PATTERN = /^[\w.|\-]{1,120}$/;
+const MAX_EDIT_LENGTH = 20000;
 
 /**
  * Run this from the editor: once at the start, and again after pasting a version that adds tabs.
@@ -111,7 +121,7 @@ function doPost(e) {
   );
 }
 
-/** Works out the reply for one request: open, load, save, create or stats. */
+/** Works out the reply for one request: open, load, save, create, stats or one of the edits ones. */
 function handleRequest_(request) {
   const code = normalise_(request.code);
   const action = request.action;
@@ -163,7 +173,59 @@ function handleRequest_(request) {
     };
   }
 
+  // The editor page (editor.html): sign in, and save or remove one question's edit.
+  if (action === 'editor-open' || action === 'edit-save') {
+    const editor = findPerson_(SHEET.EDITORS, EDITOR_COLUMN, code);
+    if (!editor) return { ok: false, error: 'not-found', delayBeforeReply: true };
+    if (action === 'edit-save' && !saveEdit_(editor.name, request.id, request.edit)) {
+      return { ok: false, error: 'bad-edit' };
+    }
+    return { ok: true, name: editor.name, edits: readEdits_() };
+  }
+
+  // Read by the daily copy into the repo (scripts/sync-edits.js). Edits are published anyway.
+  if (action === 'edits') return { ok: true, edits: readEdits_() };
+
   return { ok: false, error: 'bad-action' };
+}
+
+/** Every edit in the Edits tab as { question id: edit }. Rows that are not JSON are skipped. */
+function readEdits_() {
+  const rows = getSheet_(SHEET.EDITS).getDataRange().getValues();
+  const edits = {};
+  for (let i = 1; i < rows.length; i++) {
+    try {
+      edits[String(cell_(rows[i], EDIT_COLUMN.ID))] = JSON.parse(cell_(rows[i], EDIT_COLUMN.EDIT));
+    } catch (err) {
+      console.error('Edits row ' + (i + 1) + ' is not JSON'); // left for the owner to fix
+    }
+  }
+  return edits;
+}
+
+/**
+ * Saves one question's edit (an object), or removes it when `edit` is null. Returns false for a
+ * bad id or an edit too long to keep. One row per question id.
+ */
+function saveEdit_(editorName, id, edit) {
+  const questionId = String(id || '');
+  const text = edit === null ? '' : JSON.stringify(edit);
+  const isObject = edit === null || (typeof edit === 'object' && !Array.isArray(edit));
+  if (!EDIT_ID_PATTERN.test(questionId) || !isObject || text.length > MAX_EDIT_LENGTH) return false;
+  const sheet = getSheet_(SHEET.EDITS);
+  const found = sheet
+    .getRange('A:A')
+    .createTextFinder(questionId)
+    .matchEntireCell(true)
+    .findNext();
+  if (edit === null) {
+    if (found) sheet.deleteRow(found.getRow());
+    return true;
+  }
+  const row = [questionId, text, editorName, new Date().toISOString()];
+  if (found) sheet.getRange(found.getRow(), 1, 1, row.length).setValues([row]);
+  else sheet.appendRow(row);
+  return true;
 }
 
 /** Lower-case, trimmed text, so passcodes are not case sensitive. */

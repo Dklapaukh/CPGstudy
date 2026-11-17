@@ -45,6 +45,8 @@
     "src/views/quizView.js",
     "src/views/settingsView.js",
     "src/views/templates.js",
-    "src/views/updateView.js"
+    "src/views/updateView.js",
+    "content/card-edits.js",
+    "src/questionEdits.js"
   ]
 }

@@ -147,6 +147,8 @@ jobs:
             echo "- [ ] On this branch run \`node scripts/practice-level-review.js\` and check what each"
             echo "      practice level is shown in the Medicines quiz (plan 8.6)."
             echo "- [ ] Merge. Phones then show \"A new version of the guidelines is available\"."
+            echo "- [ ] After merging, open the editor page (editor.html): quiz questions edited before"
+            echo "      this update and changed by it are listed under \"Needs review\"."
           } > "$RUNNER_TEMP/body.md"
           url=$(gh pr create --head "$BRANCH" --title "$title" --body-file "$RUNNER_TEMP/body.md")
           echo "Opened $url"

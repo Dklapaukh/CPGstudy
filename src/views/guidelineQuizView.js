@@ -134,9 +134,13 @@ function markedCardHtml(step, cardIndex, placedHere) {
   const card = step.cards[cardIndex];
   const right = state.guidelineQuiz.marked.correctIndexes.has(cardIndex);
   let note = '';
-  if (card.isDistractor)
-    note = right ? `From ${card.source}` : `Not in this guideline: from ${card.source}`;
-  else if (!placedHere) note = 'This is in the guideline';
+  if (card.isDistractor) {
+    // A wrong card written by an editor has no source.
+    const notHere = card.source
+      ? `Not in this guideline: from ${card.source}`
+      : 'Not in this guideline';
+    note = right && card.source ? `From ${card.source}` : notHere;
+  } else if (!placedHere) note = 'This is in the guideline';
   else if (!right) note = 'Out of order';
   return `<li class="order-card order-card--${right ? 'right' : 'wrong'}">
     <span class="order-mark">${right ? '✓ Right' : '✗ Wrong'}</span>

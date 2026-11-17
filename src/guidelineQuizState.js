@@ -5,20 +5,18 @@
  * the latest score, 15 Nov 2026) as one extra entry (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id,
  * note = JSON { best, at, last, lastAt }), so it is saved, uploaded and merged by the same code
  * as the guidelines and needs no backend change.
- * Depends on state.js, sync.js, guidelines.js, logic.js, quizCards.js, quizDoses.js,
- * content/related.js and the three guidelineQuiz files.
+ * Depends on state.js, sync.js, guidelines.js, logic.js, content/related.js,
+ * content/card-edits.js and the three guidelineQuiz files.
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
-import { sections, guidelines } from './guidelines.js';
+import { sections } from './guidelines.js';
 import { nextTimestamp } from './logic.js';
-import { tableNames } from './quizCards.js';
-import { blockText } from './quizDoses.js';
 import { relatedLinks } from '../content/related.js';
+import { cardEdits } from '../content/card-edits.js';
 import { quizGuidelines, markRound } from './guidelineQuizRounds.js';
-import { valuePools } from './guidelineQuizNumbers.js';
-import { buildPlay, playTotal, redFlags } from './guidelineQuizPlay.js';
-import { STATUS, GUIDELINE_QUIZ_ENTRY_PREFIX, QUIZ_SECTION_NAME, BLOCK } from './constants.js';
+import { buildPlay, playTotal, playContext } from './guidelineQuizPlay.js';
+import { STATUS, GUIDELINE_QUIZ_ENTRY_PREFIX } from './constants.js';
 
 const PERCENT = 100;
 let cachedQuizzed = null;
@@ -30,30 +28,9 @@ export function quizzedGuidelines() {
   return cachedQuizzed;
 }
 
-/** The medicine names (lower case) of every medicine guideline, for same-medicine distractors. */
-function medicineNames() {
-  const medicines = sections.find((section) => section.name === QUIZ_SECTION_NAME);
-  if (!medicines) return [];
-  return medicines.items
-    .filter((guideline) =>
-      guideline.b.some((block) => block[0] === BLOCK.HEADING && /Indications/.test(block[1])),
-    )
-    .flatMap((guideline) => tableNames(guideline.t));
-}
-
-/** What every play needs from the whole content, built once (see buildPlay). */
-function playContext() {
-  if (cachedContext) return cachedContext;
-  cachedContext = {
-    quizzed: quizzedGuidelines(),
-    allGuidelines: guidelines,
-    medicineNames: medicineNames(),
-    pools: valuePools(guidelines.flatMap((guideline) => guideline.b.map(blockText))),
-    redFlagLists: guidelines
-      .map((guideline) => ({ id: guideline.id, flags: redFlags(guideline) }))
-      .filter((list) => list.flags.length > 0),
-    relatedIds: (id) => (relatedLinks[id] || []).map((link) => link[0]),
-  };
+/** What every play needs from the whole content, built the first time it is needed. */
+function context() {
+  if (!cachedContext) cachedContext = playContext(sections, relatedLinks);
   return cachedContext;
 }
 
@@ -131,7 +108,7 @@ export function currentStep() {
 export function startGuidelineQuiz(guidelineId, random = Math.random) {
   const quizzed = quizzedGuidelines().find((candidate) => candidate.id === guidelineId);
   if (!quizzed) return;
-  const steps = buildPlay(quizzed, playContext(), random);
+  const steps = buildPlay(quizzed, context(), random, cardEdits);
   state.guidelineQuiz = {
     guidelineId,
     title: quizzed.title,

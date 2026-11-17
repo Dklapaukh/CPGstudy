@@ -60,6 +60,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 10   | Medicines quiz: practice level (ATP) filter, by medicine        | Built 16 Nov 2026 (Z17)                  |
 | 11   | Medicines quiz: ATP filter by route and indication              | Built 16 Nov 2026 (Z18 to Z22), see 8.6  |
 | 12   | Manager view (`manager.html`): team and person statistics       | Built 16 Nov 2026; live once the owner does 8.4 task 8 |
+| 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live once the owner does 8.4 task 9 |
 
 ### 8.2 Decisions in force
 
@@ -212,6 +213,24 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
 - MV-I: "stats" sends every History row of the viewer's trackers and the page does the sums.
   Revisit with C5 if the reply becomes slow.
 
+**Editor page (feature 13; owner's choices 17 Nov 2026)**
+
+- ED-A: questions are still built from the guidelines at run time; only edits are stored
+  (`content/card-edits.yaml` and `.js`), as with the other override files. No stored copy of
+  every card.
+- ED-B (saving, Option B of three): the page saves to the Sheet's `Edits` tab; a daily
+  workflow copies it into the repo and pushes to `main`. Rejected: A, the backend commits to
+  GitHub with a token; C, editors send files to the owner.
+- ED-C: editors can change a question, its right answer, its wrong answers, an ordering round's
+  steps, or leave a question out.
+- ED-D (Claude's choice): review is per question, not per guideline. Unedited questions follow a
+  guidelines update at once; an edit whose question changed or went stays live until an editor
+  keeps it or drops it. Holding a whole guideline back would mean keeping old guideline text.
+- ED-E (Claude's choice): question ids leave out digits, so a changed dose keeps its edit and is
+  flagged for review.
+- Local-only storage (no Sheet) was considered and rejected: managers use the manager view, which
+  reads the Sheet, and phones would lose progress (Safari clears site data after 7 days unused).
+
 ### 8.3 Open decisions (owner)
 
 1. **Decision D again: how a new PDF is published** (asked 16 Nov 2026, unanswered). The owner
@@ -237,7 +256,8 @@ Answered 16 Nov 2026:
   (`RED_FLAG_QUESTIONS_PER_PLAY`), so nothing changes. The earlier to-do to remove them is
   cancelled.
 - **Rationale (red-flag explanation) questions: withdrawn** by the owner, 16 Nov 2026.
-- **Mentor question editor:** not needed, given how questions are built.
+- **Mentor question editor:** not needed, given how questions are built. Superseded 17 Nov 2026:
+  an editor page was asked for (feature 13).
 - **Quiz pill:** guidelines with no quiz show no pill (a disabled pill would confuse).
 - **Publishing St John's text:** the owner has permission from their medical director.
 - **Real-phone checks:** all done and passed.
@@ -264,8 +284,21 @@ Answered 16 Nov 2026:
 8. Done 16 Nov 2026: manager view switched on. The first redeploy missed the app's address
    (fixed by redeploying with Manage deployments, New version); the owner confirmed the page
    works with the real Sheet.
+9. **Switch on the editor page** (README, "Editor page", "Switching it on"): paste and redeploy
+   `backend/Code.gs` and run `setup`, then fill the new `Editors` tab.
 
 ## 13. Status
+
+**17 Nov 2026.** Feature 13, the editor page (`editor.html`), is built and on `main` (ED-A to
+ED-E). It needs 8.4 task 9 before editors can sign in. The study app now applies published
+edits; with none published it behaves exactly as before (same plays, checked by test).
+
+**Next step (owner's request, 17 Nov 2026): a code audit**, in a fresh chat. Check that the
+code is clear and concise, has no unnecessary repetition, and can be audited easily. A tidy-up
+only: no behaviour change (rule 9). Known places to look first: `quizzedGuidelines()` and
+`playContext()` both build the quizzed list; the editor page borrows `manager.css` class names
+(`manager-container`, `person-link`, `stats-note`); `sync-edits.js` writes both a YAML record
+and the JS the app loads.
 
 **16 Nov 2026.** Features 3 to 12 are built and live on `main`. No feature is in progress.
 

@@ -2,6 +2,14 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Editor page (feature 13): new page `editor.html` where editors (new `Editors`
+  tab) change quiz questions: wording, right and wrong answers, ordering steps, or leave a
+  question out. Only the edits are stored: the page saves to a new `Edits` tab, and a daily
+  workflow (`edits-sync.yml`, `scripts/sync-edits.js`) copies them into
+  `content/card-edits.yaml` and `.js` and pushes to `main`. Edits whose question a guidelines
+  update changed are listed for review and stay live until an editor decides. Guideline quiz
+  questions now have stable ids; plays are unchanged. **Needs `setup()` and a backend
+  redeploy** (README, "Editor page"). Plan: ED-A to ED-E; next step is a code audit.
 - 2026-11-16: Plan only: the manager view is switched on and works with the real Sheet (8.4
   tasks 1 and 8 done). No app change.
 - 2026-11-16: Manager view fix. The owner's check found no passcode worked: the backend address

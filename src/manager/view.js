@@ -18,13 +18,13 @@ const shortDate = (milliseconds) =>
 const numberCells = (values) =>
   values.map((value) => `<td class="stats-table__number">${value}</td>`).join('');
 
-const warningHtml = (message) =>
+export const warningHtml = (message) =>
   message ? `<div class="warning-message" role="alert">${escapeHtml(message)}</div>` : '';
 
 /** The green banner at the top of every screen, with optional buttons on the right. */
-function coverHtml(subtitle, buttonsHtml = '') {
+export function coverHtml(subtitle, buttonsHtml = '', pageName = 'Manager view') {
   return `<header class="cover manager-cover">
-    <div class="top-bar"><b class="tracker-label">Manager view</b>
+    <div class="top-bar"><b class="tracker-label">${escapeHtml(pageName)}</b>
       <div class="top-bar__buttons">${buttonsHtml}</div></div>
     <h1>Emergency Ambulance Service</h1>
     <p>Clinical Practice Guidelines</p>

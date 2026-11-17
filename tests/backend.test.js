@@ -24,6 +24,7 @@ function fakeSheet(name) {
     getDataRange: () => ({ getValues: () => rows }),
     getLastRow: () => rows.length,
     appendRow: (row) => rows.push(row),
+    deleteRow: (row) => rows.splice(row - 1, 1),
     setFrozenRows() {},
     getRange: (row, column, rowCount = 1) => {
       if (row === 'A:A') {
@@ -82,7 +83,7 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with the manager view \(16 Nov 2026\)/);
+  assert.match(doGet().text, /running, version with the editor page \(17 Nov 2026\)/);
 });
 
 test('open: tracker, mentor, and a wrong passcode that is delayed after the lock', () => {
@@ -232,4 +233,30 @@ test('stats: a mentor also sees trackers they created; other passcodes are refus
   assert.equal(post({ action: 'stats', code: 'tracker-1' }).error, 'not-found');
   assert.equal(sleeps, before + 1);
   assert.equal(post({ action: 'open', code: 'manager-1' }).error, 'not-found');
+});
+
+test('edits: editors sign in, save, replace and remove edits; anyone can read them', () => {
+  tabs.Editors = [
+    ['Name', 'Passcode'],
+    ['Eve', 'editor-1'],
+  ];
+  const id = 'cpg-14-3|dose-cardiac-arrest';
+  assert.equal(post({ action: 'editor-open', code: 'boss-1' }).error, 'not-found');
+  assert.deepEqual(post({ action: 'editor-open', code: 'Editor-1' }), {
+    ok: true,
+    name: 'Eve',
+    edits: {},
+  });
+  const save = (edit, editId = id) =>
+    post({ action: 'edit-save', code: 'editor-1', id: editId, edit });
+  assert.deepEqual(save({ prompt: 'A', was: {} }).edits, { [id]: { prompt: 'A', was: {} } });
+  save({ prompt: 'B', was: {} });
+  assert.equal(tabs.Edits.length, 2, 'one row per question');
+  assert.equal(tabs.Edits[1][2], 'Eve');
+  assert.equal(save({ prompt: 'C' }, 'bad id').error, 'bad-edit');
+  assert.equal(save(['not', 'an', 'object']).error, 'bad-edit');
+  assert.equal(save({ answer: 'x'.repeat(20001) }).error, 'bad-edit');
+  assert.deepEqual(post({ action: 'edits' }).edits, { [id]: { prompt: 'B', was: {} } });
+  assert.deepEqual(save(null).edits, {});
+  assert.equal(tabs.Edits.length, 1);
 });

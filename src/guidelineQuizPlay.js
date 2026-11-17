@@ -1,8 +1,8 @@
 /*
- * Guideline quiz (feature 9), pure logic: the questions about information that changes the
- * course of treatment, and putting one play of a guideline together. Takes the quizzed
- * guidelines (guidelineQuizRounds.js) and returns a list of steps; randomness comes in as a
- * `random` function so tests can fix it.
+ * Guideline quiz (feature 9), pure logic: every question a guideline can ask (each with a stable
+ * id, so editors can change it), and putting one play of a guideline together from them. Takes
+ * the quizzed guidelines (guidelineQuizRounds.js) and returns a list of steps; randomness comes
+ * in as a `random` function so tests can fix it.
  *
  * Course-changing questions (Decision Z15). Only kinds that can be read straight from the layout
  * of the content are made, so no AI is ever needed:
@@ -17,20 +17,23 @@
  *   { kind: 'choice', type: 'number' | 'situation' | 'red-flag' | 'move-to', prompt, answer,
  *     choices, and: context, before, after (number: the text either side of the blank) or
  *     line (situation and move-to: the action or condition asked about) }
- * Depends on constants.js, quizDoses.js, quizCards.js, guidelineQuizRounds.js and
- * guidelineQuizNumbers.js.
+ * Depends on constants.js, quizDoses.js, quizCards.js, updates.js, questionEdits.js,
+ * guidelineQuizRounds.js and guidelineQuizNumbers.js.
  */
-import { BLOCK } from './constants.js';
+import { BLOCK, QUIZ_SECTION_NAME } from './constants.js';
 import { plainText, withoutChildDoses, blockText, isChildOnly } from './quizDoses.js';
 import {
+  quizGuidelines,
   actionZone,
   normalisedText,
   distractorCandidates,
   pickDistractors,
   shuffled,
 } from './guidelineQuizRounds.js';
-import { numberPlaces, numberQuestion } from './guidelineQuizNumbers.js';
-import { CHILD_ONLY_GUIDELINE_TITLES } from './quizCards.js';
+import { numberPlaces, numberQuestion, valuePools } from './guidelineQuizNumbers.js';
+import { CHILD_ONLY_GUIDELINE_TITLES, tableNames } from './quizCards.js';
+import { fingerprintText } from './updates.js';
+import { withEdit, textToBlocks } from './questionEdits.js';
 
 // Decision Z13: two distractors per round.
 export const DISTRACTORS_PER_ROUND = 2;
@@ -62,7 +65,29 @@ export function isForChildAges(line) {
   return Number(match[1] || match[2]) < ADULT_AGE;
 }
 
-/* ---------- Ordering rounds ---------- */
+/* ---------- Questions ---------- */
+
+/*
+ * Every question a guideline can ask is built first, each with a stable id, so an editor can
+ * change it (questionEdits.js). A play then picks some and adds wrong answers. The fields an
+ * editor can change are named in EDIT_FIELDS; `pool` holds the wrong answers chosen from at
+ * random when an editor has not chosen them (`wrong`).
+ */
+
+// Digits are left out of an id, so a changed dose keeps its question (and its edit, for review).
+const idText = (text) => normalisedText(text).replace(/\d+/g, '#');
+const questionId = (quizzed, kind, text) =>
+  `${quizzed.id}|${kind}|${fingerprintText(idText(text))}`;
+
+/** Gives repeated ids a -2, -3… ending, in order, so every id is unique. */
+function withUniqueIds(questions) {
+  const seen = {};
+  return questions.map((question) => {
+    seen[question.id] = (seen[question.id] || 0) + 1;
+    const count = seen[question.id];
+    return count === 1 ? question : { ...question, id: `${question.id}-${count}` };
+  });
+}
 
 /**
  * The text shown on a card: the line without sentences only about a child ("See the paediatric
@@ -74,35 +99,23 @@ export function cardText(text) {
   return adult.length > 0 ? adult.join(' ') : plainText(text);
 }
 
-/**
- * The ordering step of one round: { kind, title, real, cards }. `real` is the round's actions
- * in guideline order and `cards` are those plus the distractors, shuffled.
- */
-function orderStep(round, quizzed, context, random) {
-  const candidates = distractorCandidates(
-    round,
-    quizzed,
-    context.quizzed,
-    context.medicineNames,
-    context.relatedIds(quizzed.id),
-  );
-  const distractors = pickDistractors(candidates, DISTRACTORS_PER_ROUND, random);
-  const real = round.actions.map((action) => ({
-    text: cardText(action.text),
-    blocks: withoutChildDoses(action.blocks),
-    isDistractor: false,
-    source: `CPG ${quizzed.number}`,
+/** One ordering question per round: { title, steps, actions, pool }. */
+function orderQuestions(quizzed, context) {
+  return quizzed.rounds.map((round, index) => ({
+    id: questionId(quizzed, 'order', `${round.title || 'round'} ${index}`),
+    kind: 'order',
+    title: round.title,
+    steps: round.actions.map((action) => cardText(action.text)),
+    actions: round.actions,
+    pool: distractorCandidates(
+      round,
+      quizzed,
+      context.quizzed,
+      context.medicineNames,
+      context.relatedIds(quizzed.id),
+    ),
   }));
-  const fake = distractors.map((distractor) => ({
-    text: cardText(distractor.text),
-    blocks: [],
-    isDistractor: true,
-    source: distractor.source,
-  }));
-  return { kind: 'order', title: round.title, real, cards: shuffled([...real, ...fake], random) };
 }
-
-/* ---------- Number questions ---------- */
 
 /**
  * The plain lines of the actions, child-only lines and sentences removed, as [{ line, context }].
@@ -123,42 +136,39 @@ function adultActionLines(quizzed) {
 
 const asksNumbers = (quizzed) =>
   quizzed.section !== CHILD_ONLY_SECTION && !CHILD_ONLY_GUIDELINE_TITLES.includes(quizzed.title);
+// A number question offers a wrong unit or not at random; it is listed if either can be made.
+const NO_WRONG_UNIT = () => 0.99;
+const WRONG_UNIT = () => 0;
 
-/** Up to NUMBER_QUESTIONS_PER_PLAY number questions, each from a different line. */
-function numberSteps(quizzed, pools, random) {
+/** One number question per number in an action line: { line, valueIndex, context, answer, … }. */
+function numberQuestions(quizzed, context) {
   if (!asksNumbers(quizzed)) return [];
-  const places = adultActionLines(quizzed).flatMap(({ line, context }) =>
-    numberPlaces([line]).map((place) => ({ ...place, context })),
+  return adultActionLines(quizzed).flatMap(({ line, context: lineContext }) =>
+    numberPlaces([line]).flatMap(({ valueIndex }) => {
+      const question =
+        numberQuestion(line, valueIndex, context.pools, NO_WRONG_UNIT) ||
+        numberQuestion(line, valueIndex, context.pools, WRONG_UNIT);
+      if (!question) return [];
+      return [
+        {
+          id: questionId(quizzed, 'number', `${line} ${valueIndex}`),
+          kind: 'number',
+          line,
+          valueIndex,
+          context: lineContext,
+          before: question.before,
+          after: question.after,
+          answer: question.answer,
+        },
+      ];
+    }),
   );
-  const steps = [];
-  const usedLines = new Set();
-  for (const place of shuffled(places, random)) {
-    if (steps.length === NUMBER_QUESTIONS_PER_PLAY) break;
-    if (usedLines.has(place.line)) continue;
-    const question = numberQuestion(place.line, place.valueIndex, pools, random);
-    if (!question) continue;
-    usedLines.add(place.line);
-    steps.push({
-      kind: 'choice',
-      type: 'number',
-      prompt: 'Which number is right?',
-      context: place.context,
-      ...question,
-    });
-  }
-  return steps;
 }
 
-/* ---------- Situation questions ---------- */
-
-/**
- * "Which situation is this action for?": an action found in only one titled situation, with
- * the titles as choices. Needs two titled situations or more. At most CHOICE_COUNT titles.
- */
-export function situationSteps(quizzed, random) {
+/** "Which situation is this action for?": each action found in only one titled situation. */
+function situationQuestions(quizzed) {
   const titled = quizzed.rounds.filter((round) => round.title);
   if (titled.length < 2) return [];
-  const titles = titled.map((round) => round.title);
   const counts = {};
   titled.forEach((round) =>
     round.actions.forEach((action) => {
@@ -166,30 +176,18 @@ export function situationSteps(quizzed, random) {
       counts[key] = (counts[key] || 0) + 1;
     }),
   );
-  const places = titled.flatMap((round) =>
+  return titled.flatMap((round) =>
     round.actions
       .filter((action) => counts[normalisedText(action.text)] === 1)
-      .map((action) => ({ action, title: round.title })),
-  );
-  return shuffled(places, random)
-    .slice(0, SITUATION_QUESTIONS_PER_PLAY)
-    .map(({ action, title }) => {
-      const others = shuffled(
-        titles.filter((other) => other !== title),
-        random,
-      ).slice(0, CHOICE_COUNT - 1);
-      return {
-        kind: 'choice',
-        type: 'situation',
-        prompt: 'Which situation is this action for?',
+      .map((action) => ({
+        id: questionId(quizzed, 'situation', action.text),
+        kind: 'situation',
         line: action.text,
-        answer: title,
-        choices: shuffled([title, ...others], random),
-      };
-    });
+        answer: round.title,
+        pool: titled.map((other) => other.title).filter((title) => title !== round.title),
+      })),
+  );
 }
-
-/* ---------- Red flag questions ---------- */
 
 /** The red flags of a guideline: the top-level bullets under its Red flags heading(s). */
 export function redFlags(guideline) {
@@ -215,31 +213,22 @@ export function isSameFlag(flag, other) {
   return shared >= SAME_FLAG_WORD_SHARE * Math.min(words.size, otherWords.size);
 }
 
-/** "Which of these is a red flag in <guideline>?": one of its flags and three from others. */
-function redFlagSteps(quizzed, context, random) {
+/** "Which of these is a red flag in <guideline>?": one per flag, other guidelines' as the pool. */
+function redFlagQuestions(quizzed, context) {
   const own = redFlags(quizzed.guideline);
   if (own.length === 0) return [];
   const othersFlags = context.redFlagLists
     .filter((list) => list.id !== quizzed.id)
     .flatMap((list) => list.flags)
     .filter((flag) => !own.some((ownFlag) => isSameFlag(ownFlag, flag)));
-  const unique = [...new Set(othersFlags)];
-  if (unique.length < CHOICE_COUNT - 1) return [];
-  return shuffled(own, random)
-    .slice(0, RED_FLAG_QUESTIONS_PER_PLAY)
-    .map((flag) => {
-      const wrong = shuffled(unique, random).slice(0, CHOICE_COUNT - 1);
-      return {
-        kind: 'choice',
-        type: 'red-flag',
-        prompt: `Which of these is a red flag in ${quizzed.title}?`,
-        answer: flag,
-        choices: shuffled([flag, ...wrong], random),
-      };
-    });
+  const pool = [...new Set(othersFlags)];
+  return own.map((flag) => ({
+    id: questionId(quizzed, 'red-flag', flag),
+    kind: 'red-flag',
+    answer: flag,
+    pool,
+  }));
 }
-
-/* ---------- Move-to questions ---------- */
 
 /** The guideline a quoted name points to (title contains the name), or null. */
 function guidelineNamed(name, allGuidelines) {
@@ -260,49 +249,192 @@ export function moveToActions(quizzed, allGuidelines) {
     .filter((found) => found.target && found.target.id !== quizzed.id);
 }
 
-/** "If <condition>, which guideline do you move to?", with three other guidelines as choices. */
-function moveToSteps(quizzed, context, random) {
-  return shuffled(moveToActions(quizzed, context.allGuidelines), random)
-    .slice(0, MOVE_TO_QUESTIONS_PER_PLAY)
-    .map(({ condition, target }) => {
-      // Wrong answers are related treatment guidelines, so they are believable places to go.
-      const nearby = context
-        .relatedIds(quizzed.id)
-        .map((id) => context.quizzed.find((other) => other.id === id))
-        .filter((other) => other && other.id !== target.id)
-        .map((other) => other.guideline);
-      const wrong = shuffled(nearby, random)
-        .slice(0, CHOICE_COUNT - 1)
-        .map((guideline) => guideline.t);
-      return {
-        kind: 'choice',
-        type: 'move-to',
-        prompt: 'Which guideline do you move to?',
-        line: `${condition} …`,
-        answer: target.t,
-        choices: shuffled([target.t, ...wrong], random),
-      };
-    })
-    .filter((step) => step.choices.length === CHOICE_COUNT);
+/** "If <condition>, which guideline do you move to?": related guidelines are the pool. */
+function moveToQuestions(quizzed, context) {
+  return moveToActions(quizzed, context.allGuidelines).map(({ condition, target }) => ({
+    id: questionId(quizzed, 'move-to', condition),
+    kind: 'move-to',
+    line: condition,
+    answer: target.t,
+    // Related treatment guidelines, so the wrong answers are believable places to go.
+    pool: context
+      .relatedIds(quizzed.id)
+      .map((id) => context.quizzed.find((other) => other.id === id))
+      .filter((other) => other && other.id !== target.id)
+      .map((other) => other.title),
+  }));
+}
+
+/** Every question of a guideline, in play order: rounds, numbers, then the other kinds. */
+export function guidelineQuestions(quizzed, context) {
+  return withUniqueIds([
+    ...orderQuestions(quizzed, context),
+    ...numberQuestions(quizzed, context),
+    ...situationQuestions(quizzed),
+    ...redFlagQuestions(quizzed, context),
+    ...moveToQuestions(quizzed, context),
+  ]);
+}
+
+/* ---------- Steps of a play ---------- */
+
+const hasChosenWrong = (question) => Array.isArray(question.wrong) && question.wrong.length > 0;
+// The real cards of a round, from its actions, or from an editor's steps when they were changed.
+function realCards(question, source) {
+  const unchanged =
+    question.steps.length === question.actions.length &&
+    question.steps.every((text, i) => text === cardText(question.actions[i].text));
+  if (!unchanged) {
+    return question.steps.map((text) => ({
+      text,
+      blocks: textToBlocks(text),
+      isDistractor: false,
+      source,
+    }));
+  }
+  return question.actions.map((action) => ({
+    text: cardText(action.text),
+    blocks: withoutChildDoses(action.blocks),
+    isDistractor: false,
+    source,
+  }));
+}
+
+/**
+ * The ordering step of one round: { kind, title, real, cards }. `real` is the round's actions
+ * in guideline order and `cards` are those plus the distractors, shuffled.
+ */
+function orderStep(question, quizzed, random) {
+  const real = realCards(question, `CPG ${quizzed.number}`);
+  const distractors = hasChosenWrong(question)
+    ? question.wrong.map((text) => ({ text, source: '' }))
+    : pickDistractors(question.pool, DISTRACTORS_PER_ROUND, random);
+  const fake = distractors.map((distractor) => ({
+    text: cardText(distractor.text),
+    blocks: [],
+    isDistractor: true,
+    source: distractor.source,
+  }));
+  return {
+    kind: 'order',
+    title: question.title,
+    real,
+    cards: shuffled([...real, ...fake], random),
+  };
+}
+
+/** The four choices of a question: its answer and three wrong ones, shuffled. */
+function choicesOf(question, random) {
+  const wrong = hasChosenWrong(question) ? question.wrong : shuffled(question.pool, random);
+  const others = [...new Set(wrong)].filter((choice) => choice !== question.answer);
+  return shuffled([question.answer, ...others.slice(0, CHOICE_COUNT - 1)], random);
+}
+
+/** Up to NUMBER_QUESTIONS_PER_PLAY number questions, each from a different line. */
+function numberSteps(questions, pools, random) {
+  const steps = [];
+  const usedLines = new Set();
+  for (const question of shuffled(questions, random)) {
+    if (steps.length === NUMBER_QUESTIONS_PER_PLAY) break;
+    if (usedLines.has(question.line)) continue;
+    const made = numberQuestion(question.line, question.valueIndex, pools, random);
+    if (!made) continue;
+    usedLines.add(question.line);
+    const isEdited = hasChosenWrong(question) || question.answer !== made.answer;
+    steps.push({
+      kind: 'choice',
+      type: 'number',
+      prompt: 'Which number is right?',
+      context: question.context,
+      before: made.before,
+      after: made.after,
+      answer: question.answer,
+      choices: isEdited ? choicesOf({ ...question, pool: made.choices }, random) : made.choices,
+    });
+  }
+  return steps;
+}
+
+// The question shown for each of the other kinds, and the text above the choices.
+const PROMPTS = {
+  situation: () => 'Which situation is this action for?',
+  'red-flag': (quizzed) => `Which of these is a red flag in ${quizzed.title}?`,
+  'move-to': () => 'Which guideline do you move to?',
+};
+const LINES = { situation: (line) => line, 'move-to': (line) => `${line} …` };
+const PER_PLAY = {
+  situation: SITUATION_QUESTIONS_PER_PLAY,
+  'red-flag': RED_FLAG_QUESTIONS_PER_PLAY,
+  'move-to': MOVE_TO_QUESTIONS_PER_PLAY,
+};
+// A red flag or move-to question needs a full set of choices; a situation question is asked
+// with however many other situations the guideline has.
+const NEEDS_FULL_CHOICES = ['red-flag', 'move-to'];
+
+/** Up to PER_PLAY questions of one kind, as choice steps. */
+function choiceSteps(kind, questions, quizzed, random) {
+  return shuffled(questions, random)
+    .map((question) => ({
+      kind: 'choice',
+      type: kind,
+      prompt: PROMPTS[kind](quizzed),
+      ...(LINES[kind] ? { line: LINES[kind](question.line) } : {}),
+      answer: question.answer,
+      choices: choicesOf(question, random),
+    }))
+    .filter(
+      (step) =>
+        step.choices.length >= 2 &&
+        (!NEEDS_FULL_CHOICES.includes(kind) || step.choices.length === CHOICE_COUNT),
+    )
+    .slice(0, PER_PLAY[kind]);
 }
 
 /* ---------- One play ---------- */
 
 /**
  * One play of a guideline: each round in order, then the number questions, then the
- * course-changing questions. `context` is { quizzed, allGuidelines, medicineNames, pools,
- * redFlagLists, relatedIds(id) }.
+ * course-changing questions. `context` is from playContext(); `edits` are editors' changes by
+ * question id (questionEdits.js).
  */
-export function buildPlay(quizzed, context, random) {
+export function buildPlay(quizzed, context, random, edits = {}) {
+  const questions = guidelineQuestions(quizzed, context)
+    .map((question) => withEdit(question, edits[question.id]))
+    .filter(Boolean);
+  const ofKind = (kind) => questions.filter((question) => question.kind === kind);
   return [
-    ...quizzed.rounds.map((round) => orderStep(round, quizzed, context, random)),
-    ...numberSteps(quizzed, context.pools, random),
-    ...situationSteps(quizzed, random),
-    ...redFlagSteps(quizzed, context, random),
-    ...moveToSteps(quizzed, context, random),
+    ...ofKind('order').map((question) => orderStep(question, quizzed, random)),
+    ...numberSteps(ofKind('number'), context.pools, random),
+    ...Object.keys(PROMPTS).flatMap((kind) => choiceSteps(kind, ofKind(kind), quizzed, random)),
   ];
 }
 
 /** The marks a play can give: one per card of every round, one per question. */
 export const playTotal = (steps) =>
   steps.reduce((sum, step) => sum + (step.kind === 'order' ? step.cards.length : 1), 0);
+
+/** The medicine names (lower case) of every medicine guideline, for same-medicine distractors. */
+function medicineNames(sections) {
+  const medicines = sections.find((section) => section.name === QUIZ_SECTION_NAME);
+  if (!medicines) return [];
+  return medicines.items
+    .filter((guideline) =>
+      guideline.b.some((block) => block[0] === BLOCK.HEADING && /Indications/.test(block[1])),
+    )
+    .flatMap((guideline) => tableNames(guideline.t));
+}
+
+/** What every play needs from the whole content (see buildPlay). Build it once and keep it. */
+export function playContext(sections, relatedLinks) {
+  const allGuidelines = sections.flatMap((section) => section.items);
+  return {
+    quizzed: quizGuidelines(sections),
+    allGuidelines,
+    medicineNames: medicineNames(sections),
+    pools: valuePools(allGuidelines.flatMap((guideline) => guideline.b.map(blockText))),
+    redFlagLists: allGuidelines
+      .map((guideline) => ({ id: guideline.id, flags: redFlags(guideline) }))
+      .filter((list) => list.flags.length > 0),
+    relatedIds: (id) => (relatedLinks[id] || []).map((link) => link[0]),
+  };
+}
