@@ -53,11 +53,15 @@ export function demoStreakTap(onDoubleTap) {
 // Glowing sparks that rise round the powered-up rat; CSS gives each its place and timing.
 const EMBER_COUNT = 10;
 
-/** The celebration's stage: light rays, aura, flames, the hype rat, shock wave, sparks, flash. */
+/**
+ * The celebration's stage: light rays, the flickering charge glow, aura, flames, the hype rat,
+ * shock wave, sparks and flash.
+ */
 function celebrationStageHtml() {
   const embers = '<span class="streak-celebration__ember"></span>'.repeat(EMBER_COUNT);
   return `<div class="streak-celebration__stage">
       <div class="streak-celebration__rays" aria-hidden="true"></div>
+      <div class="streak-celebration__charge" aria-hidden="true"></div>
       <div class="streak-celebration__aura" aria-hidden="true"></div>
       <div class="streak-celebration__flame" aria-hidden="true"></div>
       <div class="streak-celebration__rat">${hypeRatSvg()}</div>
@@ -68,9 +72,11 @@ function celebrationStageHtml() {
 }
 
 /**
- * Shows the full-screen celebration if a quiz has just lit today's streak: the hype rat pops up,
- * crouches and leaps with its arms up (a flash, its aura bursts on), lands with a shock wave and
- * keeps hopping and pumping its fists while the day count ticks over. Stays until Continue.
+ * Shows the full-screen celebration if a quiz has just lit today's streak: the hype rat powers up
+ * like a super Saiyan. It drops into a stance with fists clenched at its hips, strains and shakes
+ * as a glow builds, then throws its arms down and out with a shout (a flash, a shock wave, its
+ * aura bursts on) and stands powered up, flexing now and then, while the day count ticks over.
+ * Stays until Continue.
  */
 export function showPendingCelebration() {
   if (!takeCelebration()) return;

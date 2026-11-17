@@ -207,16 +207,24 @@ function hypeHolsterSvg() {
 }
 
 /**
- * One arm of the hype rat, from the shoulder down to a pink fist; `side` names it. Drawn over
- * the head, so a pumped fist shows in front of the ears.
+ * One arm of the hype rat, jointed so it can bend: the upper arm turns at the shoulder and the
+ * forearm (its own group) at the elbow, ending in a clenched pink fist; `side` names it. Drawn
+ * over the head, so a raised fist shows in front of the ears.
  */
 function hypeArmSvg(side, shoulderX, handX, id) {
+  const elbowX = (shoulderX + handX) / 2;
+  const limb = (x1, y1, x2, y2) => `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${FUR_EDGE}"
+        stroke-width="11" stroke-linecap="round"/>
+      <path d="M${x1} ${y1} L${x2} ${y2}" stroke="url(#rat-fur-${id})" stroke-width="9.4"
+        stroke-linecap="round"/>`;
   return `<g class="hype-rat__arm hype-rat__arm--${side}">
-      <path d="M${shoulderX} 86 L${handX} 110" stroke="${FUR_EDGE}" stroke-width="11"
-        stroke-linecap="round"/>
-      <path d="M${shoulderX} 86 L${handX} 110" stroke="url(#rat-fur-${id})" stroke-width="9.4"
-        stroke-linecap="round"/>
-      <circle cx="${handX}" cy="111" r="5.4" fill="${SKIN}" stroke="#b9746e" stroke-width="0.6"/>
+      ${limb(shoulderX, 86, elbowX, 98)}
+      <g class="hype-rat__forearm">
+        ${limb(elbowX, 98, handX, 110)}
+        <circle cx="${handX}" cy="111" r="5.6" fill="${SKIN}" stroke="#b9746e" stroke-width="0.6"/>
+        <path d="M${handX - 3.4} 109.6 Q${handX} 108 ${handX + 3.4} 109.6" fill="none"
+          stroke="#b9746e" stroke-width="0.7" stroke-linecap="round"/>
+      </g>
     </g>`;
 }
 
@@ -236,7 +244,10 @@ function hypeSunglassesSvg(id) {
       <circle cx="76" cy="42" r="0.65"/><circle cx="84" cy="43.6" r="0.5"/></g>`;
 }
 
-/** The hype rat's head (its own group, so it can bob): ears, face, a wide grin and sunglasses. */
+/**
+ * The hype rat's head (its own group, so it can move): ears, face, a wide grin, an open shouting
+ * mouth the celebration shows while it powers up, and sunglasses.
+ */
 function hypeHeadSvg(id) {
   const ear = (x) => `<circle cx="${x}" cy="33" r="12.5" fill="#3d3632" stroke="${FUR_EDGE}"
       stroke-width="0.9"/><circle cx="${x}" cy="33.5" r="7.4" fill="${EAR_INSIDE}"/>`;
@@ -249,6 +260,11 @@ function hypeHeadSvg(id) {
       <ellipse cx="60" cy="62" rx="4.2" ry="3" fill="${NOSE}"/>
       <path d="M50.5 68.5 Q60 80 69.5 68.5 Q60 72.5 50.5 68.5 Z" fill="#3a1a1a"/>
       <rect x="57.4" y="69.6" width="5.2" height="4" rx="0.8" fill="#fffaf0"/>
+      <g class="hype-rat__shout">
+        <ellipse cx="60" cy="72.5" rx="7.4" ry="6.8" fill="#3a1a1a"/>
+        <ellipse cx="60" cy="76.2" rx="4.4" ry="2.6" fill="#d9576b"/>
+        <rect x="56.8" y="65.9" width="6.4" height="3" rx="0.8" fill="#fffaf0"/>
+      </g>
       <path d="M45 66 L29 62 M45 69 L29 71 M75 66 L91 62 M75 69 L91 71" stroke="#d8d2cc"
         stroke-opacity="0.9" stroke-width="0.8" stroke-linecap="round"/>
       ${hypeSunglassesSvg(id)}
@@ -257,7 +273,8 @@ function hypeHeadSvg(id) {
 
 /**
  * The hype rat as an SVG: stood up facing the viewer, in shield sunglasses, shears holstered on
- * a cartridge belt. The celebration moves its arms, head and tail (classes hype-rat__*).
+ * a cartridge belt. The celebration moves its arms, forearms, head and tail
+ * and shows its shout (classes hype-rat__*).
  */
 export function hypeRatSvg() {
   drawingCount += 1;

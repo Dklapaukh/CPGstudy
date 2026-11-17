@@ -257,6 +257,12 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   alternating fist pumps). Claude's choices: the pill grows from 32 to 57 by 38 px inside the
   same 40 px button; the sad-to-powered swap in the power-up was dropped (the hype rat replaces
   both); shock wave moved to the landing (1.3 s). Both drawings in `src/views/ratDrawings.js`.
+- ST-H (owner, 18 Nov 2026): the power-up moves like Goku going super Saiyan, without the hair.
+  Claude's choices: arms jointed at shoulder and elbow (`hype-rat__forearm`); an open shouting
+  mouth (`hype-rat__shout`) shown through the burst; a flickering charge glow before it; the
+  burst at 2 s (was the landing at 1.3 s), so the count and Continue come a second later; once
+  powered, a faint buzz and a flex every 2.4 s instead of hops and fist pumps. Plain CSS
+  keyframes, no outside animation service needed.
 
 **Editor page, later changes**
 
@@ -384,6 +390,10 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**18 Nov 2026.** On `main`, checked with `npm run check` and frames seen in headless Chrome
+(not yet on a phone): the super Saiyan power-up (ST-H). **Next:** the owner watches it on a phone
+via the demo tracker's double tap and says if the timing or poses want changing.
 
 **17 Nov 2026 (late night).** On `main`, checked with `npm run check` and seen in headless
 Chrome (not yet on a phone): the whole-body streak rat and the separate hype rat power-up

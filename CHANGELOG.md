@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Study streak: the power-up now moves like a super Saiyan transformation (no gold
+  hair). The hype rat's arms are jointed at shoulder and elbow. It drops into a stance with
+  elbows out and fists clenched at its hips, strains lower and shakes harder while a flickering
+  glow builds, then throws its arms straight down and out with an open-mouthed shout (flash,
+  shock wave, aura on at 2 s). It settles back into the stance and keeps breathing, buzzing and
+  flexing every 2.4 s. The day count and Continue come in a second later than before (2.4 s and
+  3.2 s). Replaces the hopping and fist pumps.
 - 2026-11-17: Editor page: each question is shown as learners see it, drawn by the quiz
   screens' own markup (new shared file `src/views/quizMarkup.js`): a Medicines card turned over,
   an ordering round marked all right, a choice question with the right answer ticked. Random
