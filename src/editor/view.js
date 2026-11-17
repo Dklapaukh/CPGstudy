@@ -4,15 +4,23 @@
  * folding sections, and the coloured guideline header. Each function takes prepared data and
  * returns text; main.js puts it on the page and handles the clicks. Question text and edits are
  * escaped before they reach the page.
- * Depends on logic.js, constants.js, quizDoses.js, questionEdits.js, staffPage.js and
- * views/templates.js.
+ * Each question is shown as learners see it, drawn by the quiz screens' own markup
+ * (views/quizMarkup.js).
+ * Depends on logic.js, constants.js, quizDoses.js, questionEdits.js, staffPage.js,
+ * views/templates.js and views/quizMarkup.js.
  */
 import { warningHtml } from '../staffPage.js';
 import { escapeHtml } from '../logic.js';
 import { DEFAULT_HEADER_COLOUR } from '../constants.js';
-import { EDIT_FIELDS, LIST_FIELDS, REVIEW } from '../questionEdits.js';
+import { EDIT_FIELDS, LIST_FIELDS, REVIEW, hasChosenWrong } from '../questionEdits.js';
 import { aiNoticeHtml, coverHtml } from '../views/templates.js';
 import { plainText } from '../quizDoses.js';
+import {
+  turnedCardHtml,
+  orderHeadHtml,
+  markedRoundHtml,
+  choiceQuestionHtml,
+} from '../views/quizMarkup.js';
 
 const PAGE_NAME = 'Question editor';
 const POOL_EXAMPLES = 3;
@@ -219,6 +227,30 @@ function reviewHtml(item) {
     </div></div>`;
 }
 
+/** Says the wrong answers shown are one random example, unless an editor chose them. */
+function randomNoteHtml(item) {
+  if (item.kind === 'card' || hasChosenWrong(item.live)) return '';
+  const from = item.live.pool ? `from ${item.live.pool.length}` : 'from similar numbers';
+  return note(`Wrong answers are picked at random ${from} each time; these are one example.`);
+}
+
+/**
+ * The question as learners see it once answered right: a card turned over, a round marked, or
+ * the choices with the right one ticked. Drawn by the quiz screens' own markup.
+ */
+function previewHtml(item) {
+  const { preview } = item;
+  if (!preview) return note('<i>Not asked: there are too few answers to choose from.</i>');
+  let body;
+  if (preview.kind === 'card') body = turnedCardHtml(preview.card);
+  else if (preview.kind === 'order') {
+    body = `${orderHeadHtml(preview.step)}${markedRoundHtml(preview.step, preview.round)}`;
+  } else {
+    body = choiceQuestionHtml(preview.step, preview.step.choices.indexOf(preview.step.answer));
+  }
+  return `<div class="editor-preview">${body}</div>${randomNoteHtml(item)}`;
+}
+
 /** Labels beside a question: edited, left out, not yet published, needs review. */
 function badgesHtml(item) {
   const badges = [];
@@ -234,9 +266,9 @@ function questionHtml(item, isOpen) {
   const head = `<h3 class="editor-question__head">${KIND_LABELS[item.kind]} ${badgesHtml(item)}</h3>`;
   let body;
   if (item.review && !isOpen) body = reviewHtml(item);
-  else if (isOpen) body = formHtml(item);
+  else if (isOpen) body = `${previewHtml(item)}${formHtml(item)}`;
   else {
-    body = `${fieldsHtml(item.live)}<div class="editor-buttons">
+    body = `${previewHtml(item)}<div class="editor-buttons">
       <button class="switch-button" type="button" data-action="open" data-id="${escapeHtml(item.id)}">Edit</button>
       ${item.edit ? `<button class="switch-button" type="button" data-action="remove" data-id="${escapeHtml(item.id)}">Undo the edit</button>` : ''}
     </div>`;
@@ -253,6 +285,6 @@ export function guidelineHtml(viewer, guideline, items, openId) {
       <div class="guideline-meta">CPG EAS ${escapeHtml(guideline.number)} · ${items.length} questions<br>
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${note(`What learners see now, edits included. ${PUBLISH_NOTE}`)}
+    ${note(`Each question as learners see it once they answer it right, edits included. ${PUBLISH_NOTE}`)}
     ${items.map((item) => questionHtml(item, item.id === openId)).join('')}</main>`;
 }

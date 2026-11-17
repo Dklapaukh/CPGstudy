@@ -250,6 +250,23 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   after 300 ms. Earlier days are kept, so the demo shows a real "still powered up" count; the
   other choice, wiping the whole streak to 0, was not built. Other trackers are unchanged.
 
+- ST-G (owner, 17 Nov 2026, with two reference pictures): the top-bar rat shows the whole body
+  side on with the laryngoscope, bougie and holstered shears (`ratSvg`); the power-up uses a
+  separate picture, the hype rat stood up with shears holstered (`hypeRatSvg`), moving like
+  Duolingo's mascot (pop up, crouch, leap with arms up, squash on landing, then hops with
+  alternating fist pumps). Claude's choices: the pill grows from 32 to 57 by 38 px inside the
+  same 40 px button; the sad-to-powered swap in the power-up was dropped (the hype rat replaces
+  both); shock wave moved to the landing (1.3 s). Both drawings in `src/views/ratDrawings.js`.
+
+**Editor page, later changes**
+
+- ED-G (owner, 17 Nov 2026): editors see each question as learners see it. Claude's choices:
+  shown in its answered-right state (card turned over, round marked all right, right choice
+  ticked), since that shows the question and its answer at once; random wrong answers seeded by
+  the question id, with a note; the field list stays only in the "Needs review" comparison. The
+  quiz screens and the editor share `src/views/quizMarkup.js`; `questionStep()` in
+  `guidelineQuizPlay.js` builds one question's step exactly as a play does.
+
 **Code audit (17 Nov 2026; tidy-up only, rule 9)**
 
 - AU-A: the manager and editor pages share `src/staffPage.js` (tab passcode, asking the backend,
@@ -367,6 +384,11 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**17 Nov 2026 (late night).** On `main`, checked with `npm run check` and seen in headless
+Chrome (not yet on a phone): the whole-body streak rat and the separate hype rat power-up
+(ST-G), and the editor showing each question as learners see it (ED-G). **Next:** the owner
+looks at both on a phone (the power-up via the demo tracker's double tap).
 
 **17 Nov 2026 (night).** The new rat and power-up (ST-E) and the demo double tap (ST-F) are on
 `main`, checked with `npm run check` and frames of the power-up seen in headless Chrome. Not yet

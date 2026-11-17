@@ -334,7 +334,10 @@ lines made in step 3). It never holds notes.
 
 A page for editors to change the quiz questions:
 <https://dklapaukh.github.io/CPGstudy/editor.html>. Questions are still built from the
-guidelines by the same code as the app; an edit replaces only what an editor changed.
+guidelines by the same code as the app; an edit replaces only what an editor changed. Each
+question is shown as learners see it once they answer it right, drawn by the quiz screens' own
+markup (`src/views/quizMarkup.js`): a card turned over, a round marked, or the choices with the
+right one ticked. Random wrong answers are one example, the same each time the page is opened.
 
 **What an editor can do.** Sign in with an editor passcode (Editors tab), find a guideline and,
 for each of its questions (Medicines quiz cards and every guideline quiz question):

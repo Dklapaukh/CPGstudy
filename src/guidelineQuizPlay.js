@@ -33,7 +33,7 @@ import {
 import { numberPlaces, numberQuestion, valuePools } from './guidelineQuizNumbers.js';
 import { CHILD_ONLY_GUIDELINE_TITLES, tableNames } from './quizCards.js';
 import { fingerprintText } from './updates.js';
-import { withEdit, textToBlocks } from './questionEdits.js';
+import { withEdit, textToBlocks, hasChosenWrong } from './questionEdits.js';
 
 // Decision Z13: two distractors per round.
 export const DISTRACTORS_PER_ROUND = 2;
@@ -278,7 +278,6 @@ export function guidelineQuestions(quizzed, context) {
 
 /* ---------- Steps of a play ---------- */
 
-const hasChosenWrong = (question) => Array.isArray(question.wrong) && question.wrong.length > 0;
 // The real cards of a round, from its actions, or from an editor's steps when they were changed.
 function realCards(question, source) {
   const unchanged =
@@ -330,6 +329,23 @@ function choicesOf(question, random) {
   return shuffled([question.answer, ...others.slice(0, CHOICE_COUNT - 1)], random);
 }
 
+/** A number question as a choice step, or null when its line no longer gives a question. */
+function numberStep(question, pools, random) {
+  const made = numberQuestion(question.line, question.valueIndex, pools, random);
+  if (!made) return null;
+  const isEdited = hasChosenWrong(question) || question.answer !== made.answer;
+  return {
+    kind: 'choice',
+    type: 'number',
+    prompt: 'Which number is right?',
+    context: question.context,
+    before: made.before,
+    after: made.after,
+    answer: question.answer,
+    choices: isEdited ? choicesOf({ ...question, pool: made.choices }, random) : made.choices,
+  };
+}
+
 /** Up to NUMBER_QUESTIONS_PER_PLAY number questions, each from a different line. */
 function numberSteps(questions, pools, random) {
   const steps = [];
@@ -337,20 +353,10 @@ function numberSteps(questions, pools, random) {
   for (const question of shuffled(questions, random)) {
     if (steps.length === NUMBER_QUESTIONS_PER_PLAY) break;
     if (usedLines.has(question.line)) continue;
-    const made = numberQuestion(question.line, question.valueIndex, pools, random);
-    if (!made) continue;
+    const step = numberStep(question, pools, random);
+    if (!step) continue;
     usedLines.add(question.line);
-    const isEdited = hasChosenWrong(question) || question.answer !== made.answer;
-    steps.push({
-      kind: 'choice',
-      type: 'number',
-      prompt: 'Which number is right?',
-      context: question.context,
-      before: made.before,
-      after: made.after,
-      answer: question.answer,
-      choices: isEdited ? choicesOf({ ...question, pool: made.choices }, random) : made.choices,
-    });
+    steps.push(step);
   }
   return steps;
 }
@@ -371,23 +377,36 @@ const PER_PLAY = {
 // with however many other situations the guideline has.
 const NEEDS_FULL_CHOICES = ['red-flag', 'move-to'];
 
+/** A question of the other kinds as a choice step, or null when it has too few choices. */
+function choiceStep(kind, question, quizzed, random) {
+  const step = {
+    kind: 'choice',
+    type: kind,
+    prompt: PROMPTS[kind](quizzed),
+    ...(LINES[kind] ? { line: LINES[kind](question.line) } : {}),
+    answer: question.answer,
+    choices: choicesOf(question, random),
+  };
+  const enough = NEEDS_FULL_CHOICES.includes(kind) ? CHOICE_COUNT : 2;
+  return step.choices.length >= enough ? step : null;
+}
+
 /** Up to PER_PLAY questions of one kind, as choice steps. */
 function choiceSteps(kind, questions, quizzed, random) {
   return shuffled(questions, random)
-    .map((question) => ({
-      kind: 'choice',
-      type: kind,
-      prompt: PROMPTS[kind](quizzed),
-      ...(LINES[kind] ? { line: LINES[kind](question.line) } : {}),
-      answer: question.answer,
-      choices: choicesOf(question, random),
-    }))
-    .filter(
-      (step) =>
-        step.choices.length >= 2 &&
-        (!NEEDS_FULL_CHOICES.includes(kind) || step.choices.length === CHOICE_COUNT),
-    )
+    .map((question) => choiceStep(kind, question, quizzed, random))
+    .filter(Boolean)
     .slice(0, PER_PLAY[kind]);
+}
+
+/**
+ * One question as the step a play would show, or null when it could not be asked. Lets the
+ * editor page show a question exactly as learners see it.
+ */
+export function questionStep(question, quizzed, context, random) {
+  if (question.kind === 'order') return orderStep(question, quizzed, random);
+  if (question.kind === 'number') return numberStep(question, context.pools, random);
+  return choiceStep(question.kind, question, quizzed, random);
 }
 
 /* ---------- One play ---------- */

@@ -28,6 +28,10 @@ export const LIST_FIELDS = ['steps', 'wrong'];
 // Wrong answers are random unless an editor chose them, so they are not compared on review.
 const UNREVIEWED_FIELD = 'wrong';
 
+/** Whether an editor chose a question's wrong answers (otherwise they are picked at random). */
+export const hasChosenWrong = (question) =>
+  Array.isArray(question.wrong) && question.wrong.length > 0;
+
 export const REVIEW = { NONE: '', CHANGED: 'changed', GONE: 'gone' };
 
 // A number question's line is not edited, but a change to it is what an editor must check.
@@ -116,3 +120,22 @@ export const cardQuestion = (card) => ({
   answer: blocksToText(card.answerBlocks),
   source: card.source,
 });
+
+/**
+ * A repeatable stand-in for Math.random, seeded from `text`: the same text gives the same numbers
+ * (from 0 up to 1). The editor page seeds it with a question's id, so the example wrong answers
+ * it shows stay put from one look to the next.
+ */
+export function seededRandom(text) {
+  let seed = [...String(text)].reduce(
+    (hash, char) => Math.imul(hash ^ char.charCodeAt(0), 16777619),
+    2166136261,
+  );
+  return () => {
+    // mulberry32: a small, well-mixed generator; plenty for shuffling a few choices.
+    seed = (seed + 0x6d2b79f5) | 0;
+    let mixed = Math.imul(seed ^ (seed >>> 15), seed | 1);
+    mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
+  };
+}

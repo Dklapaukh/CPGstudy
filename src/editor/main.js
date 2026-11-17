@@ -18,7 +18,7 @@ import {
   reviewState,
 } from '../questionEdits.js';
 import { cardEdits } from '../../content/card-edits.js';
-import { questionBank } from './questions.js';
+import { questionBank, questionPreview } from './questions.js';
 import { signInHtml, homeHtml, guidelineHtml, guidelineRowsHtml } from './view.js';
 
 // The passcode is kept for this browser tab only, as on the manager page.
@@ -136,13 +136,16 @@ function currentGuideline() {
   return questionBank().list.find((guideline) => guideline.id === id) || null;
 }
 
-/** A guideline's questions, then any edits of questions it no longer has. */
+/** A guideline's questions, then any edits of questions it no longer has; each with its preview. */
 function guidelineItems(guideline) {
   const ids = guideline.questions.map((question) => question.id);
   const gone = Object.keys(state.edits).filter(
     (id) => guidelineIdOf(id) === guideline.id && !ids.includes(id),
   );
-  return [...ids, ...gone].map(itemFor);
+  return [...ids, ...gone].map(itemFor).map((item) => ({
+    ...item,
+    preview: item.live ? questionPreview(item.id, item.live) : null,
+  }));
 }
 
 /** Draws the screen the state and the address call for. */

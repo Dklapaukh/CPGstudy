@@ -1,8 +1,7 @@
 /*
  * The Medicines quiz screen (address #quiz) and its button on the list screen.
  * Drawn from the state: the overview when no session is running, otherwise the current card.
- * Depends on state.js, logic.js, quizState.js, quizSchedule.js, practiceLevels.js and
- * templates.js.
+ * Depends on state.js, logic.js, quizState.js, quizSchedule.js and quizMarkup.js.
  */
 import { state } from '../state.js';
 import { escapeHtml } from '../logic.js';
@@ -18,8 +17,7 @@ import {
   QUIZ_SETTINGS,
 } from '../quizState.js';
 import { intervalText } from '../quizSchedule.js';
-import { levelsLabel } from '../practiceLevels.js';
-import { blockHtml } from './templates.js';
+import { cardPromptHtml, turnedCardHtml } from './quizMarkup.js';
 import { RATING, QUIZ_HASH, ALL_PRACTICE_LEVELS } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -168,43 +166,16 @@ function ratingButtonsHtml(card) {
   }).join('');
 }
 
-/**
- * The answer of a card. Lines that only other practice levels may give (card.otherLevelLines)
- * are greyed, each run of them under a label naming those levels, such as "ICP and CCP"
- * (Decision Z18), so the learner still sees what backup would give.
- */
-function answerHtml(card) {
-  const otherLevelLines = card.otherLevelLines || [];
-  let labelAbove = '';
-  return card.answerBlocks
-    .map((block, index) => {
-      const levels = otherLevelLines[index];
-      if (!levels) {
-        labelAbove = '';
-        return blockHtml(block, '');
-      }
-      const label = levelsLabel(levels);
-      const labelHtml =
-        label === labelAbove ? '' : `<p class="other-level-label">${escapeHtml(label)}</p>`;
-      labelAbove = label;
-      return `${labelHtml}<div class="other-level-line">${blockHtml(block, '')}</div>`;
-    })
-    .join('');
-}
-
 /** One quiz card: the prompt, then the answer and buttons once turned over. */
 function cardHtml(card) {
   const practising = Boolean(state.quiz.practiceMedicineId);
   const mode = practising ? 'Practice · ' : '';
   const left = `<p class="quiz-left">${mode}${plural(state.quiz.queue.length, 'card')} left</p>`;
-  const prompt = `<h2 class="quiz-prompt">${escapeHtml(card.prompt)}</h2>`;
   if (!state.quiz.revealed) {
-    return `${left}${prompt}<button class="quiz-show-button" type="button"
+    return `${left}${cardPromptHtml(card)}<button class="quiz-show-button" type="button"
       data-action="quiz-show-answer">Show answer</button>`;
   }
-  const answer = answerHtml(card);
-  return `${left}${prompt}<div class="quiz-answer">${answer}</div>
-    <p class="quiz-source">From ${escapeHtml(card.source)}</p>
+  return `${left}${turnedCardHtml(card)}
     <div class="rating-buttons${practising ? ' rating-buttons--practice' : ''}">${
       practising ? practiceButtonsHtml() : ratingButtonsHtml(card)
     }</div>`;

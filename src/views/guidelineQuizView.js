@@ -4,7 +4,7 @@
  * step (an ordering round or a choice question), and the result at the end.
  * Cards start in one list in shuffled order and are moved by dragging their grip (see
  * dragCards.js) or with the up and down arrows, which also work with a screen reader.
- * Depends on state.js, logic.js, guidelineQuizState.js, templates.js and constants.js.
+ * Depends on state.js, logic.js, guidelineQuizState.js, quizMarkup.js and constants.js.
  */
 import { state } from '../state.js';
 import { escapeHtml, formatUpdatedDate } from '../logic.js';
@@ -15,12 +15,13 @@ import {
   lastScore,
   percentOf,
 } from '../guidelineQuizState.js';
-import { blockHtml } from './templates.js';
+import { orderHeadHtml, markedRoundHtml, choiceQuestionHtml } from './quizMarkup.js';
 import { GUIDELINE_QUIZ_HASH } from '../constants.js';
 import { CARD_LIST } from '../guidelineQuizState.js';
 
 const app = document.getElementById('app');
-const BLANK = '____';
+const NEXT_BUTTON = `<button class="quiz-start-button" type="button"
+  data-action="guideline-quiz-next">Next</button>`;
 
 /** The "Guideline quiz" button for the list screen. */
 export function guidelineQuizButtonHtml() {
@@ -130,96 +131,24 @@ function orderingHtml(step) {
     <button class="quiz-start-button" type="button" data-action="guideline-quiz-check">Check</button>`;
 }
 
-/** One marked card: right or wrong (in words, not only colour) and where it really belongs. */
-function markedCardHtml(step, cardIndex, placedHere) {
-  const card = step.cards[cardIndex];
-  const right = state.guidelineQuiz.marked.correctIndexes.has(cardIndex);
-  let note = '';
-  if (card.isDistractor) {
-    // A wrong card written by an editor has no source.
-    const notHere = card.source
-      ? `Not in this guideline: from ${card.source}`
-      : 'Not in this guideline';
-    note = right && card.source ? `From ${card.source}` : notHere;
-  } else if (!placedHere) note = 'This is in the guideline';
-  else if (!right) note = 'Out of order';
-  return `<li class="order-card order-card--${right ? 'right' : 'wrong'}">
-    <span class="order-mark">${right ? '✓ Right' : '✗ Wrong'}</span>
-    <span class="order-card-text">${escapeHtml(card.text)}</span>
-    ${note ? `<span class="order-note">${escapeHtml(note)}</span>` : ''}</li>`;
-}
-
-/** The round after Check: the marks, then the guideline's order with the detail of each action. */
-function markedRoundHtml(step) {
-  const quiz = state.guidelineQuiz;
-  const guidelineOrder = step.real
-    .map(
-      (action) =>
-        `<li class="order-answer">${action.blocks.map((block) => blockHtml(block, '')).join('')}</li>`,
-    )
-    .join('');
-  return `<p class="quiz-counts">${quiz.marked.score} of ${quiz.marked.total} right</p>
-    <h3 class="order-heading">Your order</h3>
-    <ol class="order-list">${quiz.placed.map((index) => markedCardHtml(step, index, true)).join('')}</ol>
-    <h3 class="order-heading">Not in this guideline</h3>
-    <ul class="order-list order-list--aside">${
-      quiz.discarded.map((index) => markedCardHtml(step, index, false)).join('') ||
-      '<li class="order-empty">None.</li>'
-    }</ul>
-    <h3 class="order-heading">The guideline’s order</h3>
-    <ol class="order-answers quiz-answer">${guidelineOrder}</ol>
-    <p class="quiz-source">From ${escapeHtml(step.real[0].source)}</p>
-    <button class="quiz-start-button" type="button" data-action="guideline-quiz-next">Next</button>`;
-}
-
-/** An ordering round: the cards to order, or the marked result. */
+/** An ordering round: the cards to order, or the marked result and Next. */
 function orderStepHtml(step) {
-  const situation = step.title ? `<p class="order-situation">${escapeHtml(step.title)}</p>` : '';
-  const body = state.guidelineQuiz.marked ? markedRoundHtml(step) : orderingHtml(step);
-  return `<h2 class="quiz-prompt">Put the actions in order</h2>${situation}${body}`;
+  const quiz = state.guidelineQuiz;
+  const body = quiz.marked ? `${markedRoundHtml(step, quiz)}${NEXT_BUTTON}` : orderingHtml(step);
+  return `${orderHeadHtml(step)}${body}`;
 }
 
 /* ---------- Choice question ---------- */
 
-/** The line the question is about: a sentence with a blank, or a quoted action or condition. */
-function questionLineHtml(step) {
-  const context = step.context ? `<p class="choice-context">${escapeHtml(step.context)}</p>` : '';
-  if (step.type === 'number') {
-    return `${context}<p class="choice-line">${escapeHtml(step.before)}<span class="choice-blank">${BLANK}</span>${escapeHtml(step.after)}</p>`;
-  }
-  return step.line ? `${context}<p class="choice-line">${escapeHtml(step.line)}</p>` : context;
-}
-
-/** One choice of a question: a button, or after a pick, marked right or wrong. */
-function choiceButtonHtml(step, choice, index) {
-  const picked = state.guidelineQuiz.picked;
-  if (picked === null) {
-    return `<button class="choice-button" type="button" data-action="guideline-quiz-pick"
-      data-choice="${index}">${escapeHtml(choice)}</button>`;
-  }
-  const isAnswer = choice === step.answer;
-  const modifier = isAnswer
-    ? ' choice-button--right'
-    : index === picked
-      ? ' choice-button--wrong'
-      : '';
-  const mark = isAnswer ? '✓ ' : index === picked ? '✗ ' : '';
-  return `<button class="choice-button${modifier}" type="button" disabled>${mark}${escapeHtml(choice)}</button>`;
-}
-
-/** A choice question: its prompt, the choices and, after a pick, the verdict. */
+/** A choice question: its prompt, the choices and, after a pick, the verdict and Next. */
 function choiceStepHtml(step) {
-  const quiz = state.guidelineQuiz;
-  const buttons = step.choices
-    .map((choice, index) => choiceButtonHtml(step, choice, index))
-    .join('');
+  const { picked } = state.guidelineQuiz;
   const verdict =
-    quiz.picked === null
+    picked === null
       ? ''
-      : `<p class="quiz-counts">${step.choices[quiz.picked] === step.answer ? 'Right' : `Wrong: the answer is ${escapeHtml(step.answer)}`}</p>
-        <button class="quiz-start-button" type="button" data-action="guideline-quiz-next">Next</button>`;
-  return `<h2 class="quiz-prompt">${escapeHtml(step.prompt)}</h2>${questionLineHtml(step)}
-    <div class="choice-buttons">${buttons}</div>${verdict}`;
+      : `<p class="quiz-counts">${step.choices[picked] === step.answer ? 'Right' : `Wrong: the answer is ${escapeHtml(step.answer)}`}</p>
+        ${NEXT_BUTTON}`;
+  return `${choiceQuestionHtml(step, picked)}${verdict}`;
 }
 
 /* ---------- Result and screen ---------- */

@@ -102,3 +102,11 @@
   border-color: var(--colour-green);
   color: var(--colour-green);
 }
+
+/* A question as learners see it: the quiz screen's own markup, framed so it reads as a preview. */
+.editor-preview {
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.1rem 0.8rem 0.6rem;
+  border: 1px dashed var(--colour-line);
+  border-radius: 12px;
+}

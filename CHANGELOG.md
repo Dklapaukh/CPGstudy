@@ -2,6 +2,21 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Editor page: each question is shown as learners see it, drawn by the quiz
+  screens' own markup (new shared file `src/views/quizMarkup.js`): a Medicines card turned over,
+  an ordering round marked all right, a choice question with the right answer ticked. Random
+  wrong answers are one example, seeded by the question id so they stay put, with a note saying
+  so. The open form keeps the preview above it. No change to the app's quiz screens (same
+  markup, moved) or plays (`questionStep()` builds one question as a play does).
+- 2026-11-17: Study streak: the top-bar rat is now the whole rat, side on (drawn from the
+  owner's reference pictures): shield sunglasses, a laryngoscope in its front paws, a blue bougie
+  looping to the floor and trauma shears in a holster on a cartridge belt; sad with its head and
+  ear drooping and a tear, powered up with head up and a grin. The pill is 57 by 38 px inside
+  the same 40 px button. The power-up has a separate picture, the hype rat stood up with its
+  shears holstered, moving the way Duolingo's mascot celebrates: it pops up, crouches, leaps with
+  both arms up (flash and aura), lands with a squash and a shock wave, then keeps hopping and
+  pumping one fist then the other, head bobbing and tail swishing. New file
+  `src/views/ratDrawings.js`.
 - 2026-11-17: Study streak: a new rat (dark fur, shield sunglasses with a speckled mint frame and
   a yellow-to-red mirror lens; no gold hair), same size in the top bar. The power-up now charges
   up with closing rings and growing shakes, then a flash, shock wave and screen shake; the

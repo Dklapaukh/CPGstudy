@@ -46,6 +46,7 @@
     "src/views/loginView.js",
     "src/views/mentorView.js",
     "src/views/queueView.js",
+    "src/views/quizMarkup.js",
     "src/views/ratDrawings.js",
     "src/views/quizView.js",
     "src/views/settingsView.js",

@@ -15,8 +15,10 @@ import {
   blocksToText,
   snapshot,
   reviewState,
+  seededRandom,
   REVIEW,
 } from '../src/questionEdits.js';
+import { questionPreview, perfectRound } from '../src/editor/questions.js';
 import { cleanEdits } from '../scripts/sync-edits.js';
 
 const sections = guidelineData.sections;
@@ -108,6 +110,46 @@ test('guideline quiz: a choice question uses the editor’s right and wrong answ
 
 /* ---------- The daily copy ---------- */
 
+test('a seeded random gives the same numbers for the same text, between 0 and 1', () => {
+  const first = seededRandom('cpg-3-8|order|x');
+  const again = seededRandom('cpg-3-8|order|x');
+  const numbers = Array.from({ length: 50 }, first);
+  assert.deepEqual(Array.from({ length: 50 }, again), numbers);
+  assert.ok(numbers.every((number) => number >= 0 && number < 1));
+  assert.notDeepEqual(Array.from({ length: 50 }, seededRandom('other')), numbers);
+});
+
+test('previews: each question as learners see it, the same every time', () => {
+  const round = vtQuestions.find((question) => question.kind === 'order');
+  const preview = questionPreview(round.id, round);
+  assert.equal(preview.kind, 'order');
+  assert.equal(preview.round.marked.score, preview.step.cards.length, 'marked all right');
+  assert.deepEqual(questionPreview(round.id, round), preview, 'seeded by the question id');
+  const choice = vtQuestions.find((question) => question.kind === 'number');
+  const choicePreview = questionPreview(choice.id, { ...choice, answer: '7 mg', wrong: ['1 mg'] });
+  assert.equal(choicePreview.kind, 'choice');
+  assert.deepEqual([...choicePreview.step.choices].sort(), ['1 mg', '7 mg']);
+  const card = cards[0];
+  const edited = { ...cardQuestion(card), prompt: 'New?', answer: '- one\n- two' };
+  assert.deepEqual(
+    questionPreview(card.id, edited).card.answerBlocks,
+    textToBlocks('- one\n- two'),
+  );
+  assert.deepEqual(
+    questionPreview(card.id, cardQuestion(card)).card.answerBlocks,
+    card.answerBlocks,
+  );
+});
+
+test('a perfect round places the real cards in order and sets the distractors aside', () => {
+  const real = [{ text: 'A' }, { text: 'B' }];
+  const fake = { text: 'X', isDistractor: true };
+  const round = perfectRound({ real, cards: [real[1], fake, real[0]] });
+  assert.deepEqual(round.placed, [2, 0]);
+  assert.deepEqual(round.discarded, [1]);
+  assert.equal(round.marked.score, 3);
+});
+
 test('the daily copy keeps known edits only, sorted, with only the keys the app reads', () => {
   const cleaned = cleanEdits({
     'b|x': { kind: 'card', prompt: 'P', extra: 'dropped', was: { prompt: 'Q' } },
@@ -182,6 +224,9 @@ test('page: sign in, find a guideline, edit a card, and undo the edit', async ()
     was: snapshot(cardQuestion(card)),
   });
   assert.match($('.editor-question').textContent, /Edited\s*Not in the app yet/);
+  const preview = doc.getElementById(`q-${card.id}`).querySelector('.editor-preview');
+  assert.equal(preview.querySelector('.quiz-prompt').textContent, 'Amiodarone in arrest: dose?');
+  assert.ok(preview.querySelector('.quiz-answer'), 'the card is shown turned over');
   click($(`[data-action="remove"][data-id="${card.id}"]`));
   await sleep(20);
   assert.deepEqual(sheetEdits, {});
