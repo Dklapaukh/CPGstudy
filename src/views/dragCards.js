@@ -28,6 +28,42 @@ function listAt(lists, clientY) {
   return nearest;
 }
 
+/** Moves the gap to where a card dropped at `clientY` would go, in the list under it. */
+function placeGap(lists, card, gap, clientY) {
+  const list = listAt(lists, clientY);
+  const others = [...list.querySelectorAll('.order-card')].filter((other) => other !== card);
+  const before = others.find((other) => {
+    const otherBox = other.getBoundingClientRect();
+    return clientY < otherBox.top + otherBox.height / 2;
+  });
+  if (before) list.insertBefore(gap, before);
+  else list.appendChild(gap);
+}
+
+/** The gap's place among the cards of its list, not counting the dragged card. */
+function gapPosition(gap, card) {
+  return [...gap.parentElement.children]
+    .filter((child) => child !== card)
+    .filter((child) => child === gap || child.classList.contains('order-card'))
+    .indexOf(gap);
+}
+
+/** Lifts the card out of its list where it is on screen, leaving a gap of its height. */
+function liftCard(card, box) {
+  const gap = document.createElement('li');
+  gap.className = 'order-gap';
+  gap.style.height = `${box.height}px`;
+  card.after(gap);
+  Object.assign(card.style, {
+    position: 'fixed',
+    left: `${box.left}px`,
+    top: `${box.top}px`,
+    width: `${box.width}px`,
+  });
+  card.classList.add('order-card--dragging');
+  return gap;
+}
+
 /**
  * Starts dragging the card whose grip got `event` (a pointerdown). `onDrop(cardIndex, listName,
  * position)` is called on release with the list's data-drop-list name.
@@ -40,40 +76,20 @@ export function startCardDrag(event, onDrop) {
   const lists = [...document.querySelectorAll('[data-drop-list]')];
   const box = card.getBoundingClientRect();
   const offsetY = event.clientY - box.top;
-  const gap = document.createElement('li');
-  gap.className = 'order-gap';
-  gap.style.height = `${box.height}px`;
-  card.after(gap);
-  Object.assign(card.style, {
-    position: 'fixed',
-    left: `${box.left}px`,
-    top: `${box.top}px`,
-    width: `${box.width}px`,
-  });
-  card.classList.add('order-card--dragging');
+  const gap = liftCard(card, box);
   let lastY = event.clientY;
   let scrollTimer = null;
 
-  const placeGap = (clientY) => {
-    const list = listAt(lists, clientY);
-    const others = [...list.querySelectorAll('.order-card')].filter((other) => other !== card);
-    const before = others.find((other) => {
-      const otherBox = other.getBoundingClientRect();
-      return clientY < otherBox.top + otherBox.height / 2;
-    });
-    if (before) list.insertBefore(gap, before);
-    else list.appendChild(gap);
-  };
   const follow = (clientY) => {
     lastY = clientY;
     card.style.top = `${clientY - offsetY}px`;
-    placeGap(clientY);
+    placeGap(lists, card, gap, clientY);
   };
   const scrollStep = () => {
     if (lastY < EDGE_PX) window.scrollBy(0, -SCROLL_STEP_PX);
     else if (lastY > window.innerHeight - EDGE_PX) window.scrollBy(0, SCROLL_STEP_PX);
     else return;
-    placeGap(lastY);
+    placeGap(lists, card, gap, lastY);
   };
   const onMove = (moveEvent) => {
     moveEvent.preventDefault();
@@ -85,10 +101,7 @@ export function startCardDrag(event, onDrop) {
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointercancel', onCancel);
     const list = gap.parentElement;
-    const position = [...list.children]
-      .filter((child) => child !== card)
-      .filter((child) => child === gap || child.classList.contains('order-card'))
-      .indexOf(gap);
+    const position = gapPosition(gap, card);
     gap.remove();
     card.removeAttribute('style');
     card.classList.remove('order-card--dragging');

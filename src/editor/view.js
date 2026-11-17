@@ -4,8 +4,10 @@
  * folding sections, and the coloured guideline header. Each function takes prepared data and
  * returns text; main.js puts it on the page and handles the clicks. Question text and edits are
  * escaped before they reach the page.
- * Depends on logic.js, constants.js, quizDoses.js, questionEdits.js and views/templates.js.
+ * Depends on logic.js, constants.js, quizDoses.js, questionEdits.js, staffPage.js and
+ * views/templates.js.
  */
+import { warningHtml } from '../staffPage.js';
 import { escapeHtml } from '../logic.js';
 import { DEFAULT_HEADER_COLOUR } from '../constants.js';
 import { EDIT_FIELDS, LIST_FIELDS, REVIEW } from '../questionEdits.js';
@@ -45,12 +47,11 @@ const PUBLISH_NOTE = 'Saved edits reach the app the next morning.';
 
 const asText = (value) => (Array.isArray(value) ? value.join('\n') : String(value ?? ''));
 const note = (text) => `<p class="editor-note">${text}</p>`;
-const warningHtml = (message) =>
-  message ? `<div class="warning-message" role="alert">${escapeHtml(message)}</div>` : '';
 
 /** The sign-in screen, with an optional message. `isLoading` greys the button while waiting. */
 export function signInHtml(message, isLoading) {
-  return `${coverHtml({ labelHtml: PAGE_NAME, subtitleHtml: 'Quiz question editor · enter your passcode' })}
+  const subtitleHtml = 'Quiz question editor · enter your passcode';
+  return `${coverHtml({ labelHtml: PAGE_NAME, subtitleHtml })}
     <main class="page-padding">${warningHtml(message)}
     <p class="subtitle">Type your editor passcode. It isn’t case sensitive.</p>
     <label class="visually-hidden" for="editor-passcode">Passcode</label>

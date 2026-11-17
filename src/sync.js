@@ -16,10 +16,12 @@ import {
 
 const handlers = { refreshScreen: () => {}, signOut: () => {} };
 
+/** Sets the screen functions sync calls back (redraw, sign out); avoids an import loop. */
 export function setSyncHandlers(newHandlers) {
   Object.assign(handlers, newHandlers);
 }
 
+/** How many changes are waiting to be uploaded. */
 export function pendingCount() {
   return Object.keys(state.pendingChanges).length;
 }
@@ -42,6 +44,7 @@ export function scheduleSync(delayMs = SYNC_DELAY_AFTER_EDIT_MS) {
   state.syncTimer = setTimeout(syncNow, delayMs);
 }
 
+/** The waiting changes as a request list, with the timestamps sent for each. */
 function takePendingChanges() {
   const sentTimestamps = {};
   const changes = Object.keys(state.pendingChanges).map((id) => {

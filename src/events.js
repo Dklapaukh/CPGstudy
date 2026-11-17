@@ -75,6 +75,7 @@ function signInErrorMessage(reply) {
   return MESSAGES.CODE_NOT_RECOGNISED;
 }
 
+/** Opens the tracker or mentor screen for the typed passcode, or says why it cannot. */
 async function submitPasscode() {
   const code = byId('passcode-input').value.trim();
   if (!code) return;
@@ -102,6 +103,7 @@ async function submitPasscode() {
 
 /* ---------- Mentor screen ---------- */
 
+/** Creates a tracker with the typed name for the signed-in mentor, then shows its passcode. */
 async function createTracker() {
   const { name, created } = state.mentorContext;
   const label = byId('label-input').value.trim();
@@ -141,6 +143,7 @@ async function createTracker() {
   }
 }
 
+/** Opens a tracker by passcode from the mentor screen; a mentor passcode is refused there. */
 async function openTrackerFromMentor(code) {
   const { name, created } = state.mentorContext;
   try {
@@ -157,6 +160,7 @@ async function openTrackerFromMentor(code) {
   }
 }
 
+/** Opens the tracker whose passcode is typed on the mentor screen. */
 function openExistingTracker() {
   const code = byId('open-code-input').value.trim();
   if (!code) return;
@@ -166,6 +170,7 @@ function openExistingTracker() {
   openTrackerFromMentor(code);
 }
 
+/** Copies the new tracker's passcode, falling back to a selection where the clipboard is blocked. */
 function copyPasscode() {
   const text = state.mentorContext.created.code;
   const button = byId('copy-button');
@@ -208,6 +213,7 @@ function changeStatus(button) {
 
 /* ---------- Review queue ---------- */
 
+/** Saves a new review queue and redraws the parts of the screen that show it. */
 function changeQueue(newQueue) {
   saveQueue(newQueue);
   refreshQueueViews();
@@ -283,6 +289,7 @@ const changeQuiz = (change) => (element) => {
   renderQuizScreen();
   showPendingCelebration();
 };
+/** Turns the Medicines quiz card over to show its answer. */
 const showQuizAnswer = () => {
   if (state.quiz) state.quiz.revealed = true;
 };
@@ -379,6 +386,37 @@ const clickActions = {
   'guideline-quiz-end': changeGuidelineQuiz(endGuidelineQuiz, true),
 };
 
+/** Typing in the search box or in the notes. */
+function handleInput(event) {
+  if (event.target.id === 'search-input') changeSearchText(event.target);
+  if (event.target.id === 'notes-input') {
+    recordEdit(getStatus(state.entries, state.currentGuideline.id), event.target.value);
+    updateCommentHighlights();
+  }
+}
+
+/** A quiz setting or a picker changed. */
+function handleChange(event) {
+  if (event.target.dataset.setting) {
+    saveQuizSetting(event.target.dataset.setting, event.target.value);
+    renderQuizScreen();
+  }
+  // Remembered so a redraw (for example after a sync) keeps the medicine chosen.
+  if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
+  if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
+}
+
+/** Enter in a passcode box, and Enter or Space on a folding heading. */
+function handleKeydown(event) {
+  if (event.key === 'Enter' && event.target.id === 'passcode-input') submitPasscode();
+  if (event.key === 'Enter' && event.target.id === 'open-code-input') openExistingTracker();
+  const heading = event.target.closest && event.target.closest('[data-action="toggle-heading"]');
+  if (heading && (event.key === 'Enter' || event.key === ' ')) {
+    event.preventDefault();
+    toggleHeading(heading);
+  }
+}
+
 /** Attaches every listener for the app container. Called once at start-up. */
 export function attachEventListeners() {
   app.addEventListener('click', (event) => {
@@ -395,33 +433,9 @@ export function attachEventListeners() {
     );
   });
 
-  app.addEventListener('input', (event) => {
-    if (event.target.id === 'search-input') changeSearchText(event.target);
-    if (event.target.id === 'notes-input') {
-      recordEdit(getStatus(state.entries, state.currentGuideline.id), event.target.value);
-      updateCommentHighlights();
-    }
-  });
-
-  app.addEventListener('change', (event) => {
-    if (event.target.dataset.setting) {
-      saveQuizSetting(event.target.dataset.setting, event.target.value);
-      renderQuizScreen();
-    }
-    // Remembered so a redraw (for example after a sync) keeps the medicine chosen.
-    if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
-    if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
-  });
-
-  app.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && event.target.id === 'passcode-input') submitPasscode();
-    if (event.key === 'Enter' && event.target.id === 'open-code-input') openExistingTracker();
-    const heading = event.target.closest && event.target.closest('[data-action="toggle-heading"]');
-    if (heading && (event.key === 'Enter' || event.key === ' ')) {
-      event.preventDefault();
-      toggleHeading(heading);
-    }
-  });
+  app.addEventListener('input', handleInput);
+  app.addEventListener('change', handleChange);
+  app.addEventListener('keydown', handleKeydown);
 
   // The toggle event does not bubble, so it is caught on the way down (capture).
   app.addEventListener(

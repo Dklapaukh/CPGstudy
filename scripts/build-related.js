@@ -145,11 +145,13 @@ function addDifferentialSignals(links, guidelines) {
   });
 }
 
+/** A guideline number such as "3.8" as its chapter and minor number. */
 function chapterAndMinor(number) {
   const [chapter, minor] = String(number).split('.');
   return { chapter, minor: Number(minor) };
 }
 
+/** True when two guidelines are numbered one after the other in a chapter. */
 function areNextToEachOther(first, second) {
   const a = chapterAndMinor(first.n);
   const b = chapterAndMinor(second.n);
@@ -163,6 +165,7 @@ function mentionedIds(guideline, texts, patterns, allGuidelines) {
     .map((other) => other.id);
 }
 
+/** Adds a score and its reason to the link between two guidelines. */
 function addSignal(links, fromId, toId, score, reason) {
   const link = links[fromId][toId] || { score: 0, reasons: new Set() };
   link.score += score;
@@ -218,6 +221,7 @@ function addSharedMedicineSignals(links, guidelines, isMedicine, mentionedByGuid
   });
 }
 
+/** Scores pairs in the same (small enough) section, and pairs numbered next to each other. */
 function addPlaceSignals(links, sections) {
   sections.forEach((section) => {
     const items = section.items;
@@ -234,6 +238,7 @@ function addPlaceSignals(links, sections) {
   });
 }
 
+/** Removes and adds the links set by hand in the overrides file. */
 function applyOverrides(links, overrides) {
   overrides.remove.forEach(([firstId, secondId]) => {
     delete links[firstId][secondId];
@@ -267,6 +272,7 @@ export function buildRelatedLinks(data, overrides) {
   return pickBestLinks(links, guidelines);
 }
 
+/** Each guideline's best-scoring links as [id, score, reason], ties in list order. */
 function pickBestLinks(links, guidelines) {
   const order = {};
   guidelines.forEach((guideline, index) => {
@@ -286,6 +292,7 @@ function pickBestLinks(links, guidelines) {
   return result;
 }
 
+/** Writes content/related.js. */
 function writeRelatedFile(relatedLinks) {
   const lines = Object.keys(relatedLinks).map(
     (id) => `  ${JSON.stringify(id)}: ${JSON.stringify(relatedLinks[id])},`,

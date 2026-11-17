@@ -13,6 +13,7 @@ import { VERSION_FILE_URL, UPDATE_STORAGE_KEY, UPDATE_CHECK_MIN_INTERVAL_MS } fr
 
 let storedRecord = null;
 
+/** The saved update record, or null. */
 function readStoredRecord() {
   try {
     return JSON.parse(localStorage.getItem(UPDATE_STORAGE_KEY));
@@ -22,6 +23,7 @@ function readStoredRecord() {
   }
 }
 
+/** Saves the update record. */
 function writeStoredRecord() {
   try {
     localStorage.setItem(UPDATE_STORAGE_KEY, JSON.stringify(storedRecord));

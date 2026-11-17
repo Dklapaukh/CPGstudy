@@ -4,11 +4,11 @@
  * to the Sheet's Edits tab straight away and reach the app the next morning, when
  * scripts/sync-edits.js copies them into content/card-edits.js.
  * One state object, one way to draw: every change calls render().
- * Depends on api.js, constants.js, questionEdits.js, content/card-edits.js and the other files
+ * Depends on staffPage.js, theme.js, questionEdits.js, content/card-edits.js and the other files
  * of this folder.
  */
-import { sendRequest } from '../api.js';
-import { MESSAGES, THEME_STORAGE_KEY } from '../constants.js';
+import { askBackend, refusalMessage, tabPasscode } from '../staffPage.js';
+import { applyTheme } from '../theme.js';
 import {
   EDIT_FIELDS,
   LIST_FIELDS,
@@ -22,14 +22,9 @@ import { questionBank } from './questions.js';
 import { signInHtml, homeHtml, guidelineHtml, guidelineRowsHtml } from './view.js';
 
 // The passcode is kept for this browser tab only, as on the manager page.
-const SESSION_KEY = 'eas-cpg-editor-v1';
+const passcodeStore = tabPasscode('eas-cpg-editor-v1');
 const GUIDELINE_HASH_PREFIX = '#g-';
-const BACKEND_MESSAGES = {
-  'not-found': MESSAGES.CODE_NOT_RECOGNISED,
-  'placeholder-passcode': MESSAGES.PLACEHOLDER_PASSCODE,
-  'bad-action': MESSAGES.OLD_BACKEND,
-  'bad-edit': 'That edit couldn’t be saved: it is too long.',
-};
+const EDITOR_MESSAGES = { 'bad-edit': 'That edit couldn’t be saved: it is too long.' };
 
 const app = document.getElementById('editor-app');
 const state = {
@@ -43,35 +38,6 @@ const state = {
   openId: '', // the question whose form is open
 };
 
-/* ---------- Saved passcode and theme ---------- */
-
-function savedPasscode() {
-  try {
-    return sessionStorage.getItem(SESSION_KEY) || '';
-  } catch {
-    return ''; // blocked storage: the passcode is typed again after a reload
-  }
-}
-
-function savePasscode(passcode) {
-  try {
-    if (passcode) sessionStorage.setItem(SESSION_KEY, passcode);
-    else sessionStorage.removeItem(SESSION_KEY);
-  } catch {
-    // Blocked storage: signing in still works until the page is reloaded.
-  }
-}
-
-/** Uses the dark mode chosen in the study app on this device, if any. */
-function applyTheme() {
-  try {
-    document.documentElement.dataset.theme =
-      localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
-  } catch {
-    // Blocked storage: the page stays in light mode.
-  }
-}
-
 /* ---------- Talking to the backend ---------- */
 
 /** Sends a request; on success keeps the edits it returns. Returns true when it worked. */
@@ -79,33 +45,29 @@ async function request(body) {
   state.isLoading = true;
   state.message = '';
   render();
-  let reply;
-  try {
-    reply = await sendRequest({ ...body, code: state.passcode });
-  } catch {
-    reply = { ok: false, error: 'no-signal' };
-  }
+  const reply = await askBackend({ ...body, code: state.passcode });
   state.isLoading = false;
   if (reply.ok) {
     state.name = reply.name;
     state.edits = reply.edits || {};
   } else {
     if (reply.error === 'not-found') signOut();
-    const fallback = reply.error === 'no-signal' ? MESSAGES.NO_SIGNAL : MESSAGES.GENERIC_ERROR;
-    state.message = BACKEND_MESSAGES[reply.error] || fallback;
+    state.message = refusalMessage(reply.error, EDITOR_MESSAGES);
   }
   render();
   return reply.ok;
 }
 
+/** Signs in with a passcode and keeps it for this tab when it works. */
 async function signIn(passcode) {
   state.passcode = passcode;
-  if (await request({ action: 'editor-open' })) savePasscode(passcode);
+  if (await request({ action: 'editor-open' })) passcodeStore.save(passcode);
 }
 
+/** Forgets the passcode, the editor and the edits. */
 function signOut() {
   Object.assign(state, { passcode: '', name: '', edits: {}, openId: '' });
-  savePasscode('');
+  passcodeStore.save('');
 }
 
 /** Saves one question's edit, or removes it when `edit` is null. */
@@ -183,6 +145,7 @@ function guidelineItems(guideline) {
   return [...ids, ...gone].map(itemFor);
 }
 
+/** Draws the screen the state and the address call for. */
 function render() {
   if (!state.name) {
     app.innerHTML = signInHtml(state.message, state.isLoading);
@@ -286,4 +249,4 @@ window.addEventListener('hashchange', () => {
 
 applyTheme();
 render();
-if (savedPasscode()) signIn(savedPasscode());
+if (passcodeStore.load()) signIn(passcodeStore.load());

@@ -2,6 +2,12 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-17: Code audit, a tidy-up with no change in behaviour. The manager and editor pages
+  share `src/staffPage.js` (tab passcode, backend requests, refusal messages, warning box);
+  dark mode moved to `src/theme.js`. The guideline quiz builds its list of quizzed guidelines
+  once and has one shuffle. Exports used only in their own file are private. Every function has
+  a short comment; the settings wheel, the app's listeners and the card drag are split into
+  smaller functions. The style guide (plan section 10) is back in the plan.
 - 2026-11-17: Study streak: the full-screen power-up now stays until Continue is pressed. It
   no longer closes by itself after 4.5 seconds or on a tap elsewhere on the screen.
 - 2026-11-17: Editor page layout now matches the study app. The list has the app's header

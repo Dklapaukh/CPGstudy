@@ -38,10 +38,10 @@ import { withEdit, textToBlocks } from './questionEdits.js';
 // Decision Z13: two distractors per round.
 export const DISTRACTORS_PER_ROUND = 2;
 // How many of each question kind one play asks, so a play stays a few minutes long.
-export const NUMBER_QUESTIONS_PER_PLAY = 3;
-export const SITUATION_QUESTIONS_PER_PLAY = 2;
-export const RED_FLAG_QUESTIONS_PER_PLAY = 2;
-export const MOVE_TO_QUESTIONS_PER_PLAY = 2;
+const NUMBER_QUESTIONS_PER_PLAY = 3;
+const SITUATION_QUESTIONS_PER_PLAY = 2;
+const RED_FLAG_QUESTIONS_PER_PLAY = 2;
+const MOVE_TO_QUESTIONS_PER_PLAY = 2;
 const CHOICE_COUNT = 4;
 const RED_FLAG_HEADING_PATTERN = /^red flags\b/i;
 // Two red flags count as the same flag when this share of the words of the shorter one is in
@@ -424,11 +424,14 @@ function medicineNames(sections) {
     .flatMap((guideline) => tableNames(guideline.t));
 }
 
-/** What every play needs from the whole content (see buildPlay). Build it once and keep it. */
-export function playContext(sections, relatedLinks) {
+/**
+ * What every play needs from the whole content (see buildPlay). Build it once and keep it.
+ * `quizzed` is quizGuidelines(sections), passed in when the caller has already built it.
+ */
+export function playContext(sections, relatedLinks, quizzed = quizGuidelines(sections)) {
   const allGuidelines = sections.flatMap((section) => section.items);
   return {
-    quizzed: quizGuidelines(sections),
+    quizzed,
     allGuidelines,
     medicineNames: medicineNames(sections),
     pools: valuePools(allGuidelines.flatMap((guideline) => guideline.b.map(blockText))),

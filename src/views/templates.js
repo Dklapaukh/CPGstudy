@@ -31,11 +31,13 @@ export function coverHtml({ labelHtml = '', buttonHtml = '', subtitleHtml }) {
   </div>`;
 }
 
+/** A guideline table. */
 function tableHtml(rows) {
   const rowsHtml = rows.map((row) => `<tr>${row.map(cellHtml).join('')}</tr>`).join('');
   return `<div class="table-wrap"><table>${rowsHtml}</table></div>`;
 }
 
+/** One table cell, with its header style and colour from the content. */
 function cellHtml(cell) {
   if (!cell) return '<td></td>';
   const classes = [cell.w ? 'table-header-cell' : '', cell.bg ? 'table-cell--coloured' : ''];

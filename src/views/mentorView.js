@@ -4,6 +4,7 @@ import { coverHtml } from './templates.js';
 
 const app = document.getElementById('app');
 
+/** The box showing a newly created tracker and its passcode. */
 function createdTrackerHtml(created) {
   return `<div class="success-box"><b>New tracker created: ${escapeHtml(created.label)}</b>
     <div class="passcode-display" id="new-passcode">${escapeHtml(created.code)}</div>

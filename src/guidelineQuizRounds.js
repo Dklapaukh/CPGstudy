@@ -15,7 +15,7 @@ import { BLOCK } from './constants.js';
 import { plainText, namesMedicine } from './quizDoses.js';
 
 // Headings that end the actions at the top of a guideline.
-export const STOP_HEADING_PATTERN =
+const STOP_HEADING_PATTERN =
   /^(backup|referral and transport|additional information|red flags|orange flags|worsening advice|more information|version history)\b/i;
 // A guideline is quizzed only if it is about treatment: it has one of these headings, or its
 // title says it is an action list or checklist. This leaves out guidelines that are only
@@ -33,7 +33,7 @@ const MAX_SITUATION_LINE_LENGTH = 110;
 const TOP_LEVEL = 1;
 const UNINDENTED = 0;
 // A round needs at least this many actions to be worth ordering (VT's torsades round has 2).
-export const MIN_ROUND_ACTIONS = 2;
+const MIN_ROUND_ACTIONS = 2;
 
 /** Lower-case words of a text, for comparing two actions regardless of spacing and markup. */
 export const normalisedText = (text) =>
@@ -97,7 +97,7 @@ export function situations(blocks) {
 }
 
 /** The rounds of one guideline: its situations with enough actions, in guideline order. */
-export function guidelineRounds(guideline) {
+function guidelineRounds(guideline) {
   if (!isTreatmentGuideline(guideline)) return [];
   return situations(guideline.b).filter(
     (round) =>

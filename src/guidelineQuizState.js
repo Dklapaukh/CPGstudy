@@ -29,9 +29,10 @@ export function quizzedGuidelines() {
   return cachedQuizzed;
 }
 
-/** What every play needs from the whole content, built the first time it is needed. */
+/** What every play needs from the whole content, built the first time it is needed. Shares
+ * the quizzed list above rather than building it twice. */
 function context() {
-  if (!cachedContext) cachedContext = playContext(sections, relatedLinks);
+  if (!cachedContext) cachedContext = playContext(sections, relatedLinks, quizzedGuidelines());
   return cachedContext;
 }
 

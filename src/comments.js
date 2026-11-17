@@ -45,6 +45,7 @@ export function makeSnippet(pointText, otherPointTexts = []) {
   return text.length > length ? `${text.slice(0, length)}…` : text;
 }
 
+/** The text put before a comment in the notes: a bullet, the point quoted and a dash. */
 function commentPrefix(snippet) {
   return `• ${snippet} — `;
 }

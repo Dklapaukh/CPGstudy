@@ -10,8 +10,9 @@
  * with a wrong unit, for example 300 mcg for 300 mg. A wrong choice is never a value that also
  * appears in the same line. These rules were made without AI and are to be reviewed: see the
  * README, "Guideline quiz".
- * Depends on nothing.
+ * Depends on guidelineQuizRounds.js (shuffled).
  */
+import { shuffled } from './guidelineQuizRounds.js';
 
 // Units recognised after a number, longest first so "mg/kg" is not read as "mg".
 const UNITS = [
@@ -49,7 +50,7 @@ const SAME_UNIT = {
   mcg: 'micrograms',
 };
 // The wrong units offered for a unit (Decision Z14: "include wrong units sometimes").
-export const WRONG_UNITS = {
+const WRONG_UNITS = {
   mg: ['mcg', 'g'],
   mcg: ['mg'],
   micrograms: ['mg'],
@@ -67,7 +68,7 @@ export const WRONG_UNITS = {
   mmol: ['mg', 'g'],
   units: ['mg'],
 };
-export const WRONG_UNIT_CHANCE = 0.5;
+const WRONG_UNIT_CHANCE = 0.5;
 // Singular unit words, used for a made-up value of exactly 1 ("1 litre" but "6 litres").
 const SINGULAR = { minutes: 'minute', litres: 'litre', micrograms: 'microgram', hours: 'hour' };
 const PLURAL = Object.fromEntries(Object.entries(SINGULAR).map(([plural, one]) => [one, plural]));
@@ -151,16 +152,6 @@ const isNear = (value, other) => {
   const ratio = sizeOf(other) / sizeOf(value);
   return ratio > 0 && ratio <= NEAR_FACTOR && ratio >= 1 / NEAR_FACTOR;
 };
-
-/** A shuffled copy of a list (Fisher-Yates). */
-function shuffled(items, random) {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 /**
  * The wrong numbers for one blanked value, all with the right unit: values from the pool of the

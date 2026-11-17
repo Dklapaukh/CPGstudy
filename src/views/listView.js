@@ -105,6 +105,7 @@ function tabsHtml() {
     ${quizButtonHtml()}${guidelineQuizButtonHtml()}</div>`;
 }
 
+/** Opens and closes the Quiz tab's choice without redrawing the list. */
 function addQuizTabListener() {
   app.querySelector('#quiz-tab').addEventListener('click', (event) => {
     quizChoiceOpen = !quizChoiceOpen;
@@ -150,6 +151,7 @@ function addRandomGuidelineButtonListener() {
   });
 }
 
+/** The status filter pills with their counts, and the search box. */
 function filtersHtml(counts, total) {
   const filters = [
     [FILTER.ALL, `All (${total})`],
@@ -169,6 +171,7 @@ function filtersHtml(counts, total) {
       autocomplete="off">`;
 }
 
+/** One guideline row: status dot, title, number and, on the right, score and date. */
 function rowHtml(guideline) {
   const status = getStatus(state.entries, guideline.id);
   let dotClass = '';
@@ -212,6 +215,7 @@ function markedDateHtml(guidelineId, status) {
     title="${MESSAGES.MARKED_PREFIX[status]} ${date}"><span class="visually-hidden">${MESSAGES.MARKED_PREFIX[status]} </span>${date}</time>`;
 }
 
+/** The folding sections with the guidelines that match the filter and search. */
 function sectionsHtml(newlyClosed) {
   const isFiltering = state.filter !== FILTER.ALL || state.searchText.trim();
   let html = '';

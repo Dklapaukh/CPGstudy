@@ -3,15 +3,16 @@
  * page per person. One state object, one way to draw: every change calls render().
  * The backend's "stats" reply holds numbers only (no notes, comments or tracker passcodes); the
  * guideline names and totals come from the same content files as the study app.
- * Depends on api.js, constants.js, guidelines.js, guidelineQuizRounds.js, quizCards.js,
- * quizSchedule.js and the other files of this folder.
+ * Depends on staffPage.js, theme.js, constants.js, guidelines.js, guidelineQuizRounds.js,
+ * quizCards.js, quizSchedule.js and the other files of this folder.
  */
-import { sendRequest } from '../api.js';
+import { askBackend, refusalMessage, SIGN_OUT_MESSAGES, tabPasscode } from '../staffPage.js';
+import { applyTheme } from '../theme.js';
 import { sections } from '../guidelines.js';
 import { quizGuidelines } from '../guidelineQuizRounds.js';
 import { buildQuizCards } from '../quizCards.js';
 import { dayNumber } from '../quizSchedule.js';
-import { MESSAGES, QUIZ_SECTION_NAME, THEME_STORAGE_KEY } from '../constants.js';
+import { QUIZ_SECTION_NAME } from '../constants.js';
 import {
   historyFor,
   statusCounts,
@@ -27,17 +28,12 @@ import {
 } from './stats.js';
 import { signInHtml, teamHtml, personHtml, overTimeHtml } from './view.js';
 
-// The passcode is kept for this browser tab only, so a reload stays signed in and closing the
-// tab signs out. Separate from the study app's saved data on purpose.
-const SESSION_KEY = 'eas-cpg-manager-v1';
+// The passcode is kept for this browser tab only. Separate from the study app's saved data on
+// purpose.
+const passcodeStore = tabPasscode('eas-cpg-manager-v1');
 const PERSON_HASH_PREFIX = '#person-';
 const DEFAULT_RANGE_WEEKS = 12;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const BACKEND_MESSAGES = {
-  'not-found': MESSAGES.CODE_NOT_RECOGNISED,
-  'placeholder-passcode': MESSAGES.PLACEHOLDER_PASSCODE,
-  'bad-action': MESSAGES.OLD_BACKEND,
-};
 
 const app = document.getElementById('manager-app');
 const state = {
@@ -75,58 +71,23 @@ function content() {
   return cachedContent;
 }
 
-/** Reads the tab's saved passcode; '' when there is none or storage is blocked. */
-function savedPasscode() {
-  try {
-    return sessionStorage.getItem(SESSION_KEY) || '';
-  } catch {
-    return ''; // blocked storage: the passcode is simply typed again after a reload
-  }
-}
-
-/** Keeps the passcode for this tab, or forgets it when given ''. */
-function savePasscode(passcode) {
-  try {
-    if (passcode) sessionStorage.setItem(SESSION_KEY, passcode);
-    else sessionStorage.removeItem(SESSION_KEY);
-  } catch {
-    // Blocked storage: signing in still works until the page is reloaded.
-  }
-}
-
-/** Uses the dark mode chosen in the study app on this device, if any. */
-function applyTheme() {
-  try {
-    const theme = localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
-    document.documentElement.dataset.theme = theme;
-  } catch {
-    // Blocked storage: the page stays in light mode.
-  }
-}
-
 /** Asks the backend for the viewer's numbers and draws them, or shows why it could not. */
 async function loadStats(passcode) {
   state.isLoading = true;
   state.message = '';
   render();
-  let reply;
-  try {
-    reply = await sendRequest({ action: 'stats', code: passcode });
-  } catch {
-    reply = { ok: false, error: 'no-signal' }; // shown to the person just below
-  }
+  const reply = await askBackend({ action: 'stats', code: passcode });
   state.isLoading = false;
   if (reply.ok) {
     state.passcode = passcode;
     state.viewer = { name: reply.name, role: reply.role };
     state.trackers = reply.trackers || [];
     state.history = reply.history || [];
-    savePasscode(passcode);
+    passcodeStore.save(passcode);
   } else {
     // A refused passcode signs out; a lost signal keeps the numbers already on the screen.
-    if (BACKEND_MESSAGES[reply.error]) signOut();
-    const fallback = reply.error === 'no-signal' ? MESSAGES.NO_SIGNAL : MESSAGES.GENERIC_ERROR;
-    state.message = BACKEND_MESSAGES[reply.error] || fallback;
+    if (SIGN_OUT_MESSAGES[reply.error]) signOut();
+    state.message = refusalMessage(reply.error);
   }
   render();
 }
@@ -138,7 +99,7 @@ function signOut() {
   state.trackers = [];
   state.history = [];
   state.message = '';
-  savePasscode('');
+  passcodeStore.save('');
 }
 
 /** The tracker number in the address ("#person-2"), or null on the team screen. */
@@ -243,4 +204,4 @@ window.addEventListener('hashchange', () => {
 
 applyTheme();
 render();
-if (savedPasscode()) loadStats(savedPasscode());
+if (passcodeStore.load()) loadStats(passcodeStore.load());

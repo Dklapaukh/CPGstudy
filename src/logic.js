@@ -85,6 +85,7 @@ export function guidelineSearchText(guideline) {
 // Making the search text is slow, so it is made once for each guideline, when first needed.
 const searchTextCache = new WeakMap();
 
+/** A guideline's searchable text, worked out once and kept. */
 function getSearchText(guideline) {
   if (!searchTextCache.has(guideline)) {
     searchTextCache.set(guideline, guidelineSearchText(guideline));

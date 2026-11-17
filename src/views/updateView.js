@@ -9,6 +9,7 @@ import { formatCheckedTime } from '../updates.js';
 import { documentInfo } from '../../content/guidelines.js';
 import { MESSAGES } from '../constants.js';
 
+/** The update banner: downloading, or a new version with its button and any failure. */
 function bannerHtml() {
   if (state.updateInProgress) {
     return `<p class="update-banner__text">${MESSAGES.UPDATE_DOWNLOADING}</p>`;

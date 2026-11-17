@@ -57,6 +57,7 @@ function pickerSelectHtml() {
   return `<select id="guideline-quiz-choice" aria-label="Guideline to quiz">${optionGroups}</select>`;
 }
 
+/** The guideline quiz start screen: help, the guideline picker and the start buttons. */
 function pickerHtml() {
   const played = quizzedGuidelines().filter((quizzed) => bestScore(quizzed.id)).length;
   return `<p class="quiz-help">Put the actions at the top of a guideline in order, and put the
@@ -171,6 +172,7 @@ function markedRoundHtml(step) {
     <button class="quiz-start-button" type="button" data-action="guideline-quiz-next">Next</button>`;
 }
 
+/** An ordering round: the cards to order, or the marked result. */
 function orderStepHtml(step) {
   const situation = step.title ? `<p class="order-situation">${escapeHtml(step.title)}</p>` : '';
   const body = state.guidelineQuiz.marked ? markedRoundHtml(step) : orderingHtml(step);
@@ -188,6 +190,7 @@ function questionLineHtml(step) {
   return step.line ? `${context}<p class="choice-line">${escapeHtml(step.line)}</p>` : context;
 }
 
+/** One choice of a question: a button, or after a pick, marked right or wrong. */
 function choiceButtonHtml(step, choice, index) {
   const picked = state.guidelineQuiz.picked;
   if (picked === null) {
@@ -204,6 +207,7 @@ function choiceButtonHtml(step, choice, index) {
   return `<button class="choice-button${modifier}" type="button" disabled>${mark}${escapeHtml(choice)}</button>`;
 }
 
+/** A choice question: its prompt, the choices and, after a pick, the verdict. */
 function choiceStepHtml(step) {
   const quiz = state.guidelineQuiz;
   const buttons = step.choices
@@ -229,6 +233,7 @@ function scoreRingHtml(percent) {
     style="--score-target:${percent}"></div>`;
 }
 
+/** The end of a guideline quiz play: score, best score and where to go next. */
 function finishedHtml() {
   const quiz = state.guidelineQuiz;
   const percent = percentOf(quiz.score, quiz.total);

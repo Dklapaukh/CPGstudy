@@ -60,6 +60,7 @@ export function editsToReview(edits) {
   return Object.keys(edits).filter((id) => reviewState(byId[id]?.question, edits[id]));
 }
 
+/** Fetches the edits, writes both files and lists the edits that need review. */
 async function main() {
   const reply = await sendRequest({ action: 'edits' });
   if (!reply.ok) {

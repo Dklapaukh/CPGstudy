@@ -29,6 +29,7 @@ export function openCommentPanel({ snippet, pointText, onSave, returnFocusTo }) 
   commentInput.focus();
 }
 
+/** Hides the comment panel and returns focus to the button that opened it. */
 function closeCommentPanel() {
   panel.hidden = true;
   const returnFocusTo = openComment && openComment.returnFocusTo;

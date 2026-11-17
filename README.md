@@ -21,7 +21,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/state.js`                                                       | The one state object and saving it on the phone.                                               |
 | `src/api.js`, `src/sync.js`                                          | Talking to the backend; queued edits and merging.                                              |
 | `src/guidelines.js`, `src/logic.js`, `src/comments.js`               | The guideline list; pure logic (merge, filters, search, comment lines).                        |
-| `src/markedState.js`, `src/settingsState.js`                         | Marked dates; dark mode and "mark for review after N days".                                    |
+| `src/markedState.js`, `src/settingsState.js`, `src/theme.js`         | Marked dates; "mark for review after N days"; dark mode.                                       |
 | `src/queue.js`, `src/queueState.js`, `src/related.js`                | Guidelines to learn (the queue) and the related list.                                          |
 | `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`        | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                             |
 | `src/quizState.js`                                                   | Medicines quiz: session and saved schedules.                                                   |
@@ -32,6 +32,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/views/`                                                         | One file per screen or screen part.                                                            |
 | `manager.html`, `styles/manager.css`, `src/manager/`                 | The manager view: `main.js` (sign in, drawing), `stats.js` (pure sums), `view.js`, `chart.js`. |
 | `editor.html`, `styles/editor.css`, `src/editor/`                    | The editor page: `main.js` (sign in, saving), `questions.js` (every question), `view.js`.      |
+| `src/staffPage.js`                                                   | What the manager and editor pages share: tab passcode, backend requests, warnings.             |
 | `src/questionEdits.js`                                               | Editors' changes to quiz questions, pure logic: applying them, finding ones to review.         |
 | `content/card-edits.yaml`, `content/card-edits.js`                   | Published edits: readable record and what the app loads. Written by `sync-edits.js`.           |
 | `scripts/sync-edits.js`                                              | Copies the Sheet's Edits tab into the two files above (daily, `edits-sync.yml`).               |

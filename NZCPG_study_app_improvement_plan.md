@@ -231,6 +231,28 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   flagged for review.
 - Local-only storage (no Sheet) was considered and rejected: managers use the manager view, which
   reads the Sheet, and phones would lose progress (Safari clears site data after 7 days unused).
+- ED-F (owner, 17 Nov 2026): the editor page is laid out like the study app: the list header
+  and folding sections for the guideline list (with "Needs review" as its own section), and the
+  coloured guideline header for one guideline. It no longer loads `manager.css`.
+
+**Study streak, later changes**
+
+- ST-D (owner, 17 Nov 2026): the full-screen power-up stays until Continue is pressed; no
+  timeout and no closing on a tap elsewhere.
+
+**Code audit (17 Nov 2026; tidy-up only, rule 9)**
+
+- AU-A: the manager and editor pages share `src/staffPage.js` (tab passcode, asking the backend,
+  refusal messages, the warning box); dark mode is in `src/theme.js` for all three pages. Both
+  are in `src/`, so `version.json` lists them (its test wants every `src/*.js`); this adds one
+  small file to a phone's update, an exception to MV-H.
+- AU-B: `content/card-edits.yaml` stays next to the `.js`, as with the other override files
+  (ED-A): the YAML is the readable record. Not changed.
+- AU-C: left as they are: `attachEventListeners`, `startCardDrag`, `attachWheel`, `chartSvg`
+  and `overTimeHtml` are 43 to 53 lines (rule 5 says normally under 30); the rest is mostly
+  markup or listeners sharing local state, and splitting further would make them harder to
+  follow. The manager and editor sign-in screens are still two functions because their covers
+  now differ.
 
 ### 8.3 Open decisions (owner)
 
@@ -288,7 +310,62 @@ Answered 16 Nov 2026:
 9. **Switch on the editor page** (README, "Editor page", "Switching it on"): paste and redeploy
    `backend/Code.gs` and run `setup`, then fill the new `Editors` tab.
 
+## 10. Style guide: how all code is written
+
+Goal: a programmer who does not know the project can read any function once and explain it.
+
+**Names and layout**
+
+1. Full descriptive names (`guidelineStatus`, not `st`); one-letter names only for loop counters.
+2. One statement per line; lines of at most 100 characters (Prettier enforces it).
+3. Descriptive CSS class names (`guideline-row`, `status-button--complete`). No styles written in
+   JavaScript.
+4. Named constants, not magic values: status codes, storage keys, timings, column numbers, colours.
+
+**Structure**
+
+5. Small functions that do one thing, normally under 30 lines.
+6. Logic apart from the screen: pure functions take input and return a result, and are tested
+   without a browser.
+7. One state object, one way to draw. No patching the page afterwards, no polling timers for
+   display changes.
+8. Content is data: guideline text lives in `content/` and is never typed into code.
+9. Modern JavaScript (`const`, `let`, arrow functions, modules). Never `var`.
+
+**Comments and documentation**
+
+10. Every file starts with a short header: its purpose and what it depends on.
+11. Every function has a one-to-three line comment: what it is for, what it takes and returns.
+12. Comments explain why, not what; a rule that came from a real need says so.
+13. The README describes the app as it is now. The change log gets a short dated entry per change.
+
+**Safety and quality**
+
+14. No silent errors: an empty `catch` says why it is safe, or the error is shown or logged.
+15. All text from outside is untrusted: escaped before it reaches the page; downloaded content is
+    validated before it is published.
+16. Accessibility: contrast of at least 4.5:1, tap targets of at least 44 px, a label on every
+    button, status never shown by colour alone.
+17. Every pure function has tests. Fixing a bug starts with a test that shows it.
+18. One purpose per change.
+
+**Apps Script (`backend/Code.gs`)**
+
+19. One column map, one definition of the status values, a comment on every function, no waiting
+    or sleeping while holding the lock, generic error messages to the app.
+
+---
+
 ## 13. Status
+
+**17 Nov 2026 (evening).** Three changes on `main`, each checked with `npm run check`: the
+editor page layout (ED-F; seen in headless Chrome, not yet on a phone), the streak power-up
+closing only on Continue (ST-D), and the code audit (AU-A to AU-C). The audit: one quizzed list
+shared by `quizzedGuidelines()` and `playContext()`; one `shuffled()`; shared manager and editor
+code; unused exports made private; a comment on every function; three long functions split;
+section 10 (style guide) put back in this file, as `CLAUDE.md` and rule 8 refer to it. No
+behaviour change: same tests, and the card drag compared old against new. **Next:** the owner
+looks at the editor page and the power-up on a phone; then 8.3 and 8.4 as before.
 
 **17 Nov 2026 (later).** Feature 14, the study streak and the Data tab, is on `main`. Decisions:
 ST-A, a streak day is a local calendar day with at least one finished quiz (a Medicines study
@@ -296,8 +373,7 @@ or practice session run to the end, or a guideline quiz play); a streak from yes
 counts until today ends. ST-B, the days are one extra entry `study-streak` (no backend change;
 its id has no prefix the backend reads). ST-C, the Data tab shows streak, longest streak, quiz
 days, a 12-week grid, a light "rat rank", and guideline and Medicines numbers. Not yet seen on
-a real phone. **Next (owner, 17 Nov 2026):** change the editor page layout, then the code audit
-below.
+a real phone.
 
 **17 Nov 2026.** Feature 13, the editor page (`editor.html`), is built and on `main` (ED-A to
 ED-E). It needs 8.4 task 9 before editors can sign in. The study app now applies published

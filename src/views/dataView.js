@@ -51,6 +51,7 @@ function activityHtml(days, today) {
     weeks">${columns.join('')}</div>`;
 }
 
+/** The streak group of the Data tab: streak, longest, quiz days, rank and the 12-week grid. */
 function streakGroupHtml() {
   const days = streakDays();
   const today = todayNumber();
@@ -72,6 +73,10 @@ function streakGroupHtml() {
     <p class="settings-hint">Rank: <b>${rank.name}</b>. ${rankText}</p></section>`;
 }
 
+/**
+ * The guideline numbers of the Data tab: complete, quizzes played, perfect
+ * scores and average best score.
+ */
 function guidelineTiles() {
   const complete = countStatuses(guidelines, state.entries)[STATUS.COMPLETE];
   const bests = quizzedGuidelines()
@@ -89,6 +94,7 @@ function guidelineTiles() {
   ];
 }
 
+/** The Medicines numbers of the Data tab: cards learnt and locked in. */
 function medicineTiles() {
   const schedules = Object.values(allSchedules(quizCards()));
   const learnt = schedules.filter((schedule) => schedule.interval > 0).length;

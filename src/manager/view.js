@@ -2,8 +2,9 @@
  * Manager page: markup for its three screens (sign in, team, one person). Each function takes
  * prepared numbers and returns text; main.js puts it on the page and handles the clicks.
  * All names and labels come from the Sheet, so they are escaped before they reach the page.
- * Depends on logic.js, constants.js and chart.js.
+ * Depends on logic.js, constants.js, staffPage.js and chart.js.
  */
+import { warningHtml } from '../staffPage.js';
 import { escapeHtml, formatUpdatedDate } from '../logic.js';
 import { MESSAGES } from '../constants.js';
 import { chartSvg, CHART_KIND } from './chart.js';
@@ -17,9 +18,6 @@ const shortDate = (milliseconds) =>
   new Date(milliseconds).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });
 const numberCells = (values) =>
   values.map((value) => `<td class="stats-table__number">${value}</td>`).join('');
-
-export const warningHtml = (message) =>
-  message ? `<div class="warning-message" role="alert">${escapeHtml(message)}</div>` : '';
 
 /** The green banner at the top of every screen, with optional buttons on the right. */
 export function coverHtml(subtitle, buttonsHtml = '', pageName = 'Manager view') {

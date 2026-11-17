@@ -32,6 +32,7 @@ import {
 
 const app = document.getElementById('app');
 
+/** Removes the # part of the address without adding a history step. */
 function clearHash() {
   try {
     history.replaceState(null, '', location.pathname + location.search);
@@ -70,6 +71,7 @@ export function leaveOpenTracker() {
   return true;
 }
 
+/** Forgets the open tracker and everything loaded for it. */
 function clearOpenTracker() {
   clearTimeout(state.syncTimer);
   state.passcode = '';

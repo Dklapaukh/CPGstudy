@@ -8,9 +8,10 @@ import { setSyncHandlers, syncNow, updateSyncStatus } from './sync.js';
 import { attachEventListeners } from './events.js';
 import { route, showLogin, signOut, refreshScreen } from './navigation.js';
 import { recordLoadedContent, checkForUpdate } from './updateState.js';
-import { applyTheme } from './settingsState.js';
+import { applyTheme } from './theme.js';
 import { SCREEN, BACKGROUND_SYNC_INTERVAL_MS } from './constants.js';
 
+/** Starts the app: theme, sync, listeners, then the first screen. */
 function startApp() {
   applyTheme();
   setSyncHandlers({ refreshScreen, signOut });

@@ -279,7 +279,7 @@ function knownRoutes(routes, grantsByLevel) {
  * A line naming two routes counts for a level that has either, so it is never hidden wrongly.
  * `overrides` is the card's hand-made corrections: [{ lineStart, levels }].
  */
-export function cardLineLevels(card, grantsByLevel, overrides = []) {
+function cardLineLevels(card, grantsByLevel, overrides = []) {
   const indication = cardIndication(card);
   return answerLineRoutes(card.answerBlocks).map((lineRoutes, index) => {
     const text = blockText(card.answerBlocks[index]);

@@ -28,6 +28,7 @@ const STATUS_DOT_CLASS = {
 
 const guidelineById = (id) => guidelines.find((guideline) => guideline.id === id);
 
+/** The coloured dot for a status. */
 function statusDotHtml(status) {
   return `<i class="status-dot${STATUS_DOT_CLASS[status]}"></i>`;
 }
@@ -38,6 +39,7 @@ function relatedItems(guidelineId) {
   return ranked.filter((item) => guidelineById(item.id));
 }
 
+/** The Add to queue button of a related guideline, disabled when queued or the queue is full. */
 function addButtonHtml(guideline, queue) {
   const isQueued = queue.some((item) => item.id === guideline.id);
   const text = isQueued ? 'In queue' : queueRoom(queue) === 0 ? 'Queue full' : 'Add to queue';
@@ -47,6 +49,7 @@ function addButtonHtml(guideline, queue) {
     aria-label="${escapeHtml(`${text}: ${guideline.t}`)}"${disabled}>${text}</button>`;
 }
 
+/** One related guideline: link, status, why it is related, and its add button. */
 function relatedItemHtml(item, queue) {
   const guideline = guidelineById(item.id);
   const status = getStatus(state.entries, item.id);
@@ -57,6 +60,7 @@ function relatedItemHtml(item, queue) {
     ${addButtonHtml(guideline, queue)}</li>`;
 }
 
+/** The related guidelines panel under a guideline, or nothing when there are none. */
 function relatedPanelHtml(guideline, queue) {
   const items = relatedItems(guideline.id);
   if (!items.length) return '';
@@ -70,6 +74,7 @@ function relatedPanelHtml(guideline, queue) {
       ${canAddMore ? '' : 'disabled'}>Add all to queue</button></section>`;
 }
 
+/** One guideline in the review queue, ticked when done. */
 function queueItemHtml(item) {
   const guideline = guidelineById(item.id);
   const status = getStatus(state.entries, item.id);

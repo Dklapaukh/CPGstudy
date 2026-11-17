@@ -177,6 +177,7 @@ const toStored = (s) => [
   s.first,
 ];
 
+/** A schedule from its saved list of six numbers, or null when the list is not valid. */
 function fromStored(values) {
   const valid = Array.isArray(values) && values.length === 6 && values.every(Number.isFinite);
   if (!valid) return null;

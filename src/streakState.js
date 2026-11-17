@@ -54,7 +54,7 @@ export function longestStreak(days) {
 }
 
 // Light-hearted ranks on the Data tab, by the number of quiz days.
-export const RAT_RANKS = [
+const RAT_RANKS = [
   { from: 0, name: 'Lab rat' },
   { from: 3, name: 'Maze runner' },
   { from: 10, name: 'Street rat' },
@@ -93,6 +93,7 @@ export function activityWeeks(days, today, weeks) {
 
 export const todayNumber = () => dayNumber(Date.now(), new Date().getTimezoneOffset());
 
+/** The saved streak days (day numbers), oldest first. */
 export const streakDays = () => {
   const entry = state.entries[STREAK_ENTRY_ID];
   return parseStreakDays(entry && entry.n);

@@ -31,7 +31,7 @@ export { plainText };
 
 // The topics asked for each medicine, in the order they are introduced. `heading` is the
 // heading text in the medicine guideline. Dosage is split into one card per dose (see below).
-export const QUIZ_TOPICS = [
+const QUIZ_TOPICS = [
   { key: 'indications', heading: 'Indications' },
   { key: 'contraindications', heading: 'Contraindications' },
   { key: 'dose', heading: 'Dosage' },
@@ -246,7 +246,7 @@ function indicationDoseCards(medicine, guidelines, medicineNames) {
  * above the table; the weights line is the paragraph just above it, when there is one.
  * The paediatric table is left out (paediatric doses are not tested).
  */
-export function rsiTables(guideline) {
+function rsiTables(guideline) {
   const tables = [];
   let title = '';
   guideline.b.forEach((block, i) => {

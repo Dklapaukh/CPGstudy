@@ -46,13 +46,14 @@ function statusButtonsHtml(guidelineId, currentStatus) {
 }
 
 /** The line under the status buttons: when the guideline was last marked, or how to mark it. */
-export function markedLineText(guidelineId) {
+function markedLineText(guidelineId) {
   const markedAt = markedTime(state.entries, guidelineId);
   if (!markedAt) return 'Not marked yet · press Review or Complete when studied';
   const prefix = MESSAGES.MARKED_PREFIX[getStatus(state.entries, guidelineId)];
   return `${prefix} ${formatUpdatedDate(markedAt)} · press again to update`;
 }
 
+/** The link to the previous or next guideline, or an empty spacer at either end. */
 function neighbourLinkHtml(guideline, isNext) {
   if (!guideline) return '<span class="neighbour-nav__spacer"></span>';
   const cssClass = isNext ? ' class="neighbour-nav__next"' : '';

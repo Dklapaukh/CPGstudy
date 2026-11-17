@@ -113,6 +113,10 @@ function finishedHtml() {
   return `<p class="quiz-finished">${what}: ${plural(state.quiz.answered, 'answer')}.</p>`;
 }
 
+/**
+ * The Medicines quiz start screen: what is waiting, the start button, settings
+ * and the practice picker.
+ */
 function overviewHtml() {
   const plan = currentStudyPlan();
   const cards = studyCards();
@@ -141,6 +145,7 @@ const PRACTICE_BUTTONS = [
   { rating: RATING.GOOD, label: 'Got it', hint: 'I remembered it' },
 ];
 
+/** The answer buttons of a practice session, which do not change the schedule. */
 function practiceButtonsHtml() {
   return PRACTICE_BUTTONS.map(
     ({ rating, label, hint }) => `<button class="rating-button rating-button--${rating}"
@@ -149,6 +154,7 @@ function practiceButtonsHtml() {
   ).join('');
 }
 
+/** The rating buttons of a study session, each with when the card would come back. */
 function ratingButtonsHtml(card) {
   const preview = previewRatings(
     card,
@@ -186,6 +192,7 @@ function answerHtml(card) {
     .join('');
 }
 
+/** One quiz card: the prompt, then the answer and buttons once turned over. */
 function cardHtml(card) {
   const practising = Boolean(state.quiz.practiceMedicineId);
   const mode = practising ? 'Practice · ' : '';
