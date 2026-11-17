@@ -110,3 +110,26 @@
   border: 1px dashed var(--colour-line);
   border-radius: 12px;
 }
+
+/* A text that can be changed in place: outlined on hover and focus, so editors see it is a box. */
+.editor-preview [data-action='edit-box'] {
+  border-radius: 8px;
+  cursor: pointer;
+  outline-offset: 2px;
+}
+.editor-preview [data-action='edit-box']:hover,
+.editor-preview [data-action='edit-box']:focus-visible {
+  outline: 2px solid var(--colour-green);
+}
+/* The box for changing one text, drawn where that text was. */
+.editor-inline {
+  background: var(--colour-green-soft);
+  border-radius: 10px;
+  margin: 0.4rem 0;
+  padding: 0.2rem 0.6rem 0.6rem;
+}
+.order-card:has(.editor-inline) {
+  border: none;
+  display: block;
+  padding: 0;
+}

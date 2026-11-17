@@ -9,7 +9,13 @@
 import { sections, guidelines } from '../guidelines.js';
 import { QUIZ_SECTION_NAME } from '../constants.js';
 import { buildQuizCards } from '../quizCards.js';
-import { cardQuestion, seededRandom, textToBlocks } from '../questionEdits.js';
+import {
+  EDIT_FIELDS,
+  cardQuestion,
+  hasChosenWrong,
+  seededRandom,
+  textToBlocks,
+} from '../questionEdits.js';
 import { guidelineQuestions, playContext, questionStep } from '../guidelineQuizPlay.js';
 import { markRound } from '../guidelineQuizRounds.js';
 import { relatedLinks } from '../../content/related.js';
@@ -90,4 +96,49 @@ export function questionPreview(id, live) {
   return step.kind === 'order'
     ? { kind: 'order', step, round: perfectRound(step) }
     : { kind: 'choice', step };
+}
+
+/* ---------- Changing one text in place ---------- */
+
+/** The wrong answers a preview shows, in the order shown (the boxes' `index` counts these). */
+export function shownWrong(preview) {
+  if (!preview || preview.kind === 'card') return [];
+  const { step } = preview;
+  if (preview.kind === 'order') {
+    return step.cards.filter((card) => card.isDistractor).map((card) => card.text);
+  }
+  return step.choices.filter((choice) => choice !== step.answer);
+}
+
+/** The text a box shows for changing: a field, or one item of the steps or wrong answers. */
+export function boxText(item, field, index) {
+  if (field === 'steps') return item.live.steps[index] ?? '';
+  if (field === 'wrong') return shownWrong(item.preview)[index] ?? '';
+  return String(item.live[field] ?? '');
+}
+
+/** A list with one item replaced by `text`, or taken out when `text` is empty. */
+const replacedIn = (list, index, text) =>
+  text ? list.map((each, i) => (i === index ? text : each)) : list.filter((_, i) => i !== index);
+
+/**
+ * Every editable field of a question as learners see it, with one box's text changed: what
+ * editFromValues() takes. An emptied list item is taken out; an emptied single text is kept as
+ * it was (a question needs one). Changing one shown wrong answer fixes the shown ones, so a
+ * question whose wrong answers were random keeps the ones the editor saw; chosen ones not shown
+ * are kept after them.
+ */
+export function boxValues(item, field, index, text) {
+  const { live } = item;
+  const values = {};
+  EDIT_FIELDS[live.kind].forEach((name) => (values[name] = live[name]));
+  values.wrong = hasChosenWrong(live) ? live.wrong : [];
+  const changed = text.trim();
+  if (field === 'steps') values.steps = replacedIn(live.steps, index, changed);
+  else if (field === 'wrong') {
+    const shown = shownWrong(item.preview);
+    const unseen = values.wrong.filter((wrong) => !shown.includes(wrong));
+    values.wrong = [...replacedIn(shown, index, changed), ...unseen];
+  } else if (changed) values[field] = changed;
+  return values;
 }

@@ -16,9 +16,10 @@ import {
   snapshot,
   withEdit,
   reviewState,
+  editFromValues,
 } from '../questionEdits.js';
 import { cardEdits } from '../../content/card-edits.js';
-import { questionBank, questionPreview } from './questions.js';
+import { questionBank, questionPreview, boxValues } from './questions.js';
 import { signInHtml, homeHtml, guidelineHtml, guidelineRowsHtml } from './view.js';
 
 // The passcode is kept for this browser tab only, as on the manager page.
@@ -36,6 +37,7 @@ const state = {
   search: '',
   openSections: {}, // the list's open sections, by name, kept while the page is open
   openId: '', // the question whose form is open
+  openBox: null, // the one text being changed in place: { id, field, index }
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -66,13 +68,16 @@ async function signIn(passcode) {
 
 /** Forgets the passcode, the editor and the edits. */
 function signOut() {
-  Object.assign(state, { passcode: '', name: '', edits: {}, openId: '' });
+  Object.assign(state, { passcode: '', name: '', edits: {}, openId: '', openBox: null });
   passcodeStore.save('');
 }
 
 /** Saves one question's edit, or removes it when `edit` is null. */
 async function saveEdit(id, edit) {
-  if (await request({ action: 'edit-save', id, edit })) state.openId = '';
+  if (await request({ action: 'edit-save', id, edit })) {
+    state.openId = '';
+    state.openBox = null;
+  }
   render();
 }
 
@@ -157,7 +162,7 @@ function render() {
   const viewer = { name: state.name, message: state.message };
   const guideline = currentGuideline();
   app.innerHTML = guideline
-    ? guidelineHtml(viewer, guideline, guidelineItems(guideline), state.openId)
+    ? guidelineHtml(viewer, guideline, guidelineItems(guideline), state)
     : homeHtml(viewer, reviewItems(), guidelineRows(), state);
 }
 
@@ -169,23 +174,31 @@ const linesOf = (text) =>
     .map((line) => line.trim())
     .filter(Boolean);
 
-/**
- * The edit the open form describes: only the fields that differ from the built question, a
- * copy of the built question to check later updates against, and `off` when ticked. Null when
- * nothing differs (the edit is removed).
- */
+/** The edit the open form describes (see editFromValues); null when nothing differs. */
 function editFromForm(question) {
-  const edit = {};
+  const values = {};
   EDIT_FIELDS[question.kind].forEach((name) => {
     const box = app.querySelector(`[data-field="${name}"]`);
-    const value = LIST_FIELDS.includes(name) ? linesOf(box.value) : box.value.trim();
-    const isEmptyWrong = name === 'wrong' && value.length === 0;
-    if (!isEmptyWrong && JSON.stringify(value) !== JSON.stringify(question[name]))
-      edit[name] = value;
+    values[name] = LIST_FIELDS.includes(name) ? linesOf(box.value) : box.value.trim();
   });
-  if (app.querySelector('#field-off').checked) edit.off = true;
-  if (Object.keys(edit).length === 0) return null;
-  return { ...edit, kind: question.kind, was: snapshot(question) };
+  return editFromValues(question, values, app.querySelector('#field-off').checked);
+}
+
+/** The edit made by the text changed in place: that one text, on top of any earlier edit. */
+function editFromBox() {
+  const { id, field, index } = state.openBox;
+  const item = guidelineItems(currentGuideline()).find((each) => each.id === id);
+  const text = document.getElementById('box-text').value;
+  return editFromValues(item.question, boxValues(item, field, index, text), item.edit?.off);
+}
+
+/** Opens one text of a question for changing in place, and puts the cursor in it. */
+function openBox(target) {
+  const { id, editField, editIndex } = target.dataset;
+  state.openId = '';
+  state.openBox = { id, field: editField, index: Number(editIndex) };
+  render();
+  document.getElementById('box-text')?.focus();
 }
 
 /* ---------- Clicks and typing ---------- */
@@ -202,13 +215,16 @@ const ACTIONS = {
   refresh: () => request({ action: 'editor-open' }),
   open: (id) => {
     state.openId = id;
+    state.openBox = null;
     render();
     document.getElementById(`q-${id}`)?.scrollIntoView();
   },
   close: () => {
     state.openId = '';
+    state.openBox = null;
     render();
   },
+  'box-save': (id) => saveEdit(id, editFromBox()),
   save: (id) => saveEdit(id, editFromForm(questionBank().byId[id].question)),
   remove: (id) => saveEdit(id, null),
   // The guideline's new wording is accepted under the edit: the edit stays, checked against it.
@@ -220,10 +236,21 @@ const ACTIONS = {
 
 app.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action]');
-  if (button && ACTIONS[button.dataset.action]) ACTIONS[button.dataset.action](button.dataset.id);
+  if (!button) return;
+  if (button.dataset.action === 'edit-box') openBox(button);
+  else if (ACTIONS[button.dataset.action]) ACTIONS[button.dataset.action](button.dataset.id);
 });
+// Keys: Enter signs in or opens a focused box; in a box, Escape cancels and Ctrl+Enter saves.
 app.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' && event.target.id === 'editor-passcode') ACTIONS['sign-in']();
+  const { target } = event;
+  if (event.key === 'Enter' && target.id === 'editor-passcode') ACTIONS['sign-in']();
+  else if (event.key === 'Enter' && target.dataset.action === 'edit-box') {
+    event.preventDefault();
+    openBox(target);
+  } else if (target.id === 'box-text' && event.key === 'Escape') ACTIONS.close();
+  else if (target.id === 'box-text' && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    ACTIONS['box-save'](state.openBox.id);
+  }
 });
 // Only the list is redrawn while typing, so the search box keeps its place.
 app.addEventListener('input', (event) => {
@@ -246,6 +273,7 @@ app.addEventListener(
 );
 window.addEventListener('hashchange', () => {
   state.openId = '';
+  state.openBox = null;
   render();
   window.scrollTo(0, 0);
 });

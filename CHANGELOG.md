@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Editor page: tap any text of a question (a card's question or answer, an ordering
+  round's situation or one of its cards, a choice question's line or one of its choices) to
+  change just that text in a box drawn in its place, then Save or Cancel (Escape cancels,
+  Ctrl+Enter saves). Emptying a step or wrong answer takes it out. Changing a random wrong
+  answer keeps the others shown, so they stop being random. "Edit" is now "Edit all" (the whole
+  form, still where a question is left out). The quiz screens are unchanged: the shared markup
+  only adds the clickable boxes when the editor page asks for them.
 - 2026-11-18: Study streak: the power-up now moves like a super Saiyan transformation (no gold
   hair). The hype rat's arms are jointed at shoulder and elbow. It drops into a stance with
   elbows out and fists clenched at its hips, strains lower and shakes harder while a flickering

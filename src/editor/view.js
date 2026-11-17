@@ -5,9 +5,9 @@
  * returns text; main.js puts it on the page and handles the clicks. Question text and edits are
  * escaped before they reach the page.
  * Each question is shown as learners see it, drawn by the quiz screens' own markup
- * (views/quizMarkup.js).
+ * (views/quizMarkup.js); clicking any of its texts opens a box to change that text in place.
  * Depends on logic.js, constants.js, quizDoses.js, questionEdits.js, staffPage.js,
- * views/templates.js and views/quizMarkup.js.
+ * views/templates.js, views/quizMarkup.js and questions.js.
  */
 import { warningHtml } from '../staffPage.js';
 import { escapeHtml } from '../logic.js';
@@ -21,6 +21,7 @@ import {
   markedRoundHtml,
   choiceQuestionHtml,
 } from '../views/quizMarkup.js';
+import { boxText } from './questions.js';
 
 const PAGE_NAME = 'Question editor';
 const POOL_EXAMPLES = 3;
@@ -52,6 +53,12 @@ const SIGNED_IN_BUTTONS = `<div class="top-bar__buttons">
   <button class="switch-button" type="button" data-action="refresh">Refresh</button>
   <button class="switch-button" type="button" data-action="sign-out">Sign out</button></div>`;
 const PUBLISH_NOTE = 'Saved edits reach the app the next morning.';
+const TAP_NOTE = 'Tap any text to change it.';
+// Single texts get a small box; a card's answer and steps can run to several lines.
+const BOX_ROWS = { answer: 5, steps: 3 };
+const SMALL_BOX_ROWS = 2;
+// A box changes one item of a list, so its label names one.
+const BOX_LABELS = { ...FIELD_LABELS, steps: 'Step', wrong: 'Wrong answer' };
 
 const asText = (value) => (Array.isArray(value) ? value.join('\n') : String(value ?? ''));
 const note = (text) => `<p class="editor-note">${text}</p>`;
@@ -227,6 +234,41 @@ function reviewHtml(item) {
     </div></div>`;
 }
 
+/** The box for changing one text in place, prefilled with what learners see now. */
+function boxFormHtml(item, field, index) {
+  const isFixingRandom = field === 'wrong' && !hasChosenWrong(item.live);
+  const hint = [
+    field === 'answer' && item.kind === 'card' ? FIELD_HINTS.answer : '',
+    LIST_FIELDS.includes(field) ? 'Empty it to take this one out.' : '',
+    isFixingRandom ? 'Saving keeps the wrong answers shown here instead of random ones.' : '',
+  ].filter(Boolean);
+  const id = escapeHtml(item.id);
+  return `<div class="editor-inline">
+    <label class="editor-label" for="box-text">${BOX_LABELS[field]}</label>
+    <textarea class="text-input editor-box" id="box-text"
+      rows="${BOX_ROWS[field] || SMALL_BOX_ROWS}">${escapeHtml(boxText(item, field, index))}</textarea>
+    ${hint.map((text) => note(escapeHtml(text))).join('')}
+    <div class="editor-buttons">
+      <button class="button" type="button" data-action="box-save" data-id="${id}">Save</button>
+      <button class="switch-button" type="button" data-action="close">Cancel</button>
+    </div></div>`;
+}
+
+/**
+ * What makes a preview editable in place (see quizMarkup.js): every text is clickable, and the
+ * open one, `openBox` ({ id, field, index } or null), is drawn as a box to change it.
+ */
+function editingFor(item, openBox) {
+  const isOpen = (field, index) =>
+    openBox?.id === item.id && openBox.field === field && openBox.index === index;
+  return {
+    attrs: (field, index) =>
+      ` data-action="edit-box" data-id="${escapeHtml(item.id)}" data-edit-field="${field}"
+        data-edit-index="${index}" tabindex="0" title="Tap to change"`,
+    formFor: (field, index) => (isOpen(field, index) ? boxFormHtml(item, field, index) : ''),
+  };
+}
+
 /** Says the wrong answers shown are one random example, unless an editor chose them. */
 function randomNoteHtml(item) {
   if (item.kind === 'card' || hasChosenWrong(item.live)) return '';
@@ -238,15 +280,17 @@ function randomNoteHtml(item) {
  * The question as learners see it once answered right: a card turned over, a round marked, or
  * the choices with the right one ticked. Drawn by the quiz screens' own markup.
  */
-function previewHtml(item) {
+function previewHtml(item, editing) {
   const { preview } = item;
   if (!preview) return note('<i>Not asked: there are too few answers to choose from.</i>');
   let body;
-  if (preview.kind === 'card') body = turnedCardHtml(preview.card);
+  if (preview.kind === 'card') body = turnedCardHtml(preview.card, editing);
   else if (preview.kind === 'order') {
-    body = `${orderHeadHtml(preview.step)}${markedRoundHtml(preview.step, preview.round)}`;
+    const { step, round } = preview;
+    body = `${orderHeadHtml(step, editing)}${markedRoundHtml(step, round, editing)}`;
   } else {
-    body = choiceQuestionHtml(preview.step, preview.step.choices.indexOf(preview.step.answer));
+    const { step } = preview;
+    body = choiceQuestionHtml(step, step.choices.indexOf(step.answer), editing);
   }
   return `<div class="editor-preview">${body}</div>${randomNoteHtml(item)}`;
 }
@@ -261,23 +305,30 @@ function badgesHtml(item) {
   return badges.map((badge) => `<span class="editor-badge">${badge}</span>`).join('');
 }
 
-/** One question: what learners see now, then the form or the review when it is open. */
-function questionHtml(item, isOpen) {
+/**
+ * One question: what learners see now, its texts clickable to change in place, then the form
+ * or the review when it is open. `open` is { openId, openBox } from the page's state.
+ */
+function questionHtml(item, open) {
+  const isOpen = item.id === open.openId;
   const head = `<h3 class="editor-question__head">${KIND_LABELS[item.kind]} ${badgesHtml(item)}</h3>`;
   let body;
   if (item.review && !isOpen) body = reviewHtml(item);
   else if (isOpen) body = `${previewHtml(item)}${formHtml(item)}`;
   else {
-    body = `${previewHtml(item)}<div class="editor-buttons">
-      <button class="switch-button" type="button" data-action="open" data-id="${escapeHtml(item.id)}">Edit</button>
+    body = `${previewHtml(item, editingFor(item, open.openBox))}<div class="editor-buttons">
+      <button class="switch-button" type="button" data-action="open" data-id="${escapeHtml(item.id)}">Edit all</button>
       ${item.edit ? `<button class="switch-button" type="button" data-action="remove" data-id="${escapeHtml(item.id)}">Undo the edit</button>` : ''}
     </div>`;
   }
   return `<article class="editor-question" id="q-${escapeHtml(item.id)}">${head}${body}</article>`;
 }
 
-/** One guideline's screen: its coloured header, then every question in the order asked. */
-export function guidelineHtml(viewer, guideline, items, openId) {
+/**
+ * One guideline's screen: its coloured header, then every question in the order asked, stacked.
+ * `open` is { openId, openBox }: the question whose whole form is open, and the text changed in place.
+ */
+export function guidelineHtml(viewer, guideline, items, open) {
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${SIGNED_IN_BUTTONS}</div>
     <div class="guideline-header" style="--header-colour:${guideline.colour || DEFAULT_HEADER_COLOUR}">
@@ -285,6 +336,6 @@ export function guidelineHtml(viewer, guideline, items, openId) {
       <div class="guideline-meta">CPG EAS ${escapeHtml(guideline.number)} · ${items.length} questions<br>
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${note(`Each question as learners see it once they answer it right, edits included. ${PUBLISH_NOTE}`)}
-    ${items.map((item) => questionHtml(item, item.id === openId)).join('')}</main>`;
+    ${note(`Each question as learners see it once they answer it right, edits included. ${TAP_NOTE} ${PUBLISH_NOTE}`)}
+    ${items.map((item) => questionHtml(item, open)).join('')}</main>`;
 }

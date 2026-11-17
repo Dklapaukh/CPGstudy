@@ -273,6 +273,16 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   quiz screens and the editor share `src/views/quizMarkup.js`; `questionStep()` in
   `guidelineQuizPlay.js` builds one question's step exactly as a play does.
 
+- ED-H (owner, 18 Nov 2026): on a guideline's screen, every question stacked as learners see
+  it, and clicking any box edits that text. Claude's choices: the box is changed in place (a
+  textarea drawn where the text was, Save and Cancel); one item of a list per box; an emptied
+  step or wrong answer is taken out, an emptied single text is ignored; changing one shown
+  random wrong answer fixes all the shown ones (chosen ones not shown are kept after them);
+  "Edit all" keeps the whole form, the only place to leave a question out. The guideline's own
+  order under a marked round is not clickable (the cards above it are the same steps). The
+  markup is shared through an optional `editing` argument in `quizMarkup.js`; with none, the
+  quiz screens are exactly as before.
+
 **Code audit (17 Nov 2026; tidy-up only, rule 9)**
 
 - AU-A: the manager and editor pages share `src/staffPage.js` (tab passcode, asking the backend,
@@ -390,6 +400,10 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**18 Nov 2026 (later).** On `main`, checked with `npm run check` and seen in headless Chrome at
+phone size (not yet on a phone): editing a question's text in place by tapping it (ED-H).
+**Next:** the owner tries it on a phone, then looks at the power-up (ST-H) as before.
 
 **18 Nov 2026.** On `main`, checked with `npm run check` and frames seen in headless Chrome
 (not yet on a phone): the super Saiyan power-up (ST-H). **Next:** the owner watches it on a phone

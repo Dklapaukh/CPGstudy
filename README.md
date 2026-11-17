@@ -339,8 +339,12 @@ question is shown as learners see it once they answer it right, drawn by the qui
 markup (`src/views/quizMarkup.js`): a card turned over, a round marked, or the choices with the
 right one ticked. Random wrong answers are one example, the same each time the page is opened.
 
-**What an editor can do.** Sign in with an editor passcode (Editors tab), find a guideline and,
-for each of its questions (Medicines quiz cards and every guideline quiz question):
+**What an editor can do.** Sign in with an editor passcode (Editors tab) and find a guideline:
+its questions are stacked as learners see them. Tap any text (a question, an answer, a choice,
+an ordering card, a situation) to change just that text in a box drawn in its place; emptying a
+step or wrong answer takes it out, and changing a random wrong answer keeps the others shown.
+"Edit all" opens the whole form. For each question (Medicines quiz cards and every guideline
+quiz question) an editor can:
 
 - change the question and the right answer (a card's answer: "- " starts a bullet, two spaces
   before it indent it);

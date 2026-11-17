@@ -16,9 +16,16 @@ import {
   snapshot,
   reviewState,
   seededRandom,
+  editFromValues,
   REVIEW,
 } from '../src/questionEdits.js';
-import { questionPreview, perfectRound } from '../src/editor/questions.js';
+import {
+  questionPreview,
+  perfectRound,
+  boxValues,
+  boxText,
+  shownWrong,
+} from '../src/editor/questions.js';
 import { cleanEdits } from '../scripts/sync-edits.js';
 
 const sections = guidelineData.sections;
@@ -106,6 +113,48 @@ test('guideline quiz: a choice question uses the editor’s right and wrong answ
   const step = buildPlay(vt, context, fixedRandom, edits).find((s) => s.type === 'situation');
   assert.equal(step.answer, 'Right');
   assert.deepEqual([...step.choices].sort(), ['Right', 'W1', 'W2']);
+});
+
+/* ---------- Changing one text in place ---------- */
+
+/** A question as the editor page holds it, with no edit: built, live and its preview. */
+const plainItem = (question) => ({
+  question,
+  live: question,
+  preview: questionPreview(question.id, question),
+});
+
+test('an edit keeps only the fields that differ; none differing means no edit', () => {
+  const card = cardQuestion(cards[0]);
+  assert.equal(editFromValues(card, { prompt: card.prompt, answer: card.answer }, false), null);
+  const edit = editFromValues(card, { prompt: 'New?', answer: card.answer }, false);
+  assert.deepEqual(edit, { prompt: 'New?', kind: 'card', was: snapshot(card) });
+  const off = editFromValues(card, { prompt: card.prompt, answer: card.answer }, true);
+  assert.equal(off.off, true);
+});
+
+test('in place: one step changes or, emptied, goes; the other fields stay as built', () => {
+  const round = vtQuestions.find((question) => question.kind === 'order');
+  const item = plainItem(round);
+  assert.equal(boxText(item, 'steps', 1), round.steps[1]);
+  const changed = boxValues(item, 'steps', 1, '  New step ');
+  assert.equal(changed.steps[1], 'New step');
+  assert.equal(changed.steps.length, round.steps.length);
+  assert.equal(changed.title, round.title);
+  assert.deepEqual(changed.wrong, [], 'random wrong cards stay random');
+  assert.equal(boxValues(item, 'steps', 1, ' ').steps.length, round.steps.length - 1);
+  const edit = editFromValues(round, changed, false);
+  assert.deepEqual(Object.keys(edit).sort(), ['kind', 'steps', 'was']);
+});
+
+test('in place: changing a random wrong answer keeps the others shown', () => {
+  const situation = vtQuestions.find((question) => question.kind === 'situation');
+  const item = plainItem(situation);
+  const shown = shownWrong(item.preview);
+  assert.ok(shown.length > 0);
+  assert.equal(boxText(item, 'wrong', 0), shown[0]);
+  assert.deepEqual(boxValues(item, 'wrong', 0, 'Made up').wrong, ['Made up', ...shown.slice(1)]);
+  assert.equal(boxValues(item, 'answer', 0, '').answer, situation.answer, 'a question needs one');
 });
 
 /* ---------- The daily copy ---------- */
@@ -249,4 +298,36 @@ test('page: an edit whose question changed is listed, and "Keep the edit" accept
   await sleep(20);
   assert.deepEqual(sheetEdits[round.id].was, snapshot(round));
   assert.equal($('.editor-review'), null);
+});
+
+test('page: tapping a text opens a box in its place; saving edits only that text', async () => {
+  const card = cards.find((candidate) => candidate.medicineId === 'cpg-14-4');
+  dom.window.location.hash = '#g-cpg-14-4';
+  await sleep(20);
+  const question = () => doc.getElementById(`q-${card.id}`);
+  click(question().querySelector('[data-edit-field="answer"]'));
+  assert.equal($('#box-text').value, cardQuestion(card).answer);
+  assert.equal(question().querySelector('.quiz-answer'), null, 'the box replaces the answer');
+  click($('.editor-inline [data-action="close"]'));
+  assert.equal($('#box-text'), null);
+  click(question().querySelector('[data-edit-field="prompt"]'));
+  $('#box-text').value = 'Changed in place?';
+  click($('[data-action="box-save"]'));
+  await sleep(20);
+  assert.deepEqual(sheetEdits[card.id], {
+    prompt: 'Changed in place?',
+    kind: 'card',
+    was: snapshot(cardQuestion(card)),
+  });
+  assert.equal(question().querySelector('.quiz-prompt').textContent, 'Changed in place?');
+  delete sheetEdits[card.id];
+});
+
+test('page: a marked choice can be tapped to change it on the editor page', async () => {
+  dom.window.location.hash = '#g-cpg-3-8';
+  await sleep(20);
+  const choice = $('.choice-button[data-edit-field="wrong"]');
+  assert.equal(choice.disabled, false);
+  click(choice);
+  assert.ok($('.editor-inline #box-text'));
 });

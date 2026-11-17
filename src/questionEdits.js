@@ -66,6 +66,25 @@ export function reviewState(question, edit) {
   return same ? REVIEW.NONE : REVIEW.CHANGED;
 }
 
+/**
+ * The edit that `values` ({ field: value } for the question's EDIT_FIELDS) make to a built
+ * question: only the fields that differ, `off` when the question is left out, and a copy of the
+ * built question to check later updates against. Null when nothing differs (no edit).
+ * Empty wrong answers mean "chosen at random", so they are never an edit.
+ */
+export function editFromValues(question, values, off) {
+  const edit = {};
+  EDIT_FIELDS[question.kind].forEach((name) => {
+    const value = values[name];
+    const isEmptyWrong = name === 'wrong' && value.length === 0;
+    if (!isEmptyWrong && JSON.stringify(value) !== JSON.stringify(question[name]))
+      edit[name] = value;
+  });
+  if (off) edit.off = true;
+  if (Object.keys(edit).length === 0) return null;
+  return { ...edit, kind: question.kind, was: snapshot(question) };
+}
+
 /** A card answer as editable text: one line per block, "- " before bullets (indented by level). */
 export function blocksToText(blocks) {
   return blocks
