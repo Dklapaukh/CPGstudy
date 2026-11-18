@@ -1,6 +1,6 @@
 /*
  * Scenarios (Quiz > Scenarios): the list (#scenarios), grouped by level and filtered by level
- * and theme chips, and one scenario (#scenario-<id>). A scenario is only an opening for a mentor
+ * chips (one row) and a theme dropdown, and one scenario (#scenario-<id>). A scenario is only an opening for a mentor
  * to run: story, suburb, vitals, patient background, the intention (folded) and its guidelines.
  * Finish scenario opens the debrief: tick the guidelines the learner struggled with (they go to
  * Guidelines to learn) and write a note; the run is saved (scenarioRunState.js).
@@ -44,26 +44,36 @@ export const scenarioFromHash = (hash) =>
 export const scenariosButtonHtml = () =>
   `<a class="quiz-button" href="#${SCENARIOS_HASH}">${quizIconHtml('pulse')}<span>Scenarios</span></a>`;
 
-/** One chip; `action` and `value` say what it sets. */
-const chipHtml = (action, value, text, isOn) =>
+/** One chip; `action` and `value` say what it sets, `tip` is its tooltip. */
+const chipHtml = (action, value, text, isOn, tip = text) =>
   `<button class="filter-chip" type="button" data-action="${action}" data-value="${escapeHtml(String(value))}"
-    aria-pressed="${isOn}">${escapeHtml(text)}</button>`;
+    title="${escapeHtml(tip)}" aria-pressed="${isOn}">${escapeHtml(text)}</button>`;
 
-/** The level chips and the theme chips, each with "All" first. */
+/** The level chips on one row ("All" first, each named in its tooltip) and the theme dropdown. */
 function chipsHtml() {
   const { level, theme } = state.scenarioFilter;
-  const levels = [chipHtml('scenario-level', 0, 'All levels', !level)].concat(
-    Object.keys(SCENARIO_LEVELS).map((each) =>
-      chipHtml('scenario-level', each, `Level ${each}`, level === Number(each)),
+  const levels = [chipHtml('scenario-level', 0, 'All', !level, 'All levels')].concat(
+    Object.entries(SCENARIO_LEVELS).map(([each, name]) =>
+      chipHtml(
+        'scenario-level',
+        each,
+        `Level ${each}`,
+        level === Number(each),
+        `Level ${each}: ${name}`,
+      ),
     ),
   );
-  const themes = [chipHtml('scenario-theme', '', 'All themes', !theme)].concat(
-    themesInUse(shownScenarios, sectionOf).map((name) =>
-      chipHtml('scenario-theme', name, name, theme === name),
-    ),
-  );
-  return `<div class="filter-chips" role="group" aria-label="Level">${levels.join('')}</div>
-    <div class="filter-chips" role="group" aria-label="Theme">${themes.join('')}</div>`;
+  const options = ['<option value="">All themes</option>']
+    .concat(
+      themesInUse(shownScenarios, sectionOf).map(
+        (name) =>
+          `<option value="${escapeHtml(name)}"${theme === name ? ' selected' : ''}>${escapeHtml(name)}</option>`,
+      ),
+    )
+    .join('');
+  return `<div class="filter-chips scenario-level-chips" role="group" aria-label="Level">${levels.join('')}</div>
+    <label class="quiz-setting scenario-theme-setting">Theme
+    <select id="scenario-theme-choice">${options}</select></label>`;
 }
 
 /** A list row, with when the scenario was last run on this tracker. */

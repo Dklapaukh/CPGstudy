@@ -3204,6 +3204,25 @@ ul.sort-piece__text {
 .scenario-screen .filter-chips {
   margin: 0 0 0.6rem;
 }
+/* The six level chips share one row and shrink their text to fit a narrow phone. */
+.scenario-level-chips {
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
+.scenario-level-chips .filter-chip {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.4rem 0.3rem;
+  font-size: clamp(0.7rem, 3vw, 0.9rem);
+  white-space: nowrap;
+}
+.scenario-theme-setting {
+  margin: 0 0 0.8rem;
+}
+.scenario-theme-setting select {
+  flex: 1;
+  max-width: 70%;
+}
 .scenario-row__text .scenario-run {
   color: var(--colour-accent-text);
   font-weight: 600;

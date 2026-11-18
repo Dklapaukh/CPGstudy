@@ -458,7 +458,6 @@ const clickActions = {
   'add-all-to-queue': addAllRelatedToQueue,
   'remove-from-queue': removeGuidelineFromQueue,
   'scenario-level': (button) => setScenarioFilter('level', Number(button.dataset.value)),
-  'scenario-theme': (button) => setScenarioFilter('theme', button.dataset.value),
   'scenario-finish': () => showScenarioDebrief(state.scenarioReturn),
   'scenario-finish-cancel': () => showScenarioDebrief(null),
   'scenario-finish-save': saveScenarioDebrief,
@@ -526,6 +525,7 @@ function handleChange(event) {
   if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
   if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
   if (event.target.id === 'medicine-test-choice') state.medicineTestChoice = event.target.value;
+  if (event.target.id === 'scenario-theme-choice') setScenarioFilter('theme', event.target.value);
   if (event.target.id === 'sort-first-choice') {
     const count = state.sortQuiz ? state.sortQuiz.ids.length : state.sortQuizCount;
     changeSortQuiz(() => startSortQuiz(count, event.target.value), true)();

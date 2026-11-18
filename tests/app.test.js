@@ -829,11 +829,19 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   assert.match($('.scenario-group-title').textContent, /^Level 1/);
   click($('[data-action="scenario-level"][data-value="4"]'));
   assert.ok($$('.scenario-group-title').every((title) => /^Level 4/.test(title.textContent)));
-  click($('[data-action="scenario-theme"][data-value="Obstetrics"]'));
+  assert.equal(
+    $$('.scenario-level-chips .filter-chip').length,
+    6,
+    'All and five levels share one row',
+  );
+  const themeChoice = $('#scenario-theme-choice');
+  themeChoice.value = 'Obstetrics';
+  themeChoice.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   const rows = $$('.scenario-row b').map((title) => title.textContent);
   assert.ok(rows.includes('Birth in the bathroom') && !rows.includes('Café anaphylaxis'));
   click($('[data-action="scenario-level"][data-value="0"]'));
-  click($('[data-action="scenario-theme"][data-value=""]'));
+  $('#scenario-theme-choice').value = '';
+  $('#scenario-theme-choice').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   assert.equal($$('.scenario-row').length, allRows, 'All shows every scenario again');
   dom.window.location.hash = '#scenario-long-lie';
   await sleep(30);

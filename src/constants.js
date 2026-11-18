@@ -161,7 +161,7 @@ export const SCENARIO_RUN_ENTRY_PREFIX = 'scenario-run-';
 // note stays well under the backend's 5000 characters.
 export const SCENARIO_RUNS_KEPT = 3;
 export const MAX_DEBRIEF_NOTE = 1000;
-// The list's theme chips (decision 18 Nov 2026, A1), in this order. A scenario has a theme when
+// The list's theme dropdown (decision 18 Nov 2026, A1), in this order. A scenario has a theme when
 // one of its guidelines is in the named sections or list; Rural is set by hand in the content.
 export const SCENARIO_THEMES = [
   { name: 'Paediatrics', sections: ['Paediatrics'], guidelines: ['cpg-2-7', 'cpg-2-9'] },

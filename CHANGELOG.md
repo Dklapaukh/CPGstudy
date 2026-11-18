@@ -2,6 +2,9 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: Scenarios list: the six level chips (All, Level 1 to 5) now share one row, each
+  naming its level in a tooltip, and the theme chips are replaced by a Theme dropdown.
+
 - 2026-11-19: Scenarios, part two. 30 new scenarios (40 in all): paediatrics, obstetrics,
   mental health, respiratory, toxicology, rural and long transport, and more at levels 4 and 5.
   The list has level chips and theme chips; themes come from each scenario's guideline
