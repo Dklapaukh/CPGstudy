@@ -2,6 +2,9 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Plan: the editor page, sign-up and the demo are switched on and confirmed
+  working by the owner (8.4 tasks 9 and 10 done).
+
 - 2026-11-18: Tidy-up, no behaviour change. Helpers that were written two or three times now
   live once: `escapeForPattern`, `plural` and `noteObject` (reading a settings note) in
   `logic.js`, `isTextBlock` in `quizDoses.js`, `guidelineById` in `guidelines.js`. Two unused

@@ -60,9 +60,9 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 10   | Medicines quiz: practice level (ATP) filter, by medicine        | Built 16 Nov 2026 (Z17)                  |
 | 11   | Medicines quiz: ATP filter by route and indication              | Built 16 Nov 2026 (Z18 to Z22 in 8.2)    |
 | 12   | Manager view (`manager.html`): team and person statistics       | Built and live 16 Nov 2026               |
-| 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live once the owner does 8.4 task 9 |
+| 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live 18 Nov 2026      |
 | 14   | Study streak (rat in the top bar) and Settings > Data stats     | Built 17 Nov 2026 (ST-A to ST-C)         |
-| 15   | Demo on first visit and self sign-up (Make an account)          | Built 18 Nov 2026; live once the owner does 8.4 task 10 |
+| 15   | Demo on first visit and self sign-up (Make an account)          | Built and live 18 Nov 2026               |
 | 16   | Gamification: "X of Y mastered" on the Medicines quiz           | Built 18 Nov 2026 (GM-A)                 |
 | 17   | "Pick the guideline" quiz (sort pieces of 2 or 3 related guidelines) | Built 18 Nov 2026 (PG-A to PG-H)    |
 | 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
@@ -393,14 +393,8 @@ Answered 16 Nov 2026:
 8. Done 16 Nov 2026: manager view switched on. The first redeploy missed the app's address
    (fixed by redeploying with Manage deployments, New version); the owner confirmed the page
    works with the real Sheet.
-9. **Switch on the editor page** (README, "Editor page", "Switching it on"): paste and redeploy
-   `backend/Code.gs` and run `setup`, then fill the new `Editors` tab.
-10. **Switch on sign-up and the demo** (README, "Demo and sign-up", "Switching it on"): paste
-    `backend/Code.gs`, run `setup` and allow "Send email as you", redeploy as a new version,
-    and check a `Trackers` row is labelled `demo`. Until then first visits show the passcode
-    screen and Make an account fails. Anyone who used a mentor passcode on the manager page
-    needs a `Managers` row and `Assignments` rows. The `demo` row's passcode must be `demo`,
-    as the passcode screen now says "Enter code demo to take a look".
+9. Done 18 Nov 2026: editor page switched on; the owner confirmed it works.
+10. Done 18 Nov 2026: sign-up and the demo switched on; the owner confirmed they work.
 
 ## 10. Style guide: how all code is written
 
@@ -456,6 +450,6 @@ History is in `CHANGELOG.md` and the git history; this section holds only where 
 on several phones and all work. A tidy-up (rule 9) the same day merged repeated helpers and
 removed dead CSS and stale notes, with no behaviour change.
 
-**Open:** 8.3 items 1 and 2; 8.4 tasks 3 to 7, 9 and 10. Known to watch: the `demo` tracker is
+**Open:** 8.3 items 1 and 2; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
 a best score for Pick the guideline; changing its second or third guideline too.
