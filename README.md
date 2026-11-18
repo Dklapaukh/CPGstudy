@@ -28,6 +28,8 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/quizState.js`                                                   | Medicines quiz: session and saved schedules.                                                   |
 | `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`              | Guideline quiz, pure logic: ordering rounds, number questions, building a play.                |
 | `src/guidelineQuizState.js`                                          | Guideline quiz: the play in memory and saved scores.                                           |
+| `src/sortQuiz.js`, `src/sortQuizState.js`                            | Pick the guideline: pieces of two related guidelines, pure logic; the round in memory.         |
+| `src/medicineTest.js`, `src/medicineTestState.js`                    | Medicine test: one medicine's cards as tick-all and one-of-four questions; the test in memory. |
 | `src/report.js`                                                      | "Report a mistake or request" email.                                                           |
 | `src/updates.js`, `src/updateState.js`, `version.json`               | Update prompt: pure logic, checking and downloading, the published date and file list.         |
 | `src/views/`                                                         | One file per screen or screen part.                                                            |
@@ -129,6 +131,8 @@ changing the same entry before syncing keep only the newer one.
   the top of `src/quizSchedule.js`). New medicines per day: 1 to 10, default 2; each brings all
   of its cards. Review cards per day: 10 to 200, default 30; a card rated Again today always
   comes back.
+- The overview shows "X of Y mastered": cards whose interval is 21 days or more
+  (`QUIZ_MASTERED_INTERVAL_DAYS`), out of the cards of the chosen practice level.
 - "Practise one medicine" goes through every card of a chosen medicine. Nothing is saved and the
   schedule does not change.
 - Practice level (ATP): All levels (default), EMT, Paramedic, ICP or CCP. A level limits daily
@@ -185,6 +189,37 @@ changing the same entry before syncing keep only the newer one.
   and "If …, which guideline do you move to?". Conditions inside a sentence are not asked.
 - Finishing a play saves its score as the most recent, and as the best if it is. Ending early
   saves nothing. Starting a play shows both; the list row shows the most recent.
+
+## Pick the guideline
+
+- Quiz tab, "Pick the guideline" (`#pick-guideline`, `src/sortQuiz.js`). A pair is a guideline
+  and its best related guideline (the first of its links in `content/related.js`), each pair
+  once; a pair is picked at random, sides at random. About 110 of the 150 pairs can be played.
+- Pieces: the text under each heading (headings never shown). Left out: lines the other
+  guideline also has, lines naming either guideline's title, version history entries, lines
+  under 20 characters, tables, keys and boxes. A section of at most 3 lines and 220 characters
+  is shown whole; a longer one gives one top-level paragraph of at most 220 characters.
+- Up to 4 pieces from each (at least 3 each, or another pair is tried), shuffled, shown one at
+  a time with a button for each box (green left, blue right). Tap a placed piece to take it
+  back. Check marks each piece, names the right guideline of a wrong one and counts the streak
+  day. Nothing else is saved, and the editor page does not show these questions.
+
+## Medicine test
+
+- Quiz tab, "Medicine test" (`#medicine-test`, `src/medicineTest.js`): one medicine's cards
+  (at the Medicines quiz's practice level) as questions, in card order, one per card that can
+  be asked (about 390 of 415 cards; Adrenaline 22).
+- Indications, Contraindications, Cautions and Common adverse effects: "tick all that apply",
+  5 points, 1 to 3 of them the medicine's own top-level points (random), the rest other
+  medicines' points for the same topic that are unlike any of its own (60% word rule, as red
+  flags) and name no medicine. Right only if exactly the right points are ticked.
+- Each dose card, Usual onset and Usual duration: one of its lines (not one greyed for another
+  level) with its first dose (else first number) blanked; one right and three wrong values,
+  made as the guideline quiz's number questions (Decision Z14).
+- Mechanism of action: its first sentence against three other medicines' first sentences, each
+  medicine's own names put as "It".
+- Options over 140 characters are not used. Finishing counts the streak day; nothing else is
+  saved, and the editor page does not show these questions.
 
 ## Report a mistake or request
 
@@ -380,7 +415,8 @@ many edits need review.
 
 - **First visit:** a phone that has never opened a real tracker starts
   on the tracker labelled `demo` (any case) in the `Trackers` tab, fetched with the backend's
-  "demo" action. Its list has a banner with **Make an account** and **I already have a
+  "demo" action. The passcode screen says "Enter code demo to take a look", so the `demo`
+  row's passcode must be `demo` too. Its list has a banner with **Make an account** and **I already have a
   passcode**. With no signal, or no `demo` tracker, the passcode screen shows instead. Once a
   real tracker opens, the phone remembers it (`eas-cpg-signed-in-v1`) and never starts on the
   demo again. The demo is shared: anything anyone marks in it is seen by everyone.
@@ -454,9 +490,13 @@ unless marked "by hand".
 - Medicines quiz: Start shows a card; Show answer reveals it; a rating saves the quiz entry; the
   new-medicines setting changes the count; Practice level EMT hides Adenosine and Fentanyl from
   the practice list and shows Adrenaline's asthma dose with its IV lines greyed under "ICP and
-  CCP". Layout on a phone (by hand).
+  CCP". The overview shows "X of Y mastered". Layout on a phone (by hand).
 - Guideline quiz: cards move with the arrows and to and from "Not in this guideline"; dragging
   by the grip on a phone (by hand); a perfect play scores 100% and saves `quiz-order-<id>`; the
   picker shows the best score, a new play shows best and most recent, the list row the most
   recent; the Quiz pill opens the quiz and "Back to the guideline" returns to the same place;
   guidelines with no quiz have no pill. Layout on a phone (by hand).
+- Pick the guideline: both guidelines are named at the top; a piece can be placed and taken
+  back; Check marks every piece and gives "n of N right".
+- Medicine test: tick questions toggle and Check; choice questions mark at once; the end shows
+  the score. The passcode screen says "Enter code demo to take a look".

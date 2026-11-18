@@ -2,6 +2,10 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: README and plan (sections 8 and 13) describe "mastered", Pick the guideline and
+  the Medicine test (GM-A, PG-A to PG-E, MT-A to MT-E). The `demo` tracker's passcode must be
+  `demo` (8.4 task 10).
+
 - 2026-11-18: New Medicine test (Quiz tab, `#medicine-test`): every topic of one medicine at
   once, as multiple choice, following the Medicines quiz's practice level. Indications,
   contraindications, cautions and adverse effects are "tick all that apply" (1 to 3 of the

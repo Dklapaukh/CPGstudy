@@ -63,6 +63,9 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live once the owner does 8.4 task 9 |
 | 14   | Study streak (rat in the top bar) and Settings > Data stats     | Built 17 Nov 2026 (ST-A to ST-C)         |
 | 15   | Demo on first visit and self sign-up (Make an account)          | Built 18 Nov 2026; live once the owner does 8.4 task 10 |
+| 16   | Gamification: "X of Y mastered" on the Medicines quiz           | Built 18 Nov 2026 (GM-A)                 |
+| 17   | "Pick the guideline" quiz (sort pieces of two related guidelines) | Built 18 Nov 2026 (PG-A to PG-E)       |
+| 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-E)         |
 
 ### 8.2 Decisions in force
 
@@ -284,6 +287,36 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   markup is shared through an optional `editing` argument in `quizMarkup.js`; with none, the
   quiz screens are exactly as before.
 
+**Gamification and new quizzes (owner's request, 18 Nov 2026; choices marked "Claude" are
+Claude's, say if any should change)**
+
+- GM-A (owner): a Medicines card is mastered once its interval is at least 21 days; the
+  overview shows "X of Y mastered" over the chosen practice level's cards (a pill above the
+  "cards started" line). Owner: the passcode screen says in bold "Enter code demo to take a
+  look" (needs the `demo` row's passcode to be `demo`, 8.4 task 10).
+- PG-A (Claude): "Pick the guideline" pairs each guideline with the first of its related links
+  (each pair once) and picks a pair at random; about 110 of 150 pairs have enough pieces.
+  There is no way to choose the pair yet.
+- PG-B (owner, Claude's numbers): no headings; a short section (up to 3 lines, 220 characters)
+  is shown whole, a longer one gives one top-level paragraph. Claude also leaves out lines the
+  other guideline has, lines naming either title, version history entries, lines under 20
+  characters, and tables, keys and boxes.
+- PG-C (Claude): up to 4 pieces a side (at least 3), one at a time, placed with a button for
+  each box (no dragging yet); a placed piece can be taken back until Check. Sides are fixed
+  colours, green left and blue right, as two guidelines of one section share a colour.
+- PG-D (owner): not editable. PG-E (Claude): nothing saved but the streak day.
+- MT-A (owner): Medicine test, in the Quiz tab, asks every card of one medicine as multiple
+  choice, following the Medicines quiz's practice level. MT-B (owner, Claude's numbers):
+  Indications, Contraindications, Cautions and Adverse effects are "tick all that apply", 5
+  points of which 1 to 3 are right; right only when exactly those are ticked.
+- MT-C (owner): doses, and (Claude) onset and duration, are one line with a blanked number,
+  one right and three wrong values made as in Z14 (same-unit values from other medicine cards,
+  ten times or a tenth, sometimes a wrong unit).
+- MT-D (Claude): mechanism of action is its first sentence against three other medicines',
+  names put as "It". Options over 140 characters are not used; wrong points that name a
+  medicine or share 60% of their words with a right point are not used.
+- MT-E (Claude): nothing saved but the streak day; not on the editor page.
+
 **Code audit (17 Nov 2026; tidy-up only, rule 9)**
 
 - AU-A: the manager and editor pages share `src/staffPage.js` (tab passcode, asking the backend,
@@ -357,7 +390,8 @@ Answered 16 Nov 2026:
     `backend/Code.gs`, run `setup` and allow "Send email as you", redeploy as a new version,
     and check a `Trackers` row is labelled `demo`. Until then first visits show the passcode
     screen and Make an account fails. Anyone who used a mentor passcode on the manager page
-    needs a `Managers` row and `Assignments` rows.
+    needs a `Managers` row and `Assignments` rows. The `demo` row's passcode must be `demo`,
+    as the passcode screen now says "Enter code demo to take a look".
 
 ## 10. Style guide: how all code is written
 
@@ -406,6 +440,14 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**18 Nov 2026 (gamification).** On `main` in three pushes, each checked with `npm run check`
+(207 tests) and seen in headless Chrome at phone size (not yet on a phone): "X of Y mastered"
+and the demo hint (GM-A); the "Pick the guideline" quiz (PG-A to PG-E); the Medicine test
+(MT-A to MT-E). The Quiz tab now has four buttons in a 2 by 2 grid. **Next:** the owner tries
+both new quizzes on a phone (Medicine test with Adrenaline) and says if the numbers in PG-B,
+PG-C and MT-B suit; possible follow-ups: dragging pieces into the boxes, choosing the pair,
+saving best scores.
 
 **18 Nov 2026 (mentors removed).** Owner's choice ("remove completely"): self sign-up replaces
 mentors. Gone: the app's mentor screen, mentor sign-in, the backend's "create" action, the
