@@ -28,8 +28,8 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/quizState.js`                                                   | Medicines quiz: session and saved schedules.                                                   |
 | `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`              | Guideline quiz, pure logic: ordering rounds, number questions, building a play.                |
 | `src/guidelineQuizState.js`                                          | Guideline quiz: the play in memory and saved scores.                                           |
-| `src/sortQuiz.js`, `src/sortQuizState.js`                            | Pick the guideline: pieces of two related guidelines, pure logic; the round in memory.         |
-| `src/medicineTest.js`, `src/medicineTestState.js`                    | Medicine test: one medicine's cards as tick-all and one-of-four questions; the test in memory. |
+| `src/sortQuiz.js`, `src/sortQuizState.js`                            | Pick the guideline: pieces of 2 or 3 related guidelines, pure logic; the round in memory.      |
+| `src/medicineTest.js`, `src/medicineTestState.js`                    | Medicine test: one medicine's cards as tick-all and one-of-four questions; best scores.        |
 | `src/report.js`                                                      | "Report a mistake or request" email.                                                           |
 | `src/updates.js`, `src/updateState.js`, `version.json`               | Update prompt: pure logic, checking and downloading, the published date and file list.         |
 | `src/views/`                                                         | One file per screen or screen part.                                                            |
@@ -69,15 +69,16 @@ the phone and in the Sheet's Data tab, one row per entry. The newest `t` wins wh
 differ. Everything beyond a guideline's status and notes is stored as an extra entry on the same
 path, so new features need no backend change. Do not edit these rows by hand.
 
-| Entry id                    | Holds (in its note)                                   | Rows per tracker |
-| --------------------------- | ----------------------------------------------------- | ---------------- |
-| `<guideline id>`            | Status and the notes text                             | up to 180        |
-| `marked-<guideline id>`     | When the guideline was last marked Review or Complete | up to 180        |
-| `review-queue`              | The Guidelines to learn list, as JSON                 | 1                |
-| `app-settings`              | "Mark for review after N days", as JSON               | 1                |
-| `quiz-<medicine id>`        | That medicine's card schedules, as JSON               | up to 45         |
-| `quiz-settings`             | Daily limits and practice level (ATP), as JSON        | 1                |
-| `quiz-order-<guideline id>` | Guideline quiz best and most recent score, as JSON    | up to 85         |
+| Entry id                      | Holds (in its note)                                   | Rows per tracker |
+| ----------------------------- | ----------------------------------------------------- | ---------------- |
+| `<guideline id>`              | Status and the notes text                             | up to 180        |
+| `marked-<guideline id>`       | When the guideline was last marked Review or Complete | up to 180        |
+| `review-queue`                | The Guidelines to learn list, as JSON                 | 1                |
+| `app-settings`                | "Mark for review after N days", as JSON               | 1                |
+| `quiz-<medicine id>`          | That medicine's card schedules, as JSON               | up to 45         |
+| `quiz-settings`               | Daily limits and practice level (ATP), as JSON        | 1                |
+| `quiz-order-<guideline id>`   | Guideline quiz best and most recent score, as JSON    | up to 85         |
+| `medicine-test-<medicine id>` | Medicine test best score per practice level, as JSON  | up to 45         |
 
 The backend cuts a note at 5000 characters. A whole entry is replaced on save, so two phones
 changing the same entry before syncing keep only the newer one.
@@ -192,22 +193,31 @@ changing the same entry before syncing keep only the newer one.
 
 ## Pick the guideline
 
-- Quiz tab, "Pick the guideline" (`#pick-guideline`, `src/sortQuiz.js`). A pair is a guideline
-  and its best related guideline (the first of its links in `content/related.js`), each pair
-  once; a pair is picked at random, sides at random. About 110 of the 150 pairs can be played.
-- Pieces: the text under each heading (headings never shown). Left out: lines the other
-  guideline also has, lines naming either guideline's title, version history entries, lines
-  under 20 characters, tables, keys and boxes. A section of at most 3 lines and 220 characters
-  is shown whole; a longer one gives one top-level paragraph of at most 220 characters.
-- Up to 4 pieces from each (at least 3 each, or another pair is tried), shuffled, shown one at
-  a time with a button for each box (green left, blue right). Tap a placed piece to take it
-  back. Check marks each piece, names the right guideline of a wrong one and counts the streak
-  day. Nothing else is saved, and the editor page does not show these questions.
+- Quiz tab, "Pick the guideline" (`#pick-guideline`, `src/sortQuiz.js`). The start screen offers
+  Two guidelines or Three guidelines. The first guideline is picked at random from those that
+  can be played (about 110 for two, 106 for three; never a medicine); the others are picked at
+  random from its related guidelines, the five listed at the bottom of its page, leaving out
+  medicines.
+- Tapping the first guideline's name (a native picker over it) starts a round with another
+  first guideline. After Check: Another round, or the same first guideline again with new
+  partners.
+- Pieces: the text under each heading (headings never shown). Left out: lines any other
+  guideline of the round also has, lines naming any of their titles, version history entries,
+  lines under 20 characters, tables, keys and boxes. A section of at most 3 lines and 220
+  characters is shown whole; a longer one gives one top-level paragraph of at most 220
+  characters.
+- Up to 4 pieces from each of two guidelines, or 3 from each of three (at least 3 each, or other
+  partners are tried), shuffled, shown one at a time. Drag the piece onto a guideline (its
+  name, button or box; `src/views/sortDrag.js`) or tap its button. Two guidelines sit side by
+  side (green, blue); three are rows (green, blue, purple). Tap a placed piece to take it back.
+  Check marks each piece, names the right guideline of a wrong one and counts the streak day.
+  Nothing else is saved, and the editor page does not show these questions.
 
 ## Medicine test
 
 - Quiz tab, "Medicine test" (`#medicine-test`, `src/medicineTest.js`): one medicine's cards
-  (at the Medicines quiz's practice level) as questions, in card order, one per card that can
+  (at the practice level chosen on its screen, the same setting as the Medicines quiz's) as
+  questions, in card order, one per card that can
   be asked (about 390 of 415 cards; Adrenaline 22).
 - Indications, Contraindications, Cautions and Common adverse effects: "tick all that apply",
   5 points, 1 to 3 of them the medicine's own top-level points (random), the rest other
@@ -218,8 +228,11 @@ changing the same entry before syncing keep only the newer one.
   made as the guideline quiz's number questions (Decision Z14).
 - Mechanism of action: its first sentence against three other medicines' first sentences, each
   medicine's own names put as "It".
-- Options over 140 characters are not used. Finishing counts the streak day; nothing else is
-  saved, and the editor page does not show these questions.
+- Options over 140 characters are not used. Finishing counts the streak day and saves the
+  score as the best for that medicine and practice level if it beats or equals the saved one
+  (`medicine-test-<medicine id>`); the medicine picker shows "best n%" at the chosen level and
+  the end shows the best with its date ("new best" when it is). The editor page does not show
+  these questions.
 
 ## Report a mistake or request
 
@@ -496,7 +509,9 @@ unless marked "by hand".
   picker shows the best score, a new play shows best and most recent, the list row the most
   recent; the Quiz pill opens the quiz and "Back to the guideline" returns to the same place;
   guidelines with no quiz have no pill. Layout on a phone (by hand).
-- Pick the guideline: both guidelines are named at the top; a piece can be placed and taken
-  back; Check marks every piece and gives "n of N right".
-- Medicine test: tick questions toggle and Check; choice questions mark at once; the end shows
-  the score. The passcode screen says "Enter code demo to take a look".
+- Pick the guideline: Two or Three guidelines; all are named at the top (rows for three); a
+  piece can be placed, dragged onto a guideline and taken back; the first name's picker starts
+  a round with the one picked; Check marks every piece and gives "n of N right".
+- Medicine test: the practice level can be changed on its screen; tick questions toggle and
+  Check; choice questions mark at once; the end shows the score and the best, and the picker
+  shows "best n%". The passcode screen says "Enter code demo to take a look".

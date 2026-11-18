@@ -200,3 +200,35 @@ export function isRightAnswer(question, answer) {
   const ticked = [...answer].sort((a, b) => a - b);
   return ticked.join(',') === question.rightIndexes.join(',');
 }
+
+/* ---------- Best scores (MT-F) ---------- */
+
+// The level key of "All levels" (ALL_PRACTICE_LEVELS is the empty string).
+const ALL_LEVELS_KEY = 'all';
+export const bestScoreKey = (practiceLevel) => practiceLevel || ALL_LEVELS_KEY;
+
+/**
+ * The best scores saved for one medicine: { [level key]: { best (percent), at (milliseconds) } }.
+ * Anything unreadable, or a level whose score is not a number, is left out.
+ */
+export function parseBestScores(note) {
+  try {
+    const levels = JSON.parse(note || '{}').levels || {};
+    return Object.fromEntries(
+      Object.entries(levels).filter(([, saved]) => saved && Number.isFinite(saved.best)),
+    );
+  } catch {
+    return {}; // a note edited by hand in the Sheet: treated as no scores, replaced next time
+  }
+}
+
+/**
+ * The scores after a test at `levelKey` scored `percent` at `now`: { scores, isBest }. The
+ * score replaces the saved one when it beats or equals it.
+ */
+export function withTestScore(scores, levelKey, percent, now) {
+  const saved = scores[levelKey];
+  const isBest = !saved || percent >= saved.best;
+  if (!isBest) return { scores, isBest };
+  return { scores: { ...scores, [levelKey]: { best: percent, at: now } }, isBest };
+}

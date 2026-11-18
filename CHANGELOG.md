@@ -2,6 +2,15 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Medicine test, after the owner tried it: the practice level (ATP) can be chosen
+  on its screen (the same setting as the Medicines quiz), and the best score per medicine and
+  level is saved (`medicine-test-<medicine id>`), shown in the picker and at the end (MT-F).
+
+- 2026-11-18: Pick the guideline, after the owner tried it: choose Two or Three guidelines at
+  the start (three are rows); the others come at random from the first guideline's five related
+  guidelines, never a medicine; tap the first guideline's name to pick another; drag a piece
+  onto its guideline (the buttons still work) (PG-F to PG-H).
+
 - 2026-11-18: README and plan (sections 8 and 13) describe "mastered", Pick the guideline and
   the Medicine test (GM-A, PG-A to PG-E, MT-A to MT-E). The `demo` tracker's passcode must be
   `demo` (8.4 task 10).

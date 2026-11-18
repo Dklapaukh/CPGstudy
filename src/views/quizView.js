@@ -66,9 +66,9 @@ function settingSelectHtml({ name, id, label }, settings) {
 /**
  * The "Practice level" dropdown: all medicines, or only the medicines and doses the chosen ATP
  * may give (from the table in guideline 1.1). Saved with the daily limits, so it follows the
- * tracker.
+ * tracker. Also on the Medicine test screen, which follows the same level.
  */
-function practiceLevelSelectHtml(settings) {
+export function practiceLevelSelectHtml(settings) {
   const choices = [{ value: ALL_PRACTICE_LEVELS, label: 'All levels' }].concat(
     practiceLevels().map((level) => ({ value: level, label: level })),
   );

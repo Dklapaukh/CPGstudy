@@ -7,7 +7,14 @@ import assert from 'node:assert/strict';
 import { guidelineData } from '../content/guidelines.js';
 import { flattenGuidelines } from '../src/logic.js';
 import { buildQuizCards, tableNames } from '../src/quizCards.js';
-import { buildMedicineTest, isRightAnswer, TEST_KIND } from '../src/medicineTest.js';
+import {
+  buildMedicineTest,
+  isRightAnswer,
+  TEST_KIND,
+  bestScoreKey,
+  parseBestScores,
+  withTestScore,
+} from '../src/medicineTest.js';
 import { namesMedicine } from '../src/quizDoses.js';
 import { QUIZ_SECTION_NAME } from '../src/constants.js';
 
@@ -77,4 +84,18 @@ test('isRightAnswer needs exactly the right points ticked, or the right choice',
   const choice = { kind: TEST_KIND.CHOICE, options: ['1 mg', '10 mg'], answer: '1 mg' };
   assert.equal(isRightAnswer(choice, 0), true);
   assert.equal(isRightAnswer(choice, 1), false);
+});
+
+test('best scores are kept per practice level and only replaced by a score as good or better', () => {
+  assert.deepEqual(parseBestScores('not json'), {});
+  assert.deepEqual(parseBestScores('{"levels":{"EMT":{"best":"x"}}}'), {}, 'not a number');
+  const first = withTestScore({}, bestScoreKey(''), 60, 1);
+  assert.deepEqual(first, { scores: { all: { best: 60, at: 1 } }, isBest: true });
+  const lower = withTestScore(first.scores, 'all', 50, 2);
+  assert.equal(lower.isBest, false);
+  assert.equal(lower.scores.all.best, 60);
+  const otherLevel = withTestScore(first.scores, bestScoreKey('EMT'), 40, 3);
+  assert.deepEqual(Object.keys(otherLevel.scores).sort(), ['EMT', 'all']);
+  const saved = JSON.stringify({ levels: otherLevel.scores });
+  assert.deepEqual(parseBestScores(saved), otherLevel.scores);
 });

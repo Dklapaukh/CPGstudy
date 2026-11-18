@@ -64,8 +64,8 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 14   | Study streak (rat in the top bar) and Settings > Data stats     | Built 17 Nov 2026 (ST-A to ST-C)         |
 | 15   | Demo on first visit and self sign-up (Make an account)          | Built 18 Nov 2026; live once the owner does 8.4 task 10 |
 | 16   | Gamification: "X of Y mastered" on the Medicines quiz           | Built 18 Nov 2026 (GM-A)                 |
-| 17   | "Pick the guideline" quiz (sort pieces of two related guidelines) | Built 18 Nov 2026 (PG-A to PG-E)       |
-| 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-E)         |
+| 17   | "Pick the guideline" quiz (sort pieces of 2 or 3 related guidelines) | Built 18 Nov 2026 (PG-A to PG-H)    |
+| 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
 
 ### 8.2 Decisions in force
 
@@ -294,17 +294,25 @@ Claude's, say if any should change)**
   overview shows "X of Y mastered" over the chosen practice level's cards (a pill above the
   "cards started" line). Owner: the passcode screen says in bold "Enter code demo to take a
   look" (needs the `demo` row's passcode to be `demo`, 8.4 task 10).
-- PG-A (Claude): "Pick the guideline" pairs each guideline with the first of its related links
-  (each pair once) and picks a pair at random; about 110 of 150 pairs have enough pieces.
-  There is no way to choose the pair yet.
+- PG-A (Claude, replaced by PG-F on 18 Nov 2026): pairs were each guideline with the first of
+  its related links.
 - PG-B (owner, Claude's numbers): no headings; a short section (up to 3 lines, 220 characters)
   is shown whole, a longer one gives one top-level paragraph. Claude also leaves out lines the
   other guideline has, lines naming either title, version history entries, lines under 20
   characters, and tables, keys and boxes.
-- PG-C (Claude): up to 4 pieces a side (at least 3), one at a time, placed with a button for
-  each box (no dragging yet); a placed piece can be taken back until Check. Sides are fixed
-  colours, green left and blue right, as two guidelines of one section share a colour.
+- PG-C (Claude): up to 4 pieces a side for two guidelines, 3 for three (at least 3 each), one
+  at a time; a placed piece can be taken back until Check. Fixed colours by place, green,
+  blue, purple, as guidelines of one section share a colour.
 - PG-D (owner): not editable. PG-E (Claude): nothing saved but the streak day.
+- PG-F (owner, 18 Nov 2026): the first guideline is random (never a medicine); the others are
+  picked at random from its five related guidelines (as on its page, `rankRelated`), medicines
+  left out. Tapping the first guideline's name picks another (Claude: a native picker over the
+  name, listing only guidelines that can be played; the others are drawn again).
+- PG-G (owner): the start screen offers Two or Three guidelines; three are laid out as rows
+  (names, buttons and boxes), two stay side by side. A piece must be in none of the others.
+- PG-H (owner left to Claude): the piece is dragged onto a guideline's name, button or box
+  (`sortDrag.js`); the buttons stay, for tapping and for screen readers. For both two and
+  three.
 - MT-A (owner): Medicine test, in the Quiz tab, asks every card of one medicine as multiple
   choice, following the Medicines quiz's practice level. MT-B (owner, Claude's numbers):
   Indications, Contraindications, Cautions and Adverse effects are "tick all that apply", 5
@@ -315,7 +323,11 @@ Claude's, say if any should change)**
 - MT-D (Claude): mechanism of action is its first sentence against three other medicines',
   names put as "It". Options over 140 characters are not used; wrong points that name a
   medicine or share 60% of their words with a right point are not used.
-- MT-E (Claude): nothing saved but the streak day; not on the editor page.
+- MT-E (Claude): not on the editor page. (Saving: see MT-F.)
+- MT-F (owner, 18 Nov 2026): the practice level (ATP) can be chosen on the test screen (Claude:
+  the same setting as the Medicines quiz, so changing one changes both), and the best score is
+  saved (Claude: per medicine and level, as a percent with its date, in one extra entry
+  `medicine-test-<medicine id>`; shown in the picker and at the end).
 
 **Code audit (17 Nov 2026; tidy-up only, rule 9)**
 
@@ -440,6 +452,15 @@ Goal: a programmer who does not know the project can read any function once and 
 ---
 
 ## 13. Status
+
+**18 Nov 2026 (owner's feedback on the new quizzes).** On `main`, checked with `npm run check`
+(210 tests) and seen in headless Chrome at phone size, including a drag (not yet on a phone):
+Pick the guideline with Two or Three guidelines, partners from the five related (no
+medicines), the first one changeable by tapping its name, and dragging (PG-F to PG-H); the
+Medicine test's own practice level picker and saved best scores (MT-F). **Next:** the owner
+tries both on a phone, especially dragging with a finger and the picker over the first name.
+Possible follow-ups: a best score for Pick the guideline; changing the second or third
+guideline too.
 
 **18 Nov 2026 (gamification).** On `main` in three pushes, each checked with `npm run check`
 (207 tests) and seen in headless Chrome at phone size (not yet on a phone): "X of Y mastered"

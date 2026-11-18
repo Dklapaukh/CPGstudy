@@ -1,14 +1,16 @@
 /*
  * The Medicine test screen (address #medicine-test) and its button in the Quiz choice. Drawn
- * from state.medicineTest: the medicine picker, one question, or the score at the end.
- * Depends on state.js, logic.js, quizState.js, medicineTest.js, medicineTestState.js and
- * constants.js.
+ * from state.medicineTest: the practice level and medicine pickers, one question, or the score
+ * at the end with the best score.
+ * Depends on state.js, logic.js, quizState.js, quizView.js, medicineTest.js,
+ * medicineTestState.js and constants.js.
  */
 import { state } from '../state.js';
-import { escapeHtml } from '../logic.js';
-import { quizMedicines } from '../quizState.js';
+import { escapeHtml, formatUpdatedDate } from '../logic.js';
+import { quizMedicines, getQuizSettings } from '../quizState.js';
+import { practiceLevelSelectHtml } from './quizView.js';
 import { TEST_KIND, isRightAnswer } from '../medicineTest.js';
-import { currentTestQuestion } from '../medicineTestState.js';
+import { currentTestQuestion, bestTestScore } from '../medicineTestState.js';
 import { MEDICINE_TEST_HASH } from '../constants.js';
 
 const app = document.getElementById('app');
@@ -19,20 +21,32 @@ const PERCENT = 100;
 export const medicineTestButtonHtml = () =>
   `<a class="quiz-button" href="#${MEDICINE_TEST_HASH}">Medicine test</a>`;
 
-/** The medicine picker and Start button, the screen before a test. */
+/** " · best 80%" for a medicine tested at the chosen practice level, otherwise ''. */
+function bestText(medicineId) {
+  const saved = bestTestScore(medicineId);
+  return saved ? ` · best ${saved.best}%` : '';
+}
+
+/**
+ * The practice level and medicine pickers and the Start button, the screen before a test. The
+ * level is the Medicines quiz's own setting, so changing it here changes it there too.
+ */
 function pickerHtml() {
   const options = quizMedicines()
     .map(
       (medicine) =>
         `<option value="${escapeHtml(medicine.id)}"${
           medicine.id === state.medicineTestChoice ? ' selected' : ''
-        }>${escapeHtml(medicine.name)}</option>`,
+        }>${escapeHtml(medicine.name + bestText(medicine.id))}</option>`,
     )
     .join('');
   return `<p class="quiz-help">Test everything about one medicine at once: indications,
       contraindications, doses, cautions, adverse effects, onset, duration and how it works.
-      Follows the practice level chosen in the Medicines quiz. Nothing is saved but your streak.</p>
-    <select id="medicine-test-choice" aria-label="Medicine to test">${options}</select>
+      The practice level is shared with the Medicines quiz. Your best score is kept for each
+      medicine and level.</p>
+    ${practiceLevelSelectHtml(getQuizSettings())}
+    <label class="quiz-setting">Medicine
+    <select id="medicine-test-choice">${options}</select></label>
     <button class="quiz-start-button" type="button" data-action="test-start">Start test</button>`;
 }
 
@@ -109,14 +123,22 @@ function questionHtml(question, test) {
     <div class="choice-buttons">${options}</div>${verdictHtml(question, test)}`;
 }
 
-/** The end of a test: the score as a ring (see .score-ring in app.css) and what next. */
+/** The best score line at the end of a test, marking a new best. */
+function bestLineHtml(test) {
+  const saved = bestTestScore(test.medicineId);
+  if (!saved) return '';
+  const isNew = test.isNewBest ? ' · new best' : '';
+  return `<p class="quiz-totals">Best: ${saved.best}% (${formatUpdatedDate(saved.at)})${isNew}</p>`;
+}
+
+/** The end of a test: the score as a ring (see .score-ring in app.css), the best, what next. */
 function finishedHtml(test) {
   const percent = Math.round((test.score / test.questions.length) * PERCENT);
   return `<div class="score-ring" role="img" aria-label="Score ${percent}%"
       style="--score-target:${percent}"></div>
     <p class="quiz-finished">${escapeHtml(test.name)}: ${test.score} of ${
       test.questions.length
-    } (${percent}%)</p>
+    } (${percent}%)</p>${bestLineHtml(test)}
     <button class="quiz-start-button" type="button" data-action="test-again">Test again</button>`;
 }
 

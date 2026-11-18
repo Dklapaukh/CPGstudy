@@ -470,7 +470,9 @@ function handleInput(event) {
 function handleChange(event) {
   if (event.target.dataset.setting) {
     saveQuizSetting(event.target.dataset.setting, event.target.value);
-    renderQuizScreen();
+    // The practice level is also on the Medicine test screen: redraw whichever is open.
+    if (event.target.closest('.medicine-test-screen')) renderMedicineTestScreen();
+    else renderQuizScreen();
   }
   // Remembered so a redraw (for example after a sync) keeps the medicine chosen.
   if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
