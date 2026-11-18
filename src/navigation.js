@@ -20,6 +20,7 @@ import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
 import { renderQuizScreen } from './views/quizView.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { renderSortQuizScreen } from './views/sortQuizView.js';
+import { renderMedicineTestScreen } from './views/medicineTestView.js';
 import { renderSettingsScreen } from './views/settingsView.js';
 import { applyAutoReview } from './settingsState.js';
 import { markGuidelineSeen } from './updateState.js';
@@ -30,6 +31,7 @@ import {
   QUIZ_HASH,
   GUIDELINE_QUIZ_HASH,
   SORT_QUIZ_HASH,
+  MEDICINE_TEST_HASH,
   SETTINGS_HASH,
   STATS_HASH,
 } from './constants.js';
@@ -86,6 +88,7 @@ function clearOpenTracker() {
   state.quiz = null;
   state.guidelineQuiz = null;
   state.sortQuiz = null;
+  state.medicineTest = null;
   clearSavedSession();
 }
 
@@ -138,6 +141,10 @@ export function route() {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderGuidelineQuizScreen();
     window.scrollTo(0, 0);
+  } else if (id === MEDICINE_TEST_HASH) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    renderMedicineTestScreen();
+    window.scrollTo(0, 0);
   } else if (id === SORT_QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderSortQuizScreen();
@@ -158,6 +165,7 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
   state.quiz = null;
   state.guidelineQuiz = null;
   state.sortQuiz = null;
+  state.medicineTest = null;
   state.pendingChanges = {};
   saveSession();
   state.screen = SCREEN.TRACKER;
@@ -187,6 +195,10 @@ export function refreshScreen() {
     refreshDetailFromState();
   } else if (app.querySelector('.queue-screen')) {
     refreshQueueViews();
+  } else if (app.querySelector('.medicine-test-screen')) {
+    // Only the picker is redrawn (a new practice level may have arrived): a test is never
+    // interrupted.
+    if (!state.medicineTest) renderMedicineTestScreen();
   } else if (app.querySelector('.sort-quiz-screen')) {
     // Nothing saved can change a round, so it is never redrawn under the learner.
   } else if (app.querySelector('.guideline-quiz-screen')) {

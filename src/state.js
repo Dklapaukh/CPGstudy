@@ -33,7 +33,11 @@ export const state = {
   guidelineQuizChoice: '',
   // "Pick the guideline" round { leftId, rightId, items, placed, checked, score }, or null.
   // Memory only (see sortQuizState.js).
-  sortQuiz: null, // the guideline chosen on the guideline quiz screen
+  sortQuiz: null,
+  // Medicine test { medicineId, name, questions, index, ticked, picked, checked, score,
+  // finished }, or null. Memory only (see medicineTestState.js).
+  medicineTest: null,
+  medicineTestChoice: '', // the medicine chosen on the Medicine test screen // the guideline chosen on the guideline quiz screen
   // Where the student was on a guideline when they pressed its Quiz button, so the quiz can
   // return there: { guidelineId, scrollY, openHeadings (true or false per heading) }, or null.
   guidelineQuizReturn: null,

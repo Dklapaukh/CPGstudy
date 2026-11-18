@@ -59,6 +59,15 @@ import {
 } from './guidelineQuizState.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { renderSortQuizScreen } from './views/sortQuizView.js';
+import { renderMedicineTestScreen } from './views/medicineTestView.js';
+import {
+  startMedicineTest,
+  toggleTick,
+  checkTicks,
+  pickTestChoice,
+  nextTestQuestion,
+  endMedicineTest,
+} from './medicineTestState.js';
 import {
   startSortQuiz,
   placeNextItem,
@@ -319,6 +328,26 @@ const changeSortQuiz =
     showPendingCelebration();
   };
 
+/** A Medicine test action: changes the test, redraws, then plays any streak power-up. */
+const changeMedicineTest =
+  (change, toTop = false) =>
+  (element) => {
+    change(element);
+    const scrollY = window.scrollY;
+    renderMedicineTestScreen();
+    window.scrollTo(0, toTop ? 0 : scrollY);
+    showPendingCelebration();
+  };
+const optionIndexOf = (button) => Number(button.dataset.option);
+
+/** Starts the test of the medicine chosen in the dropdown. */
+function startChosenMedicineTest() {
+  const select = byId('medicine-test-choice');
+  if (!select) return;
+  state.medicineTestChoice = select.value;
+  startMedicineTest(select.value);
+}
+
 /** Starts the guideline chosen in the dropdown. */
 function startChosenGuidelineQuiz() {
   const select = byId('guideline-quiz-choice');
@@ -415,6 +444,13 @@ const clickActions = {
   'sort-take-back': changeSortQuiz((button) => takeItemBack(Number(button.dataset.item))),
   'sort-check': changeSortQuiz(checkSortQuiz),
   'sort-end': changeSortQuiz(endSortQuiz, true),
+  'test-start': changeMedicineTest(startChosenMedicineTest, true),
+  'test-tick': changeMedicineTest((button) => toggleTick(optionIndexOf(button))),
+  'test-check': changeMedicineTest(checkTicks),
+  'test-pick': changeMedicineTest((button) => pickTestChoice(optionIndexOf(button))),
+  'test-next': changeMedicineTest(nextTestQuestion, true),
+  'test-again': changeMedicineTest(() => startMedicineTest(state.medicineTest.medicineId), true),
+  'test-end': changeMedicineTest(endMedicineTest, true),
 };
 
 /** Typing in the search box or in the notes. */
@@ -435,6 +471,7 @@ function handleChange(event) {
   // Remembered so a redraw (for example after a sync) keeps the medicine chosen.
   if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
   if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
+  if (event.target.id === 'medicine-test-choice') state.medicineTestChoice = event.target.value;
 }
 
 /** Enter in a passcode or name box, and Enter or Space on a folding heading. */

@@ -146,6 +146,9 @@ export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';
 // "Pick the guideline" quiz: sort pieces of two related guidelines into their boxes. Nothing
 // is saved but the streak day.
 export const SORT_QUIZ_HASH = 'pick-guideline';
+// Medicine test: every topic of one medicine as multiple-choice questions. Nothing is saved but
+// the streak day.
+export const MEDICINE_TEST_HASH = 'medicine-test';
 
 // Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
 // "Mark for review N days after Complete" belongs to the tracker, so every phone using it shares it:

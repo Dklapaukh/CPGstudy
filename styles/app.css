@@ -2931,3 +2931,23 @@ ul.sort-piece__text {
 .sort-quiz-screen .quiz-link-button {
   margin-top: 0.8rem;
 }
+
+/* Medicine test: a tick question's points are toggles with a box drawn before the text. */
+.tick-button {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+.tick-button[aria-pressed='true'] {
+  border-color: var(--colour-green);
+  background: var(--colour-green-soft);
+}
+.tick-box {
+  flex: none;
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+.medicine-test-screen .quiz-start-button,
+.medicine-test-screen select {
+  margin-top: 0.8rem;
+}

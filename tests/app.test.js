@@ -126,7 +126,7 @@ test('the Quiz tab opens the choice of quizzes', async () => {
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, false);
   assert.equal($('#quiz-tab').getAttribute('aria-expanded'), 'true');
-  assert.equal($$('#quiz-choice .quiz-button').length, 3);
+  assert.equal($$('#quiz-choice .quiz-button').length, 4);
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, true);
 });
@@ -567,6 +567,29 @@ test('guidelines without a guideline quiz have no Quiz pill', async () => {
   dom.window.location.hash = '#cpg-1-2';
   await sleep(30);
   assert.equal($('[data-action="quiz-this-guideline"]'), null);
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
+test('the Medicine test asks tick-all and one-of-four questions and gives a score', async () => {
+  dom.window.location.hash = '#medicine-test';
+  await sleep(30);
+  click($('[data-action="test-start"]'));
+  const total = Number($('.quiz-left').textContent.match(/of (\d+)/)[1]);
+  for (let i = 0; i < total; i++) {
+    if ($('[data-action="test-tick"]')) {
+      click($('[data-action="test-tick"]'));
+      assert.equal($('[data-action="test-tick"]').getAttribute('aria-pressed'), 'true');
+      click($('[data-action="test-check"]'));
+    } else {
+      click($('[data-action="test-pick"]'));
+    }
+    assert.match($('.quiz-counts').textContent, /^(Right|Not quite)$/);
+    click($('[data-action="test-next"]'));
+  }
+  assert.match($('.quiz-finished').textContent, new RegExp(`: \\d+ of ${total} \\(\\d+%\\)$`));
+  click($('[data-action="test-end"]'));
+  assert.ok($('#medicine-test-choice'));
   dom.window.location.hash = '';
   await sleep(30);
 });

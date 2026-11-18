@@ -2,6 +2,15 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: New Medicine test (Quiz tab, `#medicine-test`): every topic of one medicine at
+  once, as multiple choice, following the Medicines quiz's practice level. Indications,
+  contraindications, cautions and adverse effects are "tick all that apply" (1 to 3 of the
+  medicine's own points among other medicines' points for the same topic, 5 in all); each dose
+  card, onset and duration is one line with its number blanked and four values (other values
+  with the same unit, ten times or a tenth, or a wrong unit, as the guideline quiz does);
+  mechanism of action is its first sentence against three others, medicine names put as "It".
+  Nothing is saved but the streak day.
+
 - 2026-11-18: New quiz, "Pick the guideline" (Quiz tab, `#pick-guideline`). Two related
   guidelines (each guideline's top related link) are named at the top; up to four pieces of
   text from each, found in only that one, come up one at a time and go in the left or right
