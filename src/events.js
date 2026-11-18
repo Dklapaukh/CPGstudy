@@ -77,6 +77,7 @@ import {
 } from './sortQuizState.js';
 import { canReport, openReport } from './report.js';
 import { startCardDrag } from './views/dragCards.js';
+import { startPieceDrag } from './views/sortDrag.js';
 import { openCommentPanel } from './views/commentPanel.js';
 import {
   MESSAGES,
@@ -439,8 +440,11 @@ const clickActions = {
     true,
   ),
   'guideline-quiz-end': changeGuidelineQuiz(endGuidelineQuiz, true),
-  'sort-start': changeSortQuiz(() => startSortQuiz(), true),
-  'sort-place': changeSortQuiz((button) => placeNextItem(button.dataset.side)),
+  'sort-start': changeSortQuiz(
+    (button) => startSortQuiz(Number(button.dataset.count), button.dataset.first),
+    true,
+  ),
+  'sort-place': changeSortQuiz((button) => placeNextItem(Number(button.dataset.side))),
   'sort-take-back': changeSortQuiz((button) => takeItemBack(Number(button.dataset.item))),
   'sort-check': changeSortQuiz(checkSortQuiz),
   'sort-end': changeSortQuiz(endSortQuiz, true),
@@ -472,6 +476,10 @@ function handleChange(event) {
   if (event.target.id === 'quiz-practice-medicine') state.practiceChoice = event.target.value;
   if (event.target.id === 'guideline-quiz-choice') state.guidelineQuizChoice = event.target.value;
   if (event.target.id === 'medicine-test-choice') state.medicineTestChoice = event.target.value;
+  if (event.target.id === 'sort-first-choice') {
+    const count = state.sortQuiz ? state.sortQuiz.ids.length : state.sortQuizCount;
+    changeSortQuiz(() => startSortQuiz(count, event.target.value), true)();
+  }
 }
 
 /** Enter in a passcode or name box, and Enter or Space on a folding heading. */
@@ -499,6 +507,12 @@ export function attachEventListeners() {
     startCardDrag(event, (cardIndex, listName, position) =>
       changeGuidelineQuiz(() => moveCardTo(cardIndex, listName, position))(),
     );
+  });
+
+  // Dragging the current "Pick the guideline" piece onto a guideline (the buttons do the same).
+  app.addEventListener('pointerdown', (event) => {
+    if (!event.target.closest('[data-sort-drag]')) return;
+    startPieceDrag(event, (side) => changeSortQuiz(() => placeNextItem(side))());
   });
 
   app.addEventListener('input', handleInput);

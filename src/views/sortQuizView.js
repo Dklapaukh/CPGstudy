@@ -1,16 +1,22 @@
 /*
  * The "Pick the guideline" quiz screen (address #pick-guideline) and its button in the Quiz
- * choice. Drawn from state.sortQuiz: a start screen, the round being sorted, or the marked round.
+ * choice. Drawn from state.sortQuiz: a start screen (two or three guidelines), the round being
+ * sorted, or the marked round. Two guidelines sit side by side; three are rows, so their names
+ * and boxes stay wide enough to read. The first guideline's name is a picker for another one.
+ * Pieces are dragged onto a guideline (see sortDrag.js) or placed with a button for each.
  * Depends on state.js, logic.js, guidelines.js, sortQuiz.js, sortQuizState.js and constants.js.
  */
 import { state } from '../state.js';
 import { escapeHtml } from '../logic.js';
 import { guidelines } from '../guidelines.js';
-import { SORT_SIDE } from '../sortQuiz.js';
-import { nextUnplacedIndex } from '../sortQuizState.js';
+import { SORT_GROUP_SIZES } from '../sortQuiz.js';
+import { nextUnplacedIndex, sortStartGuidelines } from '../sortQuizState.js';
 import { SORT_QUIZ_HASH } from '../constants.js';
 
 const app = document.getElementById('app');
+const GROUP_SIZE_TEXT = { 2: 'Two guidelines', 3: 'Three guidelines' };
+// Two guidelines fit side by side on a phone; three are laid out as rows.
+const ROWS_FROM = 3;
 
 /** The "Pick the guideline" button for the Quiz choice on the list screen. */
 export const sortQuizButtonHtml = () =>
@@ -18,23 +24,42 @@ export const sortQuizButtonHtml = () =>
 
 const guidelineById = (id) => guidelines.find((guideline) => guideline.id === id);
 
-/** The two guidelines of the round by side: { left, right }. */
-const roundGuidelines = (quiz) => ({
-  [SORT_SIDE.LEFT]: guidelineById(quiz.leftId),
-  [SORT_SIDE.RIGHT]: guidelineById(quiz.rightId),
-});
+/** The layout modifier for the header, buttons and boxes: rows for three guidelines. */
+const layoutClass = (quiz, block) =>
+  quiz.ids.length >= ROWS_FROM ? ` ${block}--rows` : ` ${block}--columns`;
 
-/** The header naming the two guidelines, left and right. */
-function headerHtml(pair) {
-  const name = (side) => {
-    const guideline = pair[side];
-    return `<div class="sort-header__name sort-side--${side}">
-      <span class="sort-header__number">CPG ${escapeHtml(guideline.n)}</span>
-      <span>${escapeHtml(guideline.t)}</span></div>`;
-  };
-  return `<div class="sort-header">${name(SORT_SIDE.LEFT)}<span class="sort-header__or">or</span>${name(
-    SORT_SIDE.RIGHT,
-  )}</div>`;
+/** The picker over the first guideline's name: every guideline a round can start with. */
+function firstPickerHtml(quiz) {
+  const options = sortStartGuidelines(quiz.ids.length)
+    .map(
+      (guideline) =>
+        `<option value="${escapeHtml(guideline.id)}"${
+          guideline.id === quiz.ids[0] ? ' selected' : ''
+        }>CPG ${escapeHtml(guideline.n)} ${escapeHtml(guideline.t)}</option>`,
+    )
+    .join('');
+  return `<select class="sort-header__picker" id="sort-first-choice"
+    aria-label="Choose a different first guideline">${options}</select>`;
+}
+
+/** One guideline's name in the header; the first one can be tapped to choose another. */
+function headerNameHtml(quiz, guideline, side) {
+  const isFirst = side === 0;
+  const tag = isFirst ? 'label' : 'div';
+  const hint = isFirst ? ' · change ▾' : '';
+  return `<${tag} class="sort-header__name sort-side--${side}${
+    isFirst ? ' sort-header__name--pick' : ''
+  }" data-sort-drop="${side}">
+    <span class="sort-header__number">CPG ${escapeHtml(guideline.n)}${hint}</span>
+    <span>${escapeHtml(guideline.t)}</span>${isFirst ? firstPickerHtml(quiz) : ''}</${tag}>`;
+}
+
+/** The header naming the guidelines of the round. */
+function headerHtml(quiz, group) {
+  const names = group.map((guideline, side) => headerNameHtml(quiz, guideline, side));
+  const joined =
+    group.length === 2 ? names.join('<span class="sort-header__or">or</span>') : names.join('');
+  return `<div class="sort-header${layoutClass(quiz, 'sort-header')}">${joined}</div>`;
 }
 
 /** The text of one piece: a paragraph, or a short list when it is a few lines. */
@@ -45,23 +70,25 @@ function pieceTextHtml(item) {
   return `<ul class="sort-piece__text">${lines}</ul>`;
 }
 
-/** The piece to place next, with a button for each box. */
-function currentPieceHtml(quiz, pair) {
+/** The piece to place next, which can be dragged, with a button for each guideline. */
+function currentPieceHtml(quiz, group) {
   const index = nextUnplacedIndex();
-  const placedCount = quiz.placed.filter(Boolean).length;
-  const button = (side, arrowBefore, arrowAfter) =>
-    `<button class="sort-place-button sort-side--${side}" type="button" data-action="sort-place" data-side="${side}">${arrowBefore}CPG ${escapeHtml(pair[side].n)}${arrowAfter}</button>`;
+  const placedCount = quiz.placed.filter((side) => side !== null).length;
+  const buttons = group
+    .map(
+      (guideline, side) =>
+        `<button class="sort-place-button sort-side--${side}" type="button" data-action="sort-place"
+          data-side="${side}" data-sort-drop="${side}">CPG ${escapeHtml(guideline.n)}</button>`,
+    )
+    .join('');
   return `<p class="quiz-left">Piece ${placedCount + 1} of ${quiz.items.length}</p>
-    <div class="sort-piece sort-piece--current">${pieceTextHtml(quiz.items[index])}</div>
-    <div class="sort-place-buttons">${button(SORT_SIDE.LEFT, '‹ ', '')}${button(
-      SORT_SIDE.RIGHT,
-      '',
-      ' ›',
-    )}</div>`;
+    <div class="sort-piece sort-piece--current" data-sort-drag>${pieceTextHtml(quiz.items[index])}</div>
+    <p class="quiz-help sort-drag-help">Drag it onto its guideline, or tap a button.</p>
+    <div class="sort-place-buttons${layoutClass(quiz, 'sort-place-buttons')}">${buttons}</div>`;
 }
 
 /** One piece inside a box: tap to take it back, or after Check marked right or wrong. */
-function boxPieceHtml(quiz, item, index, pair) {
+function boxPieceHtml(quiz, item, index, group) {
   if (!quiz.checked) {
     return `<li><button class="sort-piece sort-piece--placed" type="button"
       data-action="sort-take-back" data-item="${index}" aria-label="Take back: ${escapeHtml(
@@ -71,38 +98,46 @@ function boxPieceHtml(quiz, item, index, pair) {
   const isRight = quiz.placed[index] === item.side;
   const verdict = isRight
     ? '<span class="sort-verdict">✓ Right</span>'
-    : `<span class="sort-verdict">✗ From CPG ${escapeHtml(pair[item.side].n)}</span>`;
+    : `<span class="sort-verdict">✗ From CPG ${escapeHtml(group[item.side].n)}</span>`;
   return `<li class="sort-piece sort-piece--${isRight ? 'right' : 'wrong'}">${verdict}${pieceTextHtml(
     item,
   )}</li>`;
 }
 
-/** The two boxes side by side, each holding the pieces put in it. */
-function boxesHtml(quiz, pair) {
-  const box = (side) => {
+/** The boxes, one per guideline, each holding the pieces put in it. */
+function boxesHtml(quiz, group) {
+  const box = (guideline, side) => {
     const pieces = quiz.items
       .map((item, index) =>
-        quiz.placed[index] === side ? boxPieceHtml(quiz, item, index, pair) : '',
+        quiz.placed[index] === side ? boxPieceHtml(quiz, item, index, group) : '',
       )
       .join('');
-    return `<section class="sort-box sort-side--${side}"
-      aria-label="Pieces put in CPG ${escapeHtml(pair[side].n)}">
-      <h2 class="sort-box__title">CPG ${escapeHtml(pair[side].n)}</h2>
+    return `<section class="sort-box sort-side--${side}" data-sort-drop="${side}"
+      aria-label="Pieces put in CPG ${escapeHtml(guideline.n)}">
+      <h2 class="sort-box__title">CPG ${escapeHtml(guideline.n)}</h2>
       <ul class="sort-box__pieces">${pieces || '<li class="sort-box__empty">Empty</li>'}</ul></section>`;
   };
-  return `<div class="sort-boxes">${box(SORT_SIDE.LEFT)}${box(SORT_SIDE.RIGHT)}</div>`;
+  return `<div class="sort-boxes${layoutClass(quiz, 'sort-boxes')}">${group.map(box).join('')}</div>`;
 }
 
-/** Under the boxes: Check once every piece is placed; after it, the score and the next round. */
-function actionsHtml(quiz, pair) {
+/** Under the boxes: Check once every piece is placed; after it, the score and what next. */
+function actionsHtml(quiz, group) {
   if (quiz.checked) {
-    const link = (side) =>
-      `<a class="quiz-end-button quiz-link-button" href="#${escapeHtml(pair[side].id)}">Open CPG ${escapeHtml(
-        pair[side].n,
-      )}</a>`;
+    const links = group
+      .map(
+        (guideline) =>
+          `<a class="quiz-end-button quiz-link-button" href="#${escapeHtml(guideline.id)}">Open CPG ${escapeHtml(
+            guideline.n,
+          )}</a>`,
+      )
+      .join('');
     return `<p class="quiz-finished">${quiz.score} of ${quiz.items.length} right</p>
-      <button class="quiz-start-button" type="button" data-action="sort-start">Another pair</button>
-      ${link(SORT_SIDE.LEFT)}${link(SORT_SIDE.RIGHT)}`;
+      <button class="quiz-start-button" type="button" data-action="sort-start"
+        data-count="${quiz.ids.length}">Another round</button>
+      <button class="quiz-end-button" type="button"
+        data-action="sort-start" data-count="${quiz.ids.length}"
+        data-first="${escapeHtml(quiz.ids[0])}">CPG ${escapeHtml(group[0].n)} again</button>
+      ${links}`;
   }
   if (nextUnplacedIndex() >= 0) {
     return '<p class="quiz-help">Tap a piece in a box to take it back.</p>';
@@ -110,25 +145,31 @@ function actionsHtml(quiz, pair) {
   return `<button class="quiz-start-button" type="button" data-action="sort-check">Check</button>`;
 }
 
-/** The start screen, before a round is drawn. */
-const startHtml = () => `<p class="quiz-help">Two related guidelines are named at the top. Pieces
-    of text that are in only one of them come up one at a time: put each in the box of the
-    guideline it is from.</p>
-  <button class="quiz-start-button" type="button" data-action="sort-start">Start</button>`;
+/** The start screen: how it works, and a button for two or for three guidelines. */
+function startHtml() {
+  const buttons = SORT_GROUP_SIZES.map(
+    (count) =>
+      `<button class="quiz-start-button" type="button" data-action="sort-start"
+        data-count="${count}">${GROUP_SIZE_TEXT[count]}</button>`,
+  ).join('');
+  return `<p class="quiz-help">A guideline and one or two of its related guidelines are named at
+      the top. Pieces of text that are in only one of them come up one at a time: drag each onto
+      the guideline it is from. Tap the first guideline's name to choose a different one.</p>
+    <div class="sort-start-buttons">${buttons}</div>`;
+}
 
 /** Draws the "Pick the guideline" screen. */
 export function renderSortQuizScreen() {
   const quiz = state.sortQuiz;
   let body = startHtml();
   if (quiz) {
-    const pair = roundGuidelines(quiz);
-    const current = !quiz.checked && nextUnplacedIndex() >= 0 ? currentPieceHtml(quiz, pair) : '';
-    body = `${headerHtml(pair)}${current}${boxesHtml(quiz, pair)}${actionsHtml(quiz, pair)}`;
+    const group = quiz.ids.map(guidelineById);
+    const current = !quiz.checked && nextUnplacedIndex() >= 0 ? currentPieceHtml(quiz, group) : '';
+    body = `${headerHtml(quiz, group)}${current}${boxesHtml(quiz, group)}${actionsHtml(quiz, group)}`;
   }
-  const end =
-    quiz && !quiz.checked
-      ? '<button class="quiz-end-button" type="button" data-action="sort-end">End</button>'
-      : '';
+  const end = quiz
+    ? '<button class="quiz-end-button" type="button" data-action="sort-end">End</button>'
+    : '';
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding quiz-screen sort-quiz-screen"><h1 class="quiz-title">Pick the guideline</h1>
     <span class="sync-status"></span>${body}${end}</div>`;

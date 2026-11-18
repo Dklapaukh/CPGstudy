@@ -54,6 +54,7 @@
     "src/views/ratDrawings.js",
     "src/views/quizView.js",
     "src/views/settingsView.js",
+    "src/views/sortDrag.js",
     "src/views/sortQuizView.js",
     "src/views/signupView.js",
     "src/views/streakView.js",

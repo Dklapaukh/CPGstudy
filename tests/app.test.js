@@ -588,8 +588,18 @@ test('the Medicine test asks tick-all and one-of-four questions and gives a scor
     click($('[data-action="test-next"]'));
   }
   assert.match($('.quiz-finished').textContent, new RegExp(`: \\d+ of ${total} \\(\\d+%\\)$`));
+  assert.match($('.quiz-totals').textContent, /^Best: \d+% .* · new best$/, 'the best is saved');
   click($('[data-action="test-end"]'));
   assert.ok($('#medicine-test-choice'));
+  assert.match($('#medicine-test-choice').selectedOptions[0].textContent, / · best \d+%$/);
+  const level = $('#quiz-practice-level');
+  assert.ok(level, 'the practice level can be chosen on the test screen');
+  level.value = [...level.options].at(-1).value;
+  level.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.ok($('.medicine-test-screen'), 'the test screen is redrawn, not the Medicines quiz');
+  assert.equal($('#quiz-practice-level').value, level.value);
+  $('#quiz-practice-level').value = '';
+  $('#quiz-practice-level').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   dom.window.location.hash = '';
   await sleep(30);
 });
@@ -597,18 +607,35 @@ test('the Medicine test asks tick-all and one-of-four questions and gives a scor
 test('Pick the guideline puts each piece in a box, takes one back and marks the round', async () => {
   dom.window.location.hash = '#pick-guideline';
   await sleep(30);
-  click($('[data-action="sort-start"]'));
+  click($('[data-action="sort-start"][data-count="2"]'));
   assert.equal($$('.sort-header__name').length, 2, 'both guidelines are named in the header');
   const total = Number($('.quiz-left').textContent.match(/of (\d+)/)[1]);
-  click($('[data-action="sort-place"][data-side="left"]'));
+  click($('[data-action="sort-place"][data-side="0"]'));
   assert.equal($$('.sort-piece--placed').length, 1);
   click($('[data-action="sort-take-back"]'));
   assert.equal($$('.sort-piece--placed').length, 0, 'a piece can be taken back');
-  for (let i = 0; i < total; i++) click($('[data-action="sort-place"][data-side="right"]'));
+  for (let i = 0; i < total; i++) click($('[data-action="sort-place"][data-side="1"]'));
   assert.equal($('[data-action="sort-place"]'), null);
   click($('[data-action="sort-check"]'));
   assert.match($('.quiz-finished').textContent, new RegExp(`^\\d+ of ${total} right$`));
   assert.equal($$('.sort-piece--right, .sort-piece--wrong').length, total);
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
+test('Pick the guideline compares three as rows, and the first can be changed', async () => {
+  dom.window.location.hash = '#pick-guideline';
+  await sleep(30);
+  click($('[data-action="sort-end"]')); // the round marked in the test before is still shown
+  click($('[data-action="sort-start"][data-count="3"]'));
+  assert.equal($$('.sort-header__name').length, 3);
+  assert.ok($('.sort-boxes--rows'), 'three guidelines are rows');
+  const picker = $('#sort-first-choice');
+  const other = [...picker.options].find((option) => !option.selected);
+  picker.value = other.value;
+  picker.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.equal($('#sort-first-choice').value, other.value, 'the round starts with the one picked');
+  assert.equal($$('.sort-header__name').length, 3, 'still three');
   dom.window.location.hash = '';
   await sleep(30);
 });

@@ -2805,23 +2805,28 @@ td.table-cell--coloured {
 }
 
 /*
- * "Pick the guideline" quiz. Each side has its own colour (green left, blue right) on its name,
- * its button and its box, so the two are easy to tell apart even when both guidelines share a
- * section colour. Both take white text at more than 4.5:1. Right and wrong are also written out,
- * never shown by colour alone.
+ * "Pick the guideline" quiz. Each guideline has its own colour (green, blue, purple) on its
+ * name, its button and its box, so they are easy to tell apart even when they share a section
+ * colour. All take white text at more than 4.5:1. Right and wrong are also written out, never
+ * shown by colour alone. Two guidelines sit in columns; three are rows (--rows).
  */
-.sort-side--left {
+.sort-side--0 {
   --sort-side-colour: #00693c;
 }
-.sort-side--right {
+.sort-side--1 {
   --sort-side-colour: #1f4e8c;
+}
+.sort-side--2 {
+  --sort-side-colour: #6b3fa0;
 }
 .sort-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: stretch;
   gap: 0.4rem;
   margin-bottom: 1rem;
+}
+.sort-header--columns {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 }
 .sort-header__name {
   display: flex;
@@ -2839,9 +2844,33 @@ td.table-cell--coloured {
   font-size: 0.85rem;
   font-weight: 500;
 }
+.sort-header--rows .sort-header__name {
+  text-align: left;
+}
 .sort-header__or {
   align-self: center;
   color: var(--colour-muted);
+}
+/* The first name is a picker: an invisible native select over it opens the phone's list. */
+.sort-header__name--pick {
+  position: relative;
+  cursor: pointer;
+}
+.sort-header__picker {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.sort-header__name--pick:focus-within {
+  outline: 3px solid var(--colour-text);
+  outline-offset: 2px;
+}
+.sort-start-buttons {
+  display: grid;
+  gap: 0.6rem;
 }
 .sort-piece {
   display: block;
@@ -2858,6 +2887,27 @@ td.table-cell--coloured {
 .sort-piece--current {
   font-size: 1.05rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  cursor: grab;
+  touch-action: none; /* a swipe on the piece drags it instead of scrolling the page */
+  user-select: none;
+}
+.sort-piece--dragging {
+  z-index: 20;
+  pointer-events: none; /* so the guideline under the finger can be found (sortDrag.js) */
+  font-size: 0.9rem;
+  cursor: grabbing;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.sort-drag-help {
+  margin: 0.4rem 0 0;
+}
+/* The guideline a dragged piece is over: its name, button and box. */
+.sort-drop--target {
+  outline: 3px solid var(--sort-side-colour);
+  outline-offset: 2px;
+}
+.sort-box.sort-drop--target {
+  background: var(--colour-surface);
 }
 .sort-piece__text {
   margin: 0;
@@ -2868,7 +2918,8 @@ ul.sort-piece__text {
 }
 .sort-place-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 0.5rem;
   margin: 0.7rem 0 1.2rem;
 }
@@ -2884,9 +2935,14 @@ ul.sort-piece__text {
 }
 .sort-boxes {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.5rem;
   align-items: start;
+}
+.sort-boxes--columns {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.sort-boxes--rows .sort-box {
+  min-height: 80px;
 }
 .sort-box {
   min-height: 120px;
