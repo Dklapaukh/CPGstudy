@@ -36,6 +36,7 @@ export const REVIEW = { NONE: '', CHANGED: 'changed', GONE: 'gone' };
 
 // A number question's line is not edited, but a change to it is what an editor must check.
 const EXTRA_REVIEWED_FIELDS = { number: ['line'] };
+// The fields an editor checks for a kind of question (all but the unreviewed one).
 const reviewedFields = (kind) => [
   ...(EXTRA_REVIEWED_FIELDS[kind] || []),
   ...EDIT_FIELDS[kind].filter((name) => name !== UNREVIEWED_FIELD),

@@ -60,6 +60,7 @@ function newJob() {
   return { ...tidySubmission({}), patients: [emptyPatient()], outcomes: [''] };
 }
 
+/** Draws the page from the current state. */
 function render() {
   renderSubmitPage(app, state);
 }

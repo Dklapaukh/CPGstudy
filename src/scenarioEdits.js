@@ -337,8 +337,10 @@ function readDraftExtras(draft) {
   return { patients, photos };
 }
 
+// Validators for typed-in scenario text: non-empty and within the limits.
 const isText = (value, maxLength = MAX_SCENARIO_TEXT) =>
   typeof value === 'string' && value.trim() !== '' && value.length <= maxLength;
+// A list of 1 to maxCount such texts.
 const isTextList = (list, maxCount, maxLength) =>
   Array.isArray(list) &&
   list.length > 0 &&

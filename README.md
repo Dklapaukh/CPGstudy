@@ -12,6 +12,17 @@ editor page, lets editors change the quiz questions:
 
 Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan.md`.
 
+**Contents:** [Structure](#structure) · [Run, check and publish](#run-check-and-publish) ·
+[How data is saved](#how-data-is-saved) · [List and marking](#list-marking-and-settings) ·
+[Related](#related-guidelines-and-guidelines-to-learn) · [Medicines quiz](#medicines-quiz) ·
+[Guideline quiz](#guideline-quiz) · [Pick the guideline](#pick-the-guideline) ·
+[Medicine test](#medicine-test) · [Scenarios](#scenarios) ·
+[Report a mistake](#report-a-mistake-or-request) · [New guidelines](#publishing-new-guidelines) ·
+[Daily PDF check](#daily-check-for-a-new-guidelines-pdf) ·
+[Rebuilding from the PDF](#rebuilding-the-content-from-the-pdf) · [Manager view](#manager-view) ·
+[Editor page](#editor-page) · [Demo and sign-up](#demo-and-sign-up) · [Backend](#backend) ·
+[Behaviour checklist](#behaviour-checklist)
+
 ## Structure
 
 | Path                                                                           | Purpose                                                                                        |
@@ -30,6 +41,8 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/guidelineQuizState.js`                                                    | Guideline quiz: the play in memory and saved scores.                                           |
 | `src/sortQuiz.js`, `src/sortQuizState.js`                                      | Pick the guideline: pieces of 2 or 3 related guidelines, pure logic; the round in memory.      |
 | `src/medicineTest.js`, `src/medicineTestState.js`                              | Medicine test: one medicine's cards as tick-all and one-of-four questions; best scores.        |
+| `src/practiceLevels.js`, `content/practice-level-overrides.js`                 | Medicines quiz ATP filter: reads the 1.1 table (pure); hand-set rows for unmatched medicines.  |
+| `src/streakState.js`                                                           | Study streak: the days with a finished quiz, saved as one extra entry (pure).                  |
 | `src/report.js`                                                                | "Report a mistake or request" email.                                                           |
 | `src/updates.js`, `src/updateState.js`, `version.json`                         | Update prompt: pure logic, checking and downloading, the published date and file list.         |
 | `src/views/`                                                                   | One file per screen or screen part.                                                            |
@@ -51,6 +64,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `scripts/contentCheck.js`                                                      | Refuses content with unexpected markup.                                                        |
 | `scripts/contentUpdate.js`, `scripts/build-guidelines.js`                      | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                       |
 | `scripts/build-related.js`                                                     | Rebuilds `content/related.js`.                                                                 |
+| `scripts/audit.js`                                                             | `npm run audit`: style-guide report (headers, comments, length, copies, dead code).            |
 | `scripts/practice-level-review.js`                                             | Prints what each practice level is shown in the Medicines quiz, for checking.                  |
 | `backend/Code.gs`                                                              | The Google Apps Script service.                                                                |
 | `.github/workflows/`                                                           | `checks.yml` (every push), `pdf-check.yml` and `edits-sync.yml` (daily).                       |
@@ -60,7 +74,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 
 - Run locally: `npx serve .` (ES modules do not load from a file opened directly).
 - Check: `npm install` once, then `npm run check` (formatting, lint, tests). GitHub runs it on
-  every push.
+  every push. `npm run audit` reports style-guide gaps (plan section 10); errors fail it.
 - Publish: GitHub Pages serves the root of `main`. Claude pushes every update straight to `main`
   after `npm run check` passes, with a `CHANGELOG.md` entry (see `CLAUDE.md`).
 - App code changes show no banner. Phones pick them up on a reload once GitHub Pages' cache

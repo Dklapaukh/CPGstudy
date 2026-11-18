@@ -8,7 +8,7 @@
  * views/scenarioMarkup.js.
  */
 import { escapeHtml } from '../logic.js';
-import { warningHtml } from '../staffPage.js';
+import { warningHtml, noteHtml, actionButtonHtml } from '../staffPage.js';
 import { guidelineById } from '../guidelines.js';
 import {
   DEFAULT_HEADER_COLOUR,
@@ -56,9 +56,6 @@ const HINTS = {
   label: 'Shown above the patient. Needed when there are several patients.',
 };
 const LONG_FIELDS = ['story', 'intention', 'outcomes', 'social', 'history', 'medications'];
-const note = (text) => `<p class="editor-note">${text}</p>`;
-const button = (action, label, data = '', style = 'switch-button') =>
-  `<button class="${style}" type="button" data-action="${action}"${data}>${label}</button>`;
 
 /** What a path is called on the page: "Story", "Patient 2: HR". */
 export function pathName(scenario, path) {
@@ -106,9 +103,9 @@ function boxFormHtml(scenario, path, text, error) {
   return `<div class="editor-inline">
     <label class="editor-label" for="box-text">${escapeHtml(pathName(scenario, path))}</label>
     <textarea class="text-input editor-box" id="box-text" rows="${rows}">${escapeHtml(text)}</textarea>
-    ${hint ? note(escapeHtml(hint)) : ''}${warningHtml(error)}
-    <div class="editor-buttons">${button('scenario-box-save', 'Save', '', 'button')}
-      ${button('close', 'Cancel')}</div></div>`;
+    ${hint ? noteHtml(escapeHtml(hint)) : ''}${warningHtml(error)}
+    <div class="editor-buttons">${actionButtonHtml('scenario-box-save', 'Save', '', 'button')}
+      ${actionButtonHtml('close', 'Cancel')}</div></div>`;
 }
 
 /** Makes the markup editable: every value clickable, the open one drawn as a box. */
@@ -133,10 +130,10 @@ function reviewHtml(view) {
       <div class="editor-columns">${column('When edited', view.edit.fields[path].was, path)}
       ${column('Learners see now', view.edit.fields[path].to, path)}
       ${column('Now in the scenario file', now, path)}</div>
-      <div class="editor-buttons">${view.written ? button('scenario-keep', 'Keep the edit', data, 'button') : ''}
-      ${button('scenario-drop', view.written ? 'Use the file’s version' : 'Remove this change', data)}</div></div>`;
+      <div class="editor-buttons">${view.written ? actionButtonHtml('scenario-keep', 'Keep the edit', data, 'button') : ''}
+      ${actionButtonHtml('scenario-drop', view.written ? 'Use the file’s version' : 'Remove this change', data)}</div></div>`;
   });
-  return `${note('The scenario file changed after these were edited. Until you choose, the app keeps showing the edit.')}${items.join('')}`;
+  return `${noteHtml('The scenario file changed after these were edited. Until you choose, the app keeps showing the edit.')}${items.join('')}`;
 }
 
 /** Labels beside the scenario: edited, left out, not yet in the app, needs review. */
@@ -158,7 +155,7 @@ function badgesHtml(view) {
 export function scenarioEditorHtml(viewer, view, signedInButtons) {
   const { live, edit } = view;
   const offLabel = edit?.off ? 'Put it back in the app' : 'Leave this scenario out of the app';
-  const undo = edit && !edit.added ? button('scenario-undo', 'Undo all edits') : '';
+  const undo = edit && !edit.added ? actionButtonHtml('scenario-undo', 'Undo all edits') : '';
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${signedInButtons}</div>
     <div class="guideline-header" style="--header-colour:${DEFAULT_HEADER_COLOUR}">
@@ -166,23 +163,23 @@ export function scenarioEditorHtml(viewer, view, signedInButtons) {
       <div class="guideline-meta">Scenario · ${escapeHtml(scenarioTagsText(live))} · ${live.patients.length} patient${live.patients.length === 1 ? '' : 's'}<br>
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${note('The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.')}
+    ${noteHtml('The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.')}
     <p>${badgesHtml(view)}</p>${reviewHtml(view)}
     <div class="editor-preview scenario-screen">${scenarioBodyHtml(live, editingFor(view))}</div>
-    <div class="editor-buttons">${button('scenario-off', offLabel)}${undo}</div>
+    <div class="editor-buttons">${actionButtonHtml('scenario-off', offLabel)}${undo}</div>
     ${deleteHtml(view.isDeleting)}</main>`;
 }
 
 /** The delete button, or after one tap the question that makes sure. */
 function deleteHtml(isDeleting) {
   if (!isDeleting) {
-    return `<div class="editor-buttons">${button('scenario-delete', 'Delete this scenario', '', 'switch-button editor-danger')}</div>`;
+    return `<div class="editor-buttons">${actionButtonHtml('scenario-delete', 'Delete this scenario', '', 'switch-button editor-danger')}</div>`;
   }
   return `<div class="editor-inline editor-confirm" role="alert">
     <p><b>Delete this scenario for good?</b> It goes from the app and from this page, with its
     edits, and can’t be put back. To hide it for now instead, leave it out of the app.</p>
-    <div class="editor-buttons">${button('scenario-delete-yes', 'Yes, delete it', '', 'button editor-danger')}
-      ${button('scenario-delete-no', 'Keep it')}</div></div>`;
+    <div class="editor-buttons">${actionButtonHtml('scenario-delete-yes', 'Yes, delete it', '', 'button editor-danger')}
+      ${actionButtonHtml('scenario-delete-no', 'Keep it')}</div></div>`;
 }
 
 /** The screen for a scenario that was deleted. */
@@ -190,7 +187,7 @@ export function deletedScenarioHtml(viewer, signedInButtons) {
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}<h1>Scenario deleted</h1>
-    ${note('This scenario was deleted for good. It leaves the app the next morning.')}</main>`;
+    ${noteHtml('This scenario was deleted for good. It leaves the app the next morning.')}</main>`;
 }
 
 /* ---------- The new scenario form ---------- */
@@ -218,7 +215,7 @@ function draftBoxHtml(draft, path) {
     : `<textarea ${attrs} rows="${LONG_FIELDS.includes(field) ? 3 : 2}">${value}</textarea>`;
   const hint = DRAFT_HINTS[field];
   return `<label class="editor-label" for="${id}">${escapeHtml(FIELD_NAMES[field])}</label>${box}
-    ${hint ? note(escapeHtml(hint)) : ''}`;
+    ${hint ? noteHtml(escapeHtml(hint)) : ''}`;
 }
 
 /** A dropdown of the form: complexity or scene load. */
@@ -251,7 +248,7 @@ function draftLaterVitalsHtml(draft, index, setIndex) {
   return `<p class="editor-label">Vitals ${setIndex + 2}</p>
     ${draftBoxHtml(draft, `${prefix}.note`)}
     <div class="editor-vitals">${draftVitalsHtml(draft, `${prefix}.vitals`)}</div>
-    <div class="editor-buttons">${button('draft-remove-vitals', 'Remove these vitals', data)}</div>`;
+    <div class="editor-buttons">${actionButtonHtml('draft-remove-vitals', 'Remove these vitals', data)}</div>`;
 }
 
 /**
@@ -263,20 +260,20 @@ function draftPatientHtml(draft, index) {
   const patient = draft.patients[index];
   const remove =
     draft.patients.length > 1
-      ? button('draft-remove-patient', 'Remove this patient', ` data-index="${index}"`)
+      ? actionButtonHtml('draft-remove-patient', 'Remove this patient', ` data-index="${index}"`)
       : '';
   const later = (patient.laterVitals || [])
     .map((set, setIndex) => draftLaterVitalsHtml(draft, index, setIndex))
     .join('');
   const addVitals =
     (patient.laterVitals || []).length < MAX_LATER_VITALS
-      ? button('draft-add-vitals', '+ Add later vitals', ` data-index="${index}"`)
+      ? actionButtonHtml('draft-add-vitals', '+ Add later vitals', ` data-index="${index}"`)
       : '';
   return `<fieldset class="editor-patient"><legend>Patient ${index + 1}</legend>
     ${PATIENT_TEXT_FIELDS.map((field) => draftBoxHtml(draft, `${prefix}.${field}`)).join('')}
     <p class="editor-label">Vitals</p>${draftBoxHtml(draft, `${prefix}.vitalsNote`)}
     <div class="editor-vitals">${draftVitalsHtml(draft, `${prefix}.vitals`)}</div>
-    ${note('Write – for a vital that isn’t measured.')}${later}
+    ${noteHtml('Write – for a vital that isn’t measured.')}${later}
     <div class="editor-buttons">${addVitals}</div>
     ${draftBoxHtml(draft, `${prefix}.treatment`)}
     ${remove ? `<div class="editor-buttons">${remove}</div>` : ''}</fieldset>`;
@@ -288,14 +285,14 @@ function draftPhotosHtml(draft) {
   const photos = draft.photos
     .map(
       (photo, index) => `<figure class="scenario-photo">
-        ${photo.preview ? `<img src="${escapeHtml(photo.preview)}" alt="Photo ${index + 1}">` : note('Loading the photo…')}
+        ${photo.preview ? `<img src="${escapeHtml(photo.preview)}" alt="Photo ${index + 1}">` : noteHtml('Loading the photo…')}
         ${draftBoxHtml(draft, `photos.${index}.caption`)}
-        <div class="editor-buttons">${button('draft-remove-photo', 'Remove this photo', ` data-index="${index}"`)}</div>
+        <div class="editor-buttons">${actionButtonHtml('draft-remove-photo', 'Remove this photo', ` data-index="${index}"`)}</div>
       </figure>`,
     )
     .join('');
   return `<fieldset class="editor-patient"><legend>Photos</legend>
-    ${note('A removed photo is never published. Check nothing in a photo names the patient.')}${photos}</fieldset>`;
+    ${noteHtml('A removed photo is never published. Check nothing in a photo names the patient.')}${photos}</fieldset>`;
 }
 
 /**
@@ -306,7 +303,9 @@ function draftPhotosHtml(draft) {
 export function newScenarioHtml(viewer, draft, error, signedInButtons, job = null) {
   const errorText = error ? `${pathName(draft, error.path)}: ${error.error}` : '';
   const addPatient =
-    draft.patients.length < MAX_PATIENTS ? button('draft-add-patient', '+ Add a patient') : '';
+    draft.patients.length < MAX_PATIENTS
+      ? actionButtonHtml('draft-add-patient', '+ Add a patient')
+      : '';
   const heading = job ? 'Edit and approve a submitted job' : 'New scenario';
   const intro = job
     ? `Change anything before approving: the job becomes a new scenario. Check nothing in the
@@ -317,14 +316,14 @@ export function newScenarioHtml(viewer, draft, error, signedInButtons, job = nul
   return `<div class="editor-back-bar"><a class="back-link" href="${cancel}">‹ Back</a>
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}<h1>${heading}</h1>
-    ${note(`${intro} Saved scenarios reach the app the next morning; after saving, tap any value to change it.`)}
+    ${noteHtml(`${intro} Saved scenarios reach the app the next morning; after saving, tap any value to change it.`)}
     ${['title', 'suburb', 'story', 'intention'].map((path) => draftBoxHtml(draft, path)).join('')}
     ${draftSelectHtml(draft, 'complexity', SCENARIO_COMPLEXITY)}
-    ${draftSelectHtml(draft, 'load', SCENARIO_LOADS)}${note(escapeHtml(HINTS.load))}
+    ${draftSelectHtml(draft, 'load', SCENARIO_LOADS)}${noteHtml(escapeHtml(HINTS.load))}
     ${draftBoxHtml(draft, 'outcomes')}${draftBoxHtml(draft, 'guidelines')}
     ${draft.patients.map((patient, index) => draftPatientHtml(draft, index)).join('')}
     <div class="editor-buttons">${addPatient}</div>${draftPhotosHtml(draft)}${warningHtml(errorText)}
-    <div class="editor-buttons">${button('draft-save', save, '', 'button')}
+    <div class="editor-buttons">${actionButtonHtml('draft-save', save, '', 'button')}
       <a class="switch-button" href="${cancel}">Cancel</a></div></main>`;
 }
 
@@ -334,6 +333,6 @@ export function goneScenarioHtml(viewer, view, signedInButtons) {
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}
     <h1>Scenario no longer in the app</h1>
-    ${note('This scenario was taken out of the scenario file, so its edit does nothing.')}
-    ${reviewHtml(view)}<div class="editor-buttons">${button('scenario-undo', 'Remove the edit', '', 'button')}</div></main>`;
+    ${noteHtml('This scenario was taken out of the scenario file, so its edit does nothing.')}
+    ${reviewHtml(view)}<div class="editor-buttons">${actionButtonHtml('scenario-undo', 'Remove the edit', '', 'button')}</div></main>`;
 }

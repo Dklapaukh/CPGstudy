@@ -197,6 +197,7 @@ const DEBRIEF_GUIDE = [
   ['Summary', 'Ask for one or two things they will do next time, in their own words.'],
 ];
 
+/** The PEARLS debrief guide, as a numbered list. */
 function guideHtml() {
   const steps = DEBRIEF_GUIDE.map(
     ([name, text]) => `<li><b>${name}.</b> ${escapeHtml(text)}</li>`,

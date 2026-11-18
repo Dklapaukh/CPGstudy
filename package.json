@@ -8,7 +8,8 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "node --test",
-    "check": "npm run format:check && npm run lint && npm test"
+    "audit": "node scripts/audit.js",
+    "check": "npm run format:check && npm run lint && npm test && npm run audit -- --quiet"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

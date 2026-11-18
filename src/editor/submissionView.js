@@ -7,7 +7,7 @@
  * Depends on logic.js, constants.js, staffPage.js and views/scenarioMarkup.js.
  */
 import { escapeHtml } from '../logic.js';
-import { warningHtml } from '../staffPage.js';
+import { warningHtml, noteHtml, actionButtonHtml, dataIdAttr } from '../staffPage.js';
 import { DEFAULT_HEADER_COLOUR } from '../constants.js';
 import { scenarioBodyHtml, scenarioTagsText } from '../views/scenarioMarkup.js';
 
@@ -18,9 +18,9 @@ export const APPROVE_HASH_PREFIX = '#approve-';
 // Draws the scenario as an editor sees one (folds open, guidelines as text, not links), with
 // nothing to tap: a job is approved or rejected as it is, and edited once it is in the app.
 const READ_ONLY = { attrs: () => '', formFor: () => '', readOnly: true };
-const note = (text) => `<p class="editor-note">${text}</p>`;
-const button = (action, label, id, style = 'switch-button') =>
-  `<button class="${style}" type="button" data-action="${action}" data-id="${escapeHtml(id)}">${label}</button>`;
+// A button for one job, by its id.
+const jobButton = (action, label, id, style) =>
+  actionButtonHtml(action, label, dataIdAttr(id), style);
 
 /** The day a job was sent, as "19 Nov 2026" ('' when unreadable). */
 function sentDate(sent) {
@@ -61,13 +61,13 @@ function warningsHtml(warnings) {
  */
 function decisionHtml(id, isConfirmingReject) {
   if (isConfirmingReject) {
-    return `${note('Rejecting deletes the job’s photos and can’t be undone.')}
-      <div class="editor-buttons">${button('submission-reject-confirm', 'Yes, reject it', id, 'button')}
-      ${button('submission-reject-cancel', 'Cancel', id)}</div>`;
+    return `${noteHtml('Rejecting deletes the job’s photos and can’t be undone.')}
+      <div class="editor-buttons">${jobButton('submission-reject-confirm', 'Yes, reject it', id, 'button')}
+      ${jobButton('submission-reject-cancel', 'Cancel', id)}</div>`;
   }
-  return `<div class="editor-buttons">${button('submission-edit', 'Edit and approve', id, 'button')}
-    ${button('submission-approve', 'Approve as it is', id)}
-    ${button('submission-reject', 'Reject', id)}</div>`;
+  return `<div class="editor-buttons">${jobButton('submission-edit', 'Edit and approve', id, 'button')}
+    ${jobButton('submission-approve', 'Approve as it is', id)}
+    ${jobButton('submission-reject', 'Reject', id)}</div>`;
 }
 
 /**
@@ -76,7 +76,7 @@ function decisionHtml(id, isConfirmingReject) {
  */
 export function submissionHtml(viewer, view, signedInButtons) {
   const { submission, scenario } = view;
-  const photosNote = view.photosLoading ? note('Loading the photos…') : '';
+  const photosNote = view.photosLoading ? noteHtml('Loading the photos…') : '';
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${signedInButtons}</div>
     <div class="guideline-header" style="--header-colour:${DEFAULT_HEADER_COLOUR}">
@@ -84,7 +84,7 @@ export function submissionHtml(viewer, view, signedInButtons) {
       <div class="guideline-meta">Submitted job · ${escapeHtml(scenarioTagsText(scenario))}<br>
         Sent by ${escapeHtml(submission.sender)} on ${escapeHtml(sentDate(submission.sent))}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${note(`Check that nothing in the text or photos could identify the patient, and that it reads
+    ${noteHtml(`Check that nothing in the text or photos could identify the patient, and that it reads
       well as a scenario. Edit and approve lets you change anything first, or take a photo out.
       An approved job becomes a new scenario; it reaches the app the next morning.`)}
     ${warningsHtml(view.warnings)}${photosNote}
@@ -97,5 +97,5 @@ export function goneSubmissionHtml(viewer, signedInButtons) {
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}<h1>Job not waiting</h1>
-    ${note('This job was already approved or rejected. Press Refresh for the latest list.')}</main>`;
+    ${noteHtml('This job was already approved or rejected. Press Refresh for the latest list.')}</main>`;
 }

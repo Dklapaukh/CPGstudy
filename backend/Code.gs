@@ -571,6 +571,7 @@ function cell_(row, column) {
   return row[column - 1];
 }
 
+/** The tracker with this passcode, as { label }, or null. Row 1 holds the headings. */
 function findTracker_(code) {
   if (!code) return null;
   const rows = getSheet_(SHEET.TRACKERS).getDataRange().getValues();
@@ -582,6 +583,7 @@ function findTracker_(code) {
   return null;
 }
 
+/** The manager with this passcode, as { name }, or null. */
 function findManager_(code) {
   return findPerson_(SHEET.MANAGERS, MANAGER_COLUMN, code);
 }
@@ -980,6 +982,7 @@ function newPasscode_() {
   return code;
 }
 
+/** One random word from WORD_LIST, for new passcodes. */
 function pickWord_() {
   return WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
 }

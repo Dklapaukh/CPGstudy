@@ -40,18 +40,17 @@ export function blockText(block) {
 
 const HEADING_LEVEL = -1;
 
+/** True for a paragraph or bullet: the blocks that hold a line of text. */
+export const isTextBlock = (block) => block[0] === BLOCK.PARAGRAPH || block[0] === BLOCK.BULLET;
+
 /**
  * The indent level of a block: bullets and paragraphs carry one; a heading is above every
  * level; tables, keys and boxes count as deeper than any bullet, so they stay with the bullet
  * above them.
  */
-/** True for a paragraph or bullet: the blocks that hold a line of text. */
-export const isTextBlock = (block) => block[0] === BLOCK.PARAGRAPH || block[0] === BLOCK.BULLET;
-
 const levelOf = (block) => {
   if (block[0] === BLOCK.HEADING) return HEADING_LEVEL;
-  const isLevelled = block[0] === BLOCK.BULLET || block[0] === BLOCK.PARAGRAPH;
-  return isLevelled ? block[2] : Infinity;
+  return isTextBlock(block) ? block[2] : Infinity;
 };
 
 const isChildOnlyText = (text) => CHILD_PATTERN.test(text) && !ADULT_PATTERN.test(text);
@@ -66,8 +65,7 @@ const SENTENCE_END = /(?<=\.)\s+/;
  * the paediatric drug dose tables for a child." keeps only the adult dose.
  */
 function withoutChildSentences(block) {
-  const isText = block[0] === BLOCK.BULLET || block[0] === BLOCK.PARAGRAPH;
-  if (!isText) return block;
+  if (!isTextBlock(block)) return block;
   const sentences = String(block[1]).split(SENTENCE_END);
   const kept = sentences.filter((sentence) => !isChildOnlyText(plainText(sentence)));
   if (kept.length === sentences.length) return block;

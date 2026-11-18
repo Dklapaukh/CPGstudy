@@ -2,6 +2,15 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: **Code audit** (tidy-up, no behaviour change). New `npm run audit`
+  (`scripts/audit.js`) reports style-guide gaps: file headers, function comments and length,
+  empty catches, static inline styles, copied blocks, unused exports and CSS; `npm run check`
+  fails on its errors. Fixes: shared `noteHtml`, `actionButtonHtml` and `dataIdAttr` in
+  `staffPage.js` replace four copies in the editor and submit views; `quizDoses.js` uses
+  `isTextBlock` instead of two inline copies (and its stray comment is back on `levelOf`);
+  unused `medicinePracticeLevels` removed (tests use `medicineGrants`); `overTimeHtml` split into
+  small helpers; a dead CSS selector removed; missing comments added (app and `Code.gs`).
+  README: contents links and missing files in the structure table. Plan: repeated text removed.
 - 2026-11-19: **Add a scenario** form (`submit.html`, linked at the end of the Scenarios list),
   with no sign-in. Fields follow the scenario format: title, optional suburb, History,
   complexity and scene load, then per patient the background, several vitals sets with a note

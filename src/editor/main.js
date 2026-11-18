@@ -170,6 +170,7 @@ async function saveEdit(id, edit) {
 
 const guidelineIdOf = (questionId) => questionId.split('|')[0];
 const isScenarioEdit = (id) => Boolean(scenarioIdOfEdit(id));
+// True when the daily copy already carries this edit unchanged (nothing left to publish).
 const isPublished = (id) =>
   JSON.stringify((isScenarioEdit(id) ? scenarioEdits : cardEdits)[id]) ===
   JSON.stringify(state.edits[id]);
@@ -594,6 +595,7 @@ function render() {
 
 /* ---------- Reading the form ---------- */
 
+// The non-empty, trimmed lines of a text box.
 const linesOf = (text) =>
   text
     .split('\n')

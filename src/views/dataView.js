@@ -24,6 +24,7 @@ const ACTIVITY_WEEKS = 12;
 const LOCKED_IN_DAYS = 21; // a card whose next review is this far off is well known
 const PERFECT = 100;
 
+// One number tile, and a titled group of tiles, on Settings > Data.
 const tileHtml = (value, label) =>
   `<div class="stat-tile"><b class="stat-tile__value">${value}</b>
   <span class="stat-tile__label">${label}</span></div>`;

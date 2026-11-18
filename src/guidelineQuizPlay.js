@@ -76,6 +76,7 @@ export function isForChildAges(line) {
 
 // Digits are left out of an id, so a changed dose keeps its question (and its edit, for review).
 const idText = (text) => normalisedText(text).replace(/\d+/g, '#');
+// A stable question id: guideline, kind and a fingerprint that ignores the numbers in it.
 const questionId = (quizzed, kind, text) =>
   `${quizzed.id}|${kind}|${fingerprintText(idText(text))}`;
 
@@ -134,6 +135,7 @@ function adultActionLines(quizzed) {
   );
 }
 
+// Child-only guidelines get no number questions: their doses depend on weight.
 const asksNumbers = (quizzed) =>
   quizzed.section !== CHILD_ONLY_SECTION && !CHILD_ONLY_GUIDELINE_TITLES.includes(quizzed.title);
 // A number question offers a wrong unit or not at random; it is listed if either can be made.

@@ -3283,8 +3283,7 @@ ul.sort-piece__text {
   text-align: left;
   font-weight: 500;
 }
-.scenario-progress thead th,
-.scenario-progress__head th {
+.scenario-progress thead th {
   color: var(--colour-muted);
   font-size: 0.8rem;
   font-weight: 600;

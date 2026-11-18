@@ -33,7 +33,8 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 
 ### Code and publishing
 
-8. All new and changed code follows the style guide (section 10).
+8. All new and changed code follows the style guide (section 10). `npm run audit` measures it;
+   run it before and after a tidy-up.
 9. A tidy-up never changes behaviour; behaviour changes are made separately.
 10. **Claude commits and pushes every update straight to `main`** (standing instruction, 14 Nov
     2026): no branches, no pull requests, no asking first. Before each push `npm run check` must
@@ -519,8 +520,6 @@ guide, outcome ratings and a score with progress (SC-F). Gaps to fill: there is 
 Straightforward scenario with Delegation or Several patients yet; mentors can't see runs; a
 score only means something when the same mentor rates consistently. The manager page shows
 scenario trends (SC-G) once the backend is redeployed with the 19 Nov 2026 `Code.gs`.
-Straightforward scenario with Delegation or Several patients yet; mentors and the manager page
-can't see runs; a score only means something when the same mentor rates consistently.
 
 **Add a scenario (19 Nov 2026):** `submit.html`, no sign-in, sends anonymised jobs with ECG
 photos; editors edit and approve them (as new scenarios) or reject them on the editor page, and

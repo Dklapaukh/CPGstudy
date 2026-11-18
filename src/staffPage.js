@@ -7,6 +7,16 @@ import { sendRequest } from './api.js';
 import { escapeHtml } from './logic.js';
 import { MESSAGES } from './constants.js';
 
+/** A short note under a heading or field; `text` is trusted markup. */
+export const noteHtml = (text) => `<p class="editor-note">${text}</p>`;
+
+/** A button that runs `action` when tapped; `data` is extra attribute markup (see dataIdAttr). */
+export const actionButtonHtml = (action, label, data = '', style = 'switch-button') =>
+  `<button class="${style}" type="button" data-action="${action}"${data}>${label}</button>`;
+
+/** The escaped ` data-id="…"` attribute that tells an action which item it is for. */
+export const dataIdAttr = (id) => ` data-id="${escapeHtml(id)}"`;
+
 // Refusals that mean the passcode or the backend is wrong: the page signs out and says why.
 export const SIGN_OUT_MESSAGES = {
   'not-found': MESSAGES.CODE_NOT_RECOGNISED,

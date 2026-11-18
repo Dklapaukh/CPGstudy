@@ -10,7 +10,7 @@
  * Depends on logic.js, constants.js, quizDoses.js, questionEdits.js, staffPage.js,
  * views/templates.js, views/quizMarkup.js and questions.js.
  */
-import { warningHtml } from '../staffPage.js';
+import { warningHtml, noteHtml, actionButtonHtml, dataIdAttr } from '../staffPage.js';
 import { escapeHtml } from '../logic.js';
 import { DEFAULT_HEADER_COLOUR } from '../constants.js';
 import { EDIT_FIELDS, LIST_FIELDS, REVIEW, hasChosenWrong } from '../questionEdits.js';
@@ -62,7 +62,6 @@ const SMALL_BOX_ROWS = 2;
 const BOX_LABELS = { ...FIELD_LABELS, steps: 'Step', wrong: 'Wrong answer' };
 
 const asText = (value) => (Array.isArray(value) ? value.join('\n') : String(value ?? ''));
-const note = (text) => `<p class="editor-note">${text}</p>`;
 
 /** The sign-in screen, with an optional message. `isLoading` greys the button while waiting. */
 export function signInHtml(message, isLoading) {
@@ -140,7 +139,7 @@ function homeHeaderHtml(viewer, search) {
  */
 export function homeHtml(viewer, reviewItems, rows, list, scenariosHtml) {
   const review = reviewItems.length
-    ? `${note('The guideline changed after these were edited. Until you choose, the app keeps showing the edit.')}
+    ? `${noteHtml('The guideline changed after these were edited. Until you choose, the app keeps showing the edit.')}
       ${sectionHtml(
         `Needs review (${reviewItems.length})`,
         '',
@@ -158,7 +157,7 @@ export function homeHtml(viewer, reviewItems, rows, list, scenariosHtml) {
       )}`
     : '';
   return `${homeHeaderHtml(viewer, list.search)}
-    <main class="page-padding">${warningHtml(viewer.message)}${review}${note(PUBLISH_NOTE)}
+    <main class="page-padding">${warningHtml(viewer.message)}${review}${noteHtml(PUBLISH_NOTE)}
     ${scenariosHtml}<div id="editor-rows">${guidelineRowsHtml(rows, list.openSections, Boolean(list.search.trim()))}</div>
     </main>`;
 }
@@ -203,7 +202,7 @@ function formHtml(item) {
       const rows = LIST_FIELDS.includes(name) || name === 'answer' ? 5 : 2;
       const hint = item.live.kind === 'card' || name !== 'answer' ? FIELD_HINTS[name] : '';
       return `<label class="editor-label" for="field-${name}">${FIELD_LABELS[name]}</label>
-        ${hint ? note(escapeHtml(hint)) : ''}
+        ${hint ? noteHtml(escapeHtml(hint)) : ''}
         <textarea class="text-input editor-box" id="field-${name}" data-field="${name}"
           rows="${rows}">${escapeHtml(value)}</textarea>`;
     })
@@ -222,8 +221,8 @@ function reviewHtml(item) {
   const { question, edit } = item;
   const names = [...new Set([...Object.keys(edit.was || {}), ...EDIT_FIELDS[item.kind]])];
   const column = (heading, body) => `<div class="editor-column"><h4>${heading}</h4>${body}</div>`;
-  const button = (action, label, style = 'switch-button') =>
-    `<button class="${style}" type="button" data-action="${action}" data-id="${escapeHtml(item.id)}">${label}</button>`;
+  const button = (action, label, style) =>
+    actionButtonHtml(action, label, dataIdAttr(item.id), style);
   // Learners get the edit's fields over the question as it is built now.
   const seen = item.live || { kind: item.kind, ...edit.was, ...edit };
   const now = question
@@ -253,7 +252,7 @@ function boxFormHtml(item, field, index) {
     <label class="editor-label" for="box-text">${BOX_LABELS[field]}</label>
     <textarea class="text-input editor-box" id="box-text"
       rows="${BOX_ROWS[field] || SMALL_BOX_ROWS}">${escapeHtml(boxText(item, field, index))}</textarea>
-    ${hint.map((text) => note(escapeHtml(text))).join('')}
+    ${hint.map((text) => noteHtml(escapeHtml(text))).join('')}
     <div class="editor-buttons">
       <button class="button" type="button" data-action="box-save" data-id="${id}">Save</button>
       <button class="switch-button" type="button" data-action="close">Cancel</button>
@@ -279,7 +278,7 @@ function editingFor(item, openBox) {
 function randomNoteHtml(item) {
   if (item.kind === 'card' || hasChosenWrong(item.live)) return '';
   const from = item.live.pool ? `from ${item.live.pool.length}` : 'from similar numbers';
-  return note(`Wrong answers are picked at random ${from} each time; these are one example.`);
+  return noteHtml(`Wrong answers are picked at random ${from} each time; these are one example.`);
 }
 
 /**
@@ -288,7 +287,7 @@ function randomNoteHtml(item) {
  */
 function previewHtml(item, editing) {
   const { preview } = item;
-  if (!preview) return note('<i>Not asked: there are too few answers to choose from.</i>');
+  if (!preview) return noteHtml('<i>Not asked: there are too few answers to choose from.</i>');
   let body;
   if (preview.kind === 'card') body = turnedCardHtml(preview.card, editing);
   else if (preview.kind === 'order') {
@@ -342,6 +341,6 @@ export function guidelineHtml(viewer, guideline, items, open) {
       <div class="guideline-meta">CPG EAS ${escapeHtml(guideline.number)} · ${items.length} questions<br>
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${note(`Each question as learners see it once they answer it right, edits included. ${TAP_NOTE} ${PUBLISH_NOTE}`)}
+    ${noteHtml(`Each question as learners see it once they answer it right, edits included. ${TAP_NOTE} ${PUBLISH_NOTE}`)}
     ${items.map((item) => questionHtml(item, open)).join('')}</main>`;
 }

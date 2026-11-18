@@ -23,13 +23,13 @@ import {
 } from '../scenarioSubmission.js';
 import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from '../scenarioEdits.js';
 import { guidelines, guidelineById } from '../guidelines.js';
-import { warningHtml } from '../staffPage.js';
+import { warningHtml, noteHtml } from '../staffPage.js';
 import { coverHtml } from '../views/templates.js';
 
+// A small button inside the form (add, remove), labelled for screen readers.
 const smallButton = (action, label, data = '', ariaLabel = label) =>
   `<button class="submit-small-button" type="button" data-action="${action}"${data}
     aria-label="${escapeHtml(ariaLabel)}">${label}</button>`;
-const note = (text) => `<p class="editor-note">${text}</p>`;
 
 /** One labelled box: a line, or a text area when `field.lines` > 1. `name` is its form name. */
 function boxHtml(field, name, value) {
@@ -62,7 +62,7 @@ function complexityHtml(complexity) {
 /** Scene load: single or delegation; with several patients it is "Several patients". */
 function loadHtml(job) {
   if (job.patients.length > 1) {
-    return `<p class="submit-label">Scene load</p>${note(SCENARIO_LOADS.several.name)}`;
+    return `<p class="submit-label">Scene load</p>${noteHtml(SCENARIO_LOADS.several.name)}`;
   }
   const choices = SCENE_LOADS.map(
     ([value, text]) => `<label class="submit-check"><input type="radio" name="load"
@@ -169,7 +169,7 @@ function guidelinesHtml(state) {
   return `<section class="submit-card" aria-labelledby="submit-guidelines-title">
     <h2 class="submit-card__title" id="submit-guidelines-title">Guidelines
       <span class="submit-required">(at least one)</span></h2>
-    ${note('Only guidelines in the app can be added, so each one links to it.')}
+    ${noteHtml('Only guidelines in the app can be added, so each one links to it.')}
     ${chosen ? `<ul class="submit-guidelines">${chosen}</ul>` : ''}${picker}</section>`;
 }
 
@@ -188,14 +188,14 @@ function photoHtml(photo, index) {
 function photosHtml(photos, isReading) {
   const add =
     photos.length >= SUBMISSION_LIMITS.IMAGES
-      ? note('That’s the most photos one job can have.')
+      ? noteHtml('That’s the most photos one job can have.')
       : `<input class="submit-file-input" id="submit-photo-input" type="file" accept="image/*"
           multiple data-action="add-photos">
         <label class="button button--secondary submit-add-photo" for="submit-photo-input">
           ${isReading ? 'Reading the photo…' : 'Take or add a photo'}</label>`;
   return `<section class="submit-card" aria-labelledby="submit-photos-title">
     <h2 class="submit-card__title" id="submit-photos-title">Photos (optional)</h2>
-    ${note(`ECGs, rhythm strips or the monitor. Photograph straight on and fill the frame with the
+    ${noteHtml(`ECGs, rhythm strips or the monitor. Photograph straight on and fill the frame with the
       trace, leaving out the printed name and NHI. Check each preview: nothing that names the
       patient should show.`)}
     ${photos.map(photoHtml).join('')}${add}</section>`;
@@ -230,7 +230,7 @@ function teachingHtml(job) {
     <h2 class="submit-card__title" id="submit-teaching-title">Teaching</h2>
     ${boxHtml(INTENTION_FIELD, INTENTION_FIELD.key, job.intention)}
     <p class="submit-label">Debrief points <span class="submit-required">(at least one)</span></p>
-    ${note('Short, observable things the learner should do. The mentor rates each one in the debrief.')}
+    ${noteHtml('Short, observable things the learner should do. The mentor rates each one in the debrief.')}
     ${points}${add}</section>`;
 }
 

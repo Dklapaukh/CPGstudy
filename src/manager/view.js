@@ -61,34 +61,31 @@ function tableHtml(caption, headings, rows) {
     <thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
-/**
- * The date range boxes and the two charts with their table. `range` is { from, to } as date-box
- * text; `weeks` is the output of weeklySeries; `subject` names whose numbers they are.
- */
-export function overTimeHtml(range, weeks, subject) {
-  const weekName = (week) => `Week of ${shortDate(week.weekStart)}`;
-  const completions = weeks.map((week) => ({
+const weekName = (week) => `Week of ${shortDate(week.weekStart)}`;
+
+/** Chart points, one per week: `valueOf(week)` is the height, `tipOf(week)` the hover text. */
+function weeklyPoints(weeks, valueOf, tipOf) {
+  return weeks.map((week) => ({
     label: shortDate(week.weekStart),
-    value: week.completions,
-    tip: `${weekName(week)}: ${week.completions} marked complete`,
+    value: valueOf(week),
+    tip: `${weekName(week)}: ${tipOf(week)}`,
   }));
-  const scores = weeks.map((week) => ({
-    label: shortDate(week.weekStart),
-    value: week.quizAverage,
-    tip:
-      week.quizCount === 0
-        ? `${weekName(week)}: no quiz`
-        : `${weekName(week)}: average ${week.quizAverage}% over ${week.quizCount} quiz scores`,
-  }));
-  const scenarioScores = weeks.map((week) => ({
-    label: shortDate(week.weekStart),
-    value: week.scenarioAverage,
-    tip:
-      week.scenarioAverage === null
-        ? `${weekName(week)}: no rated scenario`
-        : `${weekName(week)}: average ${week.scenarioAverage}% over ${week.scenarioCount} ` +
-          'scenario runs',
-  }));
+}
+
+/** The From and To date boxes, with the two quick-range buttons. */
+function dateRangeHtml(range) {
+  return `<div class="date-range">
+      <label class="date-range__field">From
+        <input class="date-range__input" type="date" id="range-from" value="${range.from}"></label>
+      <label class="date-range__field">To
+        <input class="date-range__input" type="date" id="range-to" value="${range.to}"></label>
+      <button class="range-button" type="button" data-action="range-recent">Last 12 weeks</button>
+      <button class="range-button" type="button" data-action="range-all">All dates</button>
+    </div>`;
+}
+
+/** The weekly numbers as a table, for screen readers and anyone who wants the figures. */
+function weeklyTableHtml(weeks, subject) {
   const rows = weeks.map(
     (week) =>
       `<th scope="row">${escapeHtml(shortDate(week.weekStart))}</th>` +
@@ -100,15 +97,47 @@ export function overTimeHtml(range, weeks, subject) {
         percentText(week.scenarioAverage),
       ]),
   );
+  const headings = [
+    'Week of',
+    'Marked complete',
+    'Quiz scores saved',
+    'Average quiz score',
+    'Scenario runs',
+    'Average scenario score',
+  ];
+  return tableHtml(`Completions and quiz scores by week, ${subject}`, headings, rows);
+}
+
+/**
+ * The date range boxes and the charts with their table. `range` is { from, to } as date-box
+ * text; `weeks` is the output of weeklySeries; `subject` names whose numbers they are.
+ */
+export function overTimeHtml(range, weeks, subject) {
+  const completions = weeklyPoints(
+    weeks,
+    (week) => week.completions,
+    (week) => `${week.completions} marked complete`,
+  );
+  const scores = weeklyPoints(
+    weeks,
+    (week) => week.quizAverage,
+    (week) =>
+      week.quizCount === 0
+        ? 'no quiz'
+        : `average ${week.quizAverage}% over ${week.quizCount} quiz scores`,
+  );
+  const scenarioScores = weeklyPoints(
+    weeks,
+    (week) => week.scenarioAverage,
+    (week) =>
+      week.scenarioAverage === null
+        ? 'no rated scenario'
+        : `average ${week.scenarioAverage}% over ${week.scenarioCount} scenario runs`,
+  );
+  const percentChart = (points, title) =>
+    chartSvg({ points, kind: CHART_KIND.LINE, title, unit: '%', max: PERCENT_MAX });
   return `<section class="stats-section"><h2 class="section-title">Over time</h2>
-    <div class="date-range">
-      <label class="date-range__field">From
-        <input class="date-range__input" type="date" id="range-from" value="${range.from}"></label>
-      <label class="date-range__field">To
-        <input class="date-range__input" type="date" id="range-to" value="${range.to}"></label>
-      <button class="range-button" type="button" data-action="range-recent">Last 12 weeks</button>
-      <button class="range-button" type="button" data-action="range-all">All dates</button>
-    </div>
+    ${dateRangeHtml(range)}
     <h3 class="chart-title">Guidelines marked complete, by week</h3>
     ${chartSvg({
       points: completions,
@@ -116,38 +145,15 @@ export function overTimeHtml(range, weeks, subject) {
       title: `Guidelines marked complete by week, ${subject}`,
     })}
     <h3 class="chart-title">Average guideline quiz score, by week</h3>
-    ${chartSvg({
-      points: scores,
-      kind: CHART_KIND.LINE,
-      title: `Average guideline quiz score by week, ${subject}`,
-      unit: '%',
-      max: PERCENT_MAX,
-    })}
+    ${percentChart(scores, `Average guideline quiz score by week, ${subject}`)}
     <h3 class="chart-title">Average scenario score, by week</h3>
-    ${chartSvg({
-      points: scenarioScores,
-      kind: CHART_KIND.LINE,
-      title: `Average scenario score by week, ${subject}`,
-      unit: '%',
-      max: PERCENT_MAX,
-    })}
+    ${percentChart(scenarioScores, `Average scenario score by week, ${subject}`)}
     <p class="stats-note">Weeks start on Monday. A week with no dot had no quiz or no rated
       scenario. Dates before
       the manager view was switched on come from the saved marked dates and best and latest
       quiz scores, so earlier plays in between are not shown.</p>
     <details class="chart-data"><summary>Show these numbers as a table</summary>
-    ${tableHtml(
-      `Completions and quiz scores by week, ${subject}`,
-      [
-        'Week of',
-        'Marked complete',
-        'Quiz scores saved',
-        'Average quiz score',
-        'Scenario runs',
-        'Average scenario score',
-      ],
-      rows,
-    )}</details></section>`;
+    ${weeklyTableHtml(weeks, subject)}</details></section>`;
 }
 
 /**

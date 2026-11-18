@@ -11,7 +11,6 @@ import {
   rowMedicineName,
   readPracticeLevelTable,
   rowsForMedicine,
-  medicinePracticeLevels,
   ANY_ROUTE,
   textRoutes,
   rowGrant,
@@ -71,7 +70,16 @@ test('rowsForMedicine needs every word of the row name in the title', () => {
   assert.deepEqual(names('Aspirin'), ['Aspirin PO']);
 });
 
-test('medicinePracticeLevels joins the levels of all rows; no rows or [] means every level', () => {
+// The levels at which a medicine has any grant, in table order (what the ATP filter shows).
+const levelsWithGrants = (grantsById) =>
+  Object.fromEntries(
+    Object.entries(grantsById).map(([id, grants]) => [
+      id,
+      Object.keys(grants).filter((level) => grants[level].length > 0),
+    ]),
+  );
+
+test('medicineGrants covers the levels of all rows; no rows or [] means every level', () => {
   const table = readPracticeLevelTable(fakeAtpGuideline);
   const medicines = [
     { id: 'a', t: 'Aspirin' },
@@ -79,7 +87,7 @@ test('medicinePracticeLevels joins the levels of all rows; no rows or [] means e
     { id: 'x', t: 'Unknown Medicine' },
     { id: 'o', t: 'Aspirin' },
   ];
-  const levels = medicinePracticeLevels(medicines, table, { o: ['Magnesium IV'] });
+  const levels = levelsWithGrants(medicineGrants(medicines, table, { o: ['Magnesium IV'] }));
   assert.deepEqual(levels, {
     a: ['EMT', 'Paramedic', 'ICP'],
     m: ['ICP'],
@@ -93,7 +101,7 @@ test('medicinePracticeLevels joins the levels of all rows; no rows or [] means e
 const allGuidelines = guidelineData.sections.flatMap((section) => section.items);
 const atpTable = readPracticeLevelTable(allGuidelines.find((g) => g.id === ATP_GUIDELINE_ID));
 const medicines = guidelineData.sections.find((s) => s.name === QUIZ_SECTION_NAME).items;
-const realLevels = medicinePracticeLevels(medicines, atpTable, practiceLevelOverrides);
+const realLevels = levelsWithGrants(medicineGrants(medicines, atpTable, practiceLevelOverrides));
 const levelsOf = (title) => realLevels[medicines.find((medicine) => medicine.t === title).id];
 
 test('the 1.1 table has the four practice levels', () => {

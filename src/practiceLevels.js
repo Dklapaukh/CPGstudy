@@ -91,23 +91,6 @@ function medicineRows(medicine, table, overrides) {
   return rowsForMedicine(medicine.t, table.rows);
 }
 
-/**
- * The practice levels of each medicine, by guideline id: the levels ticked in any of its rows
- * (a medicine counts for an ATP if that ATP may give it by any route). `overrides` gives, by
- * guideline id, row names to use instead of matching ([] = not in the table: every level).
- * A medicine with no rows gets every level, so nothing is hidden by a missed match.
- */
-export function medicinePracticeLevels(medicines, table, overrides = {}) {
-  const levelsById = {};
-  for (const medicine of medicines) {
-    const rows = medicineRows(medicine, table, overrides);
-    const ticked = new Set(rows.flatMap((row) => row.levels));
-    levelsById[medicine.id] =
-      rows.length === 0 ? [...table.levels] : table.levels.filter((level) => ticked.has(level));
-  }
-  return levelsById;
-}
-
 /* ---------- Feature 11: routes and indication limits (plan 8.6) ---------- */
 
 // A grant with this in place of a route list covers every route ("Adrenaline (all routes)").
