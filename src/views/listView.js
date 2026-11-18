@@ -100,7 +100,7 @@ let quizChoiceOpen = false;
 /** The header tabs: Quiz (opens the choice below the tracker name) and To learn. */
 function tabsHtml() {
   return `<nav class="home-tabs" aria-label="Sections of the app">
-    <button class="home-tab" id="quiz-tab" type="button" aria-expanded="${quizChoiceOpen}"
+    <button class="home-tab home-tab--quiz" id="quiz-tab" type="button" aria-expanded="${quizChoiceOpen}"
       aria-controls="quiz-choice">Quiz</button>
     ${queueButtonHtml()}</nav>`;
 }

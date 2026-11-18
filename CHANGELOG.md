@@ -2,6 +2,9 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: The Quiz tab always has the green outline (open or closed), matching the overall
+  progress card.
+
 - 2026-11-18: Light mode restyled to the "Glacier" design: a pale green-grey page with white
   cards and pills that have a soft shadow and no border, each guideline section its own rounded
   card, the Plus Jakarta Sans font and a larger 26px title. The chosen tab and filter and the

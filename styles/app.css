@@ -376,7 +376,9 @@ h1 {
   text-decoration: none;
   cursor: pointer;
 }
-/* Chosen tab and filter: white with a green outline and green text. */
+/* Chosen tab and filter, and the Quiz tab open or closed: white with a green outline and
+   green text, like the progress card. */
+.home-tab--quiz,
 .home-tab[aria-expanded='true'],
 .home-header .filter-chip[aria-pressed='true'] {
   background: var(--header-control);
