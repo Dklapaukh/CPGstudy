@@ -126,7 +126,7 @@ test('the Quiz tab opens the choice of quizzes', async () => {
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, false);
   assert.equal($('#quiz-tab').getAttribute('aria-expanded'), 'true');
-  assert.equal($$('#quiz-choice .quiz-button').length, 4);
+  assert.equal($$('#quiz-choice .quiz-button').length, 5);
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, true);
 });
@@ -816,4 +816,39 @@ test('Switch tracker has a back link to the open tracker, which stays saved unti
   click($('[data-action="switch-tracker"]'));
   assert.match($('[data-action="back-to-tracker"]').textContent, /Back to Kim/);
   await signIn(TRACKER); // back to Sam's tracker for the tests that follow
+});
+
+test('Scenarios open from the Quiz choice; a guideline opened from one links back to it', async () => {
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.ok($('#quiz-choice a[href="#scenarios"]'), 'Scenarios is in the Quiz choice');
+  dom.window.location.hash = '#scenarios';
+  await sleep(30);
+  assert.ok($$('.scenario-row').length >= 10);
+  assert.match($('.scenario-group-title').textContent, /^Level 1/);
+  dom.window.location.hash = '#scenario-long-lie';
+  await sleep(30);
+  assert.equal($('.scenario-title').textContent, 'Long lie');
+  const heads = $$('.scenario-vitals th').map((cell) => cell.textContent);
+  assert.deepEqual(heads, ['GCS', 'RR', 'SpO₂', 'HR', 'BP', 'Temp', 'BGL', 'Pain']);
+  assert.equal($$('.scenario-vitals tbody td')[4].textContent, '168/92');
+  assert.equal($$('.scenario-guideline').length, 4);
+  assert.equal($('.scenario-guideline').getAttribute('href'), '#cpg-13-3');
+  click($('[data-action="scenario-add-to-queue"]'));
+  assert.notEqual($('#scenario-queue-message').textContent, '');
+  dom.window.location.hash = '#cpg-13-3';
+  await sleep(30);
+  assert.equal($('.back-link').textContent, '‹ Back to scenario: Long lie');
+  assert.equal($('.back-link').getAttribute('href'), '#scenario-long-lie');
+  dom.window.location.hash = '#cpg-1-2'; // not one of the scenario's guidelines
+  await sleep(30);
+  assert.equal($('.back-link').textContent, '‹ All guidelines');
+  dom.window.location.hash = '#cpg-13-3';
+  await sleep(30);
+  assert.equal($('.back-link').textContent, '‹ All guidelines', 'the link back is forgotten');
+  dom.window.location.hash = '#scenario-transmission-gully-crash';
+  await sleep(30);
+  assert.equal($$('.scenario-patient').length, 3, 'each patient of a multi-patient scenario');
+  dom.window.location.hash = '';
+  await sleep(30);
 });

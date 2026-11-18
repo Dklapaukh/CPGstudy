@@ -26,6 +26,8 @@ const QUIZ_ICON_PATHS = {
     '<rect x="8" y="2" width="8" height="4" rx="1"/>' +
     '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>' +
     '<path d="m9 14 2 2 4-4"/>',
+  // A heartbeat line: Scenarios.
+  pulse: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
   // Four squares: Pick the guideline (sorting pieces).
   grid:
     '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>' +

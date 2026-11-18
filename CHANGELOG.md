@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Scenarios, a fifth button in the Quiz choice (#scenarios). 10 hand-written
+  openings in `content/scenarios.js`, grouped by level 1 to 5. A scenario (#scenario-<id>) shows
+  level, title, suburb and story, then vitals in one row (GCS, RR, SpO₂, HR, BP, Temp, BGL,
+  Pain), patient background, the intention (folded) and its guidelines, one row each. A
+  guideline opened from a scenario has "Back to scenario"; "Add all to queue" fills Guidelines
+  to learn. Nothing is saved. `tests/scenarios.test.js` checks the content.
+
 - 2026-11-18: Plan 8.3 item 3: options for replacing the Google Sheet backend.
 
 - 2026-11-18: Plan: the editor page, sign-up and the demo are switched on and confirmed

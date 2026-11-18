@@ -18,6 +18,7 @@ import {
   GUIDELINE_QUIZ_HASH,
   QUEUE_HASH,
   SETTINGS_HASH,
+  SCENARIOS_HASH,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -26,6 +27,7 @@ const SCREEN_NAMES = {
   [GUIDELINE_QUIZ_HASH]: 'Guideline quiz',
   [QUEUE_HASH]: 'Guidelines to learn',
   [SETTINGS_HASH]: 'Settings',
+  [SCENARIOS_HASH]: 'Scenarios',
 };
 
 /** True when the report button should show (an address is set). */

@@ -42,6 +42,8 @@ export const state = {
   // Where the student was on a guideline when they pressed its Quiz button, so the quiz can
   // return there: { guidelineId, scrollY, openHeadings (true or false per heading) }, or null.
   guidelineQuizReturn: null,
+  // The scenario whose guideline link was followed, so that guideline shows "Back to scenario".
+  scenarioReturn: null,
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,
   updateInProgress: false,

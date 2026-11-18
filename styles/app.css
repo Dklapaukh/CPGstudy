@@ -3064,3 +3064,140 @@ ul.sort-piece__text {
 .medicine-test-screen select {
   margin-top: 0.8rem;
 }
+
+/* Scenarios (Quiz > Scenarios). Cards match the guideline list's section cards. */
+.scenario-screen {
+  padding-top: 0.8rem;
+}
+.scenario-card {
+  margin: 0 0 0.5rem;
+  padding: 0.9rem 0.9rem 1rem;
+  background: var(--colour-surface);
+  border: 1px solid var(--pill-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.scenario-intro {
+  margin: 0 0 0.8rem;
+  color: var(--colour-muted);
+}
+.scenario-group-title {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+}
+.scenario-row,
+.scenario-guideline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--colour-line);
+  color: var(--colour-text);
+  text-decoration: none;
+}
+.scenario-row:last-child,
+.scenario-guideline:last-child {
+  border-bottom: 0;
+}
+.scenario-row > span:last-child,
+.scenario-guideline > span:last-child {
+  color: var(--colour-accent-text);
+  font-size: 1.2rem;
+}
+.scenario-row__text small {
+  display: block;
+  color: var(--colour-muted);
+}
+.scenario-guideline b {
+  color: var(--colour-accent-text);
+  margin-right: 0.3rem;
+}
+.scenario-level {
+  display: inline-block;
+  padding: 0.15rem 0.7rem;
+  border: 1.5px solid var(--colour-green);
+  border-radius: 999px;
+  color: var(--colour-accent-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.scenario-title {
+  margin: 0.4rem 0 0.1rem;
+  font-size: 1.45rem;
+}
+.scenario-label {
+  margin: 0;
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.scenario-story {
+  margin: 0.5rem 0 0;
+}
+.scenario-fact {
+  margin: 0 0 0.6rem;
+}
+.scenario-fold__body {
+  padding: 0.7rem 0.8rem 0.4rem;
+}
+.scenario-fold__body > .scenario-fact:last-child {
+  margin-bottom: 0.3rem;
+}
+.scenario-patient {
+  margin: 1rem 0.2rem 0.4rem;
+  font-size: 1rem;
+}
+/* All eight vitals on one row, even on a small phone. */
+.scenario-vitals {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: center;
+}
+.scenario-vitals th {
+  padding: 0 0 0.35rem;
+  border-bottom: 1px solid var(--colour-line);
+  color: var(--colour-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.scenario-vitals th,
+.scenario-vitals td {
+  border: 0;
+  background: none;
+}
+.scenario-vitals td {
+  padding: 0.45rem 0 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.scenario-vitals th {
+  border-bottom: 1px solid var(--colour-line);
+}
+.scenario-vitals th + th,
+.scenario-vitals td + td {
+  border-left: 1px solid var(--colour-line);
+}
+.scenario-vitals th:nth-child(5) {
+  width: 17%;
+}
+.scenario-queue-button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 0.3rem;
+  border: 1.5px solid var(--colour-green);
+  border-radius: 999px;
+  background: var(--colour-surface);
+  color: var(--colour-accent-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.scenario-queue-message {
+  min-height: 1.5em;
+  margin: 0.5rem 0 0;
+  color: var(--colour-muted);
+  text-align: center;
+}

@@ -151,6 +151,28 @@ export const SORT_QUIZ_HASH = 'pick-guideline';
 // medicine id), so it needs no backend change; the prefix is not one the backend reads.
 export const MEDICINE_TEST_HASH = 'medicine-test';
 export const MEDICINE_TEST_ENTRY_PREFIX = 'medicine-test-';
+// Scenarios (Quiz > Scenarios): openings for mentors to run, from content/scenarios.js. The list
+// is #scenarios and one scenario is #scenario-<id>. Nothing is saved.
+export const SCENARIOS_HASH = 'scenarios';
+export const SCENARIO_HASH_PREFIX = 'scenario-';
+export const SCENARIO_LEVELS = {
+  1: 'Assessment structure',
+  2: 'Common presentations',
+  3: 'Added complexity',
+  4: 'Delegation',
+  5: 'Several patients',
+};
+// The vitals row, in this order.
+export const SCENARIO_VITALS = [
+  ['gcs', 'GCS'],
+  ['rr', 'RR'],
+  ['spo2', 'SpO₂'],
+  ['hr', 'HR'],
+  ['bp', 'BP'],
+  ['temp', 'Temp'],
+  ['bgl', 'BGL'],
+  ['pain', 'Pain'],
+];
 
 // Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
 // "Mark for review N days after Complete" belongs to the tracker, so every phone using it shares it:

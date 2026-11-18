@@ -3,6 +3,7 @@
  * then the status buttons and notes, then the review queue and related guidelines.
  * Drawn from the state. Depends on state.js, guidelines.js, logic.js, comments.js, templates.js.
  */
+import { scenarioById } from './scenarioView.js';
 import { state, saveSession } from '../state.js';
 import { guidelines } from '../guidelines.js';
 import { getStatus, escapeHtml, formatUpdatedDate, nextTimestamp, markedTime } from '../logic.js';
@@ -12,7 +13,7 @@ import { bodyHtml, aiNoticeHtml } from './templates.js';
 import { reviewPanelsHtml, refreshQueueViews } from './queueView.js';
 import { quizzedGuidelines } from '../guidelineQuizState.js';
 import { documentInfo } from '../../content/guidelines.js';
-import { STATUS, MESSAGES, DEFAULT_HEADER_COLOUR } from '../constants.js';
+import { STATUS, MESSAGES, DEFAULT_HEADER_COLOUR, SCENARIO_HASH_PREFIX } from '../constants.js';
 
 const app = document.getElementById('app');
 const byId = (id) => document.getElementById(id);
@@ -62,12 +63,21 @@ function neighbourLinkHtml(guideline, isNext) {
     ${escapeHtml(guideline.t)}</a>`;
 }
 
+/** Back to the scenario this guideline was opened from, or to the list. */
+function backLinkHtml(guidelineId) {
+  const scenario = state.scenarioReturn && scenarioById(state.scenarioReturn);
+  if (scenario && scenario.guidelines.includes(guidelineId)) {
+    return `<a class="back-link" href="#${SCENARIO_HASH_PREFIX}${escapeHtml(scenario.id)}">‹ Back to scenario: ${escapeHtml(scenario.title)}</a>`;
+  }
+  return '<a class="back-link" href="#">‹ All guidelines</a>';
+}
+
 /** Draws the guideline at `index` in the guideline list. */
 export function renderGuidelineDetail(index) {
   const guideline = guidelines[index];
   const entry = state.entries[guideline.id] || {};
   const updated = entry.t ? `Updated ${formatUpdatedDate(entry.t)}` : '';
-  app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
+  app.innerHTML = `${backLinkHtml(guideline.id)}
     <div class="guideline-header"
       style="--header-colour:${guideline.hc || DEFAULT_HEADER_COLOUR}">
       <h1>${escapeHtml(guideline.t)}</h1>

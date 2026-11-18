@@ -465,3 +465,7 @@ removed dead CSS and stale notes, with no behaviour change.
 **Open:** 8.3 items 1 to 3; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
 a best score for Pick the guideline; changing its second or third guideline too.
+
+**Scenarios (18 Nov 2026):** Quiz > Scenarios added with 10 scenarios (levels 1 to 5,
+Wellington region). Next: write more scenarios, then decide how they are selected (by level,
+theme, recently studied guidelines) and whether running one is recorded.

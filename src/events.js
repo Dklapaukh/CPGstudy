@@ -34,7 +34,8 @@ import { getQueue, saveQueue, tickOffQueuedGuideline } from './queueState.js';
 import { saveMarkedTime } from './markedState.js';
 import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
-import { getStatus } from './logic.js';
+import { getStatus, plural } from './logic.js';
+import { scenarioById } from './views/scenarioView.js';
 import { applyUpdate } from './updateState.js';
 import {
   startSession,
@@ -85,6 +86,7 @@ import {
   COMMENT_CONFIRMATION_MS,
   SEARCH_PAUSE_MS,
   GUIDELINE_QUIZ_HASH,
+  MAX_QUEUE_SIZE,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -228,6 +230,23 @@ function changeQueue(newQueue) {
 
 const addGuidelineToQueue = (button) => changeQueue(addToQueue(getQueue(), [button.dataset.id]));
 const addAllRelatedToQueue = () => changeQueue(addToQueue(getQueue(), shownRelatedIds()));
+/** Adds a scenario's guidelines to Guidelines to learn and says how many fitted. */
+function addScenarioToQueue(button) {
+  const scenario = scenarioById(button.dataset.id);
+  if (!scenario) return;
+  const before = getQueue();
+  const after = addToQueue(before, scenario.guidelines);
+  const added = after.length - before.length;
+  changeQueue(after);
+  const message = byId('scenario-queue-message');
+  if (!message) return;
+  const notAdded = scenario.guidelines.filter((id) => !after.some((item) => item.id === id));
+  message.textContent =
+    (added ? `Added ${plural(added, 'guideline')} to Guidelines to learn.` : 'Nothing added.') +
+    (notAdded.length
+      ? ` ${plural(notAdded.length, 'guideline')} didn't fit (the list holds ${MAX_QUEUE_SIZE}).`
+      : '');
+}
 const removeGuidelineFromQueue = (button) =>
   changeQueue(removeFromQueue(getQueue(), button.dataset.id));
 
@@ -414,6 +433,7 @@ const clickActions = {
   'add-to-queue': addGuidelineToQueue,
   'add-all-to-queue': addAllRelatedToQueue,
   'remove-from-queue': removeGuidelineFromQueue,
+  'scenario-add-to-queue': addScenarioToQueue,
   comment: addComment,
   'toggle-heading': toggleHeading,
   'quiz-start': changeQuiz(startSession),

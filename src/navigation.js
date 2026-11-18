@@ -22,6 +22,7 @@ import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
 import { renderSortQuizScreen } from './views/sortQuizView.js';
 import { renderMedicineTestScreen } from './views/medicineTestView.js';
 import { renderSettingsScreen } from './views/settingsView.js';
+import { renderScenarioList, renderScenario, scenarioFromHash } from './views/scenarioView.js';
 import { applyAutoReview } from './settingsState.js';
 import { markGuidelineSeen } from './updateState.js';
 import {
@@ -34,6 +35,7 @@ import {
   MEDICINE_TEST_HASH,
   SETTINGS_HASH,
   STATS_HASH,
+  SCENARIOS_HASH,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -116,12 +118,24 @@ function handleQuizReturn(id) {
   restoreGuidelinePlace(place);
 }
 
+/**
+ * Forgets the scenario a guideline was opened from once the student goes anywhere other than
+ * one of its guidelines or the scenario itself.
+ */
+function keepScenarioReturn(id, scenario) {
+  const from = state.scenarioReturn && scenarioFromHash(`scenario-${state.scenarioReturn}`);
+  if (scenario || (from && from.guidelines.includes(id))) return;
+  state.scenarioReturn = null;
+}
+
 /** Shows the list or the guideline named in the web address. */
 export function route() {
   if (state.screen !== SCREEN.TRACKER) return;
   applyAutoReview(); // Complete guidelines past the "mark for review after" days
   const id = location.hash.slice(1);
   const index = guidelines.findIndex((guideline) => guideline.id === id);
+  const scenario = scenarioFromHash(id);
+  keepScenarioReturn(id, scenario);
   if (index >= 0) {
     // Remember where the list was scrolled to, so Back returns to the same place.
     if (!app.querySelector('.guideline-body')) state.listScrollY = window.scrollY;
@@ -144,6 +158,11 @@ export function route() {
   } else if (id === MEDICINE_TEST_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderMedicineTestScreen();
+    window.scrollTo(0, 0);
+  } else if (id === SCENARIOS_HASH || scenario) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    if (scenario) renderScenario(scenario);
+    else renderScenarioList();
     window.scrollTo(0, 0);
   } else if (id === SORT_QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
@@ -199,6 +218,8 @@ export function refreshScreen() {
     // Only the picker is redrawn (a new practice level may have arrived): a test is never
     // interrupted.
     if (!state.medicineTest) renderMedicineTestScreen();
+  } else if (app.querySelector('.scenario-screen')) {
+    // Nothing saved changes a scenario, and redrawing would close its folds.
   } else if (app.querySelector('.sort-quiz-screen')) {
     // Nothing saved can change a round, so it is never redrawn under the learner.
   } else if (app.querySelector('.guideline-quiz-screen')) {

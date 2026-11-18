@@ -4,6 +4,7 @@
  * Drawn entirely from the state. Depends on state.js, guidelines.js, logic.js, templates.js and
  * guidelineQuizState.js (the most recent quiz score on each row).
  */
+import { scenariosButtonHtml } from './scenarioView.js';
 import { state } from '../state.js';
 import { guidelines, sections } from '../guidelines.js';
 import {
@@ -108,7 +109,7 @@ function tabsHtml() {
 /** The Quiz tab's choice of quizzes, shown under the tracker name while the tab is open. */
 function quizChoiceHtml() {
   return `<div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
-    ${quizButtonHtml()}${guidelineQuizButtonHtml()}${medicineTestButtonHtml()}${sortQuizButtonHtml()}</div>`;
+    ${quizButtonHtml()}${guidelineQuizButtonHtml()}${medicineTestButtonHtml()}${sortQuizButtonHtml()}${scenariosButtonHtml()}</div>`;
 }
 
 /** Opens and closes the Quiz tab's choice without redrawing the list. */
