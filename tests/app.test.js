@@ -121,12 +121,12 @@ test('a tracker passcode shows 14 sections and 180 guidelines with counts', asyn
   assert.equal($('.tracker-label').textContent, 'Sam - 2026');
 });
 
-test('the Quiz tab opens the choice of Medicines or Guideline quiz', async () => {
+test('the Quiz tab opens the choice of quizzes', async () => {
   assert.equal($('#quiz-choice').hidden, true);
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, false);
   assert.equal($('#quiz-tab').getAttribute('aria-expanded'), 'true');
-  assert.equal($$('#quiz-choice .quiz-button').length, 2);
+  assert.equal($$('#quiz-choice .quiz-button').length, 3);
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, true);
 });
@@ -567,6 +567,25 @@ test('guidelines without a guideline quiz have no Quiz pill', async () => {
   dom.window.location.hash = '#cpg-1-2';
   await sleep(30);
   assert.equal($('[data-action="quiz-this-guideline"]'), null);
+  dom.window.location.hash = '';
+  await sleep(30);
+});
+
+test('Pick the guideline puts each piece in a box, takes one back and marks the round', async () => {
+  dom.window.location.hash = '#pick-guideline';
+  await sleep(30);
+  click($('[data-action="sort-start"]'));
+  assert.equal($$('.sort-header__name').length, 2, 'both guidelines are named in the header');
+  const total = Number($('.quiz-left').textContent.match(/of (\d+)/)[1]);
+  click($('[data-action="sort-place"][data-side="left"]'));
+  assert.equal($$('.sort-piece--placed').length, 1);
+  click($('[data-action="sort-take-back"]'));
+  assert.equal($$('.sort-piece--placed').length, 0, 'a piece can be taken back');
+  for (let i = 0; i < total; i++) click($('[data-action="sort-place"][data-side="right"]'));
+  assert.equal($('[data-action="sort-place"]'), null);
+  click($('[data-action="sort-check"]'));
+  assert.match($('.quiz-finished').textContent, new RegExp(`^\\d+ of ${total} right$`));
+  assert.equal($$('.sort-piece--right, .sort-piece--wrong').length, total);
   dom.window.location.hash = '';
   await sleep(30);
 });

@@ -19,6 +19,7 @@ import {
 import { renderQueueScreen, refreshQueueViews } from './views/queueView.js';
 import { renderQuizScreen } from './views/quizView.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
+import { renderSortQuizScreen } from './views/sortQuizView.js';
 import { renderSettingsScreen } from './views/settingsView.js';
 import { applyAutoReview } from './settingsState.js';
 import { markGuidelineSeen } from './updateState.js';
@@ -28,6 +29,7 @@ import {
   QUEUE_HASH,
   QUIZ_HASH,
   GUIDELINE_QUIZ_HASH,
+  SORT_QUIZ_HASH,
   SETTINGS_HASH,
   STATS_HASH,
 } from './constants.js';
@@ -83,6 +85,7 @@ function clearOpenTracker() {
   state.currentGuideline = null;
   state.quiz = null;
   state.guidelineQuiz = null;
+  state.sortQuiz = null;
   clearSavedSession();
 }
 
@@ -135,6 +138,10 @@ export function route() {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     renderGuidelineQuizScreen();
     window.scrollTo(0, 0);
+  } else if (id === SORT_QUIZ_HASH) {
+    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
+    renderSortQuizScreen();
+    window.scrollTo(0, 0);
   } else {
     renderList();
     window.scrollTo(0, state.listScrollY);
@@ -150,6 +157,7 @@ export function beginTrackerSession(passcode, label, remoteEntries) {
   state.entries = mergeRemoteEntries({}, remoteEntries || {}).entries;
   state.quiz = null;
   state.guidelineQuiz = null;
+  state.sortQuiz = null;
   state.pendingChanges = {};
   saveSession();
   state.screen = SCREEN.TRACKER;
@@ -179,6 +187,8 @@ export function refreshScreen() {
     refreshDetailFromState();
   } else if (app.querySelector('.queue-screen')) {
     refreshQueueViews();
+  } else if (app.querySelector('.sort-quiz-screen')) {
+    // Nothing saved can change a round, so it is never redrawn under the learner.
   } else if (app.querySelector('.guideline-quiz-screen')) {
     // Only the picker is redrawn (best scores may have arrived): a play is never interrupted.
     if (!state.guidelineQuiz) renderGuidelineQuizScreen();

@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: New quiz, "Pick the guideline" (Quiz tab, `#pick-guideline`). Two related
+  guidelines (each guideline's top related link) are named at the top; up to four pieces of
+  text from each, found in only that one, come up one at a time and go in the left or right
+  box. No headings, no lines naming either guideline and no version history lines; a short
+  section is shown whole, a long one gives one top-level paragraph. Tap a placed piece to take
+  it back; Check marks each piece and counts the streak day. Not saved, not editable.
+
 - 2026-11-18: Medicines quiz overview shows "X of Y mastered" (a card is mastered once its
   interval is 21 days or more, `QUIZ_MASTERED_INTERVAL_DAYS`). The passcode screen says, in
   bold, "Enter code demo to take a look".

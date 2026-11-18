@@ -20,6 +20,7 @@ import {
 import { aiNoticeHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
 import { quizButtonHtml } from './quizView.js';
+import { sortQuizButtonHtml } from './sortQuizView.js';
 import { guidelineQuizButtonHtml } from './guidelineQuizView.js';
 import { footerHtml, drawUpdateStatus } from './updateView.js';
 import { lastScore } from '../guidelineQuizState.js';
@@ -103,7 +104,7 @@ function tabsHtml() {
       aria-controls="quiz-choice">Quiz</button>
     ${queueButtonHtml()}</nav>
     <div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
-    ${quizButtonHtml()}${guidelineQuizButtonHtml()}</div>`;
+    ${quizButtonHtml()}${guidelineQuizButtonHtml()}${sortQuizButtonHtml()}</div>`;
 }
 
 /** Opens and closes the Quiz tab's choice without redrawing the list. */

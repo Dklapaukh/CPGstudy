@@ -143,6 +143,9 @@ export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy'
 // extra entry (GUIDELINE_QUIZ_ENTRY_PREFIX + guideline id), so it needs no backend change.
 export const GUIDELINE_QUIZ_HASH = 'guideline-quiz';
 export const GUIDELINE_QUIZ_ENTRY_PREFIX = 'quiz-order-';
+// "Pick the guideline" quiz: sort pieces of two related guidelines into their boxes. Nothing
+// is saved but the streak day.
+export const SORT_QUIZ_HASH = 'pick-guideline';
 
 // Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
 // "Mark for review N days after Complete" belongs to the tracker, so every phone using it shares it:

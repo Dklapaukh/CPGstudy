@@ -58,6 +58,14 @@ import {
   quizzedGuidelines,
 } from './guidelineQuizState.js';
 import { renderGuidelineQuizScreen } from './views/guidelineQuizView.js';
+import { renderSortQuizScreen } from './views/sortQuizView.js';
+import {
+  startSortQuiz,
+  placeNextItem,
+  takeItemBack,
+  checkSortQuiz,
+  endSortQuiz,
+} from './sortQuizState.js';
 import { canReport, openReport } from './report.js';
 import { startCardDrag } from './views/dragCards.js';
 import { openCommentPanel } from './views/commentPanel.js';
@@ -300,6 +308,17 @@ const changeGuidelineQuiz =
   };
 const cardIndexOf = (button) => Number(button.dataset.card);
 
+/** A "Pick the guideline" action: changes the round, redraws, then plays any streak power-up. */
+const changeSortQuiz =
+  (change, toTop = false) =>
+  (element) => {
+    change(element);
+    const scrollY = window.scrollY;
+    renderSortQuizScreen();
+    window.scrollTo(0, toTop ? 0 : scrollY);
+    showPendingCelebration();
+  };
+
 /** Starts the guideline chosen in the dropdown. */
 function startChosenGuidelineQuiz() {
   const select = byId('guideline-quiz-choice');
@@ -391,6 +410,11 @@ const clickActions = {
     true,
   ),
   'guideline-quiz-end': changeGuidelineQuiz(endGuidelineQuiz, true),
+  'sort-start': changeSortQuiz(() => startSortQuiz(), true),
+  'sort-place': changeSortQuiz((button) => placeNextItem(button.dataset.side)),
+  'sort-take-back': changeSortQuiz((button) => takeItemBack(Number(button.dataset.item))),
+  'sort-check': changeSortQuiz(checkSortQuiz),
+  'sort-end': changeSortQuiz(endSortQuiz, true),
 };
 
 /** Typing in the search box or in the notes. */
