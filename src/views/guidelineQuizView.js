@@ -18,6 +18,7 @@ import {
 import { orderHeadHtml, markedRoundHtml, choiceQuestionHtml } from './quizMarkup.js';
 import { GUIDELINE_QUIZ_HASH } from '../constants.js';
 import { CARD_LIST } from '../guidelineQuizState.js';
+import { quizIconHtml } from './templates.js';
 
 const app = document.getElementById('app');
 const NEXT_BUTTON = `<button class="quiz-start-button" type="button"
@@ -25,7 +26,7 @@ const NEXT_BUTTON = `<button class="quiz-start-button" type="button"
 
 /** The "Guideline quiz" button for the list screen. */
 export function guidelineQuizButtonHtml() {
-  return `<a class="quiz-button" href="#${GUIDELINE_QUIZ_HASH}">Guideline quiz</a>`;
+  return `<a class="quiz-button" href="#${GUIDELINE_QUIZ_HASH}">${quizIconHtml('book')}<span>Guideline quiz</span></a>`;
 }
 
 /** " · best 80%" for a guideline that has been played, otherwise ''. */

@@ -2,6 +2,10 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Home header: the Home tab is gone; Quiz and To learn now share the top bar with
+  the streak and Settings, and the tracker name sits just below. The four Quiz choices have
+  simple icons (capsule, book, clipboard, four squares).
+
 - 2026-11-18: Medicine test, after the owner tried it: the practice level (ATP) can be chosen
   on its screen (the same setting as the Medicines quiz), and the best score per medicine and
   level is saved (`medicine-test-<medicine id>`), shown in the picker and at the end (MT-F).

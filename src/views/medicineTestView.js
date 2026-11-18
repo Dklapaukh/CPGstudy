@@ -12,6 +12,7 @@ import { practiceLevelSelectHtml } from './quizView.js';
 import { TEST_KIND, isRightAnswer } from '../medicineTest.js';
 import { currentTestQuestion, bestTestScore } from '../medicineTestState.js';
 import { MEDICINE_TEST_HASH } from '../constants.js';
+import { quizIconHtml } from './templates.js';
 
 const app = document.getElementById('app');
 const BLANK = '____';
@@ -19,7 +20,7 @@ const PERCENT = 100;
 
 /** The "Medicine test" button for the Quiz choice on the list screen. */
 export const medicineTestButtonHtml = () =>
-  `<a class="quiz-button" href="#${MEDICINE_TEST_HASH}">Medicine test</a>`;
+  `<a class="quiz-button" href="#${MEDICINE_TEST_HASH}">${quizIconHtml('clipboard')}<span>Medicine test</span></a>`;
 
 /** " · best 80%" for a medicine tested at the chosen practice level, otherwise ''. */
 function bestText(medicineId) {

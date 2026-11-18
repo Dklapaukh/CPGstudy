@@ -13,6 +13,30 @@ const INFO_ICON = `<svg class="ai-notice__icon" viewBox="0 0 16 16" aria-hidden=
   <path d="M8 7.2v4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
   <circle cx="8" cy="4.8" r="0.95" fill="currentColor"></circle></svg>`;
 
+// Simple line icons for the Quiz choice buttons, drawn in the button's text colour.
+const QUIZ_ICON_PATHS = {
+  // A capsule: the Medicines quiz.
+  capsule: '<path d="M10.5 20.5a5 5 0 0 1-7-7l6-6a5 5 0 0 1 7 7z"/><path d="m7 10 7 7"/>',
+  // An open book: the Guideline quiz.
+  book:
+    '<path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/>' +
+    '<path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/>',
+  // A clipboard with a tick: the Medicine test.
+  clipboard:
+    '<rect x="8" y="2" width="8" height="4" rx="1"/>' +
+    '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>' +
+    '<path d="m9 14 2 2 4-4"/>',
+  // Four squares: Pick the guideline (sorting pieces).
+  grid:
+    '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>' +
+    '<rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+};
+
+/** One Quiz choice icon by name (capsule, book, clipboard or grid), hidden from screen readers. */
+export const quizIconHtml = (name) =>
+  `<svg class="quiz-button__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${QUIZ_ICON_PATHS[name]}</svg>`;
+
 /**
  * The small notice that the app was made with AI and is for study only. Shown on the passcode,
  * list and guideline screens; kept quiet (small, grey) so it never gets in the way of studying.

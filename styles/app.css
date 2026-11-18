@@ -326,10 +326,19 @@ h1 {
 .settings-button:active {
   transform: scale(0.96);
 }
+/* Home top bar: the Quiz and To learn tabs share the row with the streak and Settings buttons;
+   the tracker name sits on its own line just below. */
+.home-header .top-bar {
+  margin-bottom: 0.5rem;
+}
+.home-header .tracker-label {
+  display: block;
+  margin-bottom: 0.8rem;
+}
 .home-tabs {
   display: flex;
-  gap: 0.5rem;
-  margin: 1rem 0 0.8rem;
+  gap: 0.4rem;
+  min-width: 0;
   overflow-x: auto;
 }
 .home-tab {
@@ -338,7 +347,7 @@ h1 {
   align-items: center;
   gap: 0.25rem;
   min-height: 40px;
-  padding: 0 1rem;
+  padding: 0 0.8rem;
   border: 1px solid var(--header-border);
   border-radius: 999px;
   background: var(--header-control);
@@ -348,11 +357,6 @@ h1 {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-}
-.home-tab[aria-current='page'] {
-  background: var(--header-accent);
-  border-color: var(--header-accent);
-  color: #fff;
 }
 .home-tab[aria-expanded='true'] {
   background: var(--colour-green-soft);
@@ -374,7 +378,10 @@ h1 {
 }
 .quiz-button {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.4rem;
   min-height: 76px;
   padding: 0.8rem;
   border: 1px solid var(--header-border);
@@ -384,6 +391,11 @@ h1 {
   font-weight: 600;
   line-height: 1.3;
   text-decoration: none;
+}
+.quiz-button__icon {
+  width: 22px;
+  height: 22px;
+  color: var(--header-accent);
 }
 .home-card {
   background: var(--header-card);

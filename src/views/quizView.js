@@ -24,6 +24,7 @@ import {
   ALL_PRACTICE_LEVELS,
   QUIZ_MASTERED_INTERVAL_DAYS,
 } from '../constants.js';
+import { quizIconHtml } from './templates.js';
 
 const app = document.getElementById('app');
 
@@ -42,7 +43,7 @@ export function quizButtonHtml() {
   const plan = currentStudyPlan();
   const waiting = plan.dueIds.length + plan.newIds.length;
   const count = waiting ? ` (${waiting} today)` : '';
-  return `<a class="quiz-button" href="#${QUIZ_HASH}">Medicines quiz${count}</a>`;
+  return `<a class="quiz-button" href="#${QUIZ_HASH}">${quizIconHtml('capsule')}<span>Medicines quiz${count}</span></a>`;
 }
 
 // The daily-limit dropdowns on the overview: setting name, element id and label.

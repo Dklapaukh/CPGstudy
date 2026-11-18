@@ -97,14 +97,17 @@ function progressHtml(counts, total, justClosed) {
 // a sync does not close it.
 let quizChoiceOpen = false;
 
-/** The header tabs: Home (this screen), Quiz (opens the choice below) and To learn. */
+/** The header tabs: Quiz (opens the choice below the tracker name) and To learn. */
 function tabsHtml() {
   return `<nav class="home-tabs" aria-label="Sections of the app">
-    <a class="home-tab" href="#" aria-current="page">Home</a>
     <button class="home-tab" id="quiz-tab" type="button" aria-expanded="${quizChoiceOpen}"
       aria-controls="quiz-choice">Quiz</button>
-    ${queueButtonHtml()}</nav>
-    <div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
+    ${queueButtonHtml()}</nav>`;
+}
+
+/** The Quiz tab's choice of quizzes, shown under the tracker name while the tab is open. */
+function quizChoiceHtml() {
+  return `<div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
     ${quizButtonHtml()}${guidelineQuizButtonHtml()}${medicineTestButtonHtml()}${sortQuizButtonHtml()}</div>`;
 }
 
@@ -123,16 +126,18 @@ const COG_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke
   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 
 /**
- * The header: tracker name and settings button, tabs, the progress card, then the title just
- * above the filter pills. Switch tracker lives on the Settings screen.
+ * The header: one top bar with the Quiz and To learn tabs on the left and the streak and
+ * Settings buttons on the right, the tracker name just below it, then the quiz choice, the
+ * progress card and the title above the filter pills. Switch tracker lives on Settings.
  */
 function homeHeaderHtml(counts, justClosed) {
   return `<header class="home-header">
-    <div class="top-bar"><b class="tracker-label">${escapeHtml(state.label)}</b>
+    <div class="top-bar">${tabsHtml()}
     <div class="top-bar__buttons">${streakButtonHtml()}
     <a class="settings-button" href="#settings" aria-label="Settings" title="Settings">${COG_ICON}</a>
     </div></div>
-    ${tabsHtml()}
+    <b class="tracker-label">${escapeHtml(state.label)}</b>
+    ${quizChoiceHtml()}
     <div class="home-card">${progressHtml(counts, guidelines.length, justClosed)}</div>
     <h1>Clinical Practice Guidelines<br><span class="home-header__edition">Study Version</span></h1>
     ${filtersHtml(counts, guidelines.length)}</header>`;

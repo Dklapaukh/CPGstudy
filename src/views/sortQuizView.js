@@ -12,6 +12,7 @@ import { guidelines } from '../guidelines.js';
 import { SORT_GROUP_SIZES } from '../sortQuiz.js';
 import { nextUnplacedIndex, sortStartGuidelines } from '../sortQuizState.js';
 import { SORT_QUIZ_HASH } from '../constants.js';
+import { quizIconHtml } from './templates.js';
 
 const app = document.getElementById('app');
 const GROUP_SIZE_TEXT = { 2: 'Two guidelines', 3: 'Three guidelines' };
@@ -20,7 +21,7 @@ const ROWS_FROM = 3;
 
 /** The "Pick the guideline" button for the Quiz choice on the list screen. */
 export const sortQuizButtonHtml = () =>
-  `<a class="quiz-button" href="#${SORT_QUIZ_HASH}">Pick the guideline</a>`;
+  `<a class="quiz-button" href="#${SORT_QUIZ_HASH}">${quizIconHtml('grid')}<span>Pick the guideline</span></a>`;
 
 const guidelineById = (id) => guidelines.find((guideline) => guideline.id === id);
 

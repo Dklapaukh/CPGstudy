@@ -85,7 +85,9 @@ changing the same entry before syncing keep only the newer one.
 
 ## List, marking and settings
 
-- Header: tabs Home, Quiz (Medicines quiz or Guideline quiz) and To learn; a cog opens Settings;
+- Header: one top bar with the Quiz and To learn tabs on the left and the streak rat and
+  Settings cog on the right; the tracker name sits just below it. Quiz opens four choices,
+  each with a small icon (Medicines quiz, Guideline quiz, Medicine test, Pick the guideline);
   a round button opens a random guideline (weights in `SUGGESTION_WEIGHT`; from the one open
   section if exactly one is open).
 - A guideline page has Review and Complete (no Incomplete), plus Quiz when it has a guideline
