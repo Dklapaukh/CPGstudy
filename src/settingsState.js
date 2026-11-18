@@ -5,7 +5,7 @@
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
-import { getStatus, markedTime, nextTimestamp } from './logic.js';
+import { getStatus, markedTime, nextTimestamp, noteObject } from './logic.js';
 import { guidelines } from './guidelines.js';
 import {
   APP_SETTINGS_ENTRY_ID,
@@ -26,16 +26,7 @@ function clampDays(value) {
 }
 
 /** The saved settings object, or {} when there is none or it cannot be read. */
-function storedSettings() {
-  const entry = state.entries[APP_SETTINGS_ENTRY_ID];
-  if (!entry) return {};
-  try {
-    const parsed = JSON.parse(entry.n);
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
-}
+const storedSettings = () => noteObject(state.entries[APP_SETTINGS_ENTRY_ID]);
 
 /** Days after Complete before a guideline goes back to Needs review; 0 means never. */
 export const getReviewAfterDays = () => clampDays(storedSettings().reviewAfterDays);

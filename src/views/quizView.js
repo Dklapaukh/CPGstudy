@@ -4,7 +4,7 @@
  * Depends on state.js, logic.js, quizState.js, quizSchedule.js and quizMarkup.js.
  */
 import { state } from '../state.js';
-import { escapeHtml } from '../logic.js';
+import { escapeHtml, plural } from '../logic.js';
 import {
   allSchedules,
   currentStudyPlan,
@@ -35,8 +35,6 @@ const RATING_BUTTONS = [
   { rating: RATING.GOOD, label: 'Good', hint: 'I remembered it' },
   { rating: RATING.EASY, label: 'Easy', hint: 'I remembered it easily' },
 ];
-
-const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
 /** The "Medicines quiz" button for the list screen, with the number of cards to study today. */
 export function quizButtonHtml() {

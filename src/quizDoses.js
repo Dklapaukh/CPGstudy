@@ -4,9 +4,10 @@
  * Paediatric doses are never tested, so every line that is only about a child is removed.
  * A medicine whose own Dosage section sends the reader to other guidelines ("See the individual
  * guideline") gets its adult doses from those guidelines instead, one card per indication.
- * Depends on constants.js.
+ * Depends on constants.js and logic.js.
  */
 import { BLOCK } from './constants.js';
+import { escapeForPattern } from './logic.js';
 
 const TOP_LEVEL = 1;
 // A line is only about a child when it names a child and not an adult.
@@ -44,6 +45,9 @@ const HEADING_LEVEL = -1;
  * level; tables, keys and boxes count as deeper than any bullet, so they stay with the bullet
  * above them.
  */
+/** True for a paragraph or bullet: the blocks that hold a line of text. */
+export const isTextBlock = (block) => block[0] === BLOCK.PARAGRAPH || block[0] === BLOCK.BULLET;
+
 const levelOf = (block) => {
   if (block[0] === BLOCK.HEADING) return HEADING_LEVEL;
   const isLevelled = block[0] === BLOCK.BULLET || block[0] === BLOCK.PARAGRAPH;
@@ -88,7 +92,6 @@ export function withoutChildDoses(blocks) {
   return kept;
 }
 
-const escapeForPattern = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const namePattern = (name) => new RegExp(`\\b${escapeForPattern(name)}\\b`, 'g');
 
 /** True when the text names the medicine by any of its lower-case names, as a whole word. */

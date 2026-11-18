@@ -916,11 +916,6 @@ details.section-group > summary .section-count {
   box-shadow: inset 0 0 0 2px var(--colour-green);
   color: var(--colour-green);
 }
-.status-button[aria-pressed='true'].status-button--incomplete {
-  background: #000;
-  border-color: #000;
-  color: #fff;
-}
 textarea {
   width: 100%;
   min-height: 6.5rem;
@@ -1560,7 +1555,6 @@ td.table-cell--coloured {
   margin: 0;
   padding-left: 1.6rem;
 }
-.order-list--pool,
 .order-list--aside {
   padding-left: 0;
   list-style: none;

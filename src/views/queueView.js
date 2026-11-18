@@ -5,7 +5,7 @@
  * queueState.js and content/related.js. Does not import the guideline screen (it imports us).
  */
 import { state } from '../state.js';
-import { guidelines } from '../guidelines.js';
+import { guidelineById } from '../guidelines.js';
 import { getStatus, escapeHtml } from '../logic.js';
 import { queueProgress, queueRoom } from '../queue.js';
 import { rankRelated } from '../related.js';
@@ -25,8 +25,6 @@ const STATUS_DOT_CLASS = {
   [STATUS.REVIEW]: ' status-dot--review',
   [STATUS.COMPLETE]: ' status-dot--complete',
 };
-
-const guidelineById = (id) => guidelines.find((guideline) => guideline.id === id);
 
 /** The coloured dot for a status. */
 function statusDotHtml(status) {

@@ -18,12 +18,12 @@ const PAGE_FOOTER = /^\s*Clinical Practice Guidelines\s.*Page \d+ of \d+\s*$/;
 const PAGE_HEADER_LAST_LINE = /View online at cpg\.stjohn\.org\.nz/;
 
 /** Splits the whole PDF text into pages. Returns an array of page texts. */
-export function splitPages(pdfText) {
+function splitPages(pdfText) {
   return pdfText.split(PAGE_BREAK).filter((page) => page.trim() !== '');
 }
 
 /** Guideline number printed in a page header (e.g. "3.12"), or null if the page has none. */
-export function pageGuidelineNumber(pageText) {
+function pageGuidelineNumber(pageText) {
   const match = pageText.match(GUIDELINE_HEADER);
   return match ? match[1] : null;
 }
@@ -40,7 +40,7 @@ export function exportDateOf(pdfText) {
  * Joins the pages of each guideline, in PDF order.
  * Returns a Map from guideline number to its text. Pages without a header are skipped.
  */
-export function groupPagesByGuideline(pages) {
+function groupPagesByGuideline(pages) {
   const guidelineTexts = new Map();
   pages.forEach((pageText) => {
     const number = pageGuidelineNumber(pageText);
@@ -55,7 +55,7 @@ export function groupPagesByGuideline(pages) {
  * A page without its header and footer, so text that runs over a page break stays together.
  * Returns the page unchanged if it has no recognisable header.
  */
-export function pageBody(pageText) {
+function pageBody(pageText) {
   const lines = pageText.split('\n');
   const headerEnd = lines.findIndex((line) => PAGE_HEADER_LAST_LINE.test(line));
   return lines

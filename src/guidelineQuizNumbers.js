@@ -10,8 +10,9 @@
  * with a wrong unit, for example 300 mcg for 300 mg. A wrong choice is never a value that also
  * appears in the same line. These rules were made without AI and are to be reviewed: see the
  * README, "Guideline quiz".
- * Depends on guidelineQuizRounds.js (shuffled).
+ * Depends on logic.js and guidelineQuizRounds.js (shuffled).
  */
+import { escapeForPattern } from './logic.js';
 import { shuffled } from './guidelineQuizRounds.js';
 
 // Units recognised after a number, longest first so "mg/kg" is not read as "mg".
@@ -82,7 +83,6 @@ const FALLBACK_FACTORS = [10, 0.1, 100, 0.01];
 const SIGNIFICANT_DIGITS = 6;
 
 const NUMBER = '\\d+(?:\\.\\d+)?';
-const escapeForPattern = (text) => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 const UNIT_ALTERNATIVES = UNITS.map(escapeForPattern).join('|');
 // A number or a range ("150-200"), then a unit. "/minute" follows the number with no space.
 const VALUE_PATTERN = new RegExp(

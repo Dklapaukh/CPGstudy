@@ -21,7 +21,7 @@ Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan
 | `src/constants.js`                                                   | Named constants: status codes, storage keys, backend address, timings, messages.               |
 | `src/state.js`                                                       | The one state object and saving it on the phone.                                               |
 | `src/api.js`, `src/sync.js`                                          | Talking to the backend; queued edits and merging.                                              |
-| `src/guidelines.js`, `src/logic.js`, `src/comments.js`               | The guideline list; pure logic (merge, filters, search, comment lines).                        |
+| `src/guidelines.js`, `src/logic.js`, `src/comments.js`               | The guideline list and lookup by id; pure logic (merge, filters, search, shared helpers).      |
 | `src/markedState.js`, `src/settingsState.js`, `src/theme.js`         | Marked dates; "mark for review after N days"; dark mode.                                       |
 | `src/queue.js`, `src/queueState.js`, `src/related.js`                | Guidelines to learn (the queue) and the related list.                                          |
 | `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`        | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                             |
@@ -145,8 +145,8 @@ changing the same entry before syncing keep only the newer one.
   "Magnesium IV") is in the medicine's title. Exceptions are in
   `content/practice-level-overrides.js` (Glucose Gel, the two GTN guidelines); a test fails if a
   medicine matches no row and has no override. Schedules of hidden medicines are kept.
-- With a level chosen, dose cards are also filtered by route and indication (plan 8.6). Each
-  1.1 row gives its level a set of routes ("IN, IM, nebulised and topical"; "(all routes)") and,
+- With a level chosen, dose cards are also filtered by route and indication (plan 8.2, Z18 to
+  Z22). Each 1.1 row gives its level a set of routes ("IN, IM, nebulised and topical"; "(all routes)") and,
   from an "(… only)" bracket, a limit on indications ("cardiac arrest only"). An answer line's
   routes are the route words in it (IM, IV, IN, IO, SC, PO, SL, MDI in capitals; nebulised,
   topical, inhaled; an infusion is IV); a line with none takes those of the line it sits under,

@@ -58,8 +58,8 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 8    | Medicines quiz (flashcards, spaced repetition)                | Built                                    |
 | 9    | Guideline quiz (ordering, number and course-changing questions) | Built                                    |
 | 10   | Medicines quiz: practice level (ATP) filter, by medicine        | Built 16 Nov 2026 (Z17)                  |
-| 11   | Medicines quiz: ATP filter by route and indication              | Built 16 Nov 2026 (Z18 to Z22), see 8.6  |
-| 12   | Manager view (`manager.html`): team and person statistics       | Built 16 Nov 2026; live once the owner does 8.4 task 8 |
+| 11   | Medicines quiz: ATP filter by route and indication              | Built 16 Nov 2026 (Z18 to Z22 in 8.2)    |
+| 12   | Manager view (`manager.html`): team and person statistics       | Built and live 16 Nov 2026               |
 | 13   | Editor page (`editor.html`): editors change quiz questions      | Built 17 Nov 2026; live once the owner does 8.4 task 9 |
 | 14   | Study streak (rat in the top bar) and Settings > Data stats     | Built 17 Nov 2026 (ST-A to ST-C)         |
 | 15   | Demo on first visit and self sign-up (Make an account)          | Built 18 Nov 2026; live once the owner does 8.4 task 10 |
@@ -94,7 +94,7 @@ behaves are in the README.
   hex colours and the six block shapes.
 - C2: the backend cuts back edit times more than 5 minutes ahead of its clock
   (`MAX_CLOCK_AHEAD_MS`).
-- C4: the backend refuses the placeholder mentor passcode; passcodes stay plain text in the Sheet.
+- C4: passcodes stay plain text in the Sheet.
 - C5: revisit reading the whole Data tab at about 20,000 rows or when a sync takes over 3 seconds.
 
 **List, marking and settings**
@@ -188,13 +188,11 @@ to MV-C here because D to Z are already in use above)
   section data, tests and publishing.
 - MV-B: the admin assigns people by editing the Assignments tab of the Google Sheet (viewer
   name, tracker label). There is no admin screen.
-- MV-C: mentors keep their current access (a tracker passcode opens the tracker with notes) and
-  also get the statistics view with their mentor passcode.
+- MV-C: withdrawn 18 Nov 2026 with the mentors (self sign-up replaced them).
 - Backend: tabs Managers (name, passcode), Assignments and History. Each save adds a History
   row when a guideline's status changes or a guideline quiz score is saved; notes are never
-  logged. The "stats" action answers a manager or mentor passcode with labels, statuses, quiz
-  scores and dates of assigned trackers only (mentors: also trackers they created), never
-  notes, comments or tracker passcodes; quiz notes are parsed on the server and only numbers
+  logged. The "stats" action answers a manager passcode with labels, statuses, quiz scores and
+  dates of assigned trackers only, never notes, comments or tracker passcodes; quiz notes are parsed on the server and only numbers
   are returned.
 - Quiz attempt counts exist from launch onward only (before it, only best and latest were
   stored).
@@ -208,8 +206,7 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   per guideline quiz its best and latest score. It runs once and only adds dates earlier than
   the first row already logged.
 - MV-F: guideline counts on the manager page leave out the Medicines section, which has its
-  own part of the person page. "Last active" is the newest save time on the tracker, so a
-  mentor's note edit counts too. A flashcard is "learnt" when its interval is a day or more
+  own part of the person page. "Last active" is the newest save time on the tracker. A flashcard is "learnt" when its interval is a day or more
   and "due" when its due day is today or earlier.
 - MV-G: the manager passcode is kept in the browser tab only (sessionStorage). Tracker labels
   in Assignments match ignoring capitals; two trackers with the same label are both shown.
@@ -391,7 +388,7 @@ Answered 16 Nov 2026:
 6. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
    request before merging, and run `node scripts/practice-level-review.js` on its branch to
    check what each practice level is shown (the pull request's check list says so).
-7. **If commits stop for 60 days**, GitHub pauses the daily PDF check (8.5 item 5): press
+7. **If commits stop for 60 days**, GitHub pauses the daily PDF check: press
    "Enable workflow" on the Actions tab, "pdf-check".
 8. Done 16 Nov 2026: manager view switched on. The first redeploy missed the app's address
    (fixed by redeploying with Manage deployments, New version); the owner confirmed the page
@@ -453,91 +450,12 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Status
 
-**18 Nov 2026 (owner's feedback on the new quizzes).** On `main`, checked with `npm run check`
-(210 tests) and seen in headless Chrome at phone size, including a drag (not yet on a phone):
-Pick the guideline with Two or Three guidelines, partners from the five related (no
-medicines), the first one changeable by tapping its name, and dragging (PG-F to PG-H); the
-Medicine test's own practice level picker and saved best scores (MT-F). **Next:** the owner
-tries both on a phone, especially dragging with a finger and the picker over the first name.
-Possible follow-ups: a best score for Pick the guideline; changing the second or third
-guideline too.
+History is in `CHANGELOG.md` and the git history; this section holds only where things stand.
 
-**18 Nov 2026 (gamification).** On `main` in three pushes, each checked with `npm run check`
-(207 tests) and seen in headless Chrome at phone size (not yet on a phone): "X of Y mastered"
-and the demo hint (GM-A); the "Pick the guideline" quiz (PG-A to PG-E); the Medicine test
-(MT-A to MT-E). The Quiz tab now has four buttons in a 2 by 2 grid. **Next:** the owner tries
-both new quizzes on a phone (Medicine test with Adrenaline) and says if the numbers in PG-B,
-PG-C and MT-B suit; possible follow-ups: dragging pieces into the boxes, choosing the pair,
-saving best scores.
+**18 Nov 2026.** Features 1 to 18 are built and on `main`. The owner has checked every function
+on several phones and all work. A tidy-up (rule 9) the same day merged repeated helpers and
+removed dead CSS and stale notes, with no behaviour change.
 
-**18 Nov 2026 (mentors removed).** Owner's choice ("remove completely"): self sign-up replaces
-mentors. Gone: the app's mentor screen, mentor sign-in, the backend's "create" action, the
-`Mentors` tab, the placeholder passcode check, and the manager page's mentor role (managers
-see `Assignments` only). Tracker passcodes made by mentors keep working.
-
-**18 Nov 2026 (sign-up).** Feature 15 on `main`: first visits open the `demo` tracker with a
-Make an account banner; sign-up takes a name and makes a passcode; the owner is emailed for
-each (no email, no account); bot checks are a hidden box, 3 s minimum and 20 an hour (Claude's
-choice, owner asked for "something to stop bots"). Needs 8.4 task 10. Open: the demo is shared
-by every visitor, so their marks mix; if that is a problem, the demo could be made read-only.
-
-**18 Nov 2026 (later).** On `main`, checked with `npm run check` and seen in headless Chrome at
-phone size (not yet on a phone): editing a question's text in place by tapping it (ED-H).
-**Next:** the owner tries it on a phone, then looks at the power-up (ST-H) as before.
-
-**18 Nov 2026.** On `main`, checked with `npm run check` and frames seen in headless Chrome
-(not yet on a phone): the super Saiyan power-up (ST-H). **Next:** the owner watches it on a phone
-via the demo tracker's double tap and says if the timing or poses want changing.
-
-**17 Nov 2026 (late night).** On `main`, checked with `npm run check` and seen in headless
-Chrome (not yet on a phone): the whole-body streak rat and the separate hype rat power-up
-(ST-G), and the editor showing each question as learners see it (ED-G). **Next:** the owner
-looks at both on a phone (the power-up via the demo tracker's double tap).
-
-**17 Nov 2026 (night).** The new rat and power-up (ST-E) and the demo double tap (ST-F) are on
-`main`, checked with `npm run check` and frames of the power-up seen in headless Chrome. Not yet
-seen on a phone. **Next:** the owner tries the demo tracker's double tap on a phone.
-
-**17 Nov 2026 (evening).** Three changes on `main`, each checked with `npm run check`: the
-editor page layout (ED-F; seen in headless Chrome, not yet on a phone), the streak power-up
-closing only on Continue (ST-D), and the code audit (AU-A to AU-C). The audit: one quizzed list
-shared by `quizzedGuidelines()` and `playContext()`; one `shuffled()`; shared manager and editor
-code; unused exports made private; a comment on every function; three long functions split;
-section 10 (style guide) put back in this file, as `CLAUDE.md` and rule 8 refer to it. No
-behaviour change: same tests, and the card drag compared old against new. **Next:** the owner
-looks at the editor page and the power-up on a phone; then 8.3 and 8.4 as before.
-
-**17 Nov 2026 (later).** Feature 14, the study streak and the Data tab, is on `main`. Decisions:
-ST-A, a streak day is a local calendar day with at least one finished quiz (a Medicines study
-or practice session run to the end, or a guideline quiz play); a streak from yesterday still
-counts until today ends. ST-B, the days are one extra entry `study-streak` (no backend change;
-its id has no prefix the backend reads). ST-C, the Data tab shows streak, longest streak, quiz
-days, a 12-week grid, a light "rat rank", and guideline and Medicines numbers. Not yet seen on
-a real phone.
-
-**17 Nov 2026.** Feature 13, the editor page (`editor.html`), is built and on `main` (ED-A to
-ED-E). It needs 8.4 task 9 before editors can sign in. The study app now applies published
-edits; with none published it behaves exactly as before (same plays, checked by test).
-
-**Next step (owner's request, 17 Nov 2026): a code audit**, in a fresh chat. Check that the
-code is clear and concise, has no unnecessary repetition, and can be audited easily. A tidy-up
-only: no behaviour change (rule 9). Known places to look first: `quizzedGuidelines()` and
-`playContext()` both build the quizzed list; the editor page borrows `manager.css` class names
-(`manager-container`, `person-link`, `stats-note`); `sync-edits.js` writes both a YAML record
-and the JS the app loads.
-
-**16 Nov 2026.** Features 3 to 12 are built and live on `main`. No feature is in progress.
-
-Latest: feature 11, the Medicines quiz's practice level (ATP) filter now works by route and
-indication (Z18 to Z22). With a level chosen: EMT 3 cards with greyed lines and 9 dropped;
-Paramedic 3 and 18; ICP 4 dropped (RSI rows); CCP everything. The owner saw the review list
-(`node scripts/practice-level-review.js`) and it went live on `main` on 16 Nov 2026. Not yet
-looked at on a real phone: the greyed lines and their label.
-
-Before it: the manager view (feature 12, decisions MV-A to MV-I) is on `main` at `manager.html`.
-The owner switched it on and confirmed it works with the real Sheet (16 Nov 2026), after a
-fix: the first redeploy missed the app's address, and the page now names that case.
-
-**Next steps:** the owner does 8.4 tasks 2 to 4 and answers 8.3 items 1 and 2 (item 2, Midazolam for
-eclampsia at Paramedic level, had no recommended option, so it stays as built: not shown). In a
-fresh chat: fix 8.5 items 1 to 3 and 6.
+**Open:** 8.3 items 1 and 2; 8.4 tasks 3 to 7, 9 and 10. Known to watch: the `demo` tracker is
+shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
+a best score for Pick the guideline; changing its second or third guideline too.

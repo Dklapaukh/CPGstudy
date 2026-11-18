@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Tidy-up, no behaviour change. Helpers that were written two or three times now
+  live once: `escapeForPattern`, `plural` and `noteObject` (reading a settings note) in
+  `logic.js`, `isTextBlock` in `quizDoses.js`, `guidelineById` in `guidelines.js`. Two unused
+  CSS rules removed; script functions used only in their own file are no longer exported. Plan:
+  stale mentor entries and links to the removed sections 8.5 and 8.6 fixed; section 13 cut to
+  the current status (the history is here and in git).
+
 - 2026-11-18: The Quiz tab always has the green outline (open or closed), matching the overall
   progress card.
 

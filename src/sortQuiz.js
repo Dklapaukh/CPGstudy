@@ -10,7 +10,7 @@
  * Depends on constants.js, quizDoses.js and guidelineQuizRounds.js.
  */
 import { BLOCK, QUIZ_SECTION_NAME } from './constants.js';
-import { blockText } from './quizDoses.js';
+import { blockText, isTextBlock } from './quizDoses.js';
 import { normalisedText, shuffled } from './guidelineQuizRounds.js';
 
 // How many guidelines a round can compare.
@@ -31,8 +31,6 @@ const TOP_LEVEL = 1;
 const MIN_TITLE_LENGTH = 4;
 // A version history entry ("11 September 2023 1.0.4 Update: …") says nothing to learn.
 const VERSION_LINE_PATTERN = /^\d{1,2} [A-Z][a-z]+ \d{4}\b/;
-
-const isTextBlock = (block) => block[0] === BLOCK.PARAGRAPH || block[0] === BLOCK.BULLET;
 
 // Built once per guideline: the same guideline is compared with many others.
 const groupsCache = new WeakMap();

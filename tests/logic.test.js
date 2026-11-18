@@ -3,6 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   escapeHtml,
+  escapeForPattern,
+  plural,
+  noteObject,
   getStatus,
   countStatuses,
   guidelineMatches,
@@ -213,4 +216,24 @@ test('the source never holds the whole feedback address', async () => {
   const { readFileSync } = await import('node:fs');
   const source = readFileSync('src/constants.js', 'utf8');
   assert.doesNotMatch(source, /[\w.]+@[\w-]+\.\w+/);
+});
+
+test('escapeForPattern makes every special character literal', () => {
+  const text = 'mg/kg (1.5) [a+b]*?^$|{}\\';
+  assert.ok(new RegExp(`^${escapeForPattern(text)}$`).test(text));
+  assert.ok(!new RegExp(escapeForPattern('a.c')).test('abc'));
+});
+
+test('plural adds an s except for one', () => {
+  assert.equal(plural(1, 'card'), '1 card');
+  assert.equal(plural(0, 'card'), '0 cards');
+  assert.equal(plural(2, 'day'), '2 days');
+});
+
+test('noteObject reads a JSON object note and falls back to {}', () => {
+  assert.deepEqual(noteObject({ n: '{"reviewAfterDays":7}' }), { reviewAfterDays: 7 });
+  assert.deepEqual(noteObject(undefined), {});
+  assert.deepEqual(noteObject({ n: 'not json' }), {});
+  assert.deepEqual(noteObject({ n: 'null' }), {});
+  assert.deepEqual(noteObject({ n: '5' }), {});
 });

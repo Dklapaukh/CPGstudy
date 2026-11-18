@@ -8,10 +8,11 @@
  *     wrong ones (other values with the same unit, ten times or a tenth, or a wrong unit; see
  *     guidelineQuizNumbers.js, Decision Z14).
  *   Mechanism of action: the first sentence, against other medicines' first sentences.
- * Depends on quizDoses.js, guidelineQuizRounds.js, guidelineQuizNumbers.js and
+ * Depends on logic.js, quizDoses.js, guidelineQuizRounds.js, guidelineQuizNumbers.js and
  * guidelineQuizPlay.js.
  */
-import { blockText, namesMedicine } from './quizDoses.js';
+import { escapeForPattern } from './logic.js';
+import { blockText, isTextBlock, namesMedicine } from './quizDoses.js';
 import { normalisedText, shuffled } from './guidelineQuizRounds.js';
 import { valuesInText, valuePools, numberQuestion } from './guidelineQuizNumbers.js';
 import { isSameFlag } from './guidelineQuizPlay.js';
@@ -38,7 +39,6 @@ const SENTENCE_END = /(?<=\.)\s+/;
 // Units that make a value a dose; the blank goes on a dose before any time or rate.
 const DOSE_UNITS = ['mg', 'mcg', 'microgram', 'micrograms', 'g', 'ml', 'units', 'mmol', 'mg/kg'];
 
-const isTextBlock = (block) => block[0] === 'b' || block[0] === 'p';
 const isTopLevel = (block) => isTextBlock(block) && block[2] <= TOP_LEVEL;
 const answerLines = (card) => card.answerBlocks.filter(isTextBlock).map(blockText);
 
@@ -113,8 +113,6 @@ function numberChoice(card, prompt, pools, random) {
   }
   return null;
 }
-
-const escapeForPattern = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** A sentence with the medicine's own names ("Adrenaline is …") put as "It", so it is no clue. */
 function withoutNames(sentence, names) {

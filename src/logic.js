@@ -11,6 +11,23 @@ export function escapeHtml(value) {
   return String(value).replace(/[&<>"]/g, (character) => HTML_ESCAPES[character]);
 }
 
+/** Makes text safe to put inside a regular expression as literal characters. */
+export const escapeForPattern = (text) => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+
+/** "1 card", "2 cards": a count with its word, plural unless the count is one. */
+export const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+
+/** An entry's note read as a JSON object; {} when there is no entry or the note is damaged. */
+export function noteObject(entry) {
+  if (!entry) return {};
+  try {
+    const parsed = JSON.parse(entry.n);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {}; // a damaged note falls back to the defaults
+  }
+}
+
 /** Flattens the sections into one list, each guideline remembering its section name (`sec`). */
 export function flattenGuidelines(guidelineData) {
   const guidelines = [];

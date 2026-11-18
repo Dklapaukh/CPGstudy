@@ -209,7 +209,7 @@ export function pageBlocks(page) {
 }
 
 /** The title of a guideline: the large white text in the band at the top of its first page. */
-export function pageTitle(page) {
+function pageTitle(page) {
   const titleSpans = page.spans.filter(
     (span) => span.y < BODY_TOP && Math.abs(span.size - TITLE_FONT_SIZE) < TITLE_SIZE_TOLERANCE,
   );
@@ -223,7 +223,7 @@ export function pageTitle(page) {
 }
 
 /** The colour of the title band at the top of a page. */
-export function headerColour(page) {
+function headerColour(page) {
   const band = page.rects.find(
     (rect) => !rect.stroke && rect.y0 <= 0 && rect.y1 < BODY_TOP && rect.y1 > TITLE_BAND_MIN_BOTTOM,
   );
@@ -234,7 +234,7 @@ export function headerColour(page) {
  * Builds one guideline from its pages. Takes the guideline number and its page models in order.
  * Returns { n, t, hc, b } (the id and section are added by the caller).
  */
-export function buildGuideline(number, pages) {
+function buildGuideline(number, pages) {
   return {
     n: number,
     t: pageTitle(pages[0]),

@@ -11,8 +11,8 @@
 import { state, saveSession } from './state.js';
 import { recordQuizFinished } from './streakState.js';
 import { scheduleSync } from './sync.js';
-import { sections, guidelines } from './guidelines.js';
-import { nextTimestamp } from './logic.js';
+import { sections, guidelines, guidelineById } from './guidelines.js';
+import { nextTimestamp, noteObject } from './logic.js';
 import { buildQuizCards } from './quizCards.js';
 import { applyCardEdits } from './questionEdits.js';
 import { cardEdits } from '../content/card-edits.js';
@@ -64,7 +64,7 @@ let cachedAccess = null;
  */
 function practiceLevelAccess() {
   if (!cachedAccess) {
-    const atpGuideline = guidelines.find((guideline) => guideline.id === ATP_GUIDELINE_ID);
+    const atpGuideline = guidelineById(ATP_GUIDELINE_ID);
     const table = atpGuideline ? readPracticeLevelTable(atpGuideline) : { levels: [], rows: [] };
     const medicines = guidelines.filter((guideline) => guideline.sec === QUIZ_SECTION_NAME);
     cachedAccess = {
@@ -141,16 +141,7 @@ export const QUIZ_SETTINGS = {
 };
 
 /** The stored settings note as an object; {} when there is none or it is damaged. */
-function storedSettings() {
-  const entry = state.entries[QUIZ_SETTINGS_ENTRY_ID];
-  if (!entry) return {};
-  try {
-    const parsed = JSON.parse(entry.n);
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {}; // a damaged setting falls back to the defaults
-  }
-}
+const storedSettings = () => noteObject(state.entries[QUIZ_SETTINGS_ENTRY_ID]);
 
 /** A stored practice level if it is one of the 1.1 table's levels, otherwise all levels. */
 const validPracticeLevel = (value) =>
@@ -198,7 +189,7 @@ export function quizMedicines(everyLevel = false) {
   const byId = {};
   for (const card of everyLevel ? quizCards() : studyCards()) {
     if (!byId[card.medicineId]) {
-      const guideline = guidelines.find((candidate) => candidate.id === card.medicineId);
+      const guideline = guidelineById(card.medicineId);
       byId[card.medicineId] = {
         id: card.medicineId,
         name: guideline ? guideline.t : card.medicineId,

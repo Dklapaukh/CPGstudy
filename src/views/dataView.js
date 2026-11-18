@@ -6,7 +6,7 @@
  */
 import { state } from '../state.js';
 import { guidelines } from '../guidelines.js';
-import { countStatuses } from '../logic.js';
+import { countStatuses, plural } from '../logic.js';
 import {
   currentStreak,
   longestStreak,
@@ -23,8 +23,6 @@ import { STATUS } from '../constants.js';
 const ACTIVITY_WEEKS = 12;
 const LOCKED_IN_DAYS = 21; // a card whose next review is this far off is well known
 const PERFECT = 100;
-
-const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
 const tileHtml = (value, label) =>
   `<div class="stat-tile"><b class="stat-tile__value">${value}</b>

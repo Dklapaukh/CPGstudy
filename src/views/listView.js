@@ -260,6 +260,7 @@ function demoBannerHtml() {
       I already have a passcode</button></div>`;
 }
 
+/** Draws the list screen: rings, sections and footer, celebrating any ring just closed. */
 export function renderList() {
   const counts = countStatuses(guidelines, state.entries);
   const closedNow = new Set();

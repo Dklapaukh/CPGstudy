@@ -44,7 +44,7 @@ const HEADER =
   "scripts/sync-edits.js from the Sheet's Edits tab every morning; do not edit by hand.";
 
 /** Writes both files. */
-export function writeEdits(edits) {
+function writeEdits(edits) {
   const yamlHeader = HEADER.replace(/^/gm, '# ');
   writeFileSync(YAML_PATH, `${yamlHeader}\n${stringify(edits)}`);
   const jsHeader = HEADER.replace(/^/gm, '// ');
@@ -55,7 +55,7 @@ export function writeEdits(edits) {
 }
 
 /** The ids of edits whose question changed or went since they were made. */
-export function editsToReview(edits) {
+function editsToReview(edits) {
   const { byId } = questionBank();
   return Object.keys(edits).filter((id) => reviewState(byId[id]?.question, edits[id]));
 }

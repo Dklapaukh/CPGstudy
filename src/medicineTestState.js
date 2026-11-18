@@ -12,7 +12,7 @@ import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
 import { nextTimestamp } from './logic.js';
 import { recordQuizFinished } from './streakState.js';
-import { guidelines } from './guidelines.js';
+import { guidelineById } from './guidelines.js';
 import { quizCards, studyCards, quizMedicines, getQuizSettings } from './quizState.js';
 import { tableNames } from './quizCards.js';
 import {
@@ -83,7 +83,7 @@ const freshQuestion = () => ({ ticked: [], picked: null, checked: false });
  * finished, isNewBest }.
  */
 export function startMedicineTest(medicineId, random = Math.random) {
-  const guideline = guidelines.find((candidate) => candidate.id === medicineId);
+  const guideline = guidelineById(medicineId);
   const testCards = studyCards().filter((card) => card.medicineId === medicineId);
   if (!guideline || testCards.length === 0) return;
   const questions = buildMedicineTest(
