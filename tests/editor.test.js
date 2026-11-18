@@ -26,7 +26,7 @@ import {
   boxText,
   shownWrong,
 } from '../src/editor/questions.js';
-import { cleanEdits } from '../scripts/sync-edits.js';
+import { cleanEdits, cleanScenarioEdits } from '../scripts/sync-edits.js';
 
 const sections = guidelineData.sections;
 const cards = buildQuizCards(sections, 'Medicines');
@@ -209,12 +209,32 @@ test('the daily copy keeps known edits only, sorted, with only the keys the app 
   assert.deepEqual(cleaned['b|x'], { kind: 'card', prompt: 'P', was: { prompt: 'Q' } });
 });
 
+test('the daily copy keeps scenario edits apart from question edits', () => {
+  const edits = {
+    'scenario|long-lie': {
+      kind: 'scenario',
+      extra: 'dropped',
+      fields: { title: { was: 'Long lie', to: 'Longer lie', by: 'dropped' } },
+    },
+    'scenario|bad': { kind: 'card', prompt: 'P' },
+    'a|z': { kind: 'order', off: true, was: {} },
+  };
+  assert.deepEqual(Object.keys(cleanEdits(edits)), ['a|z']);
+  assert.deepEqual(cleanScenarioEdits(edits), {
+    'scenario|long-lie': {
+      kind: 'scenario',
+      fields: { title: { was: 'Long lie', to: 'Longer lie' } },
+    },
+  });
+});
+
 /* ---------- The editor page ---------- */
 
 let dom;
 let doc;
 const sheetEdits = {};
 const $ = (selector) => doc.querySelector(selector);
+const $$ = (selector) => [...doc.querySelectorAll(selector)];
 const click = (element) => element.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -330,4 +350,58 @@ test('page: a marked choice can be tapped to change it on the editor page', asyn
   assert.equal(choice.disabled, false);
   click(choice);
   assert.ok($('.editor-inline #box-text'));
+});
+
+test('page: a scenario is shown as learners see it, and tapping a value changes it', async () => {
+  dom.window.location.hash = '';
+  await sleep(20);
+  const row = $('[data-section="Scenarios"] a[href="#s-long-lie"]');
+  assert.ok(row, 'the Scenarios section lists every scenario');
+  dom.window.location.hash = '#s-long-lie';
+  await sleep(20);
+  assert.equal($('.editor-preview .scenario-title').textContent, 'Long lie');
+  click($('[data-path="patients.0.vitals.hr"]'));
+  $('#box-text').value = '130';
+  click($('[data-action="scenario-box-save"]'));
+  await sleep(20);
+  assert.deepEqual(sheetEdits['scenario|long-lie'].fields['patients.0.vitals.hr'].to, '130');
+  assert.equal($$('.scenario-vitals tbody td')[3].textContent, '130');
+  assert.match($('main').textContent, /Edited.*Not in the app yet/s);
+  click($('[data-path="guidelines"]'));
+  $('#box-text').value = '13.3, 99.9';
+  click($('[data-action="scenario-box-save"]'));
+  assert.match($('.editor-inline').textContent, /No guideline numbered 99\.9/);
+  $('#box-text').value = '13.3, 1.18';
+  click($('[data-action="scenario-box-save"]'));
+  await sleep(20);
+  assert.deepEqual(sheetEdits['scenario|long-lie'].fields.guidelines.to, ['cpg-13-3', 'cpg-1-18']);
+  assert.equal($$('.scenario-guideline').length, 2);
+  click($('[data-action="scenario-off"]'));
+  await sleep(20);
+  assert.equal(sheetEdits['scenario|long-lie'].off, true);
+  click($('[data-action="scenario-undo"]'));
+  await sleep(20);
+  assert.equal(sheetEdits['scenario|long-lie'], undefined);
+});
+
+test('page: a scenario edit whose value changed in the file is listed for review', async () => {
+  sheetEdits['scenario|long-lie'] = {
+    kind: 'scenario',
+    fields: { title: { was: 'An older title', to: 'Edited title' } },
+  };
+  dom.window.location.hash = '';
+  click($('[data-action="refresh"]'));
+  await sleep(20);
+  assert.match($('main').textContent, /Needs review \(1\)/);
+  dom.window.location.hash = '#s-long-lie';
+  await sleep(20);
+  assert.match(
+    $('.editor-review').textContent,
+    /When edited.*Learners see now.*Now in the scenario file/s,
+  );
+  click($('[data-action="scenario-keep"]'));
+  await sleep(20);
+  assert.equal(sheetEdits['scenario|long-lie'].fields.title.was, 'Long lie');
+  assert.equal($('.editor-review'), null);
+  delete sheetEdits['scenario|long-lie'];
 });

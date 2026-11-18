@@ -3201,3 +3201,44 @@ ul.sort-piece__text {
   color: var(--colour-muted);
   text-align: center;
 }
+.scenario-screen .filter-chips {
+  margin: 0 0 0.6rem;
+}
+.scenario-row__text .scenario-run {
+  color: var(--colour-accent-text);
+  font-weight: 600;
+}
+/* The Finish form: one tick box per guideline, then the note and the buttons. */
+.scenario-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--colour-line);
+  cursor: pointer;
+}
+.scenario-check input {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin: 0.1rem 0 0;
+  flex: none;
+  accent-color: var(--colour-green);
+}
+.scenario-check b {
+  color: var(--colour-accent-text);
+  margin-right: 0.3rem;
+}
+.scenario-debrief .scenario-label {
+  display: block;
+  margin-top: 0.8rem;
+}
+.scenario-note {
+  width: 100%;
+  margin: 0.3rem 0 0.6rem;
+  resize: vertical;
+}
+.scenario-queue-button--main {
+  background: var(--colour-green);
+  color: #fff;
+}

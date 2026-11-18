@@ -1,6 +1,6 @@
-# Daily copy of the editors' changes to quiz questions (editor.html) into the app.
+# Daily copy of the editors' changes to quiz questions and scenarios (editor.html) into the app.
 # Runs scripts/sync-edits.js, which reads the Sheet's Edits tab through the backend and writes
-# content/card-edits.yaml and content/card-edits.js. When they changed, it runs `npm run check`
+# content/card-edits.yaml, content/card-edits.js and the two content/scenario-edits files. When they changed, it runs `npm run check`
 # and pushes them straight to main, so the edits are live a few minutes later. Edits were
 # already checked by an editor on the editor page, so no pull request is opened.
 # Run it now from the Actions tab: "edits-sync", Run workflow.
@@ -24,7 +24,8 @@ jobs:
       - name: Copy the edits from the Sheet
         run: |
           node scripts/sync-edits.js
-          npx prettier --write content/card-edits.yaml content/card-edits.js
+          npx prettier --write content/card-edits.yaml content/card-edits.js \
+            content/scenario-edits.yaml content/scenario-edits.js
       - name: Publish them if they changed
         run: |
           if git diff --quiet; then
@@ -34,6 +35,7 @@ jobs:
           npm run check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add content/card-edits.yaml content/card-edits.js
-          git commit -m "Quiz question edits from the editor page"
+          git add content/card-edits.yaml content/card-edits.js content/scenario-edits.yaml \
+            content/scenario-edits.js
+          git commit -m "Quiz question and scenario edits from the editor page"
           git push origin HEAD:main

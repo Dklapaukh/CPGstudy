@@ -151,9 +151,29 @@ export const SORT_QUIZ_HASH = 'pick-guideline';
 // medicine id), so it needs no backend change; the prefix is not one the backend reads.
 export const MEDICINE_TEST_HASH = 'medicine-test';
 export const MEDICINE_TEST_ENTRY_PREFIX = 'medicine-test-';
-// Scenarios (Quiz > Scenarios): openings for mentors to run, from content/scenarios.js. The list
-// is #scenarios and one scenario is #scenario-<id>. Nothing is saved.
+// Scenarios (Quiz > Scenarios): openings for mentors to run, from content/scenarios.js with the
+// editors' changes (content/scenario-edits.js). The list is #scenarios and one scenario is
+// #scenario-<id>. Finishing one saves its run and debrief (decision 18 Nov 2026, C3) as one extra
+// entry (SCENARIO_RUN_ENTRY_PREFIX + scenario id, note = JSON), so it needs no backend change.
 export const SCENARIOS_HASH = 'scenarios';
+export const SCENARIO_RUN_ENTRY_PREFIX = 'scenario-run-';
+// Only the latest runs are kept, and each debrief note is cut to this length, so the entry's
+// note stays well under the backend's 5000 characters.
+export const SCENARIO_RUNS_KEPT = 3;
+export const MAX_DEBRIEF_NOTE = 1000;
+// The list's theme chips (decision 18 Nov 2026, A1), in this order. A scenario has a theme when
+// one of its guidelines is in the named sections or list; Rural is set by hand in the content.
+export const SCENARIO_THEMES = [
+  { name: 'Paediatrics', sections: ['Paediatrics'], guidelines: ['cpg-2-7', 'cpg-2-9'] },
+  { name: 'Obstetrics', sections: ['Pregnancy and Birth'] },
+  { name: 'Mental health', sections: ['Mental Health'], guidelines: ['cpg-5-1'] },
+  { name: 'Respiratory', sections: ['Respiratory'] },
+  { name: 'Cardiac', sections: ['Cardiac'] },
+  { name: 'Trauma', sections: ['Trauma'] },
+  { name: 'Toxicology', guidelines: ['cpg-5-4', 'cpg-5-5', 'cpg-5-6', 'cpg-5-7'] },
+  { name: 'Elderly', guidelines: ['cpg-12-9'] },
+  { name: 'Rural', rural: true },
+];
 export const SCENARIO_HASH_PREFIX = 'scenario-';
 export const SCENARIO_LEVELS = {
   1: 'Assessment structure',

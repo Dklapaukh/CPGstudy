@@ -1,5 +1,6 @@
 /*
- * Editor page: markup for its screens (sign in, the guideline list, one guideline's questions).
+ * Editor page: markup for its screens (sign in, the guideline list, one guideline's questions;
+ * scenarios are in scenarioView.js).
  * The screens are laid out like the study app's: the sign-in cover, the list header with
  * folding sections, and the coloured guideline header. Each function takes prepared data and
  * returns text; main.js puts it on the page and handles the clicks. Question text and edits are
@@ -23,7 +24,7 @@ import {
 } from '../views/quizMarkup.js';
 import { boxText } from './questions.js';
 
-const PAGE_NAME = 'Question editor';
+const PAGE_NAME = 'Editor';
 const POOL_EXAMPLES = 3;
 
 const KIND_LABELS = {
@@ -49,7 +50,7 @@ const FIELD_HINTS = {
   wrong: 'One per line. Leave empty to have them chosen at random each time.',
 };
 const NONE = '(none)';
-const SIGNED_IN_BUTTONS = `<div class="top-bar__buttons">
+export const SIGNED_IN_BUTTONS = `<div class="top-bar__buttons">
   <button class="switch-button" type="button" data-action="refresh">Refresh</button>
   <button class="switch-button" type="button" data-action="sign-out">Sign out</button></div>`;
 const PUBLISH_NOTE = 'Saved edits reach the app the next morning.';
@@ -65,7 +66,7 @@ const note = (text) => `<p class="editor-note">${text}</p>`;
 
 /** The sign-in screen, with an optional message. `isLoading` greys the button while waiting. */
 export function signInHtml(message, isLoading) {
-  const subtitleHtml = 'Quiz question editor · enter your passcode';
+  const subtitleHtml = 'Quiz question and scenario editor · enter your passcode';
   return `${coverHtml({ labelHtml: PAGE_NAME, subtitleHtml })}
     <main class="page-padding">${warningHtml(message)}
     <p class="subtitle">Type your editor passcode. It isn’t case sensitive.</p>
@@ -133,27 +134,32 @@ function homeHeaderHtml(viewer, search) {
       value="${escapeHtml(search)}" autocomplete="off"></header>`;
 }
 
-/** The first screen: edits needing review, then the guidelines in their sections. */
-export function homeHtml(viewer, reviewItems, rows, list) {
+/**
+ * The first screen: edits needing review, the scenarios (`scenariosHtml`), then the guidelines
+ * in their sections.
+ */
+export function homeHtml(viewer, reviewItems, rows, list, scenariosHtml) {
   const review = reviewItems.length
     ? `${note('The guideline changed after these were edited. Until you choose, the app keeps showing the edit.')}
       ${sectionHtml(
         `Needs review (${reviewItems.length})`,
         '',
         reviewItems.map((item) =>
-          rowHtml(
-            `#g-${escapeHtml(item.guidelineId)}`,
-            item.where,
-            KIND_LABELS[item.kind],
-            item.review === REVIEW.GONE ? 'question removed' : 'question changed',
-          ),
+          item.href
+            ? rowHtml(item.href, item.where, 'Scenario', item.reviewLabel)
+            : rowHtml(
+                `#g-${escapeHtml(item.guidelineId)}`,
+                item.where,
+                KIND_LABELS[item.kind],
+                item.review === REVIEW.GONE ? 'question removed' : 'question changed',
+              ),
         ),
         true,
       )}`
     : '';
   return `${homeHeaderHtml(viewer, list.search)}
     <main class="page-padding">${warningHtml(viewer.message)}${review}${note(PUBLISH_NOTE)}
-    <div id="editor-rows">${guidelineRowsHtml(rows, list.openSections, Boolean(list.search.trim()))}</div>
+    ${scenariosHtml}<div id="editor-rows">${guidelineRowsHtml(rows, list.openSections, Boolean(list.search.trim()))}</div>
     </main>`;
 }
 

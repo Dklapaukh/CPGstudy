@@ -1,11 +1,13 @@
 /*
  * Editor page (editor.html): sign in with an editor passcode, find a guideline, and change its
- * quiz questions: wording, right answers, wrong answers, or leave a question out. Edits are saved
- * to the Sheet's Edits tab straight away and reach the app the next morning, when
- * scripts/sync-edits.js copies them into content/card-edits.js.
+ * quiz questions: wording, right answers, wrong answers, or leave a question out. Scenarios are
+ * changed the same way, on the scenario as learners see it (#s-<id>). Edits are saved to the
+ * Sheet's Edits tab straight away and reach the app the next morning, when scripts/sync-edits.js
+ * copies them into content/card-edits.js and content/scenario-edits.js.
  * One state object, one way to draw: every change calls render().
- * Depends on staffPage.js, theme.js, questionEdits.js, content/card-edits.js and the other files
- * of this folder.
+ * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, guidelines.js,
+ * content/card-edits.js, content/scenarios.js, content/scenario-edits.js and the other files of
+ * this folder.
  */
 import { askBackend, refusalMessage, tabPasscode } from '../staffPage.js';
 import { applyTheme } from '../theme.js';
@@ -18,9 +20,37 @@ import {
   reviewState,
   editFromValues,
 } from '../questionEdits.js';
+import {
+  scenarioEditId,
+  scenarioIdOfEdit,
+  applyScenarioEdit,
+  scenarioEditWith,
+  scenarioEditOff,
+  scenarioPathsToReview,
+  keepScenarioPath,
+  dropScenarioPath,
+  scenarioValue,
+  readScenarioBox,
+} from '../scenarioEdits.js';
+import { guidelines } from '../guidelines.js';
 import { cardEdits } from '../../content/card-edits.js';
+import { scenarios } from '../../content/scenarios.js';
+import { scenarioEdits } from '../../content/scenario-edits.js';
 import { questionBank, questionPreview, boxValues } from './questions.js';
-import { signInHtml, homeHtml, guidelineHtml, guidelineRowsHtml } from './view.js';
+import {
+  signInHtml,
+  homeHtml,
+  guidelineHtml,
+  guidelineRowsHtml,
+  SIGNED_IN_BUTTONS,
+} from './view.js';
+import {
+  SCENARIO_EDITOR_HASH_PREFIX,
+  scenarioSectionHtml,
+  scenarioEditorHtml,
+  goneScenarioHtml,
+  boxTextOf,
+} from './scenarioView.js';
 
 // The passcode is kept for this browser tab only, as on the manager page.
 const passcodeStore = tabPasscode('eas-cpg-editor-v1');
@@ -38,6 +68,8 @@ const state = {
   openSections: {}, // the list's open sections, by name, kept while the page is open
   openId: '', // the question whose form is open
   openBox: null, // the one text being changed in place: { id, field, index }
+  openPath: '', // the scenario value being changed in place (see scenarioEdits.js)
+  boxError: '', // why the scenario box's text couldn't be saved
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -77,6 +109,8 @@ async function saveEdit(id, edit) {
   if (await request({ action: 'edit-save', id, edit })) {
     state.openId = '';
     state.openBox = null;
+    state.openPath = '';
+    state.boxError = '';
   }
   render();
 }
@@ -84,7 +118,11 @@ async function saveEdit(id, edit) {
 /* ---------- What the screens show ---------- */
 
 const guidelineIdOf = (questionId) => questionId.split('|')[0];
-const isPublished = (id) => JSON.stringify(cardEdits[id]) === JSON.stringify(state.edits[id]);
+const isScenarioEdit = (id) => Boolean(scenarioIdOfEdit(id));
+const isPublished = (id) =>
+  JSON.stringify((isScenarioEdit(id) ? scenarioEdits : cardEdits)[id]) ===
+  JSON.stringify(state.edits[id]);
+const questionEditIds = () => Object.keys(state.edits).filter((id) => !isScenarioEdit(id));
 
 /** One question as the screens show it: built, as learners see it, its edit and its state. */
 function itemFor(id) {
@@ -106,20 +144,98 @@ function itemFor(id) {
 /** The edits a guideline update changed or removed, for the "Needs review" list. */
 function reviewItems() {
   const { byId } = questionBank();
-  return Object.keys(state.edits)
+  const questions = questionEditIds()
     .map(itemFor)
     .filter((item) => item.review)
     .map((item) => {
       const guideline = byId[item.id]?.guideline;
       return { ...item, where: guideline ? guideline.title : item.guidelineId };
     });
+  return [...questions, ...scenarioReviewItems()];
+}
+
+/* ---------- Scenarios ---------- */
+
+const writtenScenario = (scenarioId) => scenarios.find((scenario) => scenario.id === scenarioId);
+
+/** A scenario's screen data (see scenarioEditorHtml), from its id. */
+function scenarioViewFor(scenarioId) {
+  const id = scenarioEditId(scenarioId);
+  const written = writtenScenario(scenarioId);
+  const edit = state.edits[id] || null;
+  const live = written ? applyScenarioEdit(written, edit) : null;
+  const openValue = live && state.openPath ? scenarioValue(live, state.openPath) : '';
+  return {
+    id,
+    written,
+    live,
+    edit,
+    isPublished: isPublished(id),
+    toReview: edit ? scenarioPathsToReview(written, edit) : [],
+    openPath: state.openPath,
+    boxText: boxTextOf(openValue, state.openPath),
+    boxError: state.boxError,
+  };
+}
+
+/** Scenario edits that need review, for the first screen's list. */
+function scenarioReviewItems() {
+  return Object.keys(state.edits)
+    .map(scenarioIdOfEdit)
+    .filter(Boolean)
+    .map(scenarioViewFor)
+    .filter((view) => view.toReview.length)
+    .map((view) => ({
+      id: view.id,
+      href: `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(scenarioIdOfEdit(view.id))}`,
+      where: view.live ? view.live.title : scenarioIdOfEdit(view.id),
+      reviewLabel: view.written ? 'scenario changed' : 'scenario removed',
+    }));
+}
+
+/** The Scenarios section's rows, by level, each with its edit label. */
+function scenarioRows() {
+  return [...scenarios]
+    .sort((first, second) => first.level - second.level)
+    .map((scenario) => {
+      const view = scenarioViewFor(scenario.id);
+      const badge = view.edit?.off ? 'left out' : view.edit ? 'edited' : '';
+      return { ...view.live, badge };
+    });
+}
+
+/** The scenario in the address ("#s-long-lie"), or '' on any other screen. */
+function currentScenarioId() {
+  if (!location.hash.startsWith(SCENARIO_EDITOR_HASH_PREFIX)) return '';
+  return decodeURIComponent(location.hash.slice(SCENARIO_EDITOR_HASH_PREFIX.length));
+}
+
+const guidelineIdOfNumber = (number) => guidelines.find((guideline) => guideline.n === number)?.id;
+
+/** Saves the open scenario box, or shows why its text can't be kept. */
+function saveScenarioBox() {
+  const view = scenarioViewFor(currentScenarioId());
+  const text = document.getElementById('box-text').value;
+  const read = readScenarioBox(state.openPath, text, guidelineIdOfNumber);
+  if (read.error) {
+    state.boxError = read.error;
+    render();
+    return;
+  }
+  saveEdit(view.id, scenarioEditWith(view.written, view.edit, state.openPath, read.value));
+}
+
+/** Saves a change to the open scenario's edit made by `change(view)`. */
+function changeScenarioEdit(change) {
+  const view = scenarioViewFor(currentScenarioId());
+  saveEdit(view.id, change(view));
 }
 
 /** The guideline list, filtered by the search box (number or title). */
 function guidelineRows() {
   const words = state.search.toLowerCase().split(/\s+/).filter(Boolean);
   const editCounts = {};
-  Object.keys(state.edits).forEach((id) => {
+  questionEditIds().forEach((id) => {
     editCounts[guidelineIdOf(id)] = (editCounts[guidelineIdOf(id)] || 0) + 1;
   });
   return questionBank()
@@ -160,10 +276,23 @@ function render() {
     return;
   }
   const viewer = { name: state.name, message: state.message };
+  const scenarioId = currentScenarioId();
+  if (scenarioId) {
+    const view = scenarioViewFor(scenarioId);
+    const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
+    app.innerHTML = draw(viewer, view, SIGNED_IN_BUTTONS);
+    return;
+  }
   const guideline = currentGuideline();
-  app.innerHTML = guideline
-    ? guidelineHtml(viewer, guideline, guidelineItems(guideline), state)
-    : homeHtml(viewer, reviewItems(), guidelineRows(), state);
+  if (guideline) {
+    app.innerHTML = guidelineHtml(viewer, guideline, guidelineItems(guideline), state);
+    return;
+  }
+  const scenarioSection = scenarioSectionHtml(
+    scenarioRows(),
+    Boolean(state.openSections.Scenarios),
+  );
+  app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, scenarioSection);
 }
 
 /* ---------- Reading the form ---------- */
@@ -192,11 +321,13 @@ function editFromBox() {
   return editFromValues(item.question, boxValues(item, field, index, text), item.edit?.off);
 }
 
-/** Opens one text of a question for changing in place, and puts the cursor in it. */
+/** Opens one text of a question or value of a scenario for changing in place, with the cursor in it. */
 function openBox(target) {
-  const { id, editField, editIndex } = target.dataset;
+  const { id, editField, editIndex, path } = target.dataset;
   state.openId = '';
-  state.openBox = { id, field: editField, index: Number(editIndex) };
+  state.boxError = '';
+  state.openPath = path || '';
+  state.openBox = path ? null : { id, field: editField, index: Number(editIndex) };
   render();
   document.getElementById('box-text')?.focus();
 }
@@ -222,8 +353,13 @@ const ACTIONS = {
   close: () => {
     state.openId = '';
     state.openBox = null;
+    state.openPath = '';
+    state.boxError = '';
     render();
   },
+  'scenario-box-save': saveScenarioBox,
+  'scenario-off': () => changeScenarioEdit((view) => scenarioEditOff(view.edit, !view.edit?.off)),
+  'scenario-undo': () => changeScenarioEdit(() => null),
   'box-save': (id) => saveEdit(id, editFromBox()),
   save: (id) => saveEdit(id, editFromForm(questionBank().byId[id].question)),
   remove: (id) => saveEdit(id, null),
@@ -237,8 +373,13 @@ const ACTIONS = {
 app.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action]');
   if (!button) return;
-  if (button.dataset.action === 'edit-box') openBox(button);
-  else if (ACTIONS[button.dataset.action]) ACTIONS[button.dataset.action](button.dataset.id);
+  const { action, path } = button.dataset;
+  if (action === 'edit-box') openBox(button);
+  else if (action === 'scenario-keep') {
+    changeScenarioEdit((view) => keepScenarioPath(view.written, view.edit, path));
+  } else if (action === 'scenario-drop')
+    changeScenarioEdit((view) => dropScenarioPath(view.edit, path));
+  else if (ACTIONS[action]) ACTIONS[action](button.dataset.id);
 });
 // Keys: Enter signs in or opens a focused box; in a box, Escape cancels and Ctrl+Enter saves.
 app.addEventListener('keydown', (event) => {
@@ -249,7 +390,8 @@ app.addEventListener('keydown', (event) => {
     openBox(target);
   } else if (target.id === 'box-text' && event.key === 'Escape') ACTIONS.close();
   else if (target.id === 'box-text' && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-    ACTIONS['box-save'](state.openBox.id);
+    if (state.openPath) saveScenarioBox();
+    else ACTIONS['box-save'](state.openBox.id);
   }
 });
 // Only the list is redrawn while typing, so the search box keeps its place.
@@ -274,6 +416,8 @@ app.addEventListener(
 window.addEventListener('hashchange', () => {
   state.openId = '';
   state.openBox = null;
+  state.openPath = '';
+  state.boxError = '';
   render();
   window.scrollTo(0, 0);
 });

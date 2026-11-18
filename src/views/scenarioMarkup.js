@@ -1,0 +1,126 @@
+/*
+ * Markup for scenarios, shared by the app (views/scenarioView.js) and the editor page
+ * (editor/scenarioView.js), so editors change a scenario exactly as learners see it.
+ * Each function takes data and returns text; nothing here touches the page.
+ * On the editor page an optional `editing` argument makes each value clickable and puts the
+ * editor's box in place of the open one: { attrs(path), formFor(path) }, where a path names one
+ * value as in scenarioEdits.js. Without it the markup is the app's.
+ * Depends on logic.js, guidelines.js, constants.js and scenarioEdits.js.
+ */
+import { escapeHtml } from '../logic.js';
+import { guidelineById } from '../guidelines.js';
+import { SCENARIO_HASH_PREFIX, SCENARIO_LEVELS, SCENARIO_VITALS } from '../constants.js';
+
+const boxAttrs = (editing, path) => (editing ? editing.attrs(path) : '');
+const openForm = (editing, path) => (editing ? editing.formFor(path) : '');
+
+/** The level pill: "Level 2". */
+export const levelPillHtml = (level, editing) =>
+  openForm(editing, 'level') ||
+  `<span class="scenario-level"${boxAttrs(editing, 'level')}>Level ${level}</span>`;
+
+/** One row of the list: title and suburb, then `metaHtml` (such as when it was last run). */
+export function scenarioRowHtml(scenario, href, metaHtml = '') {
+  return `<a class="scenario-row" href="${href}">
+    <span class="scenario-row__text"><b>${escapeHtml(scenario.title)}</b>
+    <small>${escapeHtml(scenario.suburb)}</small>${metaHtml}</span><span aria-hidden="true">›</span></a>`;
+}
+
+/** The scenarios in one card per level, in level order. `rowFor` draws each row. */
+export function scenarioGroupsHtml(scenarios, rowFor) {
+  return Object.entries(SCENARIO_LEVELS)
+    .map(([level, name]) => {
+      const rows = scenarios.filter((scenario) => scenario.level === Number(level));
+      if (!rows.length) return '';
+      return `<section class="scenario-card"><h2 class="scenario-group-title">Level ${level} · ${name}</h2>
+        ${rows.map(rowFor).join('')}</section>`;
+    })
+    .join('');
+}
+
+/** The address of a scenario in the app. */
+export const scenarioHref = (scenario) => `#${SCENARIO_HASH_PREFIX}${escapeHtml(scenario.id)}`;
+
+/** A folding card, styled like the guideline list's sections. */
+export const foldHtml = (title, body, open) =>
+  `<details class="section-group scenario-fold"${open ? ' open' : ''}>
+    <summary><span class="section-name">${title}</span></summary>
+    <div class="scenario-fold__body">${body}</div></details>`;
+
+/** The vitals in one row, then the box for the open one (it would not fit in a cell). */
+function vitalsTableHtml(vitals, prefix, editing) {
+  const heads = SCENARIO_VITALS.map(([, name]) => `<th scope="col">${name}</th>`).join('');
+  const values = SCENARIO_VITALS.map(
+    ([key]) =>
+      `<td${boxAttrs(editing, `${prefix}.vitals.${key}`)}>${escapeHtml(vitals[key] || '–')}</td>`,
+  ).join('');
+  const form = SCENARIO_VITALS.map(([key]) => openForm(editing, `${prefix}.vitals.${key}`)).join(
+    '',
+  );
+  return `<table class="scenario-vitals"><thead><tr>${heads}</tr></thead>
+    <tbody><tr>${values}</tr></tbody></table>${form}`;
+}
+
+/** A label and its text in the patient background. */
+const factHtml = (label, text, path, editing) =>
+  `<p class="scenario-label">${label}</p>${
+    openForm(editing, path) ||
+    `<p class="scenario-fact"${boxAttrs(editing, path)}>${escapeHtml(text)}</p>`
+  }`;
+
+/** A patient's label, shown when there are several; an editor can always add or change one. */
+function patientLabelHtml(patient, prefix, editing) {
+  const path = `${prefix}.label`;
+  if (openForm(editing, path)) return openForm(editing, path);
+  if (!patient.label && !editing) return '';
+  const text = patient.label ? escapeHtml(patient.label) : '<i>No patient label</i>';
+  return `<h2 class="scenario-patient"${boxAttrs(editing, path)}>${text}</h2>`;
+}
+
+/** The vitals and background of one patient. */
+function patientHtml(patient, index, editing) {
+  const prefix = `patients.${index}`;
+  const background =
+    factHtml('Medical history', patient.history, `${prefix}.history`, editing) +
+    factHtml('Medications', patient.medications, `${prefix}.medications`, editing) +
+    factHtml('Allergies', patient.allergies, `${prefix}.allergies`, editing) +
+    factHtml('Social history', patient.social, `${prefix}.social`, editing);
+  return `${patientLabelHtml(patient, prefix, editing)}
+    ${foldHtml('Vitals', vitalsTableHtml(patient.vitals, prefix, editing), true)}
+    ${foldHtml('Patient background', background, true)}`;
+}
+
+/** One guideline row: a link in the app, plain text for an editor (the list is one box). */
+function guidelineRowHtml(id, editing) {
+  const guideline = guidelineById(id);
+  if (!guideline) return '';
+  const text = `<span><b>${escapeHtml(guideline.n)}</b> ${escapeHtml(guideline.t)}</span>`;
+  if (editing) return `<div class="scenario-guideline">${text}</div>`;
+  return `<a class="scenario-guideline" href="#${escapeHtml(id)}">${text}
+    <span aria-hidden="true">›</span></a>`;
+}
+
+/** The guidelines fold. */
+function guidelinesHtml(scenario, editing) {
+  const rows = scenario.guidelines.map((id) => guidelineRowHtml(id, editing)).join('');
+  const body =
+    openForm(editing, 'guidelines') ||
+    (editing ? `<div${boxAttrs(editing, 'guidelines')}>${rows}</div>` : rows);
+  return foldHtml(`Guidelines (${scenario.guidelines.length})`, body, true);
+}
+
+/**
+ * The scenario as learners see it: the story card, each patient, the intention (folded in the
+ * app, open for an editor) and the guidelines.
+ */
+export function scenarioBodyHtml(scenario, editing) {
+  const text = (path, tag, className) =>
+    openForm(editing, path) ||
+    `<${tag} class="${className}"${boxAttrs(editing, path)}>${escapeHtml(scenario[path])}</${tag}>`;
+  return `<section class="scenario-card">${levelPillHtml(scenario.level, editing)}
+      ${text('title', 'h1', 'scenario-title')}${text('suburb', 'p', 'scenario-label')}
+      ${text('story', 'p', 'scenario-story')}</section>
+    ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
+    ${foldHtml('Scenario intention', text('intention', 'p', 'scenario-fact'), Boolean(editing))}
+    ${guidelinesHtml(scenario, editing)}`;
+}

@@ -2,6 +2,18 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: Scenarios, part two. 30 new scenarios (40 in all): paediatrics, obstetrics,
+  mental health, respiratory, toxicology, rural and long transport, and more at levels 4 and 5.
+  The list has level chips and theme chips; themes come from each scenario's guideline
+  sections, and Rural from a new `rural` field. "Add all to queue" is replaced by **Finish
+  scenario**: tick the guidelines the learner struggled with (added to Guidelines to learn),
+  write a debrief note, and the run is saved in the tracker (`scenario-run-<id>`, no backend
+  change). The list shows when each scenario was last run, and the scenario shows the last
+  debrief. The editor page now edits scenarios too: each one is drawn as learners see it, and
+  tapping any value changes it in place. Scenario edits are saved in the Edits tab under
+  `scenario|<id>`, reviewed when the file changes, and copied daily into
+  `content/scenario-edits.js`. The editor page is renamed "Editor".
+
 - 2026-11-18: Scenarios, a fifth button in the Quiz choice (#scenarios). 10 hand-written
   openings in `content/scenarios.js`, grouped by level 1 to 5. A scenario (#scenario-<id>) shows
   level, title, suburb and story, then vitals in one row (GCS, RR, SpO₂, HR, BP, Temp, BGL,

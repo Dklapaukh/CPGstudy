@@ -1,0 +1,35 @@
+/*
+ * Reading and saving a scenario's runs and debriefs in the state. Stored as one extra entry per
+ * scenario (SCENARIO_RUN_ENTRY_PREFIX + scenario id, status always Incomplete, note = JSON), so it
+ * is saved, uploaded and merged by the same code as the guidelines and needs no backend change.
+ * The learner presses Finish on their own phone (decision 18 Nov 2026), so the run lands in
+ * their tracker.
+ * Depends on state.js, sync.js, logic.js, scenarioLogic.js and constants.js.
+ */
+import { state, saveSession } from './state.js';
+import { scheduleSync } from './sync.js';
+import { nextTimestamp } from './logic.js';
+import { parseScenarioRuns, withScenarioRun } from './scenarioLogic.js';
+import { SCENARIO_RUN_ENTRY_PREFIX, STATUS } from './constants.js';
+
+/** The scenario's record: { count, runs } (see parseScenarioRuns). */
+export function getScenarioRuns(scenarioId) {
+  const entry = state.entries[SCENARIO_RUN_ENTRY_PREFIX + scenarioId];
+  return parseScenarioRuns(entry ? entry.n : '');
+}
+
+/** Records one run: `run` is { at, struggled, note }. */
+export function saveScenarioRun(scenarioId, run) {
+  const entryId = SCENARIO_RUN_ENTRY_PREFIX + scenarioId;
+  const previous = state.entries[entryId];
+  const record = withScenarioRun(getScenarioRuns(scenarioId), run);
+  const entry = {
+    s: STATUS.INCOMPLETE,
+    n: JSON.stringify(record),
+    t: nextTimestamp(previous ? previous.t : 0, Date.now()),
+  };
+  state.entries[entryId] = entry;
+  state.pendingChanges[entryId] = { ...entry };
+  saveSession();
+  scheduleSync();
+}

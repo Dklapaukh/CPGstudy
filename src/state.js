@@ -44,6 +44,10 @@ export const state = {
   guidelineQuizReturn: null,
   // The scenario whose guideline link was followed, so that guideline shows "Back to scenario".
   scenarioReturn: null,
+  // The scenario list's chips (level 0 = any, theme '' = any) and the scenario whose Finish
+  // form is open. Memory only.
+  scenarioFilter: { level: 0, theme: '' },
+  scenarioDebriefId: null,
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,
   updateInProgress: false,

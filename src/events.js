@@ -35,7 +35,8 @@ import { saveMarkedTime } from './markedState.js';
 import { addToQueue, removeFromQueue } from './queue.js';
 import { makeSnippet, appendComment } from './comments.js';
 import { getStatus, plural } from './logic.js';
-import { scenarioById } from './views/scenarioView.js';
+import { scenarioById, renderScenario, renderScenarioList } from './views/scenarioView.js';
+import { saveScenarioRun } from './scenarioRunState.js';
 import { applyUpdate } from './updateState.js';
 import {
   startSession,
@@ -230,19 +231,42 @@ function changeQueue(newQueue) {
 
 const addGuidelineToQueue = (button) => changeQueue(addToQueue(getQueue(), [button.dataset.id]));
 const addAllRelatedToQueue = () => changeQueue(addToQueue(getQueue(), shownRelatedIds()));
-/** Adds a scenario's guidelines to Guidelines to learn and says how many fitted. */
-function addScenarioToQueue(button) {
+/* ---------- Scenarios ---------- */
+
+/** Sets one of the scenario list's chips and redraws the list. */
+function setScenarioFilter(key, value) {
+  state.scenarioFilter = { ...state.scenarioFilter, [key]: value };
+  renderScenarioList();
+}
+
+/** Opens or closes the Finish form of the scenario on screen. */
+function showScenarioDebrief(scenarioId) {
+  state.scenarioDebriefId = scenarioId;
+  const scenario = scenarioById(state.scenarioReturn);
+  if (scenario) renderScenario(scenario);
+}
+
+/**
+ * Saves the run with its debrief, adds the ticked guidelines to Guidelines to learn, and says
+ * how many fitted.
+ */
+function saveScenarioDebrief(button) {
   const scenario = scenarioById(button.dataset.id);
   if (!scenario) return;
+  const struggled = [...app.querySelectorAll('input[name="struggled"]:checked')].map(
+    (box) => box.value,
+  );
+  const note = byId('scenario-debrief-note').value.trim();
+  saveScenarioRun(scenario.id, { at: Date.now(), struggled, note });
   const before = getQueue();
-  const after = addToQueue(before, scenario.guidelines);
+  const after = addToQueue(before, struggled);
   const added = after.length - before.length;
-  changeQueue(after);
-  const message = byId('scenario-queue-message');
-  if (!message) return;
-  const notAdded = scenario.guidelines.filter((id) => !after.some((item) => item.id === id));
-  message.textContent =
-    (added ? `Added ${plural(added, 'guideline')} to Guidelines to learn.` : 'Nothing added.') +
+  if (added) changeQueue(after);
+  showScenarioDebrief(null);
+  const notAdded = struggled.filter((id) => !after.some((item) => item.id === id));
+  byId('scenario-queue-message').textContent =
+    'Run saved.' +
+    (added ? ` Added ${plural(added, 'guideline')} to Guidelines to learn.` : '') +
     (notAdded.length
       ? ` ${plural(notAdded.length, 'guideline')} didn't fit (the list holds ${MAX_QUEUE_SIZE}).`
       : '');
@@ -433,7 +457,11 @@ const clickActions = {
   'add-to-queue': addGuidelineToQueue,
   'add-all-to-queue': addAllRelatedToQueue,
   'remove-from-queue': removeGuidelineFromQueue,
-  'scenario-add-to-queue': addScenarioToQueue,
+  'scenario-level': (button) => setScenarioFilter('level', Number(button.dataset.value)),
+  'scenario-theme': (button) => setScenarioFilter('theme', button.dataset.value),
+  'scenario-finish': () => showScenarioDebrief(state.scenarioReturn),
+  'scenario-finish-cancel': () => showScenarioDebrief(null),
+  'scenario-finish-save': saveScenarioDebrief,
   comment: addComment,
   'toggle-heading': toggleHeading,
   'quiz-start': changeQuiz(startSession),

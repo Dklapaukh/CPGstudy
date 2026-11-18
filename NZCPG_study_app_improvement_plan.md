@@ -66,6 +66,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 16   | Gamification: "X of Y mastered" on the Medicines quiz           | Built 18 Nov 2026 (GM-A)                 |
 | 17   | "Pick the guideline" quiz (sort pieces of 2 or 3 related guidelines) | Built 18 Nov 2026 (PG-A to PG-H)    |
 | 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
+| 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
 
 ### 8.2 Decisions in force
 
@@ -339,6 +340,15 @@ Claude's, say if any should change)**
   markup or listeners sharing local state, and splitting further would make them harder to
   follow. The manager and editor sign-in screens are still two functions because their covers
   now differ.
+- SC-A (18 Nov 2026): the scenario list filters by level and theme chips (option A1). Themes
+  come from guideline sections (`SCENARIO_THEMES`); Rural is a hand-set `rural` field.
+- SC-B: no recommendations for now (B4).
+- SC-C: Finish scenario (C3): tick the guidelines the learner struggled with (added to
+  Guidelines to learn) and write a debrief note. Saved on the learner's phone in their tracker
+  (`scenario-run-<id>`: run count and the last 3 runs).
+- SC-D: the editor page edits scenarios as learners see them (tap a value). The edits go in the
+  Edits tab under `scenario|<id>` (no backend change) and are published daily to
+  `content/scenario-edits.js`.
 
 ### 8.3 Open decisions (owner)
 
@@ -466,6 +476,9 @@ removed dead CSS and stale notes, with no behaviour change.
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
 a best score for Pick the guideline; changing its second or third guideline too.
 
-**Scenarios (18 Nov 2026):** Quiz > Scenarios added with 10 scenarios (levels 1 to 5,
-Wellington region). Next: write more scenarios, then decide how they are selected (by level,
-theme, recently studied guidelines) and whether running one is recorded.
+**Scenarios (19 Nov 2026):** 40 scenarios. Selection decided by the owner on 18 Nov: A1 (level
+and theme chips), no recommendations for now, C3 (Finish: struggled guidelines go to Guidelines
+to learn, plus a debrief note), recorded on the learner's phone. Scenarios can be edited on the
+editor page (tap a value to change it), and the daily copy publishes the edits. Possible
+follow-ups: recommendations (recently studied, or from Guidelines to learn); adding or removing
+patients and creating new scenarios from the editor page.
