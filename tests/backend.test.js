@@ -19,6 +19,21 @@ const tabs = {
 let sleeps = 0;
 const emails = [];
 const cacheValues = {};
+const properties = {};
+const driveFolders = [];
+const driveFiles = [];
+
+/** A stand-in for a Drive folder: files made in it are kept in driveFiles. */
+function fakeFolder(id) {
+  return {
+    getId: () => id,
+    createFile: (blob) => {
+      const file = { id: `file-${driveFiles.length + 1}`, folder: id, blob };
+      driveFiles.push(file);
+      return { setDescription: (text) => (file.description = text), getId: () => file.id };
+    },
+  };
+}
 
 /** A stand-in for one tab. Ranges are addressed like the real ones: a column name or numbers. */
 function fakeSheet(name) {
@@ -76,7 +91,29 @@ const environment = {
     }),
     MimeType: { JSON: 1 },
   },
-  Utilities: { sleep: () => sleeps++ },
+  Utilities: {
+    sleep: () => sleeps++,
+    base64Decode: (text) => Buffer.from(text, 'base64'),
+    base64Encode: (bytes) => Buffer.from(bytes).toString('base64'),
+    newBlob: (bytes, type, name) => ({ bytes, type, name }),
+  },
+  PropertiesService: {
+    getScriptProperties: () => ({
+      getProperty: (key) => properties[key] ?? null,
+      setProperty: (key, value) => (properties[key] = value),
+    }),
+  },
+  DriveApp: {
+    createFolder: (name) => fakeFolder(`folder-${driveFolders.push(name)}`),
+    getFolderById: (id) => fakeFolder(id),
+    getFileById: (id) => {
+      const file = driveFiles.find((each) => each.id === id);
+      return {
+        getBlob: () => ({ getBytes: () => file.blob.bytes }),
+        setTrashed: (trashed) => (file.trashed = trashed),
+      };
+    },
+  },
   CacheService: {
     getScriptCache: () => ({
       get: (key) => cacheValues[key] ?? null,
@@ -94,7 +131,7 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with scenario runs \(19 Nov 2026\)/);
+  assert.match(doGet().text, /running, version with scenario runs and submissions \(19 Nov 2026\)/);
 });
 
 test('open: a tracker, and a wrong or old mentor passcode that is delayed after the lock', () => {
@@ -299,6 +336,7 @@ test('edits: editors sign in, save, replace and remove edits; anyone can read th
     ok: true,
     name: 'Eve',
     edits: {},
+    submissions: [],
   });
   const save = (edit, editId = id) =>
     post({ action: 'edit-save', code: 'editor-1', id: editId, edit });
@@ -363,4 +401,92 @@ test('signup: no account is made when the email cannot be sent', () => {
   } finally {
     environment.MailApp.sendEmail = sendEmail;
   }
+});
+
+test('scenario-submit: no sign-in; bot checks, bad jobs and the hourly cap are refused', () => {
+  Object.keys(cacheValues).forEach((key) => delete cacheValues[key]);
+  const job = { title: 'Fall', story: 'An 80-year-old fell.', name: 'Ana', patients: [] };
+  const photo = { data: Buffer.from('jpeg bytes').toString('base64'), caption: '12-lead' };
+  const submit = (body) =>
+    post({ action: 'scenario-submit', website: '', formMs: 30000, submission: job, ...body });
+  const emailsBefore = emails.length;
+
+  assert.equal(submit({ website: 'spam.example' }).error, 'bad-submission');
+  assert.equal(submit({ formMs: 5000 }).error, 'too-fast');
+  assert.equal(submit({ submission: { ...job, story: ' ' } }).error, 'bad-submission');
+  assert.equal(submit({ submission: [job] }).error, 'bad-submission');
+  assert.equal(
+    submit({ submission: { ...job, story: 'x'.repeat(30001) } }).error,
+    'bad-submission',
+  );
+  assert.equal(submit({ images: Array(5).fill(photo) }).error, 'bad-submission');
+  assert.equal(submit({ images: [{ data: 'not base64!' }] }).error, 'bad-submission');
+  assert.equal(tabs.Submissions.length, 1, 'nothing kept for a refused job');
+
+  const reply = submit({ images: [photo, { ...photo, caption: '' }] });
+  assert.equal(reply.ok, true);
+  const row = tabs.Submissions[1];
+  assert.equal(row[0], reply.id);
+  assert.deepEqual([row[2], row[3], row[6]], ['Ana', 'Fall', 'Pending']);
+  assert.deepEqual(JSON.parse(row[4]), job);
+  assert.deepEqual(
+    JSON.parse(row[5]).map((each) => each.caption),
+    ['12-lead', ''],
+  );
+  assert.equal(driveFiles.length, 2);
+  assert.equal(driveFiles[0].blob.bytes.toString(), 'jpeg bytes');
+  assert.equal(emails.length, emailsBefore + 1);
+  assert.match(emails.at(-1).subject, /new scenario job, Fall/);
+  assert.equal(submit({ submission: { ...job, name: '' }, images: [photo] }).ok, true);
+  assert.equal(tabs.Submissions[2][2], 'Anonymous');
+  assert.equal(driveFolders.length, 1, 'the folder is made once and then reused');
+
+  Object.keys(cacheValues).forEach((key) => (cacheValues[key] = '30'));
+  assert.equal(submit({}).error, 'busy');
+  Object.keys(cacheValues).forEach((key) => delete cacheValues[key]);
+});
+
+test('submissions: editors see pending jobs and photos, approve or reject; approved are public', () => {
+  const [first, second] = tabs.Submissions.slice(1).map((row) => row[0]);
+  const editor = (body) => post({ code: 'editor-1', ...body });
+  assert.equal(
+    post({ action: 'submission-photo', code: 'tracker-1', id: first }).error,
+    'not-found',
+  );
+  const opened = editor({ action: 'editor-open' });
+  assert.deepEqual(
+    opened.submissions.map((each) => [each.id, each.sender, each.job.title]),
+    [
+      [first, 'Ana', 'Fall'],
+      [second, 'Anonymous', 'Fall'],
+    ],
+  );
+  assert.equal('data' in opened.submissions[0].photos[0], false, 'photos are fetched one by one');
+  const shown = editor({ action: 'submission-photo', id: first, index: 0 });
+  assert.equal(Buffer.from(shown.data, 'base64').toString(), 'jpeg bytes');
+  assert.equal(editor({ action: 'submission-photo', id: first, index: 5 }).error, 'gone');
+
+  assert.equal(editor({ action: 'submission-decide', id: first, decision: 'maybe' }).error, 'gone');
+  const approved = editor({ action: 'submission-decide', id: first, decision: 'approve' });
+  assert.deepEqual(
+    approved.submissions.map((each) => each.id),
+    [second],
+  );
+  assert.deepEqual(tabs.Submissions[1].slice(6, 8), ['Approved', 'Eve']);
+  assert.equal(
+    editor({ action: 'submission-decide', id: first, decision: 'reject' }).error,
+    'gone',
+  );
+  editor({ action: 'submission-decide', id: second, decision: 'reject' });
+  assert.equal(tabs.Submissions[2][6], 'Rejected');
+
+  const published = post({ action: 'approved-scenarios' }).submissions;
+  assert.deepEqual(
+    published.map((each) => each.id),
+    [first],
+  );
+  assert.equal(Buffer.from(published[0].photos[0].data, 'base64').toString(), 'jpeg bytes');
+  assert.equal(driveFiles[0].trashed, undefined);
+  assert.equal(driveFiles[1].trashed, undefined);
+  assert.equal(driveFiles[2].trashed, true, 'a rejected job’s photos are deleted');
 });

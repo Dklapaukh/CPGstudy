@@ -5,6 +5,8 @@
  * (#new-scenario) or deleted for good. Edits are saved to the
  * Sheet's Edits tab straight away and reach the app the next morning, when scripts/sync-edits.js
  * copies them into content/card-edits.js and content/scenario-edits.js.
+ * Jobs sent with the Add a scenario form wait in their own section; one (#j-<id>) is shown as the
+ * scenario it would make, to approve (published the next morning) or reject.
  * One state object, one way to draw: every change calls render().
  * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, guidelines.js,
  * content/card-edits.js, content/scenarios.js, content/scenario-edits.js and the other files of
@@ -35,6 +37,8 @@ import {
   scenarioEditDeleted,
   emptyScenarioDraft,
   emptyPatient,
+  emptyLaterVitals,
+  scenarioDraftOf,
   readNewScenario,
   addedScenarioEditWith,
   withScenarioValue,
@@ -44,6 +48,20 @@ import { cardEdits } from '../../content/card-edits.js';
 import { scenarios } from '../../content/scenarios.js';
 import { scenarioEdits } from '../../content/scenario-edits.js';
 import { questionBank, questionPreview, boxValues } from './questions.js';
+import {
+  scenarioFromSubmission,
+  tidySubmission,
+  identifierWarnings,
+  photoName,
+} from '../scenarioSubmission.js';
+import { SCENARIO_PHOTO_FOLDER } from '../constants.js';
+import {
+  SUBMISSION_HASH_PREFIX,
+  APPROVE_HASH_PREFIX,
+  submissionSectionHtml,
+  submissionHtml,
+  goneSubmissionHtml,
+} from './submissionView.js';
 import {
   signInHtml,
   homeHtml,
@@ -60,12 +78,16 @@ import {
   deletedScenarioHtml,
   newScenarioHtml,
   boxTextOf,
+  pathName,
 } from './scenarioView.js';
 
 // The passcode is kept for this browser tab only, as on the manager page.
 const passcodeStore = tabPasscode('eas-cpg-editor-v1');
 const GUIDELINE_HASH_PREFIX = '#g-';
-const EDITOR_MESSAGES = { 'bad-edit': 'That edit couldn’t be saved: it is too long.' };
+const EDITOR_MESSAGES = {
+  'bad-edit': 'That edit couldn’t be saved: it is too long.',
+  gone: 'That job was already approved or rejected. Press Refresh for the latest list.',
+};
 
 const app = document.getElementById('editor-app');
 const state = {
@@ -83,6 +105,11 @@ const state = {
   isDeleting: false, // the open scenario's "Delete for good?" question is showing
   draft: emptyScenarioDraft(), // the new scenario form's box texts, kept while the page is open
   draftError: null, // the form box that couldn't be kept: { path, error }
+  submissions: [], // jobs sent with the Add a scenario form, waiting for approval
+  photoData: {}, // their photos by "<job id>|<index>": a data: address, '' loading, null failed
+  confirmingReject: '', // the job whose Reject is waiting for "Yes, reject it"
+  approvingJob: '', // the submitted job the new scenario form holds, '' for a blank form
+  photoBySrc: {}, // fetched photos by the address they will have once published (for previews)
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -97,6 +124,7 @@ async function request(body) {
   if (reply.ok) {
     state.name = reply.name;
     state.edits = reply.edits || {};
+    state.submissions = reply.submissions || [];
   } else {
     if (reply.error === 'not-found') signOut();
     state.message = refusalMessage(reply.error, EDITOR_MESSAGES);
@@ -113,7 +141,17 @@ async function signIn(passcode) {
 
 /** Forgets the passcode, the editor and the edits. */
 function signOut() {
-  Object.assign(state, { passcode: '', name: '', edits: {}, openId: '', openBox: null });
+  Object.assign(state, {
+    passcode: '',
+    name: '',
+    edits: {},
+    openId: '',
+    openBox: null,
+    submissions: [],
+    photoData: {},
+    photoBySrc: {},
+    approvingJob: '',
+  });
   passcodeStore.save('');
 }
 
@@ -188,7 +226,17 @@ function scenarioViewFor(scenarioId) {
   const edit = state.edits[id] || null;
   const fromFile = fileScenario(scenarioId);
   const written = edit?.deleted ? null : fromFile || edit?.added || null;
-  const live = written && !edit?.added ? applyScenarioEdit(written, edit) : written;
+  const edited = written && !edit?.added ? applyScenarioEdit(written, edit) : written;
+  // An approved job's photos are only published the next morning; show the fetched ones now.
+  const live = edited?.photos
+    ? {
+        ...edited,
+        photos: edited.photos.map((photo) => ({
+          ...photo,
+          src: state.photoBySrc[photo.src] || photo.src,
+        })),
+      }
+    : edited;
   const openValue = live && state.openPath ? scenarioValue(live, state.openPath) : '';
   return {
     id,
@@ -295,12 +343,34 @@ async function saveDraft() {
     document.querySelector(`[data-draft="${read.path}"]`)?.focus();
     return;
   }
-  const id = scenarioEditId(read.value.id);
-  if (await request({ action: 'edit-save', id, edit: { kind: 'scenario', added: read.value } })) {
+  const jobId = state.approvingJob;
+  if (await saveNewScenario(read.value, jobId)) {
     state.draft = emptyScenarioDraft();
     state.draftError = null;
+    state.approvingJob = '';
     location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(read.value.id)}`;
   }
+}
+
+/**
+ * Saves a whole new scenario as its edit and, when it came from a submitted job, approves the
+ * job. The scenario is saved first, so a job is never approved without its scenario.
+ */
+async function saveNewScenario(scenario, jobId) {
+  const id = scenarioEditId(scenario.id);
+  if (!(await request({ action: 'edit-save', id, edit: { kind: 'scenario', added: scenario } }))) {
+    return false;
+  }
+  return !jobId || request({ action: 'submission-decide', id: jobId, decision: 'approve' });
+}
+
+/** Adds later vitals to a patient of the form, or removes a set; other boxes keep their text. */
+function changeDraftLaterVitals(index, change) {
+  changeDraftPatients((patients) =>
+    patients.map((patient, each) =>
+      each === index ? { ...patient, laterVitals: change(patient.laterVitals || []) } : patient,
+    ),
+  );
 }
 
 /** Adds a patient to the form, or removes one; the other boxes keep what was typed. */
@@ -315,6 +385,107 @@ function changeScenarioEdit(change) {
   const view = scenarioViewFor(currentScenarioId());
   saveEdit(view.id, change(view));
 }
+
+/* ---------- Submitted jobs ---------- */
+
+const photoKey = (id, index) => `${id}|${index}`;
+
+/** The job in the address ("#j-job-abc"), or '' on any other screen. */
+function currentSubmissionId() {
+  if (!location.hash.startsWith(SUBMISSION_HASH_PREFIX)) return '';
+  return decodeURIComponent(location.hash.slice(SUBMISSION_HASH_PREFIX.length));
+}
+
+/** A waiting job's screen data (see submissionHtml), or null when it isn't waiting. */
+function submissionViewFor(id) {
+  const submission = state.submissions.find((each) => each.id === id);
+  if (!submission) return null;
+  const photos = submission.photos
+    .map((photo, index) => ({ src: state.photoData[photoKey(id, index)], caption: photo.caption }))
+    .filter((photo) => photo.src);
+  return {
+    submission,
+    scenario: scenarioFromSubmission(submission.job, id, photos, isGuidelineId),
+    warnings: identifierWarnings(tidySubmission(submission.job)),
+    photosLoading: submission.photos.some(
+      (photo, index) => state.photoData[photoKey(id, index)] === '',
+    ),
+    isConfirmingReject: state.confirmingReject === id,
+  };
+}
+
+/** Fetches a job's photos not yet fetched (the Drive copies are private), then draws again. */
+async function loadPhotos(submission) {
+  const missing = submission.photos
+    .map((photo, index) => index)
+    .filter((index) => state.photoData[photoKey(submission.id, index)] === undefined);
+  if (!missing.length) return;
+  missing.forEach((index) => (state.photoData[photoKey(submission.id, index)] = ''));
+  for (const index of missing) {
+    const reply = await askBackend({
+      action: 'submission-photo',
+      code: state.passcode,
+      id: submission.id,
+      index,
+    });
+    // A photo that can't be fetched stays out of the preview; Refresh tries again.
+    if (reply.ok) {
+      const dataUrl = `data:image/jpeg;base64,${reply.data}`;
+      state.photoData[photoKey(submission.id, index)] = dataUrl;
+      state.photoBySrc[publishedSrc(submission.id, index)] = dataUrl;
+    } else {
+      state.photoData[photoKey(submission.id, index)] = null;
+      console.error(`Photo ${index + 1} of ${submission.id}: ${reply.error}`);
+    }
+  }
+  render();
+}
+
+/** Rejects a job; back to the first screen when it worked. */
+async function reject(id) {
+  state.confirmingReject = '';
+  if (await request({ action: 'submission-decide', id, decision: 'reject' })) location.hash = '#';
+}
+
+const publishedSrc = (jobId, index) => `${SCENARIO_PHOTO_FOLDER}/${photoName(jobId, index)}`;
+
+/** A waiting job as the scenario it would make, its photos at their published addresses. */
+function scenarioOfJob(submission) {
+  const photos = submission.photos.map((photo, index) => ({
+    src: publishedSrc(submission.id, index),
+    caption: photo.caption,
+  }));
+  return scenarioFromSubmission(submission.job, 'job', photos, isGuidelineId);
+}
+
+const numberOfGuideline = (id) => guidelineById(id)?.n || id;
+
+/** Approves a job as it is: it becomes a new scenario, or the message says what to fix. */
+async function approveAsItIs(jobId) {
+  const submission = state.submissions.find((each) => each.id === jobId);
+  const draft = scenarioDraftOf(scenarioOfJob(submission), numberOfGuideline);
+  const read = readNewScenario(draft, takenScenarioIds(), guidelineIdOfNumber);
+  if (read.error) {
+    state.message = `Use Edit and approve to fix ${pathName(draft, read.path)}: ${read.error}`;
+    render();
+    return;
+  }
+  if (await saveNewScenario(read.value, jobId)) {
+    location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(read.value.id)}`;
+  }
+}
+
+/** The job whose Edit and approve form the address asks for ("#approve-job-abc"), or ''. */
+function currentApproveId() {
+  if (!location.hash.startsWith(APPROVE_HASH_PREFIX)) return '';
+  return decodeURIComponent(location.hash.slice(APPROVE_HASH_PREFIX.length));
+}
+
+/** The form's draft with each photo's preview, once fetched. */
+const draftWithPreviews = (draft) => ({
+  ...draft,
+  photos: (draft.photos || []).map((photo) => ({ ...photo, preview: state.photoBySrc[photo.src] })),
+});
 
 /** The guideline list, filtered by the search box (number or title). */
 function guidelineRows() {
@@ -361,7 +532,40 @@ function render() {
     return;
   }
   const viewer = { name: state.name, message: state.message };
+  const submissionId = currentSubmissionId();
+  if (submissionId) {
+    const view = submissionViewFor(submissionId);
+    app.innerHTML = view
+      ? submissionHtml(viewer, view, SIGNED_IN_BUTTONS)
+      : goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
+    if (view) loadPhotos(view.submission);
+    return;
+  }
+  const approveId = currentApproveId();
+  if (approveId) {
+    const submission = state.submissions.find((each) => each.id === approveId);
+    if (!submission) {
+      app.innerHTML = goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
+      return;
+    }
+    if (state.approvingJob !== approveId) {
+      state.draft = scenarioDraftOf(scenarioOfJob(submission), numberOfGuideline);
+      state.draftError = null;
+      state.approvingJob = approveId;
+    }
+    const draft = draftWithPreviews(state.draft);
+    app.innerHTML = newScenarioHtml(viewer, draft, state.draftError, SIGNED_IN_BUTTONS, {
+      id: approveId,
+    });
+    loadPhotos(submission);
+    return;
+  }
   if (location.hash === NEW_SCENARIO_HASH) {
+    // A job's draft is not carried into a blank new scenario.
+    if (state.approvingJob) {
+      state.draft = emptyScenarioDraft();
+      state.approvingJob = '';
+    }
     app.innerHTML = newScenarioHtml(viewer, state.draft, state.draftError, SIGNED_IN_BUTTONS);
     return;
   }
@@ -384,7 +588,8 @@ function render() {
     scenarioRows(),
     Boolean(state.openSections.Scenarios),
   );
-  app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, scenarioSection);
+  const sections = submissionSectionHtml(state.submissions) + scenarioSection;
+  app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, sections);
 }
 
 /* ---------- Reading the form ---------- */
@@ -435,7 +640,10 @@ const ACTIONS = {
     signOut();
     render();
   },
-  refresh: () => request({ action: 'editor-open' }),
+  refresh: () => {
+    state.photoData = {};
+    request({ action: 'editor-open' });
+  },
   open: (id) => {
     state.openId = id;
     state.openBox = null;
@@ -450,6 +658,17 @@ const ACTIONS = {
     render();
   },
   'scenario-box-save': saveScenarioBox,
+  'submission-approve': approveAsItIs,
+  'submission-edit': (id) => (location.hash = `${APPROVE_HASH_PREFIX}${encodeURIComponent(id)}`),
+  'submission-reject': (id) => {
+    state.confirmingReject = id;
+    render();
+  },
+  'submission-reject-confirm': reject,
+  'submission-reject-cancel': () => {
+    state.confirmingReject = '';
+    render();
+  },
   'scenario-off': () => changeScenarioEdit((view) => scenarioEditOff(view.edit, !view.edit?.off)),
   'scenario-undo': () => changeScenarioEdit(() => null),
   'scenario-delete': () => {
@@ -485,6 +704,17 @@ app.addEventListener('click', (event) => {
   else if (action === 'draft-remove-patient') {
     const index = Number(button.dataset.index);
     changeDraftPatients((patients) => patients.filter((patient, each) => each !== index));
+  } else if (action === 'draft-add-vitals') {
+    changeDraftLaterVitals(Number(button.dataset.index), (sets) => [...sets, emptyLaterVitals()]);
+  } else if (action === 'draft-remove-vitals') {
+    const set = Number(button.dataset.set);
+    changeDraftLaterVitals(Number(button.dataset.index), (sets) =>
+      sets.filter((each, index) => index !== set),
+    );
+  } else if (action === 'draft-remove-photo') {
+    const index = Number(button.dataset.index);
+    state.draft = { ...state.draft, photos: state.draft.photos.filter((each, i) => i !== index) };
+    render();
   } else if (ACTIONS[action]) ACTIONS[action](button.dataset.id);
 });
 // Keys: Enter signs in or opens a focused box; in a box, Escape cancels and Ctrl+Enter saves.

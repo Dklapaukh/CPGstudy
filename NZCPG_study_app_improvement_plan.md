@@ -442,6 +442,12 @@ Answered 16 Nov 2026:
    works with the real Sheet.
 9. Done 18 Nov 2026: editor page switched on; the owner confirmed it works.
 10. Done 18 Nov 2026: sign-up and the demo switched on; the owner confirmed they work.
+11. **Switch on Add a scenario (19 Nov 2026):** paste `backend/Code.gs` into Apps Script, run
+    `setup` (adds the `Submissions` tab) and allow the new Drive permission when asked, then
+    Deploy, Manage deployments, the pencil, Version: New version, Deploy. Opening the backend
+    address should say "version with scenario runs and submissions (19 Nov 2026)" (one redeploy
+    also covers the scenario runs one). Until then the form
+    and the daily copy fail (the copy stops with "Is it redeployed?").
 
 ## 10. Style guide: how all code is written
 
@@ -513,3 +519,13 @@ guide, outcome ratings and a score with progress (SC-F). Gaps to fill: there is 
 Straightforward scenario with Delegation or Several patients yet; mentors can't see runs; a
 score only means something when the same mentor rates consistently. The manager page shows
 scenario trends (SC-G) once the backend is redeployed with the 19 Nov 2026 `Code.gs`.
+Straightforward scenario with Delegation or Several patients yet; mentors and the manager page
+can't see runs; a score only means something when the same mentor rates consistently.
+
+**Add a scenario (19 Nov 2026):** `submit.html`, no sign-in, sends anonymised jobs with ECG
+photos; editors edit and approve them (as new scenarios) or reject them on the editor page, and
+the daily copy publishes the photos approved scenarios use (README, "Add a scenario"). Owner's changes the same day: History label, optional suburb, vitals sets with
+notes, treatment after vitals, no Rural tick, validated guidelines, teaching and debrief points
+last, no ECG blackout, complexity and scene load; then editing a job before approving. Waits
+on 8.4 task 11. Possible follow-ups: cropping photos in the form; tap-editing the treatment and
+later vitals of an approved scenario (today they are changed only before approving).

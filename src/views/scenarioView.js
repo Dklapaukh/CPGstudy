@@ -7,7 +7,9 @@
  * guidelines the learner struggled with (they go to Guidelines to learn) and three short notes;
  * the run and its score are saved (scenarioRunState.js).
  * A guideline opened from here gets a "Back to scenario" link (state.scenarioReturn).
- * Scenarios come from content/scenarios.js with the editors' changes (content/scenario-edits.js).
+ * The list ends with a link to the Add a scenario form (submit.html).
+ * Scenarios come from content/scenarios.js with the editors' changes, new scenarios (approved
+ * submitted jobs among them) and deletions (content/scenario-edits.js).
  * Depends on state.js, logic.js, guidelines.js, constants.js, scenarioEdits.js, scenarioLogic.js,
  * scenarioRunState.js, scenarioMarkup.js and templates.js.
  */
@@ -27,6 +29,7 @@ import {
   DEBRIEF_RATINGS,
   DEBRIEF_TEXTS,
   MAX_DEBRIEF_NOTE,
+  SUBMIT_PAGE,
 } from '../constants.js';
 import {
   scenarioBodyHtml,
@@ -134,7 +137,9 @@ export function renderScenarioList() {
     <div class="page-padding scenario-screen"><h1 class="quiz-title">Scenarios</h1>
     <p class="scenario-intro">Openings for a mentor to run. Start with straightforward,
     single-patient scenarios, then add complexity or scene load once the basics are solid.</p>
-    ${filtersHtml()}${progressHtml()}${groups}</div>`;
+    ${filtersHtml()}${progressHtml()}${groups}
+    <a class="scenario-queue-button scenario-submit-link" href="${SUBMIT_PAGE}">Add a job you went
+    to as a scenario</a></div>`;
 }
 
 /** The latest run's rating of each intended outcome, as a list. */

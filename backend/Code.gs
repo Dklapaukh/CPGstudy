@@ -1,10 +1,13 @@
 /*
  * CPG study app: shared data service (Google Apps Script).
- * Tabs used in the Sheet: Trackers, Data, Managers, Assignments, History, Editors, Edits. (An
+ * Tabs used in the Sheet: Trackers, Data, Managers, Assignments, History, Editors, Edits,
+ * Submissions. (An
  * old Mentors tab is no longer read and can be deleted.) Run setup()
  * once, and again after pasting a version that adds tabs (it never changes existing rows).
  * Needs the V8 runtime (Project Settings, "Enable Chrome V8 runtime").
  * The status codes and entry fields (s, n, t) match src/constants.js in the app.
+ * Submitted scenario photos are saved in a Drive folder (SUBMISSION_FOLDER_NAME), so the first
+ * run after this version asks the owner to allow Drive access.
  */
 
 const WORDS =
@@ -23,7 +26,7 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with scenario runs (19 Nov 2026)';
+const BACKEND_VERSION = 'version with scenario runs and submissions (19 Nov 2026)';
 
 // The tracker with this label (any case) opens for first-time visitors (action "demo").
 const DEMO_LABEL = 'demo';
@@ -39,6 +42,27 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 const ONE_HOUR_S = 60 * 60;
 const MAX_NAME_LENGTH = 60;
 
+// Jobs sent from the Add a scenario form (submit.html, action "scenario-submit"), with no
+// sign-in. Bots are kept out as at sign-up: the hidden box, a form open at least
+// SUBMIT_MIN_FORM_MS, and an hourly cap. The job is kept as JSON in the Submissions tab and the
+// photos (JPEG, made smaller on the phone) go in a private Drive folder; the owner is emailed.
+// It waits as Pending until an editor approves or rejects it on the editor page; rejecting
+// deletes its photos. Approved jobs are read by the daily copy ("approved-scenarios") and so
+// published, photos too. The limits match src/constants.js (SUBMISSION_LIMITS).
+const SUBMIT_MIN_FORM_MS = 20000;
+const MAX_SUBMISSION_LENGTH = 30000;
+const MAX_SUBMISSION_IMAGES = 4;
+const MAX_IMAGE_BASE64_LENGTH = 2000000; // about 1.5 MB of JPEG
+const MAX_CAPTION_LENGTH = 120;
+const MAX_TITLE_LENGTH = 80;
+const SUBMISSIONS_MAX_PER_HOUR = 30;
+const SUBMISSION_COUNT_KEY = 'submissions-';
+const SUBMISSION_FOLDER_NAME = 'CPG scenario submissions';
+const SUBMISSION_FOLDER_PROPERTY = 'submissionFolderId';
+const SUBMISSION_STATUS = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected' };
+const SUBMISSION_DECISIONS = { approve: 'Approved', reject: 'Rejected' };
+const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
+
 const STATUS = { INCOMPLETE: 'i', REVIEW: 'v', COMPLETE: 'c' };
 
 const SHEET = {
@@ -49,6 +73,7 @@ const SHEET = {
   HISTORY: 'History',
   EDITORS: 'Editors',
   EDITS: 'Edits',
+  SUBMISSIONS: 'Submissions',
 };
 
 // Extra entries the app keeps in the Data tab (src/constants.js). The manager page's numbers are
@@ -72,6 +97,17 @@ const BACKFILL_SOURCE = 'back-fill';
 const MANAGER_COLUMN = { NAME: 1, PASSCODE: 2 };
 const EDITOR_COLUMN = { NAME: 1, PASSCODE: 2 };
 const EDIT_COLUMN = { ID: 1, EDIT: 2, EDITOR: 3, UPDATED: 4 };
+const SUBMISSION_COLUMN = {
+  ID: 1,
+  SENT: 2,
+  SENDER: 3,
+  TITLE: 4,
+  JOB: 5,
+  PHOTOS: 6,
+  STATUS: 7,
+  DECIDED_BY: 8,
+  DECIDED: 9,
+};
 const ASSIGNMENT_COLUMN = { VIEWER: 1, TRACKER: 2 };
 const HISTORY_COLUMN = { TRACKER: 1, ENTRY: 2, VALUE: 3, TIME: 4, SOURCE: 5 };
 const TRACKER_COLUMN = { LABEL: 1, PASSCODE: 2, CREATED_BY: 3, CREATED: 4 };
@@ -85,6 +121,17 @@ const HEADERS = {
   History: ['Tracker passcode', 'Entry', 'Value', 'Time (ms)', 'Source'],
   Editors: ['Name', 'Passcode'],
   Edits: ['Question id', 'Edit (JSON)', 'Editor', 'Updated'],
+  Submissions: [
+    'Id',
+    'Sent',
+    'Sent by',
+    'Title',
+    'Job (JSON)',
+    'Photos (JSON)',
+    'Status',
+    'Decided by',
+    'Decided',
+  ],
 };
 // An edited question's id (src/guidelineQuizPlay.js, src/quizCards.js) and the longest edit kept.
 const EDIT_ID_PATTERN = /^[\w.|\-]{1,120}$/;
@@ -134,8 +181,8 @@ function doPost(e) {
 }
 
 /**
- * Works out the reply for one request: open, demo, signup, load, save, stats or one of
- * the edits ones.
+ * Works out the reply for one request: open, demo, signup, load, save, stats, one of the
+ * edits ones, scenario-submit or approved-scenarios.
  */
 function handleRequest_(request) {
   const code = normalise_(request.code);
@@ -182,18 +229,23 @@ function handleRequest_(request) {
     };
   }
 
-  // The editor page (editor.html): sign in, and save or remove one question's edit.
-  if (action === 'editor-open' || action === 'edit-save') {
+  // The editor page (editor.html): sign in, save or remove one question's edit, look at a
+  // submitted job's photo, and approve or reject a submitted job.
+  if (EDITOR_ACTIONS.indexOf(action) >= 0) {
     const editor = findPerson_(SHEET.EDITORS, EDITOR_COLUMN, code);
     if (!editor) return { ok: false, error: 'not-found', delayBeforeReply: true };
-    if (action === 'edit-save' && !saveEdit_(editor.name, request.id, request.edit)) {
-      return { ok: false, error: 'bad-edit' };
-    }
-    return { ok: true, name: editor.name, edits: readEdits_() };
+    return editorRequest_(editor, request);
   }
 
   // Read by the daily copy into the repo (scripts/sync-edits.js). Edits are published anyway.
   if (action === 'edits') return { ok: true, edits: readEdits_() };
+
+  if (action === 'scenario-submit') return submitScenario_(request);
+
+  // Read by the daily copy, which publishes them: approved jobs with their photos.
+  if (action === 'approved-scenarios') {
+    return { ok: true, submissions: readSubmissions_(SUBMISSION_STATUS.APPROVED, true) };
+  }
 
   return { ok: false, error: 'bad-action' };
 }
@@ -237,6 +289,207 @@ function signUp_(request) {
   getSheet_(SHEET.TRACKERS).appendRow([name, code, SIGNUP_CREATED_BY, new Date().toISOString()]);
   cache.put(countKey, String(count + 1), ONE_HOUR_S);
   return { ok: true, code: code, label: name };
+}
+
+const EDITOR_ACTIONS = ['editor-open', 'edit-save', 'submission-photo', 'submission-decide'];
+
+/** The reply to an editor's request (see EDITOR_ACTIONS); the passcode is already checked. */
+function editorRequest_(editor, request) {
+  const action = request.action;
+  if (action === 'edit-save' && !saveEdit_(editor.name, request.id, request.edit)) {
+    return { ok: false, error: 'bad-edit' };
+  }
+  if (action === 'submission-photo') {
+    const data = submissionPhoto_(request.id, request.index);
+    return data ? { ok: true, name: editor.name, data: data } : { ok: false, error: 'gone' };
+  }
+  if (action === 'submission-decide' && !decideSubmission_(editor.name, request)) {
+    return { ok: false, error: 'gone' };
+  }
+  return {
+    ok: true,
+    name: editor.name,
+    edits: readEdits_(),
+    submissions: readSubmissions_(SUBMISSION_STATUS.PENDING, false),
+  };
+}
+
+/**
+ * Keeps one job sent from the Add a scenario form, after the bot checks: photos to Drive, one
+ * Pending row, and an email to the owner. `request` is { submission (object), images:
+ * [{ data (base64 JPEG), caption }], website (the hidden box), formMs (time the form was open) }.
+ * Replies { ok, id }, or { ok: false, error }: bad-submission, too-fast or busy.
+ */
+function submitScenario_(request) {
+  if (String(request.website || '')) return { ok: false, error: 'bad-submission' };
+  if (!(Number(request.formMs) >= SUBMIT_MIN_FORM_MS)) return { ok: false, error: 'too-fast' };
+  const submission = request.submission;
+  const images = Array.isArray(request.images) ? request.images : [];
+  const text = JSON.stringify(submission || null);
+  const isObject = submission && typeof submission === 'object' && !Array.isArray(submission);
+  if (
+    !isObject ||
+    !String(submission.story || '').trim() ||
+    text.length > MAX_SUBMISSION_LENGTH ||
+    images.length > MAX_SUBMISSION_IMAGES ||
+    !images.every(isGoodImage_)
+  ) {
+    return { ok: false, error: 'bad-submission' };
+  }
+
+  const cache = CacheService.getScriptCache();
+  const countKey = SUBMISSION_COUNT_KEY + Math.floor(Date.now() / ONE_HOUR_MS);
+  const count = Number(cache.get(countKey)) || 0;
+  if (count >= SUBMISSIONS_MAX_PER_HOUR) return { ok: false, error: 'busy' };
+
+  // The time, plus a random part so two jobs in the same millisecond still differ.
+  const id = 'job-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  const title = String(submission.title || 'Untitled').slice(0, MAX_TITLE_LENGTH);
+  const sender = String(submission.name || '').trim().slice(0, MAX_NAME_LENGTH) || 'Anonymous';
+  const photos = images.map(function (image, index) {
+    return saveSubmissionPhoto_(id, index, image);
+  });
+  const row = [id, new Date().toISOString(), sender, title, text, JSON.stringify(photos)];
+  getSheet_(SHEET.SUBMISSIONS).appendRow(row.concat([SUBMISSION_STATUS.PENDING, '', '']));
+  cache.put(countKey, String(count + 1), ONE_HOUR_S);
+  emailSubmission_(sender, title, photos.length);
+  return { ok: true, id: id };
+}
+
+/**
+ * The submissions with this status, oldest first, as { id, sent, sender, job, photos:
+ * [{ caption }] }; with `withPhotoData`, each photo also has its base64 `data`.
+ */
+function readSubmissions_(status, withPhotoData) {
+  const rows = getSheet_(SHEET.SUBMISSIONS).getDataRange().getValues();
+  const found = [];
+  for (let i = 1; i < rows.length; i++) {
+    if (cell_(rows[i], SUBMISSION_COLUMN.STATUS) !== status) continue;
+    try {
+      const photos = JSON.parse(cell_(rows[i], SUBMISSION_COLUMN.PHOTOS) || '[]');
+      found.push({
+        id: String(cell_(rows[i], SUBMISSION_COLUMN.ID)),
+        sent: String(cell_(rows[i], SUBMISSION_COLUMN.SENT)),
+        sender: String(cell_(rows[i], SUBMISSION_COLUMN.SENDER)),
+        job: JSON.parse(cell_(rows[i], SUBMISSION_COLUMN.JOB)),
+        photos: photos.map(function (photo) {
+          const shown = { caption: photo.caption };
+          if (withPhotoData) shown.data = photoData_(photo.file);
+          return shown;
+        }),
+      });
+    } catch (err) {
+      console.error('Submissions row ' + (i + 1) + ' is not JSON'); // left for the owner to fix
+    }
+  }
+  return found;
+}
+
+/** The row number (counting from 1) and photos of the submission with this id, or null. */
+function findSubmission_(id) {
+  if (!String(id || '')) return null;
+  const found = getSheet_(SHEET.SUBMISSIONS)
+    .getRange('A:A')
+    .createTextFinder(String(id))
+    .matchEntireCell(true)
+    .findNext();
+  if (!found) return null;
+  const row = found.getRow();
+  const values = getSheet_(SHEET.SUBMISSIONS)
+    .getRange(row, 1, 1, SUBMISSION_COLUMN.DECIDED)
+    .getValues()[0];
+  return {
+    row: row,
+    status: cell_(values, SUBMISSION_COLUMN.STATUS),
+    photos: JSON.parse(cell_(values, SUBMISSION_COLUMN.PHOTOS) || '[]'),
+  };
+}
+
+/** One photo of a submission as base64, for the editor page; '' when there is none. */
+function submissionPhoto_(id, index) {
+  const submission = findSubmission_(id);
+  const photo = submission && submission.photos[Number(index)];
+  return photo ? photoData_(photo.file) : '';
+}
+
+/** A Drive file's contents as base64. */
+function photoData_(fileId) {
+  return Utilities.base64Encode(DriveApp.getFileById(fileId).getBlob().getBytes());
+}
+
+/**
+ * Approves or rejects a Pending submission (`request` is { id, decision: approve or reject }),
+ * noting who and when. Rejecting deletes its photos. False when there is no such Pending job.
+ */
+function decideSubmission_(editorName, request) {
+  const status = SUBMISSION_DECISIONS[request.decision];
+  const submission = findSubmission_(request.id);
+  if (!status || !submission || submission.status !== SUBMISSION_STATUS.PENDING) return false;
+  if (status === SUBMISSION_STATUS.REJECTED) {
+    submission.photos.forEach(function (photo) {
+      DriveApp.getFileById(photo.file).setTrashed(true);
+    });
+  }
+  getSheet_(SHEET.SUBMISSIONS)
+    .getRange(submission.row, SUBMISSION_COLUMN.STATUS, 1, 3)
+    .setValues([[status, editorName, new Date().toISOString()]]);
+  return true;
+}
+
+/** True for a photo the form could have sent: base64 JPEG data and a short caption. */
+function isGoodImage_(image) {
+  if (!image || typeof image !== 'object') return false;
+  const data = String(image.data || '');
+  return (
+    data.length > 0 &&
+    data.length <= MAX_IMAGE_BASE64_LENGTH &&
+    BASE64_PATTERN.test(data) &&
+    String(image.caption || '').length <= MAX_CAPTION_LENGTH
+  );
+}
+
+/** Saves one photo in the submissions folder; returns { file (its Drive id), caption }. */
+function saveSubmissionPhoto_(id, index, image) {
+  const name = id + '-' + (index + 1) + '.jpg';
+  const blob = Utilities.newBlob(Utilities.base64Decode(image.data), 'image/jpeg', name);
+  const file = submissionFolder_().createFile(blob);
+  const caption = String(image.caption || '').trim();
+  file.setDescription(caption);
+  return { file: file.getId(), caption: caption };
+}
+
+/** The private Drive folder for photos, made on first use; its id is kept in script properties. */
+function submissionFolder_() {
+  const properties = PropertiesService.getScriptProperties();
+  const folderId = properties.getProperty(SUBMISSION_FOLDER_PROPERTY);
+  if (folderId) {
+    try {
+      return DriveApp.getFolderById(folderId);
+    } catch (err) {
+      console.error('Submission folder gone, making a new one'); // the owner deleted it
+    }
+  }
+  const folder = DriveApp.createFolder(SUBMISSION_FOLDER_NAME);
+  properties.setProperty(SUBMISSION_FOLDER_PROPERTY, folder.getId());
+  return folder;
+}
+
+/** Tells the owner a job arrived. The row is already saved, so a failed email is only logged. */
+function emailSubmission_(sender, title, photoCount) {
+  try {
+    MailApp.sendEmail(
+      Session.getEffectiveUser().getEmail(),
+      'CPG study app: new scenario job, ' + title,
+      sender +
+        ' sent a job for the scenario bank (' +
+        photoCount +
+        ' photo' +
+        (photoCount === 1 ? '' : 's') +
+        ').\n\nIt waits for an editor to approve or reject it on the editor page.',
+    );
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 /** The first tracker with this label (any case), as { label, code }, or null. */

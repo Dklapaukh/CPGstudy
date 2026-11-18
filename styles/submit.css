@@ -1,0 +1,160 @@
+/* Styles for the Add a scenario page (submit.html). Loaded after app.css and editor.css. */
+
+/* Each part of the form is a card, like the scenario screens. */
+.submit-card {
+  margin: 0 0 0.8rem;
+  padding: 0.9rem 0.9rem 0.4rem;
+  background: var(--colour-surface);
+  border: 1px solid var(--pill-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.submit-card__head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.submit-card__title {
+  font-size: 1rem;
+  margin: 0 0 0.6rem;
+}
+.submit-label {
+  color: var(--colour-muted);
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+}
+.submit-required {
+  font-weight: 400;
+}
+.submit-form textarea.text-input {
+  font: inherit;
+  resize: vertical;
+}
+.submit-form select.text-input {
+  color: var(--colour-text);
+  font: inherit;
+  min-height: 44px;
+}
+
+/* Vitals: four to a row, label above each short box. */
+.submit-vitals {
+  display: grid;
+  gap: 0 0.5rem;
+  grid-template-columns: repeat(4, 1fr);
+}
+.submit-vital span {
+  color: var(--colour-muted);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.submit-vital .text-input {
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+}
+
+/* A tick box and its text, with a 44 px tap target. */
+.submit-check {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.3rem 0 0.6rem;
+}
+.submit-check input {
+  accent-color: var(--colour-green);
+  flex: none;
+  height: 1.3rem;
+  margin: 0.1rem 0 0;
+  width: 1.3rem;
+}
+
+/* Remove buttons: small, but still 44 px tall. */
+.submit-small-button {
+  background: none;
+  border: 1px solid var(--colour-line);
+  border-radius: 8px;
+  color: var(--colour-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  min-height: 44px;
+  padding: 0 0.8rem;
+}
+
+/* Photos: the preview as it will be sent, then its caption and options. */
+.submit-photo {
+  border-top: 1px solid var(--colour-line);
+  margin-bottom: 0.8rem;
+  padding-top: 0.8rem;
+}
+.submit-photo__image {
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 0.6rem;
+  max-height: 60vh;
+  max-width: 100%;
+}
+/* The file box is hidden; its label is the visible button, so the tap opens the camera or files. */
+.submit-file-input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+.submit-add-photo,
+.submit-link-button {
+  text-align: center;
+  text-decoration: none;
+}
+.submit-file-input:focus-visible + .submit-add-photo {
+  outline: 2px solid var(--colour-green);
+}
+.warning-message ul {
+  margin: 0.3rem 0;
+  padding-left: 1.2rem;
+}
+
+/* One set of vitals, set apart from the next. */
+.submit-vital-set {
+  border-top: 1px solid var(--colour-line);
+  margin-top: 0.4rem;
+  padding-top: 0.6rem;
+}
+.submit-fieldset {
+  border: 0;
+  margin: 0 0 0.4rem;
+  padding: 0;
+}
+/* A box with a small button beside it: the guideline picker and each debrief point. */
+.submit-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.5rem;
+}
+.submit-row .text-input {
+  flex: 1;
+}
+.submit-guidelines {
+  list-style: none;
+  margin: 0 0 0.8rem;
+  padding: 0;
+}
+.submit-guideline {
+  align-items: center;
+  border-bottom: 1px solid var(--colour-line);
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+}
+.submit-guideline b {
+  color: var(--colour-accent-text);
+}
+.submit-error {
+  color: var(--colour-wrong);
+  font-size: 0.85rem;
+  margin: -0.4rem 0 0.8rem;
+}

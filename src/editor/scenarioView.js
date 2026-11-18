@@ -16,7 +16,12 @@ import {
   SCENARIO_LOADS,
   SCENARIO_VITALS,
 } from '../constants.js';
-import { scenarioValue, MAX_PATIENTS, PATIENT_TEXT_FIELDS } from '../scenarioEdits.js';
+import {
+  scenarioValue,
+  MAX_PATIENTS,
+  MAX_LATER_VITALS,
+  PATIENT_TEXT_FIELDS,
+} from '../scenarioEdits.js';
 import { scenarioBodyHtml, scenarioTagsText } from '../views/scenarioMarkup.js';
 
 export const SCENARIO_EDITOR_HASH_PREFIX = '#s-';
@@ -37,6 +42,10 @@ const FIELD_NAMES = {
   medications: 'Medications',
   allergies: 'Allergies',
   social: 'Social history',
+  vitalsNote: 'Note on the first vitals',
+  treatment: 'Treatment and response',
+  note: 'Note',
+  caption: 'Caption',
 };
 const VITAL_NAMES = Object.fromEntries(SCENARIO_VITALS);
 const HINTS = {
@@ -54,8 +63,13 @@ const button = (action, label, data = '', style = 'switch-button') =>
 /** What a path is called on the page: "Story", "Patient 2: HR". */
 export function pathName(scenario, path) {
   const [top, index, field, vital] = path.split('.');
+  if (top === 'photos') return `Photo ${Number(index) + 1}: caption`;
   if (top !== 'patients') return FIELD_NAMES[top];
-  const name = field === 'vitals' ? VITAL_NAMES[vital] : FIELD_NAMES[field];
+  let name = field === 'vitals' ? VITAL_NAMES[vital] : FIELD_NAMES[field];
+  if (field === 'laterVitals') {
+    const [, , , , part, key] = path.split('.');
+    name = `Vitals ${Number(vital) + 2}: ${part === 'vitals' ? VITAL_NAMES[key] : 'note'}`;
+  }
   return scenario?.patients.length > 1 ? `Patient ${Number(index) + 1}: ${name}` : name;
 }
 
@@ -181,12 +195,16 @@ export function deletedScenarioHtml(viewer, signedInButtons) {
 
 /* ---------- The new scenario form ---------- */
 
-const SHORT_FIELDS = ['title', 'suburb', 'label'];
+const SHORT_FIELDS = ['title', 'suburb', 'label', 'vitalsNote', 'note', 'caption'];
 const DRAFT_HINTS = {
   ...HINTS,
   suburb: 'Wellington, Porirua, Kāpiti or Hutt Valley.',
   intention: 'What the scenario practises and what to watch for.',
   label: 'Needed when there are several patients, for example "Driver".',
+  vitalsNote: 'Optional, for example "On arrival".',
+  note: 'Optional, for example "5 min after GTN".',
+  treatment: 'Optional: what was done and how they responded. Shown folded, for the mentor.',
+  caption: 'Optional, for example "12-lead on arrival".',
 };
 
 /** One box of the form: a line for short texts, a few lines for the rest. */
@@ -215,47 +233,99 @@ function draftSelectHtml(draft, path, choices) {
     <select class="text-input" id="draft-${path}" data-draft="${path}">${options}</select>`;
 }
 
-/** One patient of the form: label, background and the eight vitals. */
+/** Eight vital boxes of the form under `prefix` ("patients.0.vitals"). */
+function draftVitalsHtml(draft, prefix) {
+  return SCENARIO_VITALS.map(([key, name]) => {
+    const path = `${prefix}.${key}`;
+    const id = `draft-${path.replaceAll('.', '-')}`;
+    const value = escapeHtml(String(scenarioValue(draft, path) ?? ''));
+    return `<label class="editor-vital" for="${id}">${name}
+      <input class="text-input" id="${id}" type="text" data-draft="${path}" value="${value}"></label>`;
+  }).join('');
+}
+
+/** One later set of vitals: its note, the eight vitals and Remove. */
+function draftLaterVitalsHtml(draft, index, setIndex) {
+  const prefix = `patients.${index}.laterVitals.${setIndex}`;
+  const data = ` data-index="${index}" data-set="${setIndex}"`;
+  return `<p class="editor-label">Vitals ${setIndex + 2}</p>
+    ${draftBoxHtml(draft, `${prefix}.note`)}
+    <div class="editor-vitals">${draftVitalsHtml(draft, `${prefix}.vitals`)}</div>
+    <div class="editor-buttons">${button('draft-remove-vitals', 'Remove these vitals', data)}</div>`;
+}
+
+/**
+ * One patient of the form: label, background, the first vitals with their note, any later
+ * vitals (each with a note such as "After GTN"), then the treatment and response.
+ */
 function draftPatientHtml(draft, index) {
   const prefix = `patients.${index}`;
+  const patient = draft.patients[index];
   const remove =
     draft.patients.length > 1
       ? button('draft-remove-patient', 'Remove this patient', ` data-index="${index}"`)
       : '';
-  const vitals = SCENARIO_VITALS.map(([key, name]) => {
-    const path = `${prefix}.vitals.${key}`;
-    const id = `draft-${path.replaceAll('.', '-')}`;
-    const value = escapeHtml(draft.patients[index].vitals[key] || '');
-    return `<label class="editor-vital" for="${id}">${name}
-      <input class="text-input" id="${id}" type="text" data-draft="${path}" value="${value}"></label>`;
-  }).join('');
+  const later = (patient.laterVitals || [])
+    .map((set, setIndex) => draftLaterVitalsHtml(draft, index, setIndex))
+    .join('');
+  const addVitals =
+    (patient.laterVitals || []).length < MAX_LATER_VITALS
+      ? button('draft-add-vitals', '+ Add later vitals', ` data-index="${index}"`)
+      : '';
   return `<fieldset class="editor-patient"><legend>Patient ${index + 1}</legend>
     ${PATIENT_TEXT_FIELDS.map((field) => draftBoxHtml(draft, `${prefix}.${field}`)).join('')}
-    <p class="editor-label">Vitals</p><div class="editor-vitals">${vitals}</div>
-    ${note('Write – for a vital that isn’t measured.')}
+    <p class="editor-label">Vitals</p>${draftBoxHtml(draft, `${prefix}.vitalsNote`)}
+    <div class="editor-vitals">${draftVitalsHtml(draft, `${prefix}.vitals`)}</div>
+    ${note('Write – for a vital that isn’t measured.')}${later}
+    <div class="editor-buttons">${addVitals}</div>
+    ${draftBoxHtml(draft, `${prefix}.treatment`)}
     ${remove ? `<div class="editor-buttons">${remove}</div>` : ''}</fieldset>`;
+}
+
+/** The photos of a submitted job: each as it will show, its caption and Remove. */
+function draftPhotosHtml(draft) {
+  if (!draft.photos?.length) return '';
+  const photos = draft.photos
+    .map(
+      (photo, index) => `<figure class="scenario-photo">
+        ${photo.preview ? `<img src="${escapeHtml(photo.preview)}" alt="Photo ${index + 1}">` : note('Loading the photo…')}
+        ${draftBoxHtml(draft, `photos.${index}.caption`)}
+        <div class="editor-buttons">${button('draft-remove-photo', 'Remove this photo', ` data-index="${index}"`)}</div>
+      </figure>`,
+    )
+    .join('');
+  return `<fieldset class="editor-patient"><legend>Photos</legend>
+    ${note('A removed photo is never published. Check nothing in a photo names the patient.')}${photos}</fieldset>`;
 }
 
 /**
  * The new scenario form. `draft` holds each box's text (scenarioEdits.js emptyScenarioDraft);
- * `error` is { path, error } for the box that couldn't be kept, or null.
+ * `error` is { path, error } for the box that couldn't be kept, or null. With `job` (a submitted
+ * job, { id }) it is the Edit and approve form for that job.
  */
-export function newScenarioHtml(viewer, draft, error, signedInButtons) {
+export function newScenarioHtml(viewer, draft, error, signedInButtons, job = null) {
   const errorText = error ? `${pathName(draft, error.path)}: ${error.error}` : '';
   const addPatient =
     draft.patients.length < MAX_PATIENTS ? button('draft-add-patient', '+ Add a patient') : '';
-  return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
+  const heading = job ? 'Edit and approve a submitted job' : 'New scenario';
+  const intro = job
+    ? `Change anything before approving: the job becomes a new scenario. Check nothing in the
+      text or photos could identify the patient. Boxes marked optional can be left empty.`
+    : 'Every box is needed except those marked optional.';
+  const save = job ? 'Save and approve' : 'Save the scenario';
+  const cancel = job ? `#j-${escapeHtml(job.id)}` : '#';
+  return `<div class="editor-back-bar"><a class="back-link" href="${cancel}">‹ Back</a>
     ${signedInButtons}</div>
-    <main class="page-padding">${warningHtml(viewer.message)}<h1>New scenario</h1>
-    ${note('Every box is needed. Saved scenarios reach the app the next morning; after saving, tap any value to change it.')}
+    <main class="page-padding">${warningHtml(viewer.message)}<h1>${heading}</h1>
+    ${note(`${intro} Saved scenarios reach the app the next morning; after saving, tap any value to change it.`)}
     ${['title', 'suburb', 'story', 'intention'].map((path) => draftBoxHtml(draft, path)).join('')}
     ${draftSelectHtml(draft, 'complexity', SCENARIO_COMPLEXITY)}
     ${draftSelectHtml(draft, 'load', SCENARIO_LOADS)}${note(escapeHtml(HINTS.load))}
     ${draftBoxHtml(draft, 'outcomes')}${draftBoxHtml(draft, 'guidelines')}
     ${draft.patients.map((patient, index) => draftPatientHtml(draft, index)).join('')}
-    <div class="editor-buttons">${addPatient}</div>${warningHtml(errorText)}
-    <div class="editor-buttons">${button('draft-save', 'Save the scenario', '', 'button')}
-      <a class="switch-button" href="#">Cancel</a></div></main>`;
+    <div class="editor-buttons">${addPatient}</div>${draftPhotosHtml(draft)}${warningHtml(errorText)}
+    <div class="editor-buttons">${button('draft-save', save, '', 'button')}
+      <a class="switch-button" href="${cancel}">Cancel</a></div></main>`;
 }
 
 /** The screen for an edit whose scenario is no longer in content/scenarios.js. */

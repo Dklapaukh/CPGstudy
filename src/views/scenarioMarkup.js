@@ -4,7 +4,8 @@
  * Each function takes data and returns text; nothing here touches the page.
  * On the editor page an optional `editing` argument makes each value clickable and puts the
  * editor's box in place of the open one: { attrs(path), formFor(path) }, where a path names one
- * value as in scenarioEdits.js. Without it the markup is the app's.
+ * value as in scenarioEdits.js. Without it the markup is the app's. With `readOnly: true` (a
+ * submitted job waiting for approval) it is the editor's layout with nothing to tap.
  * Depends on logic.js, guidelines.js, constants.js and scenarioEdits.js.
  */
 import { escapeHtml } from '../logic.js';
@@ -93,12 +94,47 @@ const factHtml = (label, text, path, editing) =>
 function patientLabelHtml(patient, prefix, editing) {
   const path = `${prefix}.label`;
   if (openForm(editing, path)) return openForm(editing, path);
-  if (!patient.label && !editing) return '';
+  if (!patient.label && (!editing || editing.readOnly)) return '';
   const text = patient.label ? escapeHtml(patient.label) : '<i>No patient label</i>';
   return `<h2 class="scenario-patient"${boxAttrs(editing, path)}>${text}</h2>`;
 }
 
-/** The vitals and background of one patient. */
+/** A note above a set of vitals ("On arrival", "After GTN"), when there is one. */
+const vitalsNoteHtml = (text) => (text ? `<p class="scenario-label">${escapeHtml(text)}</p>` : '');
+
+/**
+ * What happened after the first vitals, from a submitted job: later vitals, each with its note,
+ * then the treatment and response. Folded in the app, so the mentor reveals it when it fits.
+ * Nothing when the patient has neither.
+ */
+function nextHtml(patient, editing) {
+  const later = (patient.laterVitals || [])
+    .map((set) => `${vitalsNoteHtml(set.note)}${vitalsTableHtml(set.vitals, '')}`)
+    .join('');
+  const treatment = patient.treatment
+    ? `<p class="scenario-label">Treatment and response</p>
+      <p class="scenario-fact">${escapeHtml(patient.treatment)}</p>`
+    : '';
+  if (!later && !treatment) return '';
+  return foldHtml('What happened next (for the mentor)', later + treatment, Boolean(editing));
+}
+
+/** A submitted job's photos (ECGs, the monitor) with captions, folded in the app. */
+function photosHtml(scenario, editing) {
+  const photos = scenario.photos || [];
+  if (!photos.length) return '';
+  const figures = photos
+    .map(
+      (photo, index) => `<figure class="scenario-photo">
+        <img src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.caption || `Photo ${index + 1}`)}"
+          loading="lazy">${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
+      </figure>`,
+    )
+    .join('');
+  return foldHtml(`ECGs and photos (${photos.length})`, figures, Boolean(editing));
+}
+
+/** The vitals and background of one patient, then what happened next when it is known. */
 function patientHtml(patient, index, editing) {
   const prefix = `patients.${index}`;
   const background =
@@ -107,8 +143,8 @@ function patientHtml(patient, index, editing) {
     factHtml('Allergies', patient.allergies, `${prefix}.allergies`, editing) +
     factHtml('Social history', patient.social, `${prefix}.social`, editing);
   return `${patientLabelHtml(patient, prefix, editing)}
-    ${foldHtml('Vitals', vitalsTableHtml(patient.vitals, prefix, editing), true)}
-    ${foldHtml('Patient background', background, true)}`;
+    ${foldHtml('Vitals', vitalsNoteHtml(patient.vitalsNote) + vitalsTableHtml(patient.vitals, prefix, editing), true)}
+    ${foldHtml('Patient background', background, true)}${nextHtml(patient, editing)}`;
 }
 
 /** One guideline row: a link in the app, plain text for an editor (the list is one box). */
@@ -131,7 +167,8 @@ function guidelinesHtml(scenario, editing) {
 }
 
 /**
- * The scenario as learners see it: the story card, each patient, the intention and intended
+ * The scenario as learners see it: the story card, each patient (with what happened next and
+ * the photos, for a submitted job), the intention and intended
  * outcomes (folded in the app, open for an editor) and the guidelines.
  */
 export function scenarioBodyHtml(scenario, editing) {
@@ -151,6 +188,7 @@ export function scenarioBodyHtml(scenario, editing) {
       ${text('title', 'h1', 'scenario-title')}${text('suburb', 'p', 'scenario-label')}
       ${text('story', 'p', 'scenario-story')}</section>
     ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
+    ${photosHtml(scenario, editing)}
     ${foldHtml('Scenario intention', intention, Boolean(editing))}
     ${guidelinesHtml(scenario, editing)}`;
 }

@@ -13,6 +13,9 @@
  *   { kind: 'scenario', off?: true, added: <a whole scenario> }  one an editor created; it is
  *     not in content/scenarios.js, so its values are changed in `added` itself, with no review.
  *   { kind: 'scenario', deleted: true }  one an editor deleted for good; it has no undo.
+ * A new scenario may also have what a submitted job adds (Add a scenario, approved on the editor
+ * page): per patient `vitalsNote`, `laterVitals` ([{ note, vitals }]) and `treatment`, and
+ * `photos` ([{ src, caption }], published by the daily copy into content/scenario-photos).
  * Depends on constants.js.
  */
 import { SCENARIO_COMPLEXITY, SCENARIO_LOADS, SCENARIO_VITALS } from './constants.js';
@@ -30,6 +33,14 @@ export const MAX_OUTCOME_TEXT = 200;
 export const MAX_PATIENTS = 4;
 // A new scenario's id is made from its title, cut to this length.
 const MAX_ID_LENGTH = 60;
+// A submitted job's extras (all optional): later vitals sets and photos per scenario, the most
+// of each kept, and the longest note and caption. A photo is only ever one the daily copy
+// publishes, so its address is checked.
+export const MAX_LATER_VITALS = 5;
+export const MAX_PHOTOS = 4;
+const MAX_NOTE_TEXT = 80;
+const MAX_CAPTION_TEXT = 120;
+const PHOTO_SRC_PATTERN = /^content\/scenario-photos\/[a-z0-9-]+\.jpg$/;
 // The scenario-wide values an editor may change, besides the text fields.
 const OTHER_FIELDS = ['complexity', 'load', 'outcomes', 'guidelines'];
 
@@ -150,8 +161,17 @@ export function liveScenarios(scenarios, edits) {
 export const emptyPatient = () => ({
   label: '',
   ...Object.fromEntries(PATIENT_TEXT_FIELDS.slice(1).map((field) => [field, ''])),
-  vitals: Object.fromEntries(SCENARIO_VITALS.map(([key]) => [key, ''])),
+  vitalsNote: '',
+  vitals: emptyVitals(),
+  laterVitals: [],
+  treatment: '',
 });
+
+/** Eight empty vital boxes. */
+const emptyVitals = () => Object.fromEntries(SCENARIO_VITALS.map(([key]) => [key, '']));
+
+/** An empty later set of vitals for the form, with its note ("After GTN"). */
+export const emptyLaterVitals = () => ({ note: '', vitals: emptyVitals() });
 
 /** The new scenario form before anything is typed: every value as the text in its box. */
 export const emptyScenarioDraft = () => ({
@@ -161,7 +181,37 @@ export const emptyScenarioDraft = () => ({
   outcomes: '',
   guidelines: '',
   patients: [emptyPatient()],
+  photos: [],
 });
+
+/**
+ * A scenario as the new scenario form's box texts (the reverse of readNewScenario), so a
+ * submitted job can be changed before it is approved. `numberOfId` gives a guideline's CPG
+ * number. Photos keep their address and caption; `preview` (a data: address) is for showing.
+ */
+export function scenarioDraftOf(scenario, numberOfId) {
+  const vitalsText = (vitals) =>
+    Object.fromEntries(SCENARIO_VITALS.map(([key]) => [key, String(vitals?.[key] ?? '')]));
+  return {
+    ...Object.fromEntries(SCENARIO_TEXT_FIELDS.map((field) => [field, scenario[field] || ''])),
+    complexity: String(scenario.complexity),
+    load: scenario.load,
+    outcomes: scenario.outcomes.join('\n'),
+    guidelines: scenario.guidelines.map(numberOfId).join(', '),
+    patients: scenario.patients.map((patient) => ({
+      ...emptyPatient(),
+      ...Object.fromEntries(PATIENT_TEXT_FIELDS.map((field) => [field, patient[field] || ''])),
+      vitalsNote: patient.vitalsNote || '',
+      vitals: vitalsText(patient.vitals),
+      laterVitals: (patient.laterVitals || []).map((set) => ({
+        note: set.note || '',
+        vitals: vitalsText(set.vitals),
+      })),
+      treatment: patient.treatment || '',
+    })),
+    photos: (scenario.photos || []).map((photo) => ({ ...photo })),
+  };
+}
 
 /**
  * An id for a new scenario from its title ("Fall at the marae" -> "fall-at-the-marae"), with
@@ -226,8 +276,65 @@ export function readNewScenario(draft, takenIds, guidelineIdOfNumber) {
   }
   const problem = patientsProblem(scenario);
   if (problem) return problem;
+  const extras = readDraftExtras(draft);
+  if (extras.error) return extras;
+  scenario = {
+    ...scenario,
+    patients: scenario.patients.map((patient, index) => ({
+      ...patient,
+      ...extras.patients[index],
+    })),
+    ...(extras.photos.length ? { photos: extras.photos } : {}),
+  };
   const id = newScenarioId(scenario.title, takenIds);
   return { value: cleanAddedScenario(scenario, id, () => true) };
+}
+
+/** A box that may be empty, trimmed: { value } or { path, error } when it is too long. */
+function readOptional(draft, path, max) {
+  const text = String(scenarioValue(draft, path) ?? '').trim();
+  return text.length > max ? { path, error: 'That is too long to keep.' } : { value: text };
+}
+
+/**
+ * The form's optional extras (a submitted job's): each patient's vitals note, later vitals and
+ * treatment, and the photos' captions. { patients, photos } or { path, error }.
+ */
+function readDraftExtras(draft) {
+  const patients = [];
+  for (const [index, patient] of draft.patients.entries()) {
+    const prefix = `patients.${index}`;
+    const note = readOptional(draft, `${prefix}.vitalsNote`, MAX_NOTE_TEXT);
+    const treatment = readOptional(draft, `${prefix}.treatment`, MAX_SCENARIO_TEXT);
+    if (note.error) return note;
+    if (treatment.error) return treatment;
+    const laterVitals = [];
+    for (const [setIndex, set] of (patient.laterVitals || []).entries()) {
+      const setPath = `${prefix}.laterVitals.${setIndex}`;
+      const setNote = readOptional(draft, `${setPath}.note`, MAX_NOTE_TEXT);
+      if (setNote.error) return setNote;
+      const vitals = {};
+      for (const [key] of SCENARIO_VITALS) {
+        const path = `${setPath}.vitals.${key}`;
+        const read = readScenarioBox(path, String(set.vitals[key] ?? ''));
+        if (read.error) return { path, error: read.error };
+        vitals[key] = read.value;
+      }
+      laterVitals.push({ note: setNote.value, vitals });
+    }
+    patients.push({
+      ...(note.value ? { vitalsNote: note.value } : {}),
+      ...(laterVitals.length ? { laterVitals } : {}),
+      ...(treatment.value ? { treatment: treatment.value } : {}),
+    });
+  }
+  const photos = [];
+  for (const [index, photo] of (draft.photos || []).entries()) {
+    const caption = readOptional(draft, `photos.${index}.caption`, MAX_CAPTION_TEXT);
+    if (caption.error) return caption;
+    photos.push({ src: photo.src, caption: caption.value });
+  }
+  return { patients, photos };
 }
 
 const isText = (value, maxLength = MAX_SCENARIO_TEXT) =>
@@ -246,11 +353,55 @@ function cleanPatient(patient) {
   if (!fields.every((field) => isText(patient[field]))) return null;
   if (!vitalKeys.every((key) => isText(patient.vitals[key]))) return null;
   if (patient.label !== undefined && patient.label !== '' && !isText(patient.label)) return null;
+  const extras = cleanPatientExtras(patient, vitalKeys);
+  if (!extras) return null;
   return {
     ...(patient.label ? { label: patient.label } : {}),
     ...Object.fromEntries(fields.map((field) => [field, patient[field]])),
+    ...(extras.vitalsNote ? { vitalsNote: extras.vitalsNote } : {}),
     vitals: Object.fromEntries(vitalKeys.map((key) => [key, patient.vitals[key]])),
+    ...(extras.laterVitals.length ? { laterVitals: extras.laterVitals } : {}),
+    ...(extras.treatment ? { treatment: extras.treatment } : {}),
   };
+}
+
+/** Optional text: missing or empty, or a string no longer than `max`. */
+const isOptionalText = (value, max) =>
+  value === undefined || value === '' || (typeof value === 'string' && value.length <= max);
+
+/**
+ * A patient's extras from a submitted job, cleaned: { vitalsNote, laterVitals, treatment }, or
+ * null when one is malformed.
+ */
+function cleanPatientExtras(patient, vitalKeys) {
+  const { vitalsNote, treatment, laterVitals = [] } = patient;
+  if (!isOptionalText(vitalsNote, MAX_NOTE_TEXT)) return null;
+  if (!isOptionalText(treatment, MAX_SCENARIO_TEXT)) return null;
+  if (!Array.isArray(laterVitals) || laterVitals.length > MAX_LATER_VITALS) return null;
+  const sets = laterVitals.map((set) =>
+    set &&
+    isOptionalText(set.note, MAX_NOTE_TEXT) &&
+    set.vitals &&
+    vitalKeys.every((key) => isText(set.vitals[key]))
+      ? {
+          note: set.note || '',
+          vitals: Object.fromEntries(vitalKeys.map((key) => [key, set.vitals[key]])),
+        }
+      : null,
+  );
+  if (!sets.every(Boolean)) return null;
+  return { vitalsNote: vitalsNote || '', laterVitals: sets, treatment: treatment || '' };
+}
+
+/** A new scenario's photos, cleaned: [] when there are none, null when one is malformed. */
+function cleanPhotos(photos = []) {
+  if (!Array.isArray(photos) || photos.length > MAX_PHOTOS) return null;
+  const clean = photos.map((photo) =>
+    photo && PHOTO_SRC_PATTERN.test(photo.src) && isOptionalText(photo.caption, MAX_CAPTION_TEXT)
+      ? { src: photo.src, caption: photo.caption || '' }
+      : null,
+  );
+  return clean.every(Boolean) ? clean : null;
 }
 
 /**
@@ -271,7 +422,8 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
     patients.length > 0 &&
     patients.length <= MAX_PATIENTS &&
     patients.every(Boolean);
-  if (!isWhole) return null;
+  const photos = cleanPhotos(scenario.photos);
+  if (!isWhole || !photos) return null;
   const clean = {
     id,
     complexity: scenario.complexity,
@@ -280,6 +432,7 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
     outcomes: [...scenario.outcomes],
     guidelines: [...scenario.guidelines],
     patients,
+    ...(photos.length ? { photos } : {}),
   };
   return patientsProblem(clean) ? null : clean;
 }

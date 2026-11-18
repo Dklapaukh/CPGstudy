@@ -215,6 +215,24 @@ export const SCENARIO_VITALS = [
   ['bgl', 'BGL'],
   ['pain', 'Pain'],
 ];
+// Add a scenario (submit.html): anyone can send an anonymised job, with no sign-in; editors
+// approve it on the editor page before the daily copy adds it to the app. The backend checks
+// the same limits (backend/Code.gs). Photos are made smaller on the phone, which also drops
+// their location data. A form sent sooner than SUBMIT_MIN_FORM_MS after opening is a bot's.
+export const SUBMIT_PAGE = 'submit.html';
+export const SUBMIT_MIN_FORM_MS = 20000;
+export const SUBMISSION_LIMITS = {
+  IMAGES: 4,
+  IMAGE_LONGEST_SIDE_PX: 1600,
+  IMAGE_JPEG_QUALITY: 0.8,
+  IMAGE_BASE64_LENGTH: 2000000,
+  CAPTION: 120,
+  PATIENTS: 6,
+  VITAL_SETS: 6,
+  GUIDELINES: 12,
+};
+// Where the daily copy puts approved jobs' photos, as the app addresses them.
+export const SCENARIO_PHOTO_FOLDER = 'content/scenario-photos';
 
 // Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
 // "Mark for review N days after Complete" belongs to the tracker, so every phone using it shares it:

@@ -3205,6 +3205,26 @@ ul.sort-piece__text {
   font-weight: 600;
   cursor: pointer;
 }
+.scenario-photo {
+  margin: 0 0 0.8rem;
+}
+.scenario-photo img {
+  border-radius: 8px;
+  display: block;
+  max-width: 100%;
+}
+.scenario-photo figcaption {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+.scenario-submit-link {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  text-decoration: none;
+}
 .scenario-queue-message {
   min-height: 1.5em;
   margin: 0.5rem 0 0;

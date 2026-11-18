@@ -2,13 +2,14 @@
  * Copies the editors' changes from the Sheet's Edits tab into the app: content/card-edits.yaml
  * (the readable record, one entry per edited question) and content/card-edits.js (what the app
  * loads), and the scenario edits (changed, new and deleted scenarios) into
- * content/scenario-edits.yaml and content/scenario-edits.js. Run every morning by .github/workflows/edits-sync.yml, or by hand with
+ * content/scenario-edits.yaml and content/scenario-edits.js. It also copies the photos of approved submitted jobs that new scenarios use
+ * into content/scenario-photos. Run every morning by .github/workflows/edits-sync.yml, or by hand with
  * `node scripts/sync-edits.js`. Prints how many edits need an editor's review after a guideline
  * update (the editor page lists them).
  * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/guidelines.js,
  * src/editor/questions.js, content/scenarios.js and the yaml package.
  */
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { stringify } from 'yaml';
 import { sendRequest } from '../src/api.js';
@@ -23,6 +24,8 @@ import {
 } from '../src/scenarioEdits.js';
 import { guidelineById } from '../src/guidelines.js';
 import { scenarios } from '../content/scenarios.js';
+import { SCENARIO_PHOTO_FOLDER } from '../src/constants.js';
+import { photoName } from '../src/scenarioSubmission.js';
 
 const contentPath = (name) => fileURLToPath(new URL(`../content/${name}`, import.meta.url));
 const KEPT_KEYS = ['kind', 'off', 'was'];
@@ -128,6 +131,35 @@ function editsToReview(edits, scenarioEditsById) {
   ];
 }
 
+/**
+ * The photos to publish: those of approved jobs ({ id, photos: [{ data }] } from the backend)
+ * that a new scenario in `scenarioEditsById` shows, as { name, data }. A photo an editor took
+ * out before approving is never published. Names are "<job id>-<n>.jpg", as the editor page
+ * gives them (src/scenarioSubmission.js, photoName).
+ */
+export function photosToPublish(submissions, scenarioEditsById) {
+  const used = new Set(
+    Object.values(scenarioEditsById).flatMap((edit) =>
+      (edit.added?.photos || []).map((photo) => photo.src),
+    ),
+  );
+  return submissions.flatMap(({ id, photos = [] }) =>
+    photos
+      .map((photo, index) => ({ name: photoName(id, index), data: photo.data }))
+      .filter((photo) => used.has(`${SCENARIO_PHOTO_FOLDER}/${photo.name}`)),
+  );
+}
+
+/** Writes the photos to publish and removes any other photo in the folder. */
+function writePhotos(files) {
+  const folder = fileURLToPath(new URL(`../${SCENARIO_PHOTO_FOLDER}/`, import.meta.url));
+  const names = new Set(files.map((file) => file.name));
+  readdirSync(folder)
+    .filter((name) => name.endsWith('.jpg') && !names.has(name))
+    .forEach((name) => unlinkSync(folder + name));
+  files.forEach((file) => writeFileSync(folder + file.name, Buffer.from(file.data, 'base64')));
+}
+
 /** Fetches the edits, writes both files and lists the edits that need review. */
 async function main() {
   const reply = await sendRequest({ action: 'edits' });
@@ -143,6 +175,15 @@ async function main() {
   const count = Object.keys(edits).length + Object.keys(scenarioEditsById).length;
   console.log(`${count} edits written; ${toReview.length} need review.`);
   toReview.forEach((id) => console.log(`  needs review: ${id}`));
+
+  const approved = await sendRequest({ action: 'approved-scenarios' });
+  if (!approved.ok) {
+    console.error(`The backend refused approved jobs: ${approved.error}. Is it redeployed?`);
+    process.exit(1);
+  }
+  const photos = photosToPublish(approved.submissions || [], scenarioEditsById);
+  writePhotos(photos);
+  console.log(`${photos.length} photos of approved jobs written.`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) await main();

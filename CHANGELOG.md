@@ -2,6 +2,19 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: **Add a scenario** form (`submit.html`, linked at the end of the Scenarios list),
+  with no sign-in. Fields follow the scenario format: title, optional suburb, History,
+  complexity and scene load, then per patient the background, several vitals sets with a note
+  each and Treatment and response; guidelines picked only from the app's list; up to 4 photos;
+  What could it teach and debrief points (the intended outcomes) last. Identifying details are
+  flagged before sending; photos are shrunk and re-saved (no location data). Jobs wait as
+  Pending in a new `Submissions` tab (photos in a private Drive folder). On the editor page,
+  **Edit and approve** opens the new scenario form filled in from the job, **Approve as it is**
+  saves it unchanged, and **Reject** deletes its photos; an approved job becomes a new scenario
+  (`scenario|<id>`, `added`). New scenarios may now hold a vitals note, later vitals,
+  treatment and photos. The daily copy publishes only the photos a new scenario shows, into
+  `content/scenario-photos/`. Backend: `scenario-submit`, `submission-photo`,
+  `submission-decide`, `approved-scenarios`. **Needs the backend redeployed** (plan 8.4).
 - 2026-11-19: Editor page: **create and delete scenarios.** "+ New scenario" opens a form
   (title, suburb, story, intention, complexity, scene load, outcomes, guidelines, and one to four
   patients with background and vitals); it is checked whole, saved as `scenario|<id>` with

@@ -38,6 +38,7 @@
     "src/scenarioEdits.js",
     "src/scenarioLogic.js",
     "src/scenarioRunState.js",
+    "src/scenarioSubmission.js",
     "src/settingsState.js",
     "src/staffPage.js",
     "src/state.js",
