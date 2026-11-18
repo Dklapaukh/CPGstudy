@@ -1,13 +1,17 @@
 /*
- * Checks the hand-written scenarios in content/scenarios.js: unique ids, a known complexity and
+ * Checks the scenarios learners see (content/scenarios.js with the editors' new and deleted ones
+ * from content/scenario-edits.js, so the daily copy can't publish a broken one): unique ids, a known complexity and
  * scene load, intended outcomes, real guidelines, every vital, and a label on each patient when there are several.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { scenarios } from '../content/scenarios.js';
+import { scenarios as writtenScenarios } from '../content/scenarios.js';
+import { scenarioEdits } from '../content/scenario-edits.js';
 import { guidelineData } from '../content/guidelines.js';
 import { SCENARIO_COMPLEXITY, SCENARIO_LOADS, SCENARIO_VITALS } from '../src/constants.js';
-import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from '../src/scenarioEdits.js';
+import { MAX_OUTCOMES, MAX_OUTCOME_TEXT, liveScenarios } from '../src/scenarioEdits.js';
+
+const scenarios = liveScenarios(writtenScenarios, scenarioEdits);
 
 const guidelineIds = new Set(
   Object.values(guidelineData)

@@ -228,6 +228,51 @@ test('the daily copy keeps scenario edits apart from question edits', () => {
   });
 });
 
+test('the daily copy keeps whole new scenarios and deletions, and drops broken ones', () => {
+  const added = {
+    id: 'ignored',
+    complexity: 1,
+    load: 'single',
+    title: 'New one',
+    suburb: 'Petone',
+    story: 'A story.',
+    intention: 'An intention.',
+    outcomes: ['Does one thing'],
+    guidelines: ['cpg-1-17'],
+    extra: 'dropped',
+    patients: [
+      {
+        history: 'Nil',
+        medications: 'Nil',
+        allergies: 'None',
+        social: 'Lives alone',
+        vitals: {
+          gcs: '15',
+          rr: '16',
+          spo2: '99%',
+          hr: '80',
+          bp: '120/80',
+          temp: '37',
+          bgl: '5',
+          pain: '0',
+        },
+      },
+    ],
+  };
+  const cleaned = cleanScenarioEdits({
+    'scenario|new-one': { kind: 'scenario', added, fields: { title: { to: 'x' } } },
+    'scenario|long-lie': { kind: 'scenario', deleted: true, fields: { title: { to: 'x' } } },
+    'scenario|bad-guideline': { kind: 'scenario', added: { ...added, guidelines: ['cpg-99'] } },
+    'scenario|Bad Id': { kind: 'scenario', added },
+  });
+  const { extra, ...kept } = added;
+  assert.equal(extra, 'dropped');
+  assert.deepEqual(cleaned, {
+    'scenario|long-lie': { kind: 'scenario', deleted: true },
+    'scenario|new-one': { kind: 'scenario', added: { ...kept, id: 'new-one' } },
+  });
+});
+
 /* ---------- The editor page ---------- */
 
 let dom;
@@ -403,5 +448,85 @@ test('page: a scenario edit whose value changed in the file is listed for review
   await sleep(20);
   assert.equal(sheetEdits['scenario|long-lie'].fields.title.was, 'Long lie');
   assert.equal($('.editor-review'), null);
+  delete sheetEdits['scenario|long-lie'];
+});
+
+test('page: a new scenario is written in one form, saved, then changed in place', async () => {
+  dom.window.location.hash = '';
+  await sleep(20);
+  assert.ok($('[data-section="Scenarios"] a[href="#new-scenario"]'));
+  dom.window.location.hash = '#new-scenario';
+  await sleep(20);
+  const type = (path, value) => {
+    const box = $(`[data-draft="${path}"]`);
+    box.value = value;
+    box.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  };
+  type('title', 'Fall at the marae');
+  type('suburb', 'Ōtaki');
+  click($('[data-action="draft-add-patient"]'));
+  await sleep(20);
+  assert.equal($('[data-draft="title"]').value, 'Fall at the marae', 'typing survives a redraw');
+  assert.equal($$('.editor-patient').length, 2);
+  click($('[data-action="draft-remove-patient"][data-index="1"]'));
+  await sleep(20);
+  assert.equal($$('.editor-patient').length, 1);
+  click($('[data-action="draft-save"]'));
+  await sleep(20);
+  assert.match($('.warning-message').textContent, /Story: This can’t be empty/);
+  type('story', 'A kuia slipped on wet steps.');
+  type('intention', 'Falls in the elderly.');
+  type('outcomes', 'Checks for a head injury\nAsks why she fell');
+  type('guidelines', '1.17, 12.9');
+  ['history', 'medications', 'allergies', 'social'].forEach((field) =>
+    type(`patients.0.${field}`, 'Nil'),
+  );
+  ['gcs', 'rr', 'spo2', 'hr', 'bp', 'temp', 'bgl', 'pain'].forEach((key) =>
+    type(`patients.0.vitals.${key}`, '–'),
+  );
+  click($('[data-action="draft-save"]'));
+  await sleep(20);
+  const saved = sheetEdits['scenario|fall-at-the-marae'];
+  assert.equal(saved.added.title, 'Fall at the marae');
+  assert.deepEqual(saved.added.guidelines, ['cpg-1-17', 'cpg-12-9']);
+  assert.equal(dom.window.location.hash, '#s-fall-at-the-marae');
+  assert.match($('main').textContent, /New.*Not in the app yet/s);
+  assert.equal($('[data-action="scenario-undo"]'), null, 'a new scenario is deleted, not undone');
+  click($('[data-path="patients.0.vitals.hr"]'));
+  $('#box-text').value = '96';
+  click($('[data-action="scenario-box-save"]'));
+  await sleep(20);
+  assert.equal(sheetEdits['scenario|fall-at-the-marae'].added.patients[0].vitals.hr, '96');
+  dom.window.location.hash = '';
+  await sleep(20);
+  assert.ok($('[data-section="Scenarios"] a[href="#s-fall-at-the-marae"]'));
+});
+
+test('page: deleting asks first; a new scenario goes, a written one is deleted for good', async () => {
+  dom.window.location.hash = '#s-fall-at-the-marae';
+  await sleep(20);
+  click($('[data-action="scenario-delete"]'));
+  await sleep(20);
+  assert.match($('.editor-confirm').textContent, /can’t be put back/);
+  click($('[data-action="scenario-delete-no"]'));
+  await sleep(20);
+  assert.equal($('.editor-confirm'), null);
+  assert.ok(sheetEdits['scenario|fall-at-the-marae']);
+  click($('[data-action="scenario-delete"]'));
+  click($('[data-action="scenario-delete-yes"]'));
+  await sleep(20);
+  assert.equal(sheetEdits['scenario|fall-at-the-marae'], undefined);
+  assert.equal(dom.window.location.hash, '');
+  dom.window.location.hash = '#s-long-lie';
+  await sleep(20);
+  click($('[data-action="scenario-delete"]'));
+  click($('[data-action="scenario-delete-yes"]'));
+  await sleep(20);
+  assert.deepEqual(sheetEdits['scenario|long-lie'], { kind: 'scenario', deleted: true });
+  assert.equal($('[data-section="Scenarios"] a[href="#s-long-lie"]'), null);
+  dom.window.location.hash = '#s-long-lie';
+  await sleep(20);
+  assert.match($('main').textContent, /Scenario deleted/);
+  assert.equal($('[data-action="scenario-undo"]'), null);
   delete sheetEdits['scenario|long-lie'];
 });

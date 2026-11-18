@@ -506,7 +506,8 @@ and theme chips), no recommendations for now, C3 (Finish: struggled guidelines g
 to learn, plus a debrief note), recorded on the learner's phone. Scenarios can be edited on the
 editor page (tap a value to change it), and the daily copy publishes the edits. Possible
 follow-ups: recommendations (recently studied, or from Guidelines to learn); adding or removing
-patients and creating new scenarios from the editor page.
+patients of an existing scenario from the editor page. Since 19 Nov editors can also create new
+scenarios (one form) and delete any scenario for good; both publish through the daily copy.
 On 19 Nov the levels became complexity and scene load (SC-E) and the debrief gained a PEARLS
 guide, outcome ratings and a score with progress (SC-F). Gaps to fill: there is no
 Straightforward scenario with Delegation or Several patients yet; mentors can't see runs; a

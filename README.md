@@ -441,6 +441,21 @@ all edits" removes the edit. A scenario edit is saved in the same `Edits` tab un
 `scenario|<id>` and keeps what each value said when it was edited. When `content/scenarios.js`
 later changes that value, the scenario is listed under "Needs review".
 
+**New and deleted scenarios.** "+ New scenario" at the top of the Scenarios section opens one
+form (`#new-scenario`): title, suburb, story, intention, complexity, scene load, intended
+outcomes (one per line), guidelines (CPG numbers) and one or more patients (up to 4), each with
+a label, background and all eight vitals. Every box is needed; several patients need the
+"several" scene load and a label each. Saving checks the whole scenario, gives it an id from its
+title (`fall-at-the-marae`, with `-2` when taken) and saves it as `scenario|<id>` with the whole
+scenario under `added`. It is then changed in place like any other (there is no file version to
+review). "Delete this scenario" asks once more, then deletes it for good: a new scenario's edit
+is removed; a scenario of `content/scenarios.js` gets `{ "kind": "scenario", "deleted": true }`,
+which hides it from the app and the editor page with no undo (to hide one for now, leave it out
+instead). The daily copy keeps a new scenario only when it is whole (the same rules as
+`tests/scenarios.test.js`, which also checks the published ones). To remove a deleted scenario's
+text from the repo too, delete it from `content/scenarios.js` by hand; its edit then does
+nothing.
+
 **When edits go live.** Saving writes the edit to the Sheet's `Edits` tab at once (one row per
 question; the page marks it "Not in the app yet"). Every morning `edits-sync.yml` runs
 `scripts/sync-edits.js`, which copies the tab into `content/card-edits.yaml` (the readable

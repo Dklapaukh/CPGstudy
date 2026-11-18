@@ -133,3 +133,52 @@
   display: block;
   padding: 0;
 }
+
+/* New scenario: the link at the top of the Scenarios section, and the form's patients. */
+.editor-new-link {
+  display: inline-block;
+  margin: 0.5rem 0.8rem;
+  min-height: 44px;
+  line-height: 2.4;
+  text-decoration: none;
+}
+.editor-patient {
+  border: 1px solid var(--colour-line);
+  border-radius: 12px;
+  margin: 1rem 0 0;
+  padding: 0.2rem 0.8rem 0.8rem;
+}
+.editor-patient legend {
+  font-weight: 600;
+  padding: 0 0.3rem;
+}
+/* The eight vitals, four to a row on a phone and all in one row on a wide screen. */
+.editor-vitals {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+}
+.editor-vital {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.editor-vital .text-input {
+  margin-top: 0.2rem;
+  width: 100%;
+}
+
+/* Deleting for good: red, and the question that makes sure is boxed in red too. */
+.editor-buttons .switch-button.editor-danger {
+  border-color: var(--colour-wrong);
+  color: var(--colour-wrong);
+}
+.editor-buttons .button.editor-danger {
+  background: var(--colour-wrong);
+}
+.editor-confirm {
+  background: var(--colour-wrong-soft);
+}
+/* The app's red is too dark for text on the dark theme's surface (under 4.5:1). */
+:root[data-theme='dark'] .editor-buttons .switch-button.editor-danger {
+  color: #f2a19b;
+}

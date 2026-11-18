@@ -17,6 +17,14 @@ import {
   dropScenarioPath,
   liveScenarios,
   readScenarioBox,
+  scenarioEditDeleted,
+  emptyScenarioDraft,
+  emptyPatient,
+  newScenarioId,
+  readNewScenario,
+  cleanAddedScenario,
+  addedScenarioEditWith,
+  MAX_PATIENTS,
 } from '../src/scenarioEdits.js';
 import {
   scenarioThemes,
@@ -141,6 +149,144 @@ test('boxes: complexity 1 to 3, a known load, outcomes one per line, CPG numbers
   assert.ok(readScenarioBox('story', '   ', idOf).error);
   assert.deepEqual(readScenarioBox('patients.0.label', '', idOf), { value: '' });
   assert.deepEqual(readScenarioBox('title', ' Trimmed ', idOf), { value: 'Trimmed' });
+});
+
+/* ---------- New and deleted scenarios ---------- */
+
+const guidelineIdOfNumber = (number) => ({ 2.1: 'cpg-2-1', 1.16: 'cpg-1-16' })[number];
+const isGuidelineId = (id) => ['cpg-2-1', 'cpg-1-16'].includes(id);
+const vitalsText = { gcs: '15', rr: '16', spo2: '99%', hr: '80', bp: '120/80' };
+
+/** The new scenario form filled in, with `patients` patients. */
+function filledDraft(patients = 1) {
+  const patient = (index) => ({
+    ...emptyPatient(),
+    label: patients > 1 ? `Patient ${index + 1}` : '',
+    history: ' Asthma ',
+    medications: 'Nil',
+    allergies: 'None',
+    social: 'Lives alone',
+    vitals: { ...vitalsText, temp: '36.8', bgl: '5', pain: '–' },
+  });
+  return {
+    ...emptyScenarioDraft(),
+    title: 'Fall at the Kāpiti marae',
+    suburb: 'Ōtaki',
+    story: 'A story.',
+    intention: 'An intention.',
+    complexity: '2',
+    load: patients > 1 ? 'several' : 'single',
+    outcomes: '- Does one thing\nDoes another\n',
+    guidelines: '2.1, 1.16',
+    patients: Array.from({ length: patients }, (unused, index) => patient(index)),
+  };
+}
+
+test('a new scenario id comes from its title, safe in an address and never taken', () => {
+  assert.equal(newScenarioId('Fall at the Kāpiti marae!', []), 'fall-at-the-kapiti-marae');
+  assert.equal(newScenarioId('Long lie', ['long-lie', 'long-lie-2']), 'long-lie-3');
+  assert.equal(newScenarioId('???', []), 'scenario');
+  assert.ok(newScenarioId('a'.repeat(200), []).length <= 60);
+});
+
+test('the new scenario form reads into a whole scenario, or names the box to fix', () => {
+  const read = readNewScenario(filledDraft(), ['sample'], guidelineIdOfNumber);
+  assert.deepEqual(read.value, {
+    id: 'fall-at-the-kapiti-marae',
+    complexity: 2,
+    load: 'single',
+    title: 'Fall at the Kāpiti marae',
+    suburb: 'Ōtaki',
+    story: 'A story.',
+    intention: 'An intention.',
+    outcomes: ['Does one thing', 'Does another'],
+    guidelines: ['cpg-2-1', 'cpg-1-16'],
+    patients: [
+      {
+        history: 'Asthma',
+        medications: 'Nil',
+        allergies: 'None',
+        social: 'Lives alone',
+        vitals: { ...vitalsText, temp: '36.8', bgl: '5', pain: '–' },
+      },
+    ],
+  });
+  const noStory = { ...filledDraft(), story: '  ' };
+  assert.deepEqual(readNewScenario(noStory, [], guidelineIdOfNumber), {
+    path: 'story',
+    error: 'This can’t be empty.',
+  });
+  const noVital = filledDraft();
+  noVital.patients[0].vitals.bp = '';
+  assert.equal(readNewScenario(noVital, [], guidelineIdOfNumber).path, 'patients.0.vitals.bp');
+  const badGuideline = { ...filledDraft(), guidelines: '9.9' };
+  assert.match(readNewScenario(badGuideline, [], guidelineIdOfNumber).error, /9\.9/);
+});
+
+test('several patients need the several load and a label each; one patient needs neither', () => {
+  const two = readNewScenario(filledDraft(2), [], guidelineIdOfNumber).value;
+  assert.deepEqual(
+    two.patients.map((patient) => patient.label),
+    ['Patient 1', 'Patient 2'],
+  );
+  assert.equal(
+    readNewScenario({ ...filledDraft(2), load: 'single' }, [], guidelineIdOfNumber).path,
+    'load',
+  );
+  assert.equal(
+    readNewScenario({ ...filledDraft(1), load: 'several' }, [], guidelineIdOfNumber).path,
+    'load',
+  );
+  const unlabelled = filledDraft(2);
+  unlabelled.patients[1].label = '';
+  assert.equal(readNewScenario(unlabelled, [], guidelineIdOfNumber).path, 'patients.1.label');
+  const tooMany = filledDraft(MAX_PATIENTS + 1);
+  assert.match(readNewScenario(tooMany, [], guidelineIdOfNumber).error, /patients/);
+});
+
+test('a saved new scenario is checked again: unknown keys go, a broken one is refused', () => {
+  const scenario = readNewScenario(filledDraft(), [], guidelineIdOfNumber).value;
+  const withExtra = { ...scenario, id: 'other', extra: 'dropped', rural: 'no' };
+  assert.deepEqual(cleanAddedScenario(withExtra, scenario.id, isGuidelineId), scenario);
+  assert.equal(cleanAddedScenario({ ...scenario, complexity: 9 }, 'x', isGuidelineId), null);
+  assert.equal(
+    cleanAddedScenario({ ...scenario, guidelines: ['cpg-99'] }, 'x', isGuidelineId),
+    null,
+  );
+  assert.equal(cleanAddedScenario({ ...scenario, outcomes: [] }, 'x', isGuidelineId), null);
+  assert.equal(cleanAddedScenario({ ...scenario, patients: [{}] }, 'x', isGuidelineId), null);
+  assert.equal(cleanAddedScenario('not a scenario', 'x', isGuidelineId), null);
+});
+
+test('a new scenario is changed in place in its edit, and kept whole', () => {
+  const added = readNewScenario(filledDraft(), [], guidelineIdOfNumber).value;
+  const edit = { kind: 'scenario', added };
+  const changed = addedScenarioEditWith(edit, 'patients.0.vitals.hr', '130', isGuidelineId);
+  assert.equal(changed.edit.added.patients[0].vitals.hr, '130');
+  assert.equal(edit.added.patients[0].vitals.hr, '80', 'the old edit is untouched');
+  assert.equal(changed.edit.fields, undefined, 'a new scenario has nothing to review');
+  const broken = addedScenarioEditWith(edit, 'load', 'several', isGuidelineId);
+  assert.match(broken.error, /more than one patient/);
+  assert.deepEqual(scenarioEditOff(edit, true), { kind: 'scenario', off: true, added });
+  assert.deepEqual(scenarioEditOff({ ...edit, off: true }, false), edit);
+});
+
+test('learners see new scenarios after the written ones; deleted ones are gone', () => {
+  const added = { ...readNewScenario(filledDraft(), [], guidelineIdOfNumber).value, id: 'new-one' };
+  const other = { ...written, id: 'other' };
+  const edits = {
+    'scenario|other': scenarioEditDeleted(),
+    'scenario|new-one': { kind: 'scenario', added },
+    'scenario|hidden-new': { kind: 'scenario', off: true, added: { ...added, id: 'hidden-new' } },
+    // A new one whose id the file has since taken: the file's scenario wins.
+    'scenario|sample': { kind: 'scenario', added: { ...added, id: 'sample', title: 'Clash' } },
+  };
+  assert.deepEqual(
+    liveScenarios([written, other], edits).map((scenario) => scenario.title),
+    ['Sample', 'Fall at the Kāpiti marae'],
+  );
+  assert.deepEqual(scenarioEditDeleted(), { kind: 'scenario', deleted: true });
+  assert.deepEqual(scenarioPathsToReview(other, scenarioEditDeleted()), []);
 });
 
 test('themes come from guideline sections, guideline lists and the rural field', () => {

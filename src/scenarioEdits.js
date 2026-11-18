@@ -9,6 +9,10 @@
  * A path names one value: 'title', 'complexity', 'load', 'outcomes', 'guidelines', 'patients.0.history',
  * 'patients.1.vitals.hr'. `to` is what learners see; `was` is the value in content/scenarios.js
  * when the edit was made, so a later change to that file is noticed and shown for review.
+ * Two more shapes (decision 19 Nov 2026):
+ *   { kind: 'scenario', off?: true, added: <a whole scenario> }  one an editor created; it is
+ *     not in content/scenarios.js, so its values are changed in `added` itself, with no review.
+ *   { kind: 'scenario', deleted: true }  one an editor deleted for good; it has no undo.
  * Depends on constants.js.
  */
 import { SCENARIO_COMPLEXITY, SCENARIO_LOADS, SCENARIO_VITALS } from './constants.js';
@@ -22,6 +26,10 @@ export const MAX_SCENARIO_TEXT = 2000;
 // Intended outcomes: one per line in the box, at most this many, each at most this long.
 export const MAX_OUTCOMES = 6;
 export const MAX_OUTCOME_TEXT = 200;
+// The most patients a new scenario has, so its edit stays inside the backend's 20000 characters.
+export const MAX_PATIENTS = 4;
+// A new scenario's id is made from its title, cut to this length.
+const MAX_ID_LENGTH = 60;
 // The scenario-wide values an editor may change, besides the text fields.
 const OTHER_FIELDS = ['complexity', 'load', 'outcomes', 'guidelines'];
 
@@ -47,7 +55,7 @@ export function isEditablePath(scenario, path) {
 }
 
 /** A copy of the scenario with one value changed; the parts on the way are copied, not shared. */
-function withValue(scenario, path, value) {
+export function withScenarioValue(scenario, path, value) {
   const keys = path.split('.');
   const copy = (object, depth) => {
     const clone = Array.isArray(object) ? [...object] : { ...object };
@@ -63,7 +71,7 @@ export function applyScenarioEdit(scenario, edit) {
   if (!edit || !edit.fields) return scenario;
   return Object.entries(edit.fields)
     .filter(([path]) => isEditablePath(scenario, path))
-    .reduce((changed, [path, field]) => withValue(changed, path, field.to), scenario);
+    .reduce((changed, [path, field]) => withScenarioValue(changed, path, field.to), scenario);
 }
 
 /**
@@ -78,13 +86,21 @@ export function scenarioEditWith(scenario, edit, path, value) {
   return tidyEdit(edit?.off, fields);
 }
 
-/** The edit with the scenario left out of the app, or put back. */
-export const scenarioEditOff = (edit, off) => tidyEdit(off, edit?.fields || {});
+/** The edit with the scenario left out of the app, or put back. A new one stays new. */
+export const scenarioEditOff = (edit, off) => tidyEdit(off, edit?.fields || {}, edit?.added);
 
-/** An edit object, or null when it changes nothing. */
-function tidyEdit(off, fields) {
+/** The edit that deletes a scenario of content/scenarios.js for good. */
+export const scenarioEditDeleted = () => ({ kind: SCENARIO_EDIT_KIND, deleted: true });
+
+/**
+ * An edit object, or null when it changes nothing. A new scenario's edit keeps only `added`
+ * (and `off`), in the order the daily copy writes it, so the page can tell when it is published.
+ */
+function tidyEdit(off, fields, added) {
+  const offPart = off ? { off: true } : {};
+  if (added) return { kind: SCENARIO_EDIT_KIND, ...offPart, added };
   if (!off && Object.keys(fields).length === 0) return null;
-  return { kind: SCENARIO_EDIT_KIND, ...(off ? { off: true } : {}), fields };
+  return { kind: SCENARIO_EDIT_KIND, ...offPart, fields };
 }
 
 /**
@@ -110,11 +126,174 @@ export function dropScenarioPath(edit, path) {
   return tidyEdit(edit.off, fields);
 }
 
-/** The scenarios learners see: each with its edit, without those left out. */
+/**
+ * The scenarios learners see: each with its edit, without those left out or deleted, then the
+ * new ones by id. A new one whose id the file has since taken is skipped: the file wins.
+ */
 export function liveScenarios(scenarios, edits) {
-  return scenarios
-    .filter((scenario) => !edits[scenarioEditId(scenario.id)]?.off)
-    .map((scenario) => applyScenarioEdit(scenario, edits[scenarioEditId(scenario.id)]));
+  const editOf = (scenario) => edits[scenarioEditId(scenario.id)];
+  const fileIds = new Set(scenarios.map((scenario) => scenario.id));
+  const written = scenarios
+    .filter((scenario) => !editOf(scenario)?.off && !editOf(scenario)?.deleted)
+    .map((scenario) => applyScenarioEdit(scenario, editOf(scenario)));
+  const added = Object.keys(edits)
+    .sort()
+    .map((id) => edits[id])
+    .filter((edit) => edit?.added && !edit.off && !fileIds.has(edit.added.id))
+    .map((edit) => edit.added);
+  return [...written, ...added];
+}
+
+/* ---------- New scenarios ---------- */
+
+/** A patient with every box empty, for the new scenario form. */
+export const emptyPatient = () => ({
+  label: '',
+  ...Object.fromEntries(PATIENT_TEXT_FIELDS.slice(1).map((field) => [field, ''])),
+  vitals: Object.fromEntries(SCENARIO_VITALS.map(([key]) => [key, ''])),
+});
+
+/** The new scenario form before anything is typed: every value as the text in its box. */
+export const emptyScenarioDraft = () => ({
+  ...Object.fromEntries(SCENARIO_TEXT_FIELDS.map((field) => [field, ''])),
+  complexity: '1',
+  load: 'single',
+  outcomes: '',
+  guidelines: '',
+  patients: [emptyPatient()],
+});
+
+/**
+ * An id for a new scenario from its title ("Fall at the marae" -> "fall-at-the-marae"), with
+ * "-2", "-3" added when `takenIds` has it. Safe in an address and in the Edits tab.
+ */
+export function newScenarioId(title, takenIds) {
+  const base =
+    title
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // macrons and accents go: "Kāpiti" -> "kapiti"
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .slice(0, MAX_ID_LENGTH)
+      .replace(/^-+|-+$/g, '') || 'scenario';
+  const taken = new Set(takenIds);
+  let id = base;
+  for (let count = 2; taken.has(id); count += 1) id = `${base}-${count}`;
+  return id;
+}
+
+/** Every path of one patient, in the order the form shows them. */
+const patientPaths = (index) => [
+  ...PATIENT_TEXT_FIELDS.map((field) => `patients.${index}.${field}`),
+  ...SCENARIO_VITALS.map(([key]) => `patients.${index}.vitals.${key}`),
+];
+
+/** Why the patients don't fit the scene load, as { path, error }, or null when they do. */
+function patientsProblem(scenario) {
+  const isSeveral = scenario.patients.length > 1;
+  if ((scenario.load === 'several') !== isSeveral) {
+    const error = isSeveral
+      ? 'With more than one patient the scene load is several.'
+      : 'Several is only for more than one patient.';
+    return { path: 'load', error };
+  }
+  const unlabelled = scenario.patients.findIndex((patient) => !patient.label);
+  if (isSeveral && unlabelled >= 0) {
+    return { path: `patients.${unlabelled}.label`, error: 'Give each patient a label.' };
+  }
+  return null;
+}
+
+/**
+ * Reads the new scenario form (box texts, as emptyScenarioDraft) into a whole scenario with an
+ * id not in `takenIds`: { value } or { path, error } for the first box that can't be kept.
+ */
+export function readNewScenario(draft, takenIds, guidelineIdOfNumber) {
+  if (draft.patients.length > MAX_PATIENTS) {
+    return { path: 'load', error: `Keep it to ${MAX_PATIENTS} patients.` };
+  }
+  const paths = [
+    ...SCENARIO_TEXT_FIELDS,
+    ...OTHER_FIELDS,
+    ...draft.patients.flatMap((patient, index) => patientPaths(index)),
+  ];
+  let scenario = { patients: draft.patients.map(() => ({ vitals: {} })) };
+  for (const path of paths) {
+    const text = String(scenarioValue(draft, path) ?? '');
+    const read = readScenarioBox(path, text, guidelineIdOfNumber);
+    if (read.error) return { path, error: read.error };
+    scenario = withScenarioValue(scenario, path, read.value);
+  }
+  const problem = patientsProblem(scenario);
+  if (problem) return problem;
+  const id = newScenarioId(scenario.title, takenIds);
+  return { value: cleanAddedScenario(scenario, id, () => true) };
+}
+
+const isText = (value, maxLength = MAX_SCENARIO_TEXT) =>
+  typeof value === 'string' && value.trim() !== '' && value.length <= maxLength;
+const isTextList = (list, maxCount, maxLength) =>
+  Array.isArray(list) &&
+  list.length > 0 &&
+  list.length <= maxCount &&
+  list.every((item) => isText(item, maxLength));
+
+/** One patient with only the keys the app reads, or null when a text or vital is missing. */
+function cleanPatient(patient) {
+  if (!patient || typeof patient !== 'object' || !patient.vitals) return null;
+  const fields = PATIENT_TEXT_FIELDS.slice(1);
+  const vitalKeys = SCENARIO_VITALS.map(([key]) => key);
+  if (!fields.every((field) => isText(patient[field]))) return null;
+  if (!vitalKeys.every((key) => isText(patient.vitals[key]))) return null;
+  if (patient.label !== undefined && patient.label !== '' && !isText(patient.label)) return null;
+  return {
+    ...(patient.label ? { label: patient.label } : {}),
+    ...Object.fromEntries(fields.map((field) => [field, patient[field]])),
+    vitals: Object.fromEntries(vitalKeys.map((key) => [key, patient.vitals[key]])),
+  };
+}
+
+/**
+ * A new scenario with only the keys the app reads, in one order, under `id`; or null when it is
+ * not whole (the same rules as tests/scenarios.test.js). `isGuidelineId` says a guideline is real.
+ * Used by the editor page before saving and by the daily copy, which trusts nothing in the Sheet.
+ */
+export function cleanAddedScenario(scenario, id, isGuidelineId) {
+  if (!scenario || typeof scenario !== 'object' || !Array.isArray(scenario.patients)) return null;
+  const patients = scenario.patients.map(cleanPatient);
+  const isWhole =
+    SCENARIO_TEXT_FIELDS.every((field) => isText(scenario[field])) &&
+    Boolean(SCENARIO_COMPLEXITY[scenario.complexity]) &&
+    Boolean(SCENARIO_LOADS[scenario.load]) &&
+    isTextList(scenario.outcomes, MAX_OUTCOMES, MAX_OUTCOME_TEXT) &&
+    isTextList(scenario.guidelines, Infinity, MAX_SCENARIO_TEXT) &&
+    scenario.guidelines.every(isGuidelineId) &&
+    patients.length > 0 &&
+    patients.length <= MAX_PATIENTS &&
+    patients.every(Boolean);
+  if (!isWhole) return null;
+  const clean = {
+    id,
+    complexity: scenario.complexity,
+    load: scenario.load,
+    ...Object.fromEntries(SCENARIO_TEXT_FIELDS.map((field) => [field, scenario[field]])),
+    outcomes: [...scenario.outcomes],
+    guidelines: [...scenario.guidelines],
+    patients,
+  };
+  return patientsProblem(clean) ? null : clean;
+}
+
+/**
+ * A new scenario's edit after one value is changed in place: { edit } or { error } when the
+ * change would leave it incomplete (such as several patients' load with only one).
+ */
+export function addedScenarioEditWith(edit, path, value, isGuidelineId) {
+  const changed = withScenarioValue(edit.added, path, value);
+  const added = cleanAddedScenario(changed, edit.added.id, isGuidelineId);
+  if (!added)
+    return { error: patientsProblem(changed)?.error || 'That would leave it incomplete.' };
+  return { edit: tidyEdit(edit.off, {}, added) };
 }
 
 /**

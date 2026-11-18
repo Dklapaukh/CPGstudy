@@ -1,11 +1,12 @@
 /*
  * Copies the editors' changes from the Sheet's Edits tab into the app: content/card-edits.yaml
  * (the readable record, one entry per edited question) and content/card-edits.js (what the app
- * loads), and the scenario edits into content/scenario-edits.yaml and content/scenario-edits.js. Run every morning by .github/workflows/edits-sync.yml, or by hand with
+ * loads), and the scenario edits (changed, new and deleted scenarios) into
+ * content/scenario-edits.yaml and content/scenario-edits.js. Run every morning by .github/workflows/edits-sync.yml, or by hand with
  * `node scripts/sync-edits.js`. Prints how many edits need an editor's review after a guideline
  * update (the editor page lists them).
- * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/editor/questions.js,
- * content/scenarios.js and the yaml package.
+ * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/guidelines.js,
+ * src/editor/questions.js, content/scenarios.js and the yaml package.
  */
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +18,10 @@ import {
   SCENARIO_EDIT_KIND,
   scenarioIdOfEdit,
   scenarioPathsToReview,
+  cleanAddedScenario,
+  scenarioEditDeleted,
 } from '../src/scenarioEdits.js';
+import { guidelineById } from '../src/guidelines.js';
 import { scenarios } from '../content/scenarios.js';
 
 const contentPath = (name) => fileURLToPath(new URL(`../content/${name}`, import.meta.url));
@@ -45,11 +49,24 @@ export function cleanEdits(edits) {
   return sorted;
 }
 
-/** A scenario edit with only the keys the app knows, or null when it is not one. */
-function cleanScenarioEdit(edit) {
-  if (edit?.kind !== SCENARIO_EDIT_KIND || !edit.fields || typeof edit.fields !== 'object') {
-    return null;
+// A scenario id the app can put in an address (as tests/scenarios.test.js checks).
+const SCENARIO_ID_PATTERN = /^[a-z0-9-]+$/;
+const isGuidelineId = (id) => Boolean(guidelineById(id));
+
+/**
+ * A scenario edit with only the keys the app knows, or null when it is not one. A new scenario
+ * is kept only when it is whole and its id is safe; a deleted one keeps only that it is deleted.
+ */
+function cleanScenarioEdit(edit, scenarioId) {
+  if (edit?.kind !== SCENARIO_EDIT_KIND) return null;
+  if (edit.deleted) return scenarioEditDeleted();
+  if (edit.added) {
+    const added = SCENARIO_ID_PATTERN.test(scenarioId)
+      ? cleanAddedScenario(edit.added, scenarioId, isGuidelineId)
+      : null;
+    return added ? { kind: SCENARIO_EDIT_KIND, ...(edit.off ? { off: true } : {}), added } : null;
   }
+  if (!edit.fields || typeof edit.fields !== 'object') return null;
   const fields = {};
   Object.keys(edit.fields)
     .sort()
@@ -67,7 +84,7 @@ export function cleanScenarioEdits(edits) {
     .filter(scenarioIdOfEdit)
     .sort()
     .forEach((id) => {
-      const clean = cleanScenarioEdit(edits[id]);
+      const clean = cleanScenarioEdit(edits[id], scenarioIdOfEdit(id));
       if (clean) sorted[id] = clean;
     });
   return sorted;

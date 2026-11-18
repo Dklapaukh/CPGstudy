@@ -2,6 +2,14 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: Editor page: **create and delete scenarios.** "+ New scenario" opens a form
+  (title, suburb, story, intention, complexity, scene load, outcomes, guidelines, and one to four
+  patients with background and vitals); it is checked whole, saved as `scenario|<id>` with
+  `added`, and changed in place afterwards. "Delete this scenario" asks once more, then deletes
+  for good (a new one's edit goes; a written one is marked `deleted`). The daily copy publishes
+  both, keeping a new scenario only when it is whole; the app, manager page and scenario checks
+  include new scenarios and leave deleted ones out. No backend change.
+
 - 2026-11-19: Manager view: scenario trends. The team table adds scenarios run and the average
   latest scenario score; team and person pages gain a **Scenarios** section (runs, average first
   and latest scores, how many went up or down, the same by complexity and scene load, and the

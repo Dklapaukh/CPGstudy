@@ -1,7 +1,8 @@
 /*
  * Editor page (editor.html): sign in with an editor passcode, find a guideline, and change its
  * quiz questions: wording, right answers, wrong answers, or leave a question out. Scenarios are
- * changed the same way, on the scenario as learners see it (#s-<id>). Edits are saved to the
+ * changed the same way, on the scenario as learners see it (#s-<id>), and can be created
+ * (#new-scenario) or deleted for good. Edits are saved to the
  * Sheet's Edits tab straight away and reach the app the next morning, when scripts/sync-edits.js
  * copies them into content/card-edits.js and content/scenario-edits.js.
  * One state object, one way to draw: every change calls render().
@@ -31,8 +32,14 @@ import {
   dropScenarioPath,
   scenarioValue,
   readScenarioBox,
+  scenarioEditDeleted,
+  emptyScenarioDraft,
+  emptyPatient,
+  readNewScenario,
+  addedScenarioEditWith,
+  withScenarioValue,
 } from '../scenarioEdits.js';
-import { guidelines } from '../guidelines.js';
+import { guidelines, guidelineById } from '../guidelines.js';
 import { cardEdits } from '../../content/card-edits.js';
 import { scenarios } from '../../content/scenarios.js';
 import { scenarioEdits } from '../../content/scenario-edits.js';
@@ -46,9 +53,12 @@ import {
 } from './view.js';
 import {
   SCENARIO_EDITOR_HASH_PREFIX,
+  NEW_SCENARIO_HASH,
   scenarioSectionHtml,
   scenarioEditorHtml,
   goneScenarioHtml,
+  deletedScenarioHtml,
+  newScenarioHtml,
   boxTextOf,
 } from './scenarioView.js';
 
@@ -70,6 +80,9 @@ const state = {
   openBox: null, // the one text being changed in place: { id, field, index }
   openPath: '', // the scenario value being changed in place (see scenarioEdits.js)
   boxError: '', // why the scenario box's text couldn't be saved
+  isDeleting: false, // the open scenario's "Delete for good?" question is showing
+  draft: emptyScenarioDraft(), // the new scenario form's box texts, kept while the page is open
+  draftError: null, // the form box that couldn't be kept: { path, error }
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -156,14 +169,26 @@ function reviewItems() {
 
 /* ---------- Scenarios ---------- */
 
-const writtenScenario = (scenarioId) => scenarios.find((scenario) => scenario.id === scenarioId);
+const fileScenario = (scenarioId) => scenarios.find((scenario) => scenario.id === scenarioId);
+const isGuidelineId = (id) => Boolean(guidelineById(id));
 
-/** A scenario's screen data (see scenarioEditorHtml), from its id. */
+/** The edits of scenarios editors created, not in content/scenarios.js. */
+const addedEdits = () =>
+  Object.keys(state.edits)
+    .filter((id) => state.edits[id].added && !fileScenario(scenarioIdOfEdit(id)))
+    .sort()
+    .map((id) => state.edits[id]);
+
+/**
+ * A scenario's screen data (see scenarioEditorHtml), from its id. A new scenario is "written"
+ * as its edit holds it; a deleted one has neither written nor live.
+ */
 function scenarioViewFor(scenarioId) {
   const id = scenarioEditId(scenarioId);
-  const written = writtenScenario(scenarioId);
   const edit = state.edits[id] || null;
-  const live = written ? applyScenarioEdit(written, edit) : null;
+  const fromFile = fileScenario(scenarioId);
+  const written = edit?.deleted ? null : fromFile || edit?.added || null;
+  const live = written && !edit?.added ? applyScenarioEdit(written, edit) : written;
   const openValue = live && state.openPath ? scenarioValue(live, state.openPath) : '';
   return {
     id,
@@ -175,6 +200,7 @@ function scenarioViewFor(scenarioId) {
     openPath: state.openPath,
     boxText: boxTextOf(openValue, state.openPath),
     boxError: state.boxError,
+    isDeleting: state.isDeleting,
   };
 }
 
@@ -182,7 +208,7 @@ function scenarioViewFor(scenarioId) {
 function scenarioReviewItems() {
   return Object.keys(state.edits)
     .map(scenarioIdOfEdit)
-    .filter(Boolean)
+    .filter((scenarioId) => scenarioId && !state.edits[scenarioEditId(scenarioId)].deleted)
     .map(scenarioViewFor)
     .filter((view) => view.toReview.length)
     .map((view) => ({
@@ -193,15 +219,18 @@ function scenarioReviewItems() {
     }));
 }
 
-/** The Scenarios section's rows, by complexity, each with its edit label. */
+/** The Scenarios section's rows, by complexity, each with its edit label; deleted ones go. */
 function scenarioRows() {
-  return [...scenarios]
-    .sort((first, second) => first.complexity - second.complexity)
-    .map((scenario) => {
-      const view = scenarioViewFor(scenario.id);
-      const badge = view.edit?.off ? 'left out' : view.edit ? 'edited' : '';
-      return { ...view.live, badge };
-    });
+  const badgeOf = (edit) => {
+    if (edit?.off) return 'left out';
+    if (edit?.added) return 'new';
+    return edit ? 'edited' : '';
+  };
+  return [...scenarios, ...addedEdits().map((edit) => edit.added)]
+    .map((scenario) => scenarioViewFor(scenario.id))
+    .filter((view) => view.live)
+    .sort((first, second) => first.live.complexity - second.live.complexity)
+    .map((view) => ({ ...view.live, badge: badgeOf(view.edit) }));
 }
 
 /** The scenario in the address ("#s-long-lie"), or '' on any other screen. */
@@ -222,7 +251,63 @@ function saveScenarioBox() {
     render();
     return;
   }
-  saveEdit(view.id, scenarioEditWith(view.written, view.edit, state.openPath, read.value));
+  if (!view.edit?.added) {
+    saveEdit(view.id, scenarioEditWith(view.written, view.edit, state.openPath, read.value));
+    return;
+  }
+  // A new scenario has no file version: the value changes in the edit itself, kept whole.
+  const changed = addedScenarioEditWith(view.edit, state.openPath, read.value, isGuidelineId);
+  if (changed.error) {
+    state.boxError = changed.error;
+    render();
+  } else saveEdit(view.id, changed.edit);
+}
+
+/** Deletes the open scenario for good: a new one's edit goes, a file one is marked deleted. */
+async function deleteScenario() {
+  const view = scenarioViewFor(currentScenarioId());
+  state.isDeleting = false;
+  if (
+    await request({
+      action: 'edit-save',
+      id: view.id,
+      edit: view.edit?.added ? null : scenarioEditDeleted(),
+    })
+  ) {
+    location.hash = '';
+  }
+}
+
+/* ---------- The new scenario form ---------- */
+
+/** Every scenario id in use, in the file or the Edits tab (deleted ones too), for a new id. */
+const takenScenarioIds = () => [
+  ...scenarios.map((scenario) => scenario.id),
+  ...Object.keys(state.edits).map(scenarioIdOfEdit).filter(Boolean),
+];
+
+/** Saves the new scenario form as a new scenario and opens it, or shows the box to fix. */
+async function saveDraft() {
+  const read = readNewScenario(state.draft, takenScenarioIds(), guidelineIdOfNumber);
+  if (read.error) {
+    state.draftError = read;
+    render();
+    document.querySelector(`[data-draft="${read.path}"]`)?.focus();
+    return;
+  }
+  const id = scenarioEditId(read.value.id);
+  if (await request({ action: 'edit-save', id, edit: { kind: 'scenario', added: read.value } })) {
+    state.draft = emptyScenarioDraft();
+    state.draftError = null;
+    location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(read.value.id)}`;
+  }
+}
+
+/** Adds a patient to the form, or removes one; the other boxes keep what was typed. */
+function changeDraftPatients(change) {
+  state.draft = { ...state.draft, patients: change(state.draft.patients) };
+  state.draftError = null;
+  render();
 }
 
 /** Saves a change to the open scenario's edit made by `change(view)`. */
@@ -276,11 +361,18 @@ function render() {
     return;
   }
   const viewer = { name: state.name, message: state.message };
+  if (location.hash === NEW_SCENARIO_HASH) {
+    app.innerHTML = newScenarioHtml(viewer, state.draft, state.draftError, SIGNED_IN_BUTTONS);
+    return;
+  }
   const scenarioId = currentScenarioId();
   if (scenarioId) {
     const view = scenarioViewFor(scenarioId);
-    const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
-    app.innerHTML = draw(viewer, view, SIGNED_IN_BUTTONS);
+    if (view.edit?.deleted) app.innerHTML = deletedScenarioHtml(viewer, SIGNED_IN_BUTTONS);
+    else {
+      const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
+      app.innerHTML = draw(viewer, view, SIGNED_IN_BUTTONS);
+    }
     return;
   }
   const guideline = currentGuideline();
@@ -360,6 +452,17 @@ const ACTIONS = {
   'scenario-box-save': saveScenarioBox,
   'scenario-off': () => changeScenarioEdit((view) => scenarioEditOff(view.edit, !view.edit?.off)),
   'scenario-undo': () => changeScenarioEdit(() => null),
+  'scenario-delete': () => {
+    state.isDeleting = true;
+    render();
+  },
+  'scenario-delete-no': () => {
+    state.isDeleting = false;
+    render();
+  },
+  'scenario-delete-yes': deleteScenario,
+  'draft-add-patient': () => changeDraftPatients((patients) => [...patients, emptyPatient()]),
+  'draft-save': saveDraft,
   'box-save': (id) => saveEdit(id, editFromBox()),
   save: (id) => saveEdit(id, editFromForm(questionBank().byId[id].question)),
   remove: (id) => saveEdit(id, null),
@@ -379,7 +482,10 @@ app.addEventListener('click', (event) => {
     changeScenarioEdit((view) => keepScenarioPath(view.written, view.edit, path));
   } else if (action === 'scenario-drop')
     changeScenarioEdit((view) => dropScenarioPath(view.edit, path));
-  else if (ACTIONS[action]) ACTIONS[action](button.dataset.id);
+  else if (action === 'draft-remove-patient') {
+    const index = Number(button.dataset.index);
+    changeDraftPatients((patients) => patients.filter((patient, each) => each !== index));
+  } else if (ACTIONS[action]) ACTIONS[action](button.dataset.id);
 });
 // Keys: Enter signs in or opens a focused box; in a box, Escape cancels and Ctrl+Enter saves.
 app.addEventListener('keydown', (event) => {
@@ -394,8 +500,14 @@ app.addEventListener('keydown', (event) => {
     else ACTIONS['box-save'](state.openBox.id);
   }
 });
-// Only the list is redrawn while typing, so the search box keeps its place.
+// Only the list is redrawn while typing, so the search box keeps its place. The new scenario
+// form is not redrawn at all: each box's text is kept in the draft as it is typed.
 app.addEventListener('input', (event) => {
+  const { draft } = event.target.dataset;
+  if (draft) {
+    state.draft = withScenarioValue(state.draft, draft, event.target.value);
+    return;
+  }
   if (event.target.id !== 'editor-search') return;
   state.search = event.target.value;
   document.getElementById('editor-rows').innerHTML = guidelineRowsHtml(
@@ -414,6 +526,7 @@ app.addEventListener(
   true,
 );
 window.addEventListener('hashchange', () => {
+  state.isDeleting = false;
   state.openId = '';
   state.openBox = null;
   state.openPath = '';
