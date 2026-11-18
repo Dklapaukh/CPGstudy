@@ -2,6 +2,8 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Plan 8.3 item 3: options for replacing the Google Sheet backend.
+
 - 2026-11-18: Plan: the editor page, sign-up and the demo are switched on and confirmed
   working by the owner (8.4 tasks 9 and 10 done).
 

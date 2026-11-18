@@ -354,6 +354,18 @@ Claude's, say if any should change)**
    `content/practice-level-overrides.js`).
    Option B: leave it as built: Paramedics do not get the Eclampsia card.
 
+3. **Replacing the Google Sheet backend** (asked 18 Nov 2026). The app reaches the backend only
+   through `src/api.js` (one address, nine actions in `backend/Code.gs`), so a move means a new
+   backend, a new `BACKEND_URL` and copying the Sheet's rows; the screens stay as they are. The
+   people lists (Managers, Assignments, Editors) are now edited by hand in the Sheet and would
+   need another way to edit them.
+   Option A: harden what exists first: store passcodes hashed in the Sheet, and limit who the
+   Sheet is shared with. Smallest change; the Sheet's speed and size limits stay.
+   Option B: Cloudflare Workers with a D1 database: the same nine actions rewritten as a Worker,
+   passcodes hashed. Closest to today's design; the free plan does not pause when idle.
+   Option C: Supabase (Postgres with sign-in and row-level security): real per-person accounts.
+   Most secure, biggest rewrite; free projects pause after a week without use.
+
 Answered 16 Nov 2026:
 
 - **Feature 11** (old items 2 to 5): recorded as Z18 to Z21 in 8.2; the owner accepted the
@@ -450,6 +462,6 @@ History is in `CHANGELOG.md` and the git history; this section holds only where 
 on several phones and all work. A tidy-up (rule 9) the same day merged repeated helpers and
 removed dead CSS and stale notes, with no behaviour change.
 
-**Open:** 8.3 items 1 and 2; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
+**Open:** 8.3 items 1 to 3; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
 a best score for Pick the guideline; changing its second or third guideline too.
