@@ -16,9 +16,14 @@ import {
   studyCards,
   QUIZ_SETTINGS,
 } from '../quizState.js';
-import { intervalText } from '../quizSchedule.js';
+import { intervalText, masteredCount } from '../quizSchedule.js';
 import { cardPromptHtml, turnedCardHtml } from './quizMarkup.js';
-import { RATING, QUIZ_HASH, ALL_PRACTICE_LEVELS } from '../constants.js';
+import {
+  RATING,
+  QUIZ_HASH,
+  ALL_PRACTICE_LEVELS,
+  QUIZ_MASTERED_INTERVAL_DAYS,
+} from '../constants.js';
 
 const app = document.getElementById('app');
 
@@ -118,7 +123,9 @@ function finishedHtml() {
 function overviewHtml() {
   const plan = currentStudyPlan();
   const cards = studyCards();
-  const learnt = Object.keys(allSchedules(cards)).length;
+  const schedules = allSchedules(cards);
+  const learnt = Object.keys(schedules).length;
+  const mastered = masteredCount(schedules, QUIZ_MASTERED_INTERVAL_DAYS);
   const waiting = plan.dueIds.length + plan.newIds.length;
   const finished = finishedHtml();
   const startButton = waiting
@@ -129,7 +136,9 @@ function overviewHtml() {
     ${practiceLevelSelectHtml(settings)}
     <p class="quiz-counts">${countsText(plan)}</p>
     ${startButton}
-    <p class="quiz-totals">${learnt} of ${cards.length} cards started</p>
+    <p class="quiz-mastered">${mastered} of ${cards.length} mastered</p>
+    <p class="quiz-totals">${learnt} of ${cards.length} cards started · a card is mastered once
+      it comes back ${QUIZ_MASTERED_INTERVAL_DAYS} or more days later</p>
     ${SETTING_SELECTS.map((select) => settingSelectHtml(select, settings)).join('')}
     <p class="quiz-help">Read the question, answer it in your head, then tap Show answer and rate
       how hard it was. Cards you find easy come back less often. Each new medicine brings all of

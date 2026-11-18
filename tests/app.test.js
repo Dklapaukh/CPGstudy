@@ -101,6 +101,7 @@ async function signIn(code) {
 test('start-up shows the passcode screen and a wrong passcode shows the message', async () => {
   await import('../src/main.js');
   assert.ok($('#passcode-input'));
+  assert.match($('.page-padding b').textContent, /Enter code demo to take a look/);
   await signIn('wrong');
   assert.match($('.warning-message').textContent, /wasn’t recognised/);
   assert.equal($('#passcode-input').value, 'wrong');

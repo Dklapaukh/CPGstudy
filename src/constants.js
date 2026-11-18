@@ -134,6 +134,8 @@ export const QUIZ_NEW_MEDICINES_PER_DAY = { MIN: 1, MAX: 10, STEP: 1, DEFAULT: 2
 export const QUIZ_REVIEWS_PER_DAY = { MIN: 10, MAX: 200, STEP: 10, DEFAULT: 30 };
 // A card rated Again comes back after this many other cards in the same session.
 export const QUIZ_AGAIN_GAP = 3;
+// A card counts as mastered once its interval reaches this many days (gamification, 18 Nov 2026).
+export const QUIZ_MASTERED_INTERVAL_DAYS = 21;
 export const RATING = { AGAIN: 'again', HARD: 'hard', GOOD: 'good', EASY: 'easy' };
 
 // Guideline quiz (feature 9): put a guideline's actions in order, then number and

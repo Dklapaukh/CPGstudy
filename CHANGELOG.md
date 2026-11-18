@@ -2,6 +2,10 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Medicines quiz overview shows "X of Y mastered" (a card is mastered once its
+  interval is 21 days or more, `QUIZ_MASTERED_INTERVAL_DAYS`). The passcode screen says, in
+  bold, "Enter code demo to take a look".
+
 - 2026-11-18: Mentors removed, now that people make their own accounts. The app has no mentor
   screen (a mentor passcode is "not recognised"), the backend no longer reads the `Mentors`
   tab or accepts "create", and the manager page takes manager passcodes only (assigned

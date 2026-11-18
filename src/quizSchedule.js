@@ -78,6 +78,13 @@ export function clampSetting(value, limits) {
   return Math.min(limits.MAX, Math.max(limits.MIN, number));
 }
 
+/**
+ * How many of the schedules are "mastered": an interval of at least `masteredDays` days
+ * (QUIZ_MASTERED_INTERVAL_DAYS), the point where a card has been remembered over three weeks.
+ */
+export const masteredCount = (schedules, masteredDays) =>
+  Object.values(schedules).filter((schedule) => schedule.interval >= masteredDays).length;
+
 /** The day a card was last answered: answering sets its due day that many days ahead. */
 const lastAnsweredDay = (schedule) => schedule.due - schedule.interval;
 

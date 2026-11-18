@@ -22,6 +22,7 @@ import {
   parseSchedules,
   clampSetting,
   intervalText,
+  masteredCount,
 } from '../src/quizSchedule.js';
 import {
   RATING,
@@ -274,4 +275,15 @@ test('clampSetting and intervalText', () => {
   assert.equal(intervalText(0), 'again today');
   assert.equal(intervalText(1), '1 day');
   assert.equal(intervalText(4), '4 days');
+});
+
+test('masteredCount counts schedules whose interval has reached the mastered days', () => {
+  const schedules = {
+    a: { interval: 21 },
+    b: { interval: 20 },
+    c: { interval: 60 },
+    d: { interval: 0 },
+  };
+  assert.equal(masteredCount(schedules, 21), 2);
+  assert.equal(masteredCount({}, 21), 0);
 });
