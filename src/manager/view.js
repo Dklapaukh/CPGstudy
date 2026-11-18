@@ -6,7 +6,7 @@
  */
 import { warningHtml } from '../staffPage.js';
 import { escapeHtml, formatUpdatedDate } from '../logic.js';
-import { MESSAGES } from '../constants.js';
+import { MESSAGES, SCENARIO_COMPLEXITY, SCENARIO_LOADS } from '../constants.js';
 import { chartSvg, CHART_KIND } from './chart.js';
 
 const PERCENT_MAX = 100;
@@ -14,6 +14,11 @@ const NO_VALUE = '–';
 
 const dateText = (milliseconds) => (milliseconds > 0 ? formatUpdatedDate(milliseconds) : NO_VALUE);
 const percentText = (value) => (value === null ? NO_VALUE : `${value}%`);
+// A change in points, signed: "+12", "−5", "0", or a dash when there is none.
+const changeText = (value) => {
+  if (value === null) return NO_VALUE;
+  return value > 0 ? `+${value}` : String(value).replace('-', '−');
+};
 const shortDate = (milliseconds) =>
   new Date(milliseconds).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });
 const numberCells = (values) =>
@@ -75,10 +80,25 @@ export function overTimeHtml(range, weeks, subject) {
         ? `${weekName(week)}: no quiz`
         : `${weekName(week)}: average ${week.quizAverage}% over ${week.quizCount} quiz scores`,
   }));
+  const scenarioScores = weeks.map((week) => ({
+    label: shortDate(week.weekStart),
+    value: week.scenarioAverage,
+    tip:
+      week.scenarioAverage === null
+        ? `${weekName(week)}: no rated scenario`
+        : `${weekName(week)}: average ${week.scenarioAverage}% over ${week.scenarioCount} ` +
+          'scenario runs',
+  }));
   const rows = weeks.map(
     (week) =>
       `<th scope="row">${escapeHtml(shortDate(week.weekStart))}</th>` +
-      numberCells([week.completions, week.quizCount, percentText(week.quizAverage)]),
+      numberCells([
+        week.completions,
+        week.quizCount,
+        percentText(week.quizAverage),
+        week.scenarioCount,
+        percentText(week.scenarioAverage),
+      ]),
   );
   return `<section class="stats-section"><h2 class="section-title">Over time</h2>
     <div class="date-range">
@@ -103,22 +123,39 @@ export function overTimeHtml(range, weeks, subject) {
       unit: '%',
       max: PERCENT_MAX,
     })}
-    <p class="stats-note">Weeks start on Monday. A week with no dot had no quiz. Dates before
+    <h3 class="chart-title">Average scenario score, by week</h3>
+    ${chartSvg({
+      points: scenarioScores,
+      kind: CHART_KIND.LINE,
+      title: `Average scenario score by week, ${subject}`,
+      unit: '%',
+      max: PERCENT_MAX,
+    })}
+    <p class="stats-note">Weeks start on Monday. A week with no dot had no quiz or no rated
+      scenario. Dates before
       the manager view was switched on come from the saved marked dates and best and latest
       quiz scores, so earlier plays in between are not shown.</p>
     <details class="chart-data"><summary>Show these numbers as a table</summary>
     ${tableHtml(
       `Completions and quiz scores by week, ${subject}`,
-      ['Week of', 'Marked complete', 'Quiz scores saved', 'Average score'],
+      [
+        'Week of',
+        'Marked complete',
+        'Quiz scores saved',
+        'Average quiz score',
+        'Scenario runs',
+        'Average scenario score',
+      ],
       rows,
     )}</details></section>`;
 }
 
 /**
  * The team screen. `viewer` is { name, role, message }; `rows` is one teamRow per tracker with
- * its `index`; `overTime` is ready-made markup for the charts.
+ * its `index`; `scenarios` is { totals, groups, struggled } for the whole team; `overTime` is
+ * ready-made markup for the charts.
  */
-export function teamHtml(viewer, rows, overTime) {
+export function teamHtml(viewer, rows, scenarios, overTime) {
   const header =
     coverHtml(`Signed in as ${viewer.name}`, SIGNED_IN_BUTTONS) +
     `<div class="page-padding">${warningHtml(viewer.message)}</div>`;
@@ -136,6 +173,8 @@ export function teamHtml(viewer, rows, overTime) {
         row.review,
         row.complete,
         `${row.quizzesDone} of ${row.quizzesTotal}`,
+        row.scenariosRun,
+        percentText(row.scenarioLatest),
         escapeHtml(dateText(row.lastActive)),
       ]),
   );
@@ -143,13 +182,132 @@ export function teamHtml(viewer, rows, overTime) {
     <h2 class="section-title">Team</h2>
     ${tableHtml(
       'Progress of each person',
-      ['Person', 'Incomplete', 'For review', 'Complete', 'Guideline quizzes done', 'Last active'],
+      [
+        'Person',
+        'Incomplete',
+        'For review',
+        'Complete',
+        'Guideline quizzes done',
+        'Scenarios run',
+        'Scenario score',
+        'Last active',
+      ],
       tableRows,
     )}
     <p class="stats-note">Guideline counts leave out the Medicines section, which has its own
       numbers on each person’s page. Tap a name for detail. Last active is the last time
-      anything was saved on the tracker.</p>
+      anything was saved on the tracker. Scenario score is the average of each scenario’s
+      latest rated run.</p>
+    ${teamScenariosHtml(scenarios)}
     ${overTime}</main>`;
+}
+
+/** The complexity and scene load table: runs, and average first and latest scores. */
+function scenarioGroupsHtml(groups, isTeam) {
+  const line = (labels) => (group) =>
+    `<th scope="row">${escapeHtml(labels[group.key].name)}</th>` +
+    numberCells([
+      isTeam ? group.run : `${group.run} of ${group.total}`,
+      percentText(group.averageFirst),
+      percentText(group.averageLatest),
+    ]);
+  return tableHtml(
+    'Scenario scores by complexity and scene load',
+    ['Group', isTeam ? 'Scenario runs by people' : 'Scenarios run', 'First score', 'Latest score'],
+    [...groups.complexity.map(line(SCENARIO_COMPLEXITY)), ...groups.load.map(line(SCENARIO_LOADS))],
+  );
+}
+
+/** Guidelines ticked as struggled. `struggled` is [{ name, times, people }]. */
+function struggledHtml(struggled, isTeam) {
+  if (!struggled.length) return '<p class="subtitle">No guidelines ticked as struggled yet.</p>';
+  const rows = struggled.map(
+    (item) =>
+      `<th scope="row">${escapeHtml(item.name)}</th>` +
+      numberCells(isTeam ? [item.times, item.people] : [item.times]),
+  );
+  return tableHtml(
+    'Guidelines most often struggled with in scenarios',
+    isTeam ? ['Guideline', 'Times ticked', 'People'] : ['Guideline', 'Times ticked'],
+    rows,
+  );
+}
+
+/** Scenario tiles: how many were run and how scores moved from first to latest. */
+function scenarioTilesHtml(totals, scenariosTotal) {
+  return tilesHtml([
+    [
+      'Scenarios run',
+      scenariosTotal ? `${totals.scenariosRun} of ${scenariosTotal}` : totals.scenariosRun,
+    ],
+    ['Runs recorded', totals.runs],
+    ['Average first score', percentText(totals.averageFirst)],
+    ['Average latest score', percentText(totals.averageLatest)],
+    ['Scores up since first run', totals.improved],
+    ['Scores down since first run', totals.declined],
+  ]);
+}
+
+const SCENARIO_SCORE_NOTE = `A run’s score is its outcome ratings (Not done 0, Talked through 1,
+  Prompted 2, Independent 3) as a percentage of the most possible, counting only the outcomes
+  rated. First and latest are a scenario’s first and latest rated runs, so the gap between them
+  is the trend. Scores compare best when the same mentor rates.`;
+
+/** The Scenarios section of the team screen. */
+function teamScenariosHtml({ totals, groups, struggled }) {
+  return `<section class="stats-section"><h2 class="section-title">Scenarios</h2>
+    ${scenarioTilesHtml(totals, 0)}
+    ${scenarioGroupsHtml(groups, true)}
+    <h3 class="chart-title">Guidelines most often struggled with</h3>
+    ${struggledHtml(struggled, true)}
+    <p class="stats-note">${SCENARIO_SCORE_NOTE} Struggled guidelines are counted over each
+      person’s last 3 runs of each scenario.</p></section>`;
+}
+
+/**
+ * The Scenarios section of the person screen. `scenarios` is { totals, groups, rows, struggled,
+ * total }; each row also has `struggledNames`.
+ */
+function personScenariosHtml({ totals, groups, rows, struggled, total }) {
+  const scenarioLines = rows.map(
+    (row) =>
+      `<th scope="row">${escapeHtml(row.title)}</th>` +
+      numberCells([
+        escapeHtml(SCENARIO_COMPLEXITY[row.complexity]?.short || NO_VALUE),
+        escapeHtml(SCENARIO_LOADS[row.load]?.short || NO_VALUE),
+        row.runs,
+        percentText(row.first),
+        percentText(row.latest),
+        changeText(row.change),
+        escapeHtml(dateText(row.lastAt)),
+      ]) +
+      `<td>${escapeHtml(row.struggledNames.join(', ') || NO_VALUE)}</td>`,
+  );
+  const table = rows.length
+    ? tableHtml(
+        'Scenarios run',
+        [
+          'Scenario',
+          'Complexity',
+          'Scene load',
+          'Runs',
+          'First',
+          'Latest',
+          'Change',
+          'Last run',
+          'Struggled last run',
+        ],
+        scenarioLines,
+      )
+    : '<p class="subtitle">No scenarios run yet.</p>';
+  return `<section class="stats-section"><h2 class="section-title">Scenarios</h2>
+    ${scenarioTilesHtml(totals, total)}
+    ${scenarioGroupsHtml(groups, false)}
+    ${table}
+    <h3 class="chart-title">Guidelines struggled with</h3>
+    ${struggledHtml(struggled, false)}
+    <p class="stats-note">${SCENARIO_SCORE_NOTE} Debrief notes stay on the tracker and are not
+      shown here.</p></section>`;
 }
 
 /** The guidelines table of the person screen: one line for all sections, then one each. */
@@ -206,7 +364,7 @@ function tilesHtml(tiles) {
 
 /**
  * The person screen. `person` is { label, overall, sections, quizRows, quizzesTotal, medicines,
- * flashcards, general } from stats.js; `overTime` is ready-made markup for the charts.
+ * flashcards, scenarios, general } from stats.js; `overTime` is ready-made markup for the charts.
  */
 export function personHtml(viewer, person, overTime) {
   const { medicines, flashcards, general } = person;
@@ -227,6 +385,7 @@ export function personHtml(viewer, person, overTime) {
       <p class="stats-note">A flashcard counts as learnt while its next review is a day or more
         after its last answer (it was answered Hard, Good or Easy). ${flashcards.started}
         flashcards have been started.</p></section>
+    ${personScenariosHtml(person.scenarios)}
     <section class="stats-section"><h2 class="section-title">General</h2>
       ${tilesHtml([
         ['Last active', dateText(general.lastActive)],

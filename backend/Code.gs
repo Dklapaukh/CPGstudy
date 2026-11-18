@@ -23,7 +23,7 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version without mentors (18 Nov 2026)';
+const BACKEND_VERSION = 'version with scenario runs (19 Nov 2026)';
 
 // The tracker with this label (any case) opens for first-time visitors (action "demo").
 const DEMO_LABEL = 'demo';
@@ -53,7 +53,15 @@ const SHEET = {
 
 // Extra entries the app keeps in the Data tab (src/constants.js). The manager page's numbers are
 // read from their notes; the notes themselves never leave the Sheet through "stats".
-const ENTRY_PREFIX = { MARKED: 'marked-', GUIDELINE_QUIZ: 'quiz-order-', FLASHCARDS: 'quiz-' };
+const ENTRY_PREFIX = {
+  MARKED: 'marked-',
+  GUIDELINE_QUIZ: 'quiz-order-',
+  FLASHCARDS: 'quiz-',
+  SCENARIO_RUN: 'scenario-run-',
+};
+// A scenario debrief rates each outcome 0 (Not done) to 3 (Independent), as DEBRIEF_RATING_TOP
+// in src/constants.js.
+const DEBRIEF_RATING_TOP = 3;
 const QUIZ_SETTINGS_ENTRY_ID = 'quiz-settings';
 const ROLE = { MANAGER: 'manager' };
 // Written in the History tab's Source column for rows made by setup() from older data, so
@@ -379,12 +387,21 @@ function trackerIndexes_(trackers) {
 
 /**
  * Numbers for the manager page, one object per tracker in the same order as `trackers`:
- * { label, lastActive, statuses, marked, quizzes, flashcards }. No notes, comments or passcodes.
+ * { label, lastActive, statuses, marked, quizzes, flashcards, scenarios }. No notes, comments or
+ * passcodes.
  */
 function readStats_(trackers) {
   const indexes = trackerIndexes_(trackers);
   const stats = trackers.map(function (tracker) {
-    return { label: tracker.label, lastActive: 0, statuses: {}, marked: {}, quizzes: {}, flashcards: {} };
+    return {
+      label: tracker.label,
+      lastActive: 0,
+      statuses: {},
+      marked: {},
+      quizzes: {},
+      flashcards: {},
+      scenarios: {},
+    };
   });
   const rows = getSheet_(SHEET.DATA).getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
@@ -406,6 +423,9 @@ function addEntryToStats_(stats, row) {
   } else if (id.indexOf(ENTRY_PREFIX.GUIDELINE_QUIZ) === 0) {
     const score = quizScore_(note);
     if (score) stats.quizzes[id.slice(ENTRY_PREFIX.GUIDELINE_QUIZ.length)] = score;
+  } else if (id.indexOf(ENTRY_PREFIX.SCENARIO_RUN) === 0) {
+    const record = scenarioRecord_(note);
+    if (record.runs.length) stats.scenarios[id.slice(ENTRY_PREFIX.SCENARIO_RUN.length)] = record;
   } else if (id.indexOf(ENTRY_PREFIX.FLASHCARDS) === 0) {
     const cards = id === QUIZ_SETTINGS_ENTRY_ID ? [] : flashcardNumbers_(note);
     if (cards.length) stats.flashcards[id.slice(ENTRY_PREFIX.FLASHCARDS.length)] = cards;
@@ -437,6 +457,52 @@ function quizScore_(note) {
 }
 
 /**
+ * The numbers in a scenario's record (src/scenarioLogic.js): { count, runs }, runs newest first
+ * as { at, ratings, struggled }. The debrief texts (Went well, To work on, take-away, note) are
+ * left out. A rating that is not 0 to DEBRIEF_RATING_TOP is null. Bad data gives no runs.
+ */
+function scenarioRecord_(note) {
+  let saved;
+  try {
+    saved = JSON.parse(note);
+  } catch (err) {
+    return { count: 0, runs: [] }; // a damaged note: no runs, as the app treats it
+  }
+  const runs = [];
+  (saved && Array.isArray(saved.runs) ? saved.runs : []).forEach(function (run) {
+    if (!run || !isFinite(run.at) || typeof run.at !== 'number') return;
+    runs.push({
+      at: run.at,
+      ratings: (Array.isArray(run.ratings) ? run.ratings : []).map(function (rating) {
+        const isRating = rating === Math.floor(rating) && rating >= 0 && rating <= DEBRIEF_RATING_TOP;
+        return typeof rating === 'number' && isRating ? rating : null;
+      }),
+      struggled: (Array.isArray(run.struggled) ? run.struggled : []).filter(function (id) {
+        return typeof id === 'string';
+      }),
+    });
+  });
+  const savedCount = saved && saved.count;
+  const hasCount = typeof savedCount === 'number' && savedCount === Math.floor(savedCount);
+  return { count: hasCount ? Math.max(savedCount, runs.length) : runs.length, runs: runs };
+}
+
+/**
+ * A run's score: its ratings as a percentage of the most possible, counting only the outcomes
+ * rated (scoreOf in src/scenarioLogic.js). '' when nothing was rated.
+ */
+function scenarioScore_(ratings) {
+  const rated = ratings.filter(function (rating) {
+    return rating !== null;
+  });
+  if (!rated.length) return '';
+  const points = rated.reduce(function (sum, rating) {
+    return sum + rating;
+  }, 0);
+  return Math.round((points / (rated.length * DEBRIEF_RATING_TOP)) * 100);
+}
+
+/**
  * The flashcards in a medicine's quiz note, as [[due day, interval in days], …]. The app stores
  * each card as six numbers, due and interval first (src/quizSchedule.js). Bad data gives [].
  */
@@ -459,7 +525,8 @@ function flashcardNumbers_(note) {
 
 /**
  * The History rows of these trackers, as [tracker number, entry id, value, time, back-filled
- * (1 or 0)]. The value is a status code, or a percent for a guideline quiz score.
+ * (1 or 0)]. The value is a status code, a percent for a guideline quiz score, or a percent or
+ * null for a scenario run (null: no outcome was rated).
  */
 function readHistory_(trackers) {
   const indexes = trackerIndexes_(trackers);
@@ -471,10 +538,14 @@ function readHistory_(trackers) {
     const id = String(cell_(rows[i], HISTORY_COLUMN.ENTRY));
     const value = cell_(rows[i], HISTORY_COLUMN.VALUE);
     const isQuiz = id.indexOf(ENTRY_PREFIX.GUIDELINE_QUIZ) === 0;
+    const isScenario = id.indexOf(ENTRY_PREFIX.SCENARIO_RUN) === 0;
+    let shown = String(value);
+    if (isQuiz) shown = Number(value);
+    if (isScenario) shown = value === '' ? null : Number(value);
     history.push([
       index,
       id,
-      isQuiz ? Number(value) : String(value),
+      shown,
       Number(cell_(rows[i], HISTORY_COLUMN.TIME)) || 0,
       String(cell_(rows[i], HISTORY_COLUMN.SOURCE)) === BACKFILL_SOURCE ? 1 : 0,
     ]);
@@ -484,7 +555,8 @@ function readHistory_(trackers) {
 
 /**
  * The History rows one saved change causes: one when the status changed, one when a guideline
- * quiz was played (its "most recent" time moved). Notes are never copied into History.
+ * quiz was played (its "most recent" time moved), and one per new scenario run (with its score).
+ * Notes are never copied into History.
  */
 function historyRows_(code, clean, oldStatus, oldNote) {
   const rows = [];
@@ -500,6 +572,25 @@ function historyRows_(code, clean, oldStatus, oldNote) {
     if (score && score.lastAt > 0 && (!oldScore || oldScore.lastAt !== score.lastAt)) {
       rows.push([code, clean.id, score.last, score.lastAt, '']);
     }
+  }
+  if (clean.id.indexOf(ENTRY_PREFIX.SCENARIO_RUN) === 0) {
+    // Runs newer than the newest one already saved; several if the phone was offline for a while.
+    const lastSavedAt = Math.max.apply(
+      null,
+      [0].concat(
+        scenarioRecord_(oldNote).runs.map(function (run) {
+          return run.at;
+        }),
+      ),
+    );
+    scenarioRecord_(clean.note)
+      .runs.filter(function (run) {
+        return run.at > lastSavedAt;
+      })
+      .reverse()
+      .forEach(function (run) {
+        rows.push([code, clean.id, scenarioScore_(run.ratings), run.at, '']);
+      });
   }
   return rows;
 }

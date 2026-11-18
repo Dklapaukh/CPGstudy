@@ -365,6 +365,15 @@ Claude's, say if any should change)**
   most possible, counting only the outcomes rated. The list shows each scenario's latest score
   and a "Your progress" fold: scenarios run and the average latest score by complexity and by
   scene load. Older runs keep their single note.
+- SC-G (19 Nov 2026, Claude's choices; say if any should change): the manager page shows
+  scenario trends. "stats" sends each scenario record's run times, ratings and struggled
+  guideline ids, never the debrief texts. Each new run adds a History row (entry
+  `scenario-run-<id>`, value its score or empty when nothing was rated), several if a phone
+  uploads runs saved offline, so trends are not limited to the 3 runs a tracker keeps; runs from
+  before the backend logged them are taken from the tracker's record and matched by time. The
+  trend is **first rated run against latest rated run** per scenario, averaged overall and by
+  complexity and scene load; plus a weekly average scenario score chart and the guidelines most
+  often struggled with (over the saved runs). No back-fill of History for scenarios.
 
 ### 8.3 Open decisions (owner)
 
@@ -500,5 +509,6 @@ follow-ups: recommendations (recently studied, or from Guidelines to learn); add
 patients and creating new scenarios from the editor page.
 On 19 Nov the levels became complexity and scene load (SC-E) and the debrief gained a PEARLS
 guide, outcome ratings and a score with progress (SC-F). Gaps to fill: there is no
-Straightforward scenario with Delegation or Several patients yet; mentors and the manager page
-can't see runs; a score only means something when the same mentor rates consistently.
+Straightforward scenario with Delegation or Several patients yet; mentors can't see runs; a
+score only means something when the same mentor rates consistently. The manager page shows
+scenario trends (SC-G) once the backend is redeployed with the 19 Nov 2026 `Code.gs`.

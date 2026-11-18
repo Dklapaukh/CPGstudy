@@ -2,6 +2,14 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: Manager view: scenario trends. The team table adds scenarios run and the average
+  latest scenario score; team and person pages gain a **Scenarios** section (runs, average first
+  and latest scores, how many went up or down, the same by complexity and scene load, and the
+  guidelines most often struggled with); a person page lists each scenario with first, latest
+  and change in score; Over time gains an average scenario score chart. The backend sends run
+  times, ratings and struggled guideline ids (never debrief notes) and logs every run in History
+  with its score. **Needs the backend redeployed** (README, Manager view, step 4).
+
 - 2026-11-19: Scenarios: the five levels are replaced by two filters, **complexity**
   (Straightforward, Common presentation, Complex or atypical) and **scene load** (Single
   patient, Delegation, Several patients); all 40 scenarios are re-tagged (`complexity`, `load`)

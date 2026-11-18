@@ -94,7 +94,7 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version without mentors \(18 Nov 2026\)/);
+  assert.match(doGet().text, /running, version with scenario runs \(19 Nov 2026\)/);
 });
 
 test('open: a tracker, and a wrong or old mentor passcode that is delayed after the lock', () => {
@@ -233,6 +233,59 @@ test('stats: a manager sees back-filled History; tracker and old mentor passcode
   assert.equal(post({ action: 'stats', code: 'tracker-1' }).error, 'not-found');
   assert.equal(sleeps, before + 1);
   assert.equal(post({ action: 'open', code: 'manager-1' }).error, 'not-found');
+});
+
+test('scenario runs: each new run is logged with its score; stats send numbers, never debrief text', () => {
+  const now = Date.now();
+  const record = (runs, count) =>
+    JSON.stringify({
+      count,
+      runs: runs.map(([at, ratings]) => ({
+        at,
+        ratings,
+        struggled: ['cpg-2-1'],
+        plus: 'secret plus',
+        delta: 'secret delta',
+        takeaway: 'secret takeaway',
+      })),
+    });
+  const save = (n, t) =>
+    post({ action: 'save', code: 'tracker-1', changes: [{ id: 'scenario-run-x', s: 'i', n, t }] });
+  const before = historyOf('tracker-1').length;
+  save(record([[now, [3, 2, null]]], 1), now);
+  save(record([[now, [3, 2, null]]], 1), now + 1); // the same run uploaded again: no row
+  // Two runs saved while offline, then uploaded together: both logged, oldest first.
+  save(
+    record(
+      [
+        [now + 20, []],
+        [now + 10, [0, 0, 3]],
+        [now, [3, 2, null]],
+      ],
+      3,
+    ),
+    now + 20,
+  );
+  assert.deepEqual(historyOf('tracker-1').slice(before), [
+    ['tracker-1', 'scenario-run-x', 83, now, ''],
+    ['tracker-1', 'scenario-run-x', 33, now + 10, ''],
+    ['tracker-1', 'scenario-run-x', '', now + 20, ''],
+  ]);
+  const reply = post({ action: 'stats', code: 'manager-1' });
+  const sam = reply.trackers[0];
+  assert.equal(sam.scenarios.x.count, 3);
+  assert.deepEqual(sam.scenarios.x.runs[1], {
+    at: now + 10,
+    ratings: [0, 0, 3],
+    struggled: ['cpg-2-1'],
+  });
+  const runRows = reply.history.filter((row) => row[1] === 'scenario-run-x');
+  assert.deepEqual(
+    runRows.map((row) => row[2]),
+    [83, 33, null],
+  );
+  assert.equal(JSON.stringify(reply).includes('secret'), false);
+  assert.equal(JSON.stringify(tabs.History).includes('secret'), false);
 });
 
 test('edits: editors sign in, save, replace and remove edits; anyone can read them', () => {

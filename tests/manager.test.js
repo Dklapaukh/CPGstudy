@@ -21,6 +21,11 @@ import {
   dateInputValue,
   parseDateInput,
   MAX_CHART_WEEKS,
+  withScenarioRuns,
+  scenarioRows,
+  scenarioGroups,
+  scenarioTotals,
+  struggledGuidelines,
 } from '../src/manager/stats.js';
 import { chartSvg, CHART_KIND } from '../src/manager/chart.js';
 
@@ -119,6 +124,8 @@ test('team row and general numbers', () => {
     total: 3,
     quizzesDone: 1,
     quizzesTotal: 2,
+    scenariosRun: 0,
+    scenarioLatest: null,
     lastActive: at(18),
   });
   const general = generalStats(sam, historyFor(history, 0), at(16));
@@ -127,6 +134,84 @@ test('team row and general numbers', () => {
   assert.equal(general.quizPlaysRecorded, 2);
   assert.equal(general.averageLatestScore, 85);
   assert.equal(generalStats({ ...sam, quizzes: {} }, [], at(16)).averageBestScore, null);
+});
+
+const scenarioList = [
+  { id: 'ankle', title: 'Ankle', complexity: 1, load: 'single' },
+  { id: 'crash', title: 'Crash', complexity: 3, load: 'several' },
+  { id: 'chest', title: 'Chest', complexity: 2, load: 'single' },
+];
+// Ankle: 5 runs in all, the first two logged before History had runs (only the last 3 kept).
+const runner = {
+  scenarios: {
+    ankle: {
+      count: 5,
+      runs: [
+        { at: at(20), ratings: [3, 3, 3], struggled: [] },
+        { at: at(12), ratings: [], struggled: ['g1'] },
+        { at: at(4), ratings: [1, 1, null], struggled: ['g1', 'g2'] },
+      ],
+    },
+    crash: { count: 1, runs: [{ at: at(18), ratings: [2, 0, 1], struggled: ['g1'] }] },
+    gone: { count: 1, runs: [{ at: at(5), ratings: [3], struggled: ['g9'] }] },
+  },
+};
+const runHistory = [[0, 'scenario-run-ankle', 100, at(20), 0]];
+
+test('scenarios: saved runs fill History gaps; rows show first, latest and change', () => {
+  const merged = withScenarioRuns(runHistory, [runner]);
+  assert.equal(merged.length, 5, 'the logged run is not added twice');
+  assert.deepEqual(
+    merged.filter((row) => row[1] === 'scenario-run-ankle').map((row) => row[2]),
+    [100, null, 33],
+  );
+  const rows = scenarioRows(scenarioList, runner, merged);
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.runs, row.first, row.latest, row.best, row.change]),
+    [
+      ['ankle', 5, 33, 100, 100, 67],
+      ['crash', 1, 33, 33, 33, null],
+    ],
+  );
+  assert.deepEqual(rows[1].struggled, ['g1']);
+  assert.deepEqual(scenarioTotals(rows), {
+    scenariosRun: 2,
+    runs: 6,
+    averageFirst: 33,
+    averageLatest: 67,
+    improved: 1,
+    declined: 0,
+  });
+  const groups = scenarioGroups(scenarioList, rows);
+  assert.deepEqual(
+    groups.complexity.map((g) => [g.key, g.total, g.run, g.averageFirst, g.averageLatest]),
+    [
+      ['1', 1, 1, 33, 100],
+      ['2', 1, 0, null, null],
+      ['3', 1, 1, 33, 33],
+    ],
+  );
+  assert.deepEqual(
+    groups.load.map((g) => [g.key, g.run]),
+    [
+      ['single', 1],
+      ['delegation', 0],
+      ['several', 1],
+    ],
+  );
+  assert.deepEqual(scenarioRows(scenarioList, { scenarios: undefined }, []), []);
+  const [week] = weeklySeries(merged, monday, at(22, 23));
+  assert.deepEqual([week.scenarioCount, week.scenarioAverage], [2, 67]);
+});
+
+test('scenarios: struggled guidelines are counted over saved runs, most often first', () => {
+  const other = {
+    scenarios: { crash: { count: 1, runs: [{ at: 1, ratings: [], struggled: ['g2'] }] } },
+  };
+  assert.deepEqual(struggledGuidelines([runner, other], 2), [
+    { id: 'g1', times: 3, people: 1 },
+    { id: 'g2', times: 2, people: 2 },
+  ]);
 });
 
 test('weeks start on Monday, empty weeks are kept, and rows outside the range are left out', () => {
@@ -195,12 +280,27 @@ const reply = {
   role: 'manager',
   name: 'Rua',
   trackers: [
-    { ...sam, label: 'Sam <2026>', statuses: { 'cpg-2-1': 'c', 'cpg-2-2': 'v' }, quizzes: {} },
+    {
+      ...sam,
+      label: 'Sam <2026>',
+      statuses: { 'cpg-2-1': 'c', 'cpg-2-2': 'v' },
+      quizzes: {},
+      scenarios: {
+        'netball-ankle': {
+          count: 2,
+          runs: [
+            { at: now - DAY, ratings: [3, 3, 3], struggled: ['cpg-2-1'] },
+            { at: now - DAY - 1000, ratings: [1, 1, 1], struggled: [] },
+          ],
+        },
+      },
+    },
     { label: 'Alex', lastActive: 0, statuses: {}, marked: {}, quizzes: {}, flashcards: {} },
   ],
   history: [
     [0, 'cpg-2-1', 'c', now - DAY, 0],
     [0, 'quiz-order-cpg-2-1', 75, now - DAY, 0],
+    [0, 'scenario-run-netball-ankle', 100, now - DAY, 0],
   ],
 };
 // 'old-backend' stands for a backend address still running code from before the manager view.
@@ -256,7 +356,9 @@ test('page: a wrong passcode shows the message; the right one shows the team tab
   );
   assert.equal(doc.querySelector('.person-link[href="#person-0"]').textContent, 'Sam <2026>');
   assert.match(rows[1].textContent, /1\s*1\s*\d+ of \d+/);
-  assert.equal(doc.querySelectorAll('svg.chart').length, 2);
+  assert.equal(doc.querySelectorAll('svg.chart').length, 3);
+  assert.match(rows[1].textContent, /1\s*100%/, 'scenarios run and latest score');
+  assert.match($('main').textContent, /Average first score\s*33%/);
 });
 
 test('page: a person page has every part, and the date range redraws the charts', async () => {
@@ -268,12 +370,15 @@ test('page: a person page has every part, and the date range redraws the charts'
     'Guidelines',
     'Guideline quizzes',
     'Medicines',
+    'Scenarios',
     'General',
     'Over time',
   ]);
   assert.match($('main').textContent, /Flashcards learnt\s*2 of \d+/);
   assert.equal(doc.querySelectorAll('.chart__bar').length, 1);
-  assert.equal(doc.querySelectorAll('.chart__dot').length, 1);
+  assert.equal(doc.querySelectorAll('.chart__dot').length, 2, 'a quiz dot and a scenario dot');
+  assert.match($('main').textContent, /Netball ankle\s*Simple\s*Single\s*2\s*33%\s*100%\s*\+67/);
+  assert.equal($('main').textContent.includes('secret'), false);
   $('#range-to').value = dateInputValue(now - 30 * DAY);
   $('#range-to').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   assert.equal(doc.querySelectorAll('.chart__bar').length, 0);

@@ -4,11 +4,15 @@
  * The backend's "stats" reply holds numbers only (no notes, comments or tracker passcodes); the
  * guideline names and totals come from the same content files as the study app.
  * Depends on staffPage.js, theme.js, constants.js, guidelines.js, guidelineQuizRounds.js,
- * quizCards.js, quizSchedule.js and the other files of this folder.
+ * quizCards.js, quizSchedule.js, scenarioEdits.js, content/scenarios.js,
+ * content/scenario-edits.js and the other files of this folder.
  */
 import { askBackend, refusalMessage, SIGN_OUT_MESSAGES, tabPasscode } from '../staffPage.js';
 import { applyTheme } from '../theme.js';
-import { sections } from '../guidelines.js';
+import { sections, guidelineById } from '../guidelines.js';
+import { scenarios } from '../../content/scenarios.js';
+import { scenarioEdits } from '../../content/scenario-edits.js';
+import { liveScenarios } from '../scenarioEdits.js';
 import { quizGuidelines } from '../guidelineQuizRounds.js';
 import { buildQuizCards } from '../quizCards.js';
 import { dayNumber } from '../quizSchedule.js';
@@ -25,6 +29,11 @@ import {
   earliestTime,
   dateInputValue,
   parseDateInput,
+  withScenarioRuns,
+  scenarioRows,
+  scenarioGroups,
+  scenarioTotals,
+  struggledGuidelines,
 } from './stats.js';
 import { signInHtml, teamHtml, personHtml, overTimeHtml } from './view.js';
 
@@ -34,6 +43,8 @@ const passcodeStore = tabPasscode('eas-cpg-manager-v1');
 const PERSON_HASH_PREFIX = '#person-';
 const DEFAULT_RANGE_WEEKS = 12;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// How many struggled guidelines the Scenarios sections list.
+const STRUGGLED_SHOWN = 8;
 
 const app = document.getElementById('manager-app');
 const state = {
@@ -67,6 +78,7 @@ function content() {
     medicines: medicines ? medicines.items : [],
     quizzed: quizGuidelines(sections).map(({ id, number, title }) => ({ id, number, title })),
     totalCards: buildQuizCards(sections, QUIZ_SECTION_NAME).length,
+    scenarios: liveScenarios(scenarios, scenarioEdits),
   };
   return cachedContent;
 }
@@ -82,7 +94,8 @@ async function loadStats(passcode) {
     state.passcode = passcode;
     state.viewer = { name: reply.name, role: reply.role };
     state.trackers = reply.trackers || [];
-    state.history = reply.history || [];
+    // Runs saved before the backend logged them are added from the trackers' records.
+    state.history = withScenarioRuns(reply.history || [], state.trackers);
     passcodeStore.save(passcode);
   } else {
     // A refused passcode signs out; a lost signal keeps the numbers already on the screen.
@@ -118,6 +131,33 @@ function overTime(trackerIndex, subject) {
   return overTimeHtml(state.range, weeks, subject);
 }
 
+/** A guideline's number and title, or its id when it is no longer in the guidelines. */
+function guidelineName(id) {
+  const guideline = guidelineById(id);
+  return guideline ? `${guideline.number} ${guideline.title}` : id;
+}
+
+/** The scenario rows of one tracker. */
+const trackerScenarios = (index) =>
+  scenarioRows(content().scenarios, state.trackers[index], historyFor(state.history, index));
+
+/** The guidelines most often struggled with by these trackers, with their names. */
+const struggledList = (trackers) =>
+  struggledGuidelines(trackers, STRUGGLED_SHOWN).map((item) => ({
+    ...item,
+    name: guidelineName(item.id),
+  }));
+
+/** The team's Scenarios section numbers: every person's rows taken together. */
+function teamScenarios() {
+  const rows = state.trackers.flatMap((tracker, index) => trackerScenarios(index));
+  return {
+    totals: scenarioTotals(rows),
+    groups: scenarioGroups(content().scenarios, rows),
+    struggled: struggledList(state.trackers),
+  };
+}
+
 /** Everything the person screen shows for one tracker. */
 function personSummary(index) {
   const tracker = state.trackers[index];
@@ -132,7 +172,23 @@ function personSummary(index) {
     quizzesTotal: quizzed.length,
     medicines: statusCounts(medicines, tracker.statuses),
     flashcards: flashcardTotals(tracker.flashcards, totalCards, today),
+    scenarios: personScenarios(index),
     general: generalStats(tracker, rows, Date.now()),
+  };
+}
+
+/** The person screen's Scenarios section numbers. */
+function personScenarios(index) {
+  const rows = trackerScenarios(index).map((row) => ({
+    ...row,
+    struggledNames: row.struggled.map(guidelineName),
+  }));
+  return {
+    totals: scenarioTotals(rows),
+    groups: scenarioGroups(content().scenarios, rows),
+    rows,
+    struggled: struggledList([state.trackers[index]]),
+    total: content().scenarios.length,
   };
 }
 
@@ -150,9 +206,12 @@ function render() {
     return;
   }
   const rows = state.trackers
-    .map((tracker, trackerIndex) => ({ ...teamRow(tracker, content()), index: trackerIndex }))
+    .map((tracker, trackerIndex) => ({
+      ...teamRow(tracker, content(), trackerScenarios(trackerIndex)),
+      index: trackerIndex,
+    }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  app.innerHTML = teamHtml(viewer, rows, overTime(null, 'whole team'));
+  app.innerHTML = teamHtml(viewer, rows, teamScenarios(), overTime(null, 'whole team'));
 }
 
 /** Signs in with what is typed in the passcode box. */

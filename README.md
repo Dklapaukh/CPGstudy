@@ -338,16 +338,27 @@ It uses the same guideline data and backend as the study app and is published th
 - Sign in with a manager passcode (Managers tab). The passcode is kept until the browser tab is
   closed.
 - **Team table**, one line per person: guidelines incomplete, for review and complete; guideline
-  quizzes done; last active (the last time anything was saved on the tracker).
+  quizzes done; scenarios run and their average latest score; last active (the last time
+  anything was saved on the tracker).
 - **Person page** (tap a name): guidelines overall and by section; each guideline quiz played
   with its most recent and highest score and their dates; Medicines on their own (statuses,
-  flashcards learnt and due today); general numbers; charts.
-- **Over time**: a From and To date and two charts by week, guidelines marked complete and the
-  average guideline quiz score. On the team page they cover everyone; on a person page, that
+  flashcards learnt and due today); Scenarios; general numbers; charts.
+- **Scenarios** (team and person pages): scenarios run, runs recorded, the average first and
+  latest scores and how many scenarios went up or down since their first run; the same by
+  complexity and scene load; the guidelines most often ticked as struggled. A person page also
+  lists each scenario run with its runs, first, latest and change in score, last run date and
+  the guidelines struggled with in the latest run. Debrief notes are never sent.
+- **Over time**: a From and To date and three charts by week, guidelines marked complete, the
+  average guideline quiz score and the average scenario score. On the team page they cover everyone; on a person page, that
   person. "Show these numbers as a table" is under the charts.
 - Guideline counts leave out the Medicines section, because it has its own part of the page.
 - A manager sees only the trackers assigned to them in the `Assignments` tab. Self sign-ups
   are not assigned to anyone until you add a line there.
+
+**Scenario runs need the 19 Nov 2026 backend.** Until `backend/Code.gs` is pasted in and
+redeployed (step 4 below), the Scenarios sections stay empty. From then on every run is logged in
+History with its score; runs saved earlier are taken from the tracker, which keeps the last 3
+per scenario.
 
 **What a manager can never see.** The page is sent numbers only: statuses, scores, counts and
 dates. Notes, comments and tracker passcodes never leave the Sheet through the manager view.
@@ -478,7 +489,8 @@ many edits need review.
 - **Switching it on:** paste `backend/Code.gs` into Apps Script, press Run on `setup` once so
   Google asks for the new permission ("Send email as you"), allow it, then Deploy, Manage
   deployments, the pencil, Version: New version, Deploy. Opening the backend address should
-  say "version without mentors (18 Nov 2026)" (or a later version). Check there is a `Trackers` row
+  say "version without mentors (18 Nov 2026)" (or a later version, such as "version with
+  scenario runs (19 Nov 2026)"). Check there is a `Trackers` row
   labelled `demo`.
 
 ## Backend

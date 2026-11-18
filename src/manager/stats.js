@@ -1,10 +1,18 @@
 /*
  * Manager page: pure sums over the numbers the backend's "stats" action returns. Takes input and
  * returns a result; touches no page, storage or network. Tested in tests/manager.test.js.
- * A tracker is { label, lastActive, statuses, marked, quizzes, flashcards }; a History row is
- * [tracker number, entry id, value, time, back-filled]. Depends on constants.js only.
+ * A tracker is { label, lastActive, statuses, marked, quizzes, flashcards, scenarios }; a History
+ * row is [tracker number, entry id, value, time, back-filled]. A scenario run's row holds its
+ * score (or null when nothing was rated). Depends on constants.js and scenarioLogic.js.
  */
-import { STATUS, GUIDELINE_QUIZ_ENTRY_PREFIX } from '../constants.js';
+import {
+  STATUS,
+  GUIDELINE_QUIZ_ENTRY_PREFIX,
+  SCENARIO_RUN_ENTRY_PREFIX,
+  SCENARIO_COMPLEXITY,
+  SCENARIO_LOADS,
+} from '../constants.js';
+import { scoreOf } from '../scenarioLogic.js';
 
 // Positions in one History row from the backend (readHistory_ in backend/Code.gs).
 const HISTORY = { TRACKER: 0, ENTRY: 1, VALUE: 2, TIME: 3, BACKFILLED: 4 };
@@ -14,7 +22,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const MAX_CHART_WEEKS = 260;
 
 const isQuizRow = (row) => String(row[HISTORY.ENTRY]).startsWith(GUIDELINE_QUIZ_ENTRY_PREFIX);
-const isCompletion = (row) => !isQuizRow(row) && row[HISTORY.VALUE] === STATUS.COMPLETE;
+const isScenarioRow = (row) => String(row[HISTORY.ENTRY]).startsWith(SCENARIO_RUN_ENTRY_PREFIX);
+const isCompletion = (row) =>
+  !isQuizRow(row) && !isScenarioRow(row) && row[HISTORY.VALUE] === STATUS.COMPLETE;
+const hasScore = (value) => typeof value === 'number';
 const average = (numbers) =>
   numbers.length ? Math.round(numbers.reduce((sum, n) => sum + n, 0) / numbers.length) : null;
 
@@ -97,14 +108,20 @@ export function flashcardTotals(flashcards, totalCards, today) {
   };
 }
 
-/** One line of the team table for a tracker. `content` is { studyGuidelines, quizzed }. */
-export function teamRow(tracker, content) {
+/**
+ * One line of the team table for a tracker. `content` is { studyGuidelines, quizzed }; `scenarios`
+ * is the tracker's scenarioRows.
+ */
+export function teamRow(tracker, content, scenarios = []) {
   const played = content.quizzed.filter((guideline) => tracker.quizzes[guideline.id]);
+  const scenarioNumbers = scenarioTotals(scenarios);
   return {
     label: tracker.label,
     ...statusCounts(content.studyGuidelines, tracker.statuses),
     quizzesDone: played.length,
     quizzesTotal: content.quizzed.length,
+    scenariosRun: scenarioNumbers.scenariosRun,
+    scenarioLatest: scenarioNumbers.averageLatest,
     lastActive: tracker.lastActive,
   };
 }
@@ -129,6 +146,128 @@ export function generalStats(tracker, trackerHistory, now) {
   };
 }
 
+/**
+ * History with each tracker's saved scenario runs added where History lacks them. A tracker keeps
+ * its last 3 runs per scenario; History logs every run, but only since the backend began to, so
+ * runs from before then exist only in the tracker. A run is matched by scenario and time.
+ */
+export function withScenarioRuns(history, trackers) {
+  const logged = new Set(
+    history.filter(isScenarioRow).map((row) => `${row[0]}|${row[1]}|${row[HISTORY.TIME]}`),
+  );
+  const added = [];
+  trackers.forEach((tracker, index) => {
+    for (const [scenarioId, record] of Object.entries(tracker.scenarios || {})) {
+      const entry = SCENARIO_RUN_ENTRY_PREFIX + scenarioId;
+      for (const run of record.runs) {
+        if (logged.has(`${index}|${entry}|${run.at}`)) continue;
+        added.push([index, entry, scoreOf(run.ratings || []), run.at, 0]);
+      }
+    }
+  });
+  return [...history, ...added];
+}
+
+/**
+ * One row per scenario the person has run, most recently run first: { id, title, complexity,
+ * load, runs, first, latest, best, change, lastAt, struggled }. Scores are of the runs that were
+ * rated (null when none was); change is latest minus first, null with fewer than two rated runs.
+ * `struggled` is the guideline ids ticked in the latest run. `scenarioList` is the live
+ * scenarios; runs of scenarios no longer in it are left out.
+ */
+export function scenarioRows(scenarioList, tracker, trackerHistory) {
+  const saved = tracker.scenarios || {};
+  return scenarioList
+    .filter((scenario) => saved[scenario.id])
+    .map((scenario) => {
+      const entry = SCENARIO_RUN_ENTRY_PREFIX + scenario.id;
+      const runs = trackerHistory
+        .filter((row) => row[HISTORY.ENTRY] === entry)
+        .sort((a, b) => a[HISTORY.TIME] - b[HISTORY.TIME]);
+      const scores = runs.map((row) => row[HISTORY.VALUE]).filter(hasScore);
+      const record = saved[scenario.id];
+      const latestRun = record.runs[0];
+      return {
+        id: scenario.id,
+        title: scenario.title,
+        complexity: scenario.complexity,
+        load: scenario.load,
+        runs: Math.max(record.count || 0, runs.length),
+        first: scores.length ? scores[0] : null,
+        latest: scores.length ? scores.at(-1) : null,
+        best: scores.length ? Math.max(...scores) : null,
+        change: scores.length > 1 ? scores.at(-1) - scores[0] : null,
+        lastAt: Math.max(latestRun ? latestRun.at : 0, ...runs.map((row) => row[HISTORY.TIME])),
+        struggled: latestRun ? latestRun.struggled || [] : [],
+      };
+    })
+    .sort((a, b) => b.lastAt - a.lastAt);
+}
+
+/**
+ * Scenario rows grouped by complexity and by scene load: { complexity: [group], load: [group] },
+ * group = { key, name, total, run, averageFirst, averageLatest }. `total` is how many live
+ * scenarios are in the group; `run` how many rows (for a team, a scenario run by two people
+ * counts twice). The averages are of first and latest scores, so they show the trend.
+ */
+export function scenarioGroups(scenarioList, rows) {
+  const groupsOf = (groups, field) =>
+    Object.entries(groups).map(([key, { name }]) => {
+      const inGroup = rows.filter((row) => String(row[field]) === key);
+      return {
+        key,
+        name,
+        total: scenarioList.filter((scenario) => String(scenario[field]) === key).length,
+        run: inGroup.length,
+        averageFirst: average(inGroup.map((row) => row.first).filter(hasScore)),
+        averageLatest: average(inGroup.map((row) => row.latest).filter(hasScore)),
+      };
+    });
+  return {
+    complexity: groupsOf(SCENARIO_COMPLEXITY, 'complexity'),
+    load: groupsOf(SCENARIO_LOADS, 'load'),
+  };
+}
+
+/**
+ * Totals for scenario rows: { scenariosRun, runs, averageFirst, averageLatest, improved,
+ * declined } (improved and declined count rows whose change is above or below zero).
+ */
+export function scenarioTotals(rows) {
+  return {
+    scenariosRun: rows.length,
+    runs: rows.reduce((sum, row) => sum + row.runs, 0),
+    averageFirst: average(rows.map((row) => row.first).filter(hasScore)),
+    averageLatest: average(rows.map((row) => row.latest).filter(hasScore)),
+    improved: rows.filter((row) => row.change > 0).length,
+    declined: rows.filter((row) => row.change < 0).length,
+  };
+}
+
+/**
+ * The guidelines ticked as struggled in the saved runs (the last 3 per scenario) of these
+ * trackers, most often first: [{ id, times, people }]. At most `limit` of them.
+ */
+export function struggledGuidelines(trackers, limit) {
+  const counts = new Map();
+  trackers.forEach((tracker, index) => {
+    for (const record of Object.values(tracker.scenarios || {})) {
+      for (const run of record.runs) {
+        for (const id of run.struggled || []) {
+          const count = counts.get(id) || { id, times: 0, people: new Set() };
+          count.times++;
+          count.people.add(index);
+          counts.set(id, count);
+        }
+      }
+    }
+  });
+  return [...counts.values()]
+    .sort((a, b) => b.times - a.times || b.people.size - a.people.size || a.id.localeCompare(b.id))
+    .slice(0, limit)
+    .map(({ id, times, people }) => ({ id, times, people: people.size }));
+}
+
 /** The start (local midnight on Monday) of the week a time falls in, in milliseconds. */
 export function weekStart(milliseconds) {
   const date = new Date(milliseconds);
@@ -145,15 +284,17 @@ function nextWeekStart(milliseconds) {
 }
 
 /**
- * Completions and quiz scores by week between two times, for the charts. Returns one item per
- * week, empty weeks included: { weekStart, completions, quizCount, quizAverage } (the average is
- * null in a week with no quiz). At most MAX_CHART_WEEKS weeks, counted from `from`.
+ * Completions, quiz scores and scenario scores by week between two times, for the charts.
+ * Returns one item per week, empty weeks included: { weekStart, completions, quizCount,
+ * quizAverage, scenarioCount, scenarioAverage } (an average is null in a week with nothing to
+ * average; scenarioCount counts every run, rated or not). At most MAX_CHART_WEEKS weeks, counted
+ * from `from`.
  */
 export function weeklySeries(history, from, to) {
   const weeks = new Map();
   let start = weekStart(from);
   while (start <= to && weeks.size < MAX_CHART_WEEKS) {
-    weeks.set(start, { weekStart: start, completions: 0, scores: [] });
+    weeks.set(start, { weekStart: start, completions: 0, scores: [], runs: 0, runScores: [] });
     start = nextWeekStart(start);
   }
   for (const row of history) {
@@ -161,13 +302,18 @@ export function weeklySeries(history, from, to) {
     const week = time >= from && time <= to ? weeks.get(weekStart(time)) : undefined;
     if (!week) continue;
     if (isQuizRow(row)) week.scores.push(row[HISTORY.VALUE]);
-    else if (isCompletion(row)) week.completions++;
+    else if (isScenarioRow(row)) {
+      week.runs++;
+      if (hasScore(row[HISTORY.VALUE])) week.runScores.push(row[HISTORY.VALUE]);
+    } else if (isCompletion(row)) week.completions++;
   }
   return [...weeks.values()].map((week) => ({
     weekStart: week.weekStart,
     completions: week.completions,
     quizCount: week.scores.length,
     quizAverage: average(week.scores),
+    scenarioCount: week.runs,
+    scenarioAverage: average(week.runScores),
   }));
 }
 
