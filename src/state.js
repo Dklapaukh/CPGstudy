@@ -46,7 +46,7 @@ export const state = {
   scenarioReturn: null,
   // The scenario list's chips (level 0 = any, theme '' = any) and the scenario whose Finish
   // form is open. Memory only.
-  scenarioFilter: { level: 0, theme: '' },
+  scenarioFilter: { complexity: 0, load: '', theme: '' },
   scenarioDebriefId: null,
   // Feature 7, kept on this phone only (see updateState.js), never sent to the backend.
   updateAvailable: false,

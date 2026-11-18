@@ -193,10 +193,10 @@ function scenarioReviewItems() {
     }));
 }
 
-/** The Scenarios section's rows, by level, each with its edit label. */
+/** The Scenarios section's rows, by complexity, each with its edit label. */
 function scenarioRows() {
   return [...scenarios]
-    .sort((first, second) => first.level - second.level)
+    .sort((first, second) => first.complexity - second.complexity)
     .map((scenario) => {
       const view = scenarioViewFor(scenario.id);
       const badge = view.edit?.off ? 'left out' : view.edit ? 'edited' : '';

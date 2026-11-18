@@ -349,6 +349,22 @@ Claude's, say if any should change)**
 - SC-D: the editor page edits scenarios as learners see them (tap a value). The edits go in the
   Edits tab under `scenario|<id>` (no backend change) and are published daily to
   `content/scenario-edits.js`.
+- SC-E (19 Nov 2026, option B, after a literature review): the five levels are replaced by two
+  filters, **complexity** (1 Straightforward, 2 Common presentation, 3 Complex or atypical) and
+  **scene load** (Single patient, Delegation, Several patients). Easy-to-hard progression is
+  well supported (Issenberg 2005 BEME review; Cook 2013 meta-analysis, effect size 0.68 for a
+  range of difficulty; cognitive load theory), but the old levels 4 and 5 added team and scene
+  load rather than clinical difficulty, so those are a separate axis (as in 4C/ID task
+  classes). Theme is a dropdown.
+- SC-F (19 Nov 2026): each scenario has 3 **intended outcomes** (`outcomes`, editable on the
+  editor page). The Finish form has a PEARLS debrief guide (Eppich and Cheng 2015: reactions,
+  description, analysis, summary), a rating per outcome on how much help the learner needed
+  (Not done, Talked through, Prompted, Independent, after the O-SCORE's entrustment anchors,
+  which are more reliable than norm-based ones), the struggled guidelines, and three notes (Went
+  well, To work on, Learner's take-away). A run's score is its ratings as a percentage of the
+  most possible, counting only the outcomes rated. The list shows each scenario's latest score
+  and a "Your progress" fold: scenarios run and the average latest score by complexity and by
+  scene load. Older runs keep their single note.
 
 ### 8.3 Open decisions (owner)
 
@@ -482,3 +498,7 @@ to learn, plus a debrief note), recorded on the learner's phone. Scenarios can b
 editor page (tap a value to change it), and the daily copy publishes the edits. Possible
 follow-ups: recommendations (recently studied, or from Guidelines to learn); adding or removing
 patients and creating new scenarios from the editor page.
+On 19 Nov the levels became complexity and scene load (SC-E) and the debrief gained a PEARLS
+guide, outcome ratings and a score with progress (SC-F). Gaps to fill: there is no
+Straightforward scenario with Delegation or Several patients yet; mentors and the manager page
+can't see runs; a score only means something when the same mentor rates consistently.

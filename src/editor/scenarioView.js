@@ -11,7 +11,7 @@ import { warningHtml } from '../staffPage.js';
 import { guidelineById } from '../guidelines.js';
 import { DEFAULT_HEADER_COLOUR, SCENARIO_VITALS } from '../constants.js';
 import { scenarioValue } from '../scenarioEdits.js';
-import { scenarioBodyHtml } from '../views/scenarioMarkup.js';
+import { scenarioBodyHtml, scenarioTagsText } from '../views/scenarioMarkup.js';
 
 export const SCENARIO_EDITOR_HASH_PREFIX = '#s-';
 
@@ -20,7 +20,9 @@ const FIELD_NAMES = {
   suburb: 'Suburb',
   story: 'Story',
   intention: 'Scenario intention',
-  level: 'Level',
+  complexity: 'Complexity',
+  load: 'Scene load',
+  outcomes: 'Intended outcomes',
   guidelines: 'Guidelines',
   label: 'Patient label',
   history: 'Medical history',
@@ -30,12 +32,13 @@ const FIELD_NAMES = {
 };
 const VITAL_NAMES = Object.fromEntries(SCENARIO_VITALS);
 const HINTS = {
-  level:
-    '1 Assessment structure, 2 Common presentations, 3 Added complexity, 4 Delegation, 5 Several patients.',
+  complexity: '1 Straightforward, 2 Common presentation, 3 Complex or atypical.',
+  load: 'single, delegation or several (several only when there is more than one patient).',
+  outcomes: 'One per line, short and observable. The debrief rates each one.',
   guidelines: 'CPG numbers in the order shown, separated by commas, for example 1.17, 4.11.',
   label: 'Shown above the patient. Needed when there are several patients.',
 };
-const LONG_FIELDS = ['story', 'intention', 'social', 'history', 'medications'];
+const LONG_FIELDS = ['story', 'intention', 'outcomes', 'social', 'history', 'medications'];
 const note = (text) => `<p class="editor-note">${text}</p>`;
 const button = (action, label, data = '', style = 'switch-button') =>
   `<button class="${style}" type="button" data-action="${action}"${data}>${label}</button>`;
@@ -53,16 +56,17 @@ export function boxTextOf(value, path) {
   if (path === 'guidelines') {
     return (value || []).map((id) => guidelineById(id)?.n || id).join(', ');
   }
+  if (path === 'outcomes') return (value || []).join('\n');
   return value === undefined || value === null ? '' : String(value);
 }
 
-/** The Scenarios section of the first screen: one row per scenario, by level. */
+/** The Scenarios section of the first screen: one row per scenario, by complexity. */
 export function scenarioSectionHtml(rows, isOpen) {
   const items = rows
     .map(
       (row) => `<a class="guideline-row" href="${SCENARIO_EDITOR_HASH_PREFIX}${escapeHtml(row.id)}">
       <div class="guideline-row__text"><b>${escapeHtml(row.title)}</b>
-      <small>Level ${row.level} · ${escapeHtml(row.suburb)}</small></div>
+      <small>${escapeHtml(scenarioTagsText(row))} · ${escapeHtml(row.suburb)}</small></div>
       ${row.badge ? `<span class="row-meta"><span class="editor-badge">${row.badge}</span></span>` : ''}</a>`,
     )
     .join('');
@@ -134,10 +138,10 @@ export function scenarioEditorHtml(viewer, view, signedInButtons) {
     ${signedInButtons}</div>
     <div class="guideline-header" style="--header-colour:${DEFAULT_HEADER_COLOUR}">
       <h1>${escapeHtml(live.title)}</h1>
-      <div class="guideline-meta">Scenario · Level ${live.level} · ${live.patients.length} patient${live.patients.length === 1 ? '' : 's'}<br>
+      <div class="guideline-meta">Scenario · ${escapeHtml(scenarioTagsText(live))} · ${live.patients.length} patient${live.patients.length === 1 ? '' : 's'}<br>
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${note('The scenario as learners see it, edits included. Tap any text, vital, the level or the guidelines to change it. Saved edits reach the app the next morning.')}
+    ${note('The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.')}
     <p>${badgesHtml(view)}</p>${reviewHtml(view)}
     <div class="editor-preview scenario-screen">${scenarioBodyHtml(live, editingFor(view))}</div>
     <div class="editor-buttons">${button('scenario-off', offLabel)}

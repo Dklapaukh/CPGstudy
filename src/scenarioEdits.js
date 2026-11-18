@@ -6,12 +6,12 @@
  * An edit is saved in the Sheet's Edits tab under SCENARIO_EDIT_PREFIX + scenario id, beside the
  * quiz question edits, so it needs no backend change. Its shape:
  *   { kind: 'scenario', off?: true, fields: { <path>: { was, to } } }
- * A path names one value: 'title', 'level', 'guidelines', 'patients.0.history',
+ * A path names one value: 'title', 'complexity', 'load', 'outcomes', 'guidelines', 'patients.0.history',
  * 'patients.1.vitals.hr'. `to` is what learners see; `was` is the value in content/scenarios.js
  * when the edit was made, so a later change to that file is noticed and shown for review.
  * Depends on constants.js.
  */
-import { SCENARIO_LEVELS, SCENARIO_VITALS } from './constants.js';
+import { SCENARIO_COMPLEXITY, SCENARIO_LOADS, SCENARIO_VITALS } from './constants.js';
 
 export const SCENARIO_EDIT_PREFIX = 'scenario|';
 export const SCENARIO_EDIT_KIND = 'scenario';
@@ -19,6 +19,11 @@ export const SCENARIO_TEXT_FIELDS = ['title', 'suburb', 'story', 'intention'];
 export const PATIENT_TEXT_FIELDS = ['label', 'history', 'medications', 'allergies', 'social'];
 // The longest text one box keeps, so one edit stays well inside the Sheet's limit.
 export const MAX_SCENARIO_TEXT = 2000;
+// Intended outcomes: one per line in the box, at most this many, each at most this long.
+export const MAX_OUTCOMES = 6;
+export const MAX_OUTCOME_TEXT = 200;
+// The scenario-wide values an editor may change, besides the text fields.
+const OTHER_FIELDS = ['complexity', 'load', 'outcomes', 'guidelines'];
 
 const sameValue = (first, second) => JSON.stringify(first) === JSON.stringify(second);
 
@@ -34,7 +39,7 @@ export function scenarioValue(scenario, path) {
 
 /** Whether a path names a place an editor may change in this scenario. */
 export function isEditablePath(scenario, path) {
-  if ([...SCENARIO_TEXT_FIELDS, 'level', 'guidelines'].includes(path)) return true;
+  if ([...SCENARIO_TEXT_FIELDS, ...OTHER_FIELDS].includes(path)) return true;
   const [top, index, field, vital] = path.split('.');
   if (top !== 'patients' || !scenario.patients[Number(index)]) return false;
   if (field === 'vitals') return SCENARIO_VITALS.some(([key]) => key === vital);
@@ -118,10 +123,14 @@ export function liveScenarios(scenarios, edits) {
  */
 export function readScenarioBox(path, text, guidelineIdOfNumber) {
   const trimmed = text.trim();
-  if (path === 'level') {
-    const level = Number(trimmed);
-    return SCENARIO_LEVELS[level] ? { value: level } : { error: 'The level is a number, 1 to 5.' };
+  if (path === 'complexity') {
+    const complexity = Number(trimmed);
+    return SCENARIO_COMPLEXITY[complexity]
+      ? { value: complexity }
+      : { error: 'The complexity is a number, 1 to 3.' };
   }
+  if (path === 'load') return readLoad(trimmed);
+  if (path === 'outcomes') return readOutcomes(trimmed);
   if (path === 'guidelines') return readGuidelineNumbers(trimmed, guidelineIdOfNumber);
   if (trimmed.length > MAX_SCENARIO_TEXT) return { error: 'That is too long to keep.' };
   if (!trimmed && !path.endsWith('.label')) return { error: 'This can’t be empty.' };
@@ -135,4 +144,27 @@ function readGuidelineNumbers(text, guidelineIdOfNumber) {
   const unknown = numbers.filter((number) => !guidelineIdOfNumber(number));
   if (unknown.length) return { error: `No guideline numbered ${unknown.join(', ')}.` };
   return { value: [...new Set(numbers.map(guidelineIdOfNumber))] };
+}
+
+/** A scene load typed as its key or name ("delegation", "Several patients"). */
+function readLoad(text) {
+  const typed = text.toLowerCase();
+  const key = Object.keys(SCENARIO_LOADS).find(
+    (each) => each === typed || SCENARIO_LOADS[each].name.toLowerCase() === typed,
+  );
+  return key ? { value: key } : { error: 'Write single, delegation or several.' };
+}
+
+/** Intended outcomes, one per line; blank lines are skipped. */
+function readOutcomes(text) {
+  const outcomes = text
+    .split('\n')
+    .map((line) => line.replace(/^[-•*]\s*/, '').trim())
+    .filter(Boolean);
+  if (!outcomes.length) return { error: 'List at least one outcome.' };
+  if (outcomes.length > MAX_OUTCOMES) return { error: `Keep it to ${MAX_OUTCOMES} outcomes.` };
+  if (outcomes.some((outcome) => outcome.length > MAX_OUTCOME_TEXT)) {
+    return { error: `Keep each outcome under ${MAX_OUTCOME_TEXT} characters.` };
+  }
+  return { value: outcomes };
 }

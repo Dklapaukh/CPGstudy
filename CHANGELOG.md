@@ -2,6 +2,17 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-19: Scenarios: the five levels are replaced by two filters, **complexity**
+  (Straightforward, Common presentation, Complex or atypical) and **scene load** (Single
+  patient, Delegation, Several patients); all 40 scenarios are re-tagged (`complexity`, `load`)
+  and each has three **intended outcomes**, shown in the folded intention. **Finish scenario**
+  now has a PEARLS debrief guide, a rating of each outcome by how much help the learner needed
+  (Not done, Talked through, Prompted, Independent), the struggled guidelines, and three notes
+  (Went well, To work on, Learner's take-away). Each run gets a score (ratings as a percentage);
+  the list shows the latest score and a "Your progress" fold by complexity and scene load, and
+  the scenario's Debriefs fold shows the scores of the last runs. The editor page edits the
+  complexity, scene load and outcomes. Runs saved before keep their note.
+
 - 2026-11-19: Scenarios list: the six level chips (All, Level 1 to 5) now share one row, each
   naming its level in a tooltip, and the theme chips are replaced by a Theme dropdown.
 

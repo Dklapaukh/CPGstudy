@@ -826,20 +826,27 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   await sleep(30);
   const allRows = $$('.scenario-row').length;
   assert.ok(allRows >= 40);
-  assert.match($('.scenario-group-title').textContent, /^Level 1/);
-  click($('[data-action="scenario-level"][data-value="4"]'));
-  assert.ok($$('.scenario-group-title').every((title) => /^Level 4/.test(title.textContent)));
-  assert.equal(
-    $$('.scenario-level-chips .filter-chip').length,
-    6,
-    'All and five levels share one row',
+  assert.equal($('.scenario-group-title').textContent, 'Straightforward');
+  assert.ok(!$('.scenario-progress'), 'no progress until something is run');
+  click($('[data-action="scenario-complexity"][data-value="3"]'));
+  click($('[data-action="scenario-load"][data-value="delegation"]'));
+  assert.deepEqual(
+    $$('.scenario-group-title').map((title) => title.textContent),
+    ['Complex or atypical'],
+  );
+  assert.ok($$('.scenario-row small').every((meta) => /Delegation/.test(meta.textContent)));
+  assert.deepEqual(
+    $$('.scenario-level-chips').map((row) => row.querySelectorAll('.filter-chip').length),
+    [4, 4],
+    'complexity and scene load each have All and three chips on one row',
   );
   const themeChoice = $('#scenario-theme-choice');
   themeChoice.value = 'Obstetrics';
   themeChoice.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   const rows = $$('.scenario-row b').map((title) => title.textContent);
   assert.ok(rows.includes('Birth in the bathroom') && !rows.includes('Café anaphylaxis'));
-  click($('[data-action="scenario-level"][data-value="0"]'));
+  click($('[data-action="scenario-complexity"][data-value=""]'));
+  click($('[data-action="scenario-load"][data-value=""]'));
   $('#scenario-theme-choice').value = '';
   $('#scenario-theme-choice').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   assert.equal($$('.scenario-row').length, allRows, 'All shows every scenario again');
@@ -851,16 +858,34 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   assert.equal($$('.scenario-vitals tbody td')[4].textContent, '168/92');
   assert.equal($$('.scenario-guideline').length, 4);
   assert.equal($('.scenario-guideline').getAttribute('href'), '#cpg-13-3');
+  assert.equal(
+    $('.scenario-tags').textContent.trim().replace(/\s+/g, ' '),
+    'Common presentation Single patient',
+  );
+  assert.equal($$('.scenario-outcomes li').length, 3, 'the intended outcomes are in the intention');
   click($('[data-action="scenario-finish"]'));
+  assert.equal($$('.scenario-guide li').length, 4, 'the PEARLS guide has four steps');
+  assert.equal($$('.scenario-outcome').length, 3, 'one rating row per outcome');
+  $('input[name="rating-0"][value="3"]').checked = true;
+  $('input[name="rating-1"][value="1"]').checked = true; // the third is left blank
   $$('input[name="struggled"]')[0].checked = true;
-  $('#scenario-debrief-note').value = 'Slow to check for a pressure injury';
+  $('#scenario-debrief-delta').value = 'Slow to check for a pressure injury';
+  $('#scenario-debrief-takeaway').value = 'Ask why they fell first';
   click($('[data-action="scenario-finish-save"]'));
-  assert.match($('#scenario-queue-message').textContent, /^Run saved\./);
-  assert.ok(!$('#scenario-debrief-note'), 'the form closes');
-  assert.match($('.scenario-screen').textContent, /Slow to check for a pressure injury/);
+  assert.match($('#scenario-queue-message').textContent, /^Run saved\. Score 67%\./);
+  assert.ok(!$('#scenario-debrief-delta'), 'the form closes');
+  const debrief = $('.scenario-screen').textContent;
+  assert.match(debrief, /Slow to check for a pressure injury/);
+  assert.match(debrief, /Ask why they fell first/);
+  assert.match(debrief, /Score: 67% \(/);
+  assert.match(debrief, /Independent/);
   dom.window.location.hash = '#scenarios';
   await sleep(30);
-  assert.ok($('.scenario-run'), 'the list shows the run');
+  assert.match($('.scenario-run').textContent, /· 67%$/, 'the list shows the run and its score');
+  const progress = $$('.scenario-progress tr').map((row) =>
+    [...row.children].map((cell) => cell.textContent.trim()).join(' | '),
+  );
+  assert.ok(progress.includes('Common presentation | 1 of 16 | 67%'), progress.join(' / '));
   dom.window.location.hash = '#scenario-long-lie';
   await sleep(30);
   dom.window.location.hash = '#cpg-13-3';

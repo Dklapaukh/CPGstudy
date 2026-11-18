@@ -157,10 +157,27 @@ export const MEDICINE_TEST_ENTRY_PREFIX = 'medicine-test-';
 // entry (SCENARIO_RUN_ENTRY_PREFIX + scenario id, note = JSON), so it needs no backend change.
 export const SCENARIOS_HASH = 'scenarios';
 export const SCENARIO_RUN_ENTRY_PREFIX = 'scenario-run-';
-// Only the latest runs are kept, and each debrief note is cut to this length, so the entry's
-// note stays well under the backend's 5000 characters.
+// Only the latest runs are kept and each debrief text is cut to MAX_DEBRIEF_NOTE; older runs are
+// dropped until the entry's note fits MAX_SCENARIO_RECORD, under the backend's 5000 characters.
 export const SCENARIO_RUNS_KEPT = 3;
-export const MAX_DEBRIEF_NOTE = 1000;
+export const MAX_DEBRIEF_NOTE = 400;
+export const MAX_SCENARIO_RECORD = 4500;
+// The debrief (decision 19 Nov 2026): a PEARLS guide (Eppich and Cheng 2015) for the mentor,
+// then each intended outcome rated on how much help the learner needed (an entrustment-style
+// scale, after the O-SCORE). A run's score is its ratings as a percentage of the most possible.
+export const DEBRIEF_RATINGS = [
+  { value: 0, name: 'Not done', help: 'missed, or I had to do it' },
+  { value: 1, name: 'Talked through', help: 'I had to talk them through it' },
+  { value: 2, name: 'Prompted', help: 'they needed a prompt' },
+  { value: 3, name: 'Independent', help: 'done well without help' },
+];
+export const DEBRIEF_RATING_TOP = 3;
+// The three free-text parts of the debrief, saved with the run (key, label, placeholder).
+export const DEBRIEF_TEXTS = [
+  ['plus', 'Went well', 'What the learner did well'],
+  ['delta', 'To work on', 'What to do differently next time'],
+  ['takeaway', 'Learner’s take-away', 'In the learner’s words: one thing they will do next time'],
+];
 // The list's theme dropdown (decision 18 Nov 2026, A1), in this order. A scenario has a theme when
 // one of its guidelines is in the named sections or list; Rural is set by hand in the content.
 export const SCENARIO_THEMES = [
@@ -175,12 +192,17 @@ export const SCENARIO_THEMES = [
   { name: 'Rural', rural: true },
 ];
 export const SCENARIO_HASH_PREFIX = 'scenario-';
-export const SCENARIO_LEVELS = {
-  1: 'Assessment structure',
-  2: 'Common presentations',
-  3: 'Added complexity',
-  4: 'Delegation',
-  5: 'Several patients',
+// Two filters in place of levels (decision 19 Nov 2026, option B): how clinically hard the
+// scenario is, and the team and scene load on top of it. `short` is the chip's text.
+export const SCENARIO_COMPLEXITY = {
+  1: { name: 'Straightforward', short: 'Simple' },
+  2: { name: 'Common presentation', short: 'Common' },
+  3: { name: 'Complex or atypical', short: 'Complex' },
+};
+export const SCENARIO_LOADS = {
+  single: { name: 'Single patient', short: 'Single' },
+  delegation: { name: 'Delegation', short: 'Delegate' },
+  several: { name: 'Several patients', short: 'Several' },
 };
 // The vitals row, in this order.
 export const SCENARIO_VITALS = [

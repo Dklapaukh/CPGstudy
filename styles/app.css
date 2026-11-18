@@ -3123,6 +3123,16 @@ ul.sort-piece__text {
   font-size: 0.85rem;
   font-weight: 600;
 }
+.scenario-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+}
+.scenario-level--load {
+  border-color: var(--colour-line);
+  color: var(--colour-muted);
+}
 .scenario-title {
   margin: 0.4rem 0 0.1rem;
   font-size: 1.45rem;
@@ -3216,6 +3226,14 @@ ul.sort-piece__text {
   font-size: clamp(0.7rem, 3vw, 0.9rem);
   white-space: nowrap;
 }
+.scenario-chip-label {
+  flex: none;
+  align-self: center;
+  width: 5.2rem;
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
 .scenario-theme-setting {
   margin: 0 0 0.8rem;
 }
@@ -3227,7 +3245,89 @@ ul.sort-piece__text {
   color: var(--colour-accent-text);
   font-weight: 600;
 }
-/* The Finish form: one tick box per guideline, then the note and the buttons. */
+/* The progress fold: one row per complexity and scene load. */
+.scenario-progress {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.scenario-progress th,
+.scenario-progress td {
+  padding: 0.35rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--colour-line);
+  background: none;
+  text-align: right;
+}
+.scenario-progress th:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+.scenario-progress thead th,
+.scenario-progress__head th {
+  color: var(--colour-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-top: 0.7rem;
+}
+.scenario-outcomes {
+  margin: 0.2rem 0 0;
+  padding-left: 1.2rem;
+}
+/* The Finish form: the guide, a row of rating pills per outcome, the tick boxes, the notes. */
+.scenario-guide {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.45;
+}
+.scenario-guide li {
+  margin: 0.3rem 0;
+}
+.scenario-outcome {
+  margin: 0;
+  padding: 0.6rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--colour-line);
+}
+.scenario-outcome legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+.rating-pills {
+  display: flex;
+  gap: 0.3rem;
+}
+.rating-pill {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.rating-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.rating-pill span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.2rem;
+  border-radius: 10px;
+  background: var(--colour-control);
+  font-size: clamp(0.68rem, 2.9vw, 0.85rem);
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+.rating-pill input:checked + span {
+  background: var(--colour-green);
+  color: #fff;
+}
+.rating-pill input:focus-visible + span {
+  outline: 2px solid var(--colour-accent-text);
+  outline-offset: 2px;
+}
 .scenario-check {
   display: flex;
   align-items: flex-start;

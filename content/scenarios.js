@@ -4,10 +4,13 @@
  *
  * Fields:
  *   id         short unique name, used in the address (#scenario-<id>)
- *   level      1 to 5, see SCENARIO_LEVELS in src/constants.js
+ *   complexity 1 to 3, how clinically hard it is (SCENARIO_COMPLEXITY in src/constants.js)
+ *   load       'single', 'delegation' or 'several': the team and scene load (SCENARIO_LOADS);
+ *              'several' exactly when there is more than one patient
  *   title, suburb (Wellington, Porirua, Kāpiti or Hutt Valley), story
  *   rural      true for a rural scenario or one with a long transport (the Rural theme); optional
  *   intention  what the scenario practises and what to watch for
+ *   outcomes   the intended outcomes, short and observable; the debrief rates each one
  *   guidelines guideline ids in the order they are shown (checked by tests/scenarios.test.js)
  *   patients   one or more { label (only when more than one), history, medications, allergies,
  *              social, vitals { gcs, rr, spo2, hr, bp, temp, bgl, pain } }. Vitals are text,
@@ -16,12 +19,18 @@
 export const scenarios = [
   {
     id: 'netball-ankle',
-    level: 1,
+    complexity: 1,
+    load: 'single',
     title: 'Netball ankle',
     suburb: 'Hataitai',
     story: "A 34-year-old woman rolled her ankle at netball and can't put weight on it.",
     intention:
       'Run a full primary and secondary survey and handover on a stable patient. Insist on the whole structure even though the problem is obvious.',
+    outcomes: [
+      'Completes the primary survey before focusing on the ankle',
+      'Examines the joints above and below and checks circulation, sensation and movement',
+      'Gives a clear, structured handover',
+    ],
     guidelines: ['cpg-1-17', 'cpg-4-11', 'cpg-1-9'],
     patients: [
       {
@@ -44,12 +53,18 @@ export const scenarios = [
   },
   {
     id: 'not-himself',
-    level: 1,
+    complexity: 1,
+    load: 'single',
     title: 'Just not himself',
     suburb: 'Paraparaumu',
     story: 'A 72-year-old man\'s daughter called because he\'s been "off" for two days.',
     intention:
       'Take a structured history when there is no clear complaint. See whether they dig in or give up when nothing stands out; the prostate history and low fever point to a urinary infection.',
+    outcomes: [
+      'Takes a structured history although there is no clear complaint',
+      'Does a full set of vitals and a head-to-toe check',
+      'Links the prostate history and low fever to a possible urinary infection',
+    ],
     guidelines: ['cpg-1-17', 'cpg-12-9', 'cpg-1-6'],
     patients: [
       {
@@ -73,12 +88,18 @@ export const scenarios = [
   },
   {
     id: 'chest-pain-lawns',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Chest pain mowing the lawns',
     suburb: 'Cannons Creek',
     story:
       'A 58-year-old man has had central chest pressure for 40 minutes, which started while he was mowing the lawns.',
     intention: 'Practise assessing chest pain. Watch whether they get a 12-lead early.',
+    outcomes: [
+      'Gets a 12-lead ECG early and interprets it',
+      'Takes a focused chest pain history, including risk factors',
+      'Treats and gives pain relief by the guideline',
+    ],
     guidelines: ['cpg-3-2', 'cpg-3-3', 'cpg-1-18'],
     patients: [
       {
@@ -101,13 +122,19 @@ export const scenarios = [
   },
   {
     id: 'long-lie',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Long lie',
     suburb: 'Waterloo, Lower Hutt',
     story:
       'An 84-year-old woman was found on the floor this morning after falling overnight. Her left hip is sore and the leg is shortened.',
     intention:
       'Assess a fall in an older person. Ask why she fell, and check for pressure areas and hypothermia. The codeine allergy tests the analgesia choice.',
+    outcomes: [
+      'Asks why she fell and looks for a medical cause',
+      'Checks for pressure areas, hypothermia and injuries from the long lie',
+      'Chooses pain relief that suits her codeine allergy',
+    ],
     guidelines: ['cpg-13-3', 'cpg-4-11', 'cpg-1-18', 'cpg-12-9'],
     patients: [
       {
@@ -130,13 +157,19 @@ export const scenarios = [
   },
   {
     id: 'right-abdo-pain',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Right-sided abdominal pain',
     suburb: 'Johnsonville',
     story:
       'A 26-year-old man has had abdominal pain since last night. It started around the belly button and has moved to the right lower abdomen.',
     intention:
       'Assess abdominal pain. Look for a systematic abdominal exam and a sensible analgesia choice.',
+    outcomes: [
+      'Does a systematic abdominal examination',
+      'Considers the serious causes of right-sided pain',
+      'Chooses sensible pain relief and gives it by the guideline',
+    ],
     guidelines: ['cpg-13-2', 'cpg-1-18'],
     patients: [
       {
@@ -159,13 +192,19 @@ export const scenarios = [
   },
   {
     id: 'copd-or-sepsis',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'COPD or sepsis?',
     suburb: 'Ōtaki',
     story:
       'A 67-year-old woman with known COPD has been more short of breath for three days and is now feverish.',
     intention:
       'Work through differentials and titrate oxygen. Watch the oxygen target and whether they think of sepsis. Ask what the long trip to hospital changes.',
+    outcomes: [
+      'Titrates oxygen to the right target for COPD',
+      'Considers sepsis alongside an exacerbation',
+      'Plans for the long trip to hospital',
+    ],
     guidelines: ['cpg-2-2', 'cpg-6-2', 'cpg-1-16'],
     patients: [
       {
@@ -189,13 +228,19 @@ export const scenarios = [
   },
   {
     id: 'head-strike-warfarin',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'Head strike on warfarin',
     suburb: 'Waikanae',
     story:
       "A 79-year-old man tripped in the garden and hit his head. He's on warfarin. He was briefly confused and says he's fine now.",
     intention:
       'Recognise risk hidden behind a minor injury. Does anyone suggest leaving him at home? Ask whether he really tripped.',
+    outcomes: [
+      'Recognises the bleeding risk of a head strike on warfarin',
+      'Asks whether he really tripped and looks for a medical cause',
+      'Transports him rather than leaving him at home',
+    ],
     guidelines: ['cpg-4-9', 'cpg-13-3', 'cpg-12-9'],
     patients: [
       {
@@ -218,13 +263,19 @@ export const scenarios = [
   },
   {
     id: 'cafe-anaphylaxis',
-    level: 4,
+    complexity: 2,
+    load: 'delegation',
     title: 'Café anaphylaxis',
     suburb: 'Te Aro',
     story:
       'A 19-year-old woman ate a dish with peanuts in it and now has hives, wheeze and feels faint.',
     intention:
       'Lead a crew through several urgent interventions at once. The point is who does what (adrenaline, airway, IV access, fluids, a second adrenaline dose), not the medicine itself.',
+    outcomes: [
+      'Gives intramuscular adrenaline without delay',
+      'Gives each crew member a clear task (airway, IV access, fluids)',
+      'Reassesses and gives a second adrenaline dose when needed',
+    ],
     guidelines: ['cpg-12-12', 'cpg-1-8'],
     patients: [
       {
@@ -247,13 +298,19 @@ export const scenarios = [
   },
   {
     id: 'gym-collapse',
-    level: 4,
+    complexity: 2,
+    load: 'delegation',
     title: 'Collapse at the gym',
     suburb: 'Trentham, Upper Hutt',
     story:
       "A 55-year-old man collapsed on the treadmill. Staff are doing CPR and have applied the gym's AED.",
     intention:
       'Run a cardiac arrest as team leader. Make them hand off compressions and keep oversight of the whole team. Bring in his partner whenever you want more pressure.',
+    outcomes: [
+      'Leads the team and keeps oversight rather than doing compressions',
+      'Organises compression changes and keeps pauses short',
+      'Follows the arrest guideline for rhythm checks, shocks and medicines',
+    ],
     guidelines: ['cpg-3-14', 'cpg-1-8'],
     patients: [
       {
@@ -277,13 +334,19 @@ export const scenarios = [
   },
   {
     id: 'transmission-gully-crash',
-    level: 5,
+    complexity: 3,
+    load: 'several',
     title: 'Transmission Gully crash',
     suburb: 'Pāuatahanui',
     story:
       "Two cars have collided on State Highway 1 in Transmission Gully. You're a single crew and the first to arrive.",
     intention:
       "Triage, call for resources and manage the scene as the first crew there. Watch the first report, the triage order and when they ask for a helicopter. The passenger is the driver's mother and on an anticoagulant.",
+    outcomes: [
+      'Sends a clear first report and asks for resources early',
+      'Triages all three patients in a sensible order',
+      'Weighs the passenger’s anticoagulant and the helicopter decision',
+    ],
     guidelines: ['cpg-1-11', 'cpg-4-2', 'cpg-4-23', 'cpg-1-12'],
     patients: [
       {
@@ -341,13 +404,19 @@ export const scenarios = [
   },
   {
     id: 'trampoline-wrist',
-    level: 1,
+    complexity: 1,
+    load: 'single',
     title: 'Off the trampoline',
     suburb: 'Tawa',
     story:
       'A 6-year-old boy fell off the backyard trampoline onto his outstretched hand. His mum says his wrist "looks funny".',
     intention:
       'Run the full structure on a child: talk to the child as well as the parent, get child-sized vitals and use the paediatric ranges. Watch whether the obvious wrist stops them checking for other injuries.',
+    outcomes: [
+      'Talks to the child as well as the parent',
+      'Uses the paediatric ranges for the vitals',
+      'Checks for other injuries beyond the obvious wrist',
+    ],
     guidelines: ['cpg-7-1', 'cpg-4-11', 'cpg-1-18', 'cpg-1-17'],
     patients: [
       {
@@ -370,13 +439,19 @@ export const scenarios = [
   },
   {
     id: 'bus-stop-dizzy',
-    level: 1,
+    complexity: 1,
+    load: 'single',
     title: 'Dizzy at the bus stop',
     suburb: 'Lower Hutt',
     story:
       'A 45-year-old woman is sitting on the footpath at a bus stop on High Street. She says the world is spinning and she has vomited once.',
     intention:
       'Keep to the structure when nothing obvious stands out. Watch whether they separate vertigo from light-headedness and look for the features that point to a stroke rather than an inner-ear cause.',
+    outcomes: [
+      'Keeps to the full assessment structure',
+      'Separates vertigo from light-headedness',
+      'Looks for features of a stroke rather than an inner-ear cause',
+    ],
     guidelines: ['cpg-13-9', 'cpg-1-17', 'cpg-1-6'],
     patients: [
       {
@@ -399,13 +474,19 @@ export const scenarios = [
   },
   {
     id: 'refuses-transport',
-    level: 1,
+    complexity: 1,
+    load: 'single',
     title: "Doesn't want to go",
     suburb: 'Karori',
     story:
       'An 81-year-old woman slipped on her kitchen floor. Her neighbour helped her up and called 111. She is adamant she is not going to hospital.',
     intention:
       'Practise assessing capacity, informed consent and a safe decision to leave someone at home. Watch for a full falls assessment, a clear explanation of the risks and a sensible safety-net plan.',
+    outcomes: [
+      'Assesses capacity and informed consent',
+      'Does a full falls assessment',
+      'Explains the risks clearly and leaves a safety-net plan',
+    ],
     guidelines: ['cpg-1-4', 'cpg-1-5', 'cpg-1-6', 'cpg-13-3'],
     patients: [
       {
@@ -429,13 +510,19 @@ export const scenarios = [
   },
   {
     id: 'hot-toddler',
-    level: 1,
+    complexity: 1,
+    load: 'single',
     title: 'Hot toddler',
     suburb: 'Ranui',
     story:
       'An 18-month-old girl has had a fever since yesterday. Her dad is worried because she is "floppy" and not drinking much.',
     intention:
       'Assess a febrile young child in a structured way and make a treatment and referral decision. Watch for hydration, a look for a rash and how they explain what to watch for if she stays home.',
+    outcomes: [
+      'Assesses hydration and looks for a rash',
+      'Makes a clear treatment and referral decision',
+      'Explains what to watch for if she stays home',
+    ],
     guidelines: ['cpg-6-10', 'cpg-7-1', 'cpg-1-17', 'cpg-1-6'],
     patients: [
       {
@@ -458,13 +545,19 @@ export const scenarios = [
   },
   {
     id: 'wheezy-at-school',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Wheezy at school',
     suburb: 'Naenae',
     story:
       'A 15-year-old girl became short of breath during PE. The school nurse has given her four puffs of her inhaler and called you.',
     intention:
       'Grade the severity of asthma and treat by the guideline, with the dose for her age and weight. Watch whether they reassess after each nebuliser and decide on transport.',
+    outcomes: [
+      'Grades the severity of the asthma',
+      'Gives the right dose for her age and weight',
+      'Reassesses after each nebuliser and decides on transport',
+    ],
     guidelines: ['cpg-2-1', 'cpg-7-2', 'cpg-1-16'],
     patients: [
       {
@@ -487,13 +580,19 @@ export const scenarios = [
   },
   {
     id: 'croup-2am',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Croup at 2 am',
     suburb: 'Titahi Bay',
     story:
       'A 3-year-old boy woke at 2 am with a barking cough and noisy breathing. His mum has him on her knee in the bathroom with the shower running.',
     intention:
       'Recognise croup, grade it and treat it while keeping the child calm. Watch that they leave him with his mum, avoid upsetting him, and separate croup from other causes of stridor.',
+    outcomes: [
+      'Recognises and grades the croup',
+      'Keeps the child calm and with his mum',
+      'Considers other causes of stridor',
+    ],
     guidelines: ['cpg-2-7', 'cpg-2-6', 'cpg-7-1'],
     patients: [
       {
@@ -516,13 +615,19 @@ export const scenarios = [
   },
   {
     id: 'hypo-building-site',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Hypo on the building site',
     suburb: 'Petone',
     story:
       'A 39-year-old builder is sweaty and confused. His workmates say he skipped lunch and has type 1 diabetes.',
     intention:
       "Treat hypoglycaemia and decide whether he can safely stay. Watch for the cause, a repeat glucose, food after treatment and the conditions for leaving him in someone's care.",
+    outcomes: [
+      'Treats the low glucose and repeats the glucose check',
+      'Looks for the cause and makes sure he eats',
+      'Applies the conditions for leaving him in someone’s care',
+    ],
     guidelines: ['cpg-5-3', 'cpg-1-6'],
     patients: [
       {
@@ -545,13 +650,19 @@ export const scenarios = [
   },
   {
     id: 'seizure-coastlands',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Seizure at Coastlands',
     suburb: 'Paraparaumu',
     story:
       'A 24-year-old man had a seizure in the food court. It has stopped, and his friend says "he\'s fine, he has these all the time".',
     intention:
       "Manage the post-ictal patient and decide on transport. Watch whether they check for injuries and for a change to his usual seizures, and whether they assess his capacity before taking the friend's word.",
+    outcomes: [
+      'Checks for injuries after the seizure',
+      'Asks whether this seizure was different from his usual ones',
+      'Assesses his capacity before taking the friend’s word',
+    ],
     guidelines: ['cpg-5-8', 'cpg-1-6', 'cpg-1-4'],
     patients: [
       {
@@ -574,13 +685,19 @@ export const scenarios = [
   },
   {
     id: 'stroke-breakfast',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Stroke at breakfast',
     suburb: 'Stokes Valley',
     story:
       'A 67-year-old man dropped his cup at breakfast and his wife noticed his face drooping. It started 35 minutes ago.',
     intention:
       'Recognise a stroke, establish the time of onset and decide on the stroke clot retrieval pathway. Watch for a quick scene time and a clear radio notification to hospital.',
+    outcomes: [
+      'Recognises the stroke and establishes the time of onset',
+      'Applies the clot retrieval pathway',
+      'Keeps the scene time short and gives a clear radio notification',
+    ],
     guidelines: ['cpg-12-6', 'cpg-12-8', 'cpg-1-23'],
     patients: [
       {
@@ -603,13 +720,19 @@ export const scenarios = [
   },
   {
     id: 'svt-lambton-quay',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Racing heart at work',
     suburb: 'Wellington Central',
     story:
       'A 28-year-old office worker has had a pounding heart for 30 minutes. A colleague called 111.',
     intention:
       'Identify SVT on the monitor and manage it by the guideline. Watch for a 12-lead before and after treatment, vagal manoeuvres done well and the signs that would make it unstable.',
+    outcomes: [
+      'Identifies SVT and records a 12-lead before and after treatment',
+      'Performs vagal manoeuvres well',
+      'Knows the signs that would make it unstable',
+    ],
     guidelines: ['cpg-3-9', 'cpg-3-7', 'cpg-3-11'],
     patients: [
       {
@@ -632,13 +755,19 @@ export const scenarios = [
   },
   {
     id: 'bleeding-nine-weeks',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Bleeding at nine weeks',
     suburb: 'Wainuiomata',
     story:
       'A 31-year-old woman who is nine weeks pregnant has bleeding and lower abdominal cramping that started this morning.',
     intention:
       'Assess bleeding in early pregnancy, look for shock and think of ectopic pregnancy. Watch for a sensitive approach, pain relief and a clear explanation of where she is going.',
+    outcomes: [
+      'Looks for shock and considers an ectopic pregnancy',
+      'Takes a sensitive approach and gives pain relief',
+      'Explains clearly where she is going and why',
+    ],
     guidelines: ['cpg-8-5', 'cpg-8-3', 'cpg-12-13'],
     patients: [
       {
@@ -661,13 +790,19 @@ export const scenarios = [
   },
   {
     id: 'phone-call-newtown',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'The phone call',
     suburb: 'Newtown',
     story:
       'A 22-year-old man rang a friend and said he was going to end his life. The friend called 111. Police are on their way.',
     intention:
       'Assess someone with thoughts of suicide: build rapport, ask directly and assess risk and capacity. Watch for scene safety, a calm conversation and a plan that keeps him safe.',
+    outcomes: [
+      'Keeps the scene safe',
+      'Builds rapport and asks directly about suicide',
+      'Assesses risk and capacity and makes a plan that keeps him safe',
+    ],
     guidelines: ['cpg-10-6', 'cpg-10-2', 'cpg-1-4', 'cpg-1-24'],
     patients: [
       {
@@ -691,13 +826,19 @@ export const scenarios = [
   },
   {
     id: 'back-gone-lifting',
-    level: 2,
+    complexity: 2,
+    load: 'single',
     title: 'Back gone lifting',
     suburb: 'Upper Hutt',
     story:
       'A 52-year-old man felt his lower back "go" while lifting a bag of concrete. He is lying on the garage floor.',
     intention:
       'Assess non-traumatic back pain, give good pain relief and search for the red flags. Watch whether they ask about bladder and bowel control, numbness in the saddle area and leg weakness.',
+    outcomes: [
+      'Asks about bladder and bowel control, saddle numbness and leg weakness',
+      'Gives good pain relief',
+      'Makes a safe transport or referral decision',
+    ],
     guidelines: ['cpg-13-7', 'cpg-1-18', 'cpg-1-6'],
     patients: [
       {
@@ -720,13 +861,19 @@ export const scenarios = [
   },
   {
     id: 'mums-pills',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: "Her mum's pills",
     suburb: 'Porirua East',
     story:
       "A 17-year-old girl's mum found her drowsy in her bedroom with empty blister packs of her mum's medicines. The girl won't say how many she took.",
     intention:
       'Manage a mixed overdose of medicines in a young person who may not consent. Watch for working out what and how much was taken and when, an ECG, thinking about her safety at home, and capacity for a 17-year-old.',
+    outcomes: [
+      'Works out what was taken, how much and when',
+      'Records an ECG',
+      'Considers her safety at home and her capacity at 17',
+    ],
     guidelines: ['cpg-5-5', 'cpg-10-3', 'cpg-1-20', 'cpg-1-24'],
     patients: [
       {
@@ -750,13 +897,19 @@ export const scenarios = [
   },
   {
     id: 'after-the-party',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'After the party',
     suburb: 'Mount Cook',
     story:
       'Flatmates called because a 20-year-old man is hot, sweaty and agitated after a party. They say he "took something".',
     intention:
       'Manage recreational drug toxicity with hyperthermia and agitation. Watch for scene safety, cooling, sedation decisions and recognising when this is becoming life-threatening.',
+    outcomes: [
+      'Keeps the scene safe',
+      'Starts cooling and makes sound sedation decisions',
+      'Recognises when it is becoming life-threatening',
+    ],
     guidelines: ['cpg-5-6', 'cpg-11-3', 'cpg-5-1'],
     patients: [
       {
@@ -780,13 +933,19 @@ export const scenarios = [
   },
   {
     id: 'baby-not-feeding',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'Baby not feeding',
     suburb: 'Waitangirua',
     story:
       'A 4-month-old baby has had a cough for three days and is now taking half her usual feeds. Her nana is looking after her.',
     intention:
       'Assess bronchiolitis and decide whether a borderline baby needs to go. Watch for counting breathing properly, feeding and wet nappies, the risk factors that lower the threshold, and how they involve nana.',
+    outcomes: [
+      'Counts the breathing properly and asks about feeding and wet nappies',
+      'Names the risk factors that lower the threshold to transport',
+      'Involves nana in the decision',
+    ],
     guidelines: ['cpg-2-9', 'cpg-7-1', 'cpg-7-2', 'cpg-1-16'],
     patients: [
       {
@@ -810,13 +969,19 @@ export const scenarios = [
   },
   {
     id: 'headache-36-weeks',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'Headache at 36 weeks',
     suburb: 'Kilbirnie',
     story:
       'A 29-year-old woman who is 36 weeks pregnant has a severe headache and blurred vision. Partway through the job, she has a seizure.',
     intention:
       'Recognise pre-eclampsia, then manage an eclamptic seizure. Watch for checking the blood pressure early, positioning for pregnancy, the treatment of the seizure and early notice to the hospital.',
+    outcomes: [
+      'Checks the blood pressure early and recognises pre-eclampsia',
+      'Positions her correctly for pregnancy',
+      'Treats the eclamptic seizure and warns the hospital early',
+    ],
     guidelines: ['cpg-8-4', 'cpg-8-3', 'cpg-8-8'],
     patients: [
       {
@@ -839,7 +1004,8 @@ export const scenarios = [
   },
   {
     id: 'otaki-forks-tramper',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'Tramper at Ōtaki Forks',
     suburb: 'Ōtaki Forks',
     rural: true,
@@ -847,6 +1013,11 @@ export const scenarios = [
       "A 61-year-old tramper slipped on the track about an hour's walk in. It is late afternoon, raining and 9°C. His friend walked out to get signal.",
     intention:
       'Manage a lower leg fracture far from the road, with hypothermia setting in. Watch for planning the extraction early, asking for a helicopter or more crew, keeping him warm and pain relief for a long carry.',
+    outcomes: [
+      'Plans the extraction early and asks for a helicopter or more crew',
+      'Keeps him warm',
+      'Gives pain relief that will last a long carry',
+    ],
     guidelines: ['cpg-4-11', 'cpg-11-4', 'cpg-1-12', 'cpg-1-18'],
     patients: [
       {
@@ -870,7 +1041,8 @@ export const scenarios = [
   },
   {
     id: 'remutaka-motorbike',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'Remutaka Hill motorbike',
     suburb: 'Kaitoke',
     rural: true,
@@ -878,6 +1050,11 @@ export const scenarios = [
       'A 44-year-old motorcyclist came off on a bend on the Remutaka Hill Road. His thigh is deformed and he is lying on the roadside.',
     intention:
       'Manage a femur fracture with bleeding and a long transport. Watch for a full trauma survey despite the distracting injury, traction and splinting, bleeding control, and the transport and helicopter decision.',
+    outcomes: [
+      'Completes a full trauma survey despite the femur',
+      'Applies traction and splinting and controls bleeding',
+      'Makes a sound transport and helicopter decision',
+    ],
     guidelines: ['cpg-4-23', 'cpg-4-11', 'cpg-4-2', 'cpg-1-12'],
     patients: [
       {
@@ -900,13 +1077,19 @@ export const scenarios = [
   },
   {
     id: 'in-the-cells',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'In the cells',
     suburb: 'Lower Hutt',
     story:
       'Police have asked you to see a 33-year-old man in the cells at the Hutt Valley police station. He is shouting, sweating and fighting the officers.',
     intention:
       'Manage acute behavioural disturbance safely with police. Watch for scene safety, looking for medical causes, sedation by the guideline, monitoring afterwards and the law on treatment without consent.',
+    outcomes: [
+      'Keeps the scene safe and works with police',
+      'Looks for medical causes of the behaviour',
+      'Sedates by the guideline, monitors afterwards and applies the law on treatment without consent',
+    ],
     guidelines: ['cpg-5-1', 'cpg-10-2', 'cpg-1-24'],
     patients: [
       {
@@ -929,13 +1112,19 @@ export const scenarios = [
   },
   {
     id: 'rash-in-the-hostel',
-    level: 3,
+    complexity: 3,
+    load: 'single',
     title: 'Rash in the hostel',
     suburb: 'Kelburn',
     story:
       'A 19-year-old student felt unwell overnight. Her friend found her vomiting and noticed a few purple spots on her legs.',
     intention:
       'Recognise meningococcal septicaemia early and treat it fast. Watch for infection precautions, the antibiotic given without delay, fluids for shock and warning the hospital.',
+    outcomes: [
+      'Uses infection precautions',
+      'Gives the antibiotic without delay',
+      'Gives fluids for shock and warns the hospital',
+    ],
     guidelines: ['cpg-6-3', 'cpg-6-2', 'cpg-6-9'],
     patients: [
       {
@@ -959,13 +1148,19 @@ export const scenarios = [
   },
   {
     id: 'birth-in-the-bathroom',
-    level: 4,
+    complexity: 3,
+    load: 'delegation',
     title: 'Birth in the bathroom',
     suburb: 'Pukerua Bay',
     story:
       'A 27-year-old woman in her second labour is on the bathroom floor, pushing. Her partner is on the phone to the midwife, who is 40 minutes away.',
     intention:
       'Manage an imminent birth, then a baby who is slow to breathe. Watch how they use the partner and their crewmate, prepare for the newborn before the birth and run newborn resuscitation.',
+    outcomes: [
+      'Prepares for the newborn before the birth',
+      'Gives the partner and crewmate clear roles',
+      'Runs newborn resuscitation by the guideline',
+    ],
     guidelines: ['cpg-8-6', 'cpg-8-7', 'cpg-7-3', 'cpg-1-8'],
     patients: [
       {
@@ -988,13 +1183,19 @@ export const scenarios = [
   },
   {
     id: 'toddler-in-the-pool',
-    level: 4,
+    complexity: 3,
+    load: 'delegation',
     title: 'Toddler in the pool',
     suburb: 'Paraparaumu Beach',
     story:
       'A 2-year-old boy was found face down in a backyard pool. A neighbour is doing CPR when you arrive.',
     intention:
       'Run a paediatric cardiac arrest from drowning. Watch for rescue breaths, doses by weight, roles given to the crew and the neighbour, and looking after the distraught parents.',
+    outcomes: [
+      'Gives rescue breaths and doses by weight',
+      'Gives roles to the crew and the neighbour',
+      'Looks after the distraught parents',
+    ],
     guidelines: ['cpg-11-1', 'cpg-3-14', 'cpg-7-2', 'cpg-1-8'],
     patients: [
       {
@@ -1017,7 +1218,8 @@ export const scenarios = [
   },
   {
     id: 'home-birth-haemorrhage',
-    level: 4,
+    complexity: 3,
+    load: 'delegation',
     title: 'Home birth haemorrhage',
     suburb: 'Te Horo',
     rural: true,
@@ -1025,6 +1227,11 @@ export const scenarios = [
       "A 34-year-old woman gave birth at home 20 minutes ago. Her midwife says she is bleeding heavily and the placenta hasn't come.",
     intention:
       'Manage a postpartum haemorrhage far from hospital alongside the midwife. Watch for clear roles with the midwife, fundal massage and medicines, the helicopter decision and the transport checklist.',
+    outcomes: [
+      'Agrees clear roles with the midwife',
+      'Gives fundal massage and medicines for the bleeding',
+      'Makes the helicopter decision and uses the transport checklist',
+    ],
     guidelines: ['cpg-8-2', 'cpg-8-8', 'cpg-1-12', 'cpg-1-8'],
     patients: [
       {
@@ -1048,13 +1255,19 @@ export const scenarios = [
   },
   {
     id: 'cant-talk-asthma',
-    level: 4,
+    complexity: 3,
+    load: 'delegation',
     title: "Can't talk",
     suburb: 'Ascot Park',
     story:
       "A 36-year-old woman's partner called because she can't breathe. She is sitting upright, can only say single words and is getting tired.",
     intention:
       'Manage life-threatening asthma that is close to arrest. Watch for early adrenaline, getting more help, preparing for her to stop breathing and delegating tasks to the crew.',
+    outcomes: [
+      'Gives adrenaline early',
+      'Calls for more help and delegates tasks to the crew',
+      'Prepares for her to stop breathing',
+    ],
     guidelines: ['cpg-2-1', 'cpg-2-5', 'cpg-1-16', 'cpg-1-8'],
     patients: [
       {
@@ -1077,13 +1290,19 @@ export const scenarios = [
   },
   {
     id: 'stemi-arrest-tawa',
-    level: 4,
+    complexity: 3,
+    load: 'delegation',
     title: 'STEMI that arrests',
     suburb: 'Tawa',
     story:
       'A 62-year-old man has crushing chest pain. His 12-lead shows an inferior STEMI. During loading he goes into VF.',
     intention:
       'Manage a STEMI, then a cardiac arrest in the back of the ambulance and care after return of circulation. Watch for roles inside a small space, the reperfusion pathway and the post-arrest checks.',
+    outcomes: [
+      'Recognises the STEMI and follows the reperfusion pathway',
+      'Gives clear roles in a small space during the arrest',
+      'Completes the post-arrest checks',
+    ],
     guidelines: ['cpg-3-3', 'cpg-3-16', 'cpg-3-14', 'cpg-3-15', 'cpg-1-8'],
     patients: [
       {
@@ -1106,13 +1325,19 @@ export const scenarios = [
   },
   {
     id: 'generator-garage',
-    level: 5,
+    complexity: 2,
+    load: 'several',
     title: 'Generator in the garage',
     suburb: 'Wainuiomata',
     story:
       'During a power cut a family ran a petrol generator in their garage. The mum called because everyone has a headache and her son vomited.',
     intention:
       'Recognise carbon monoxide poisoning in a family and triage it. Watch for scene safety first, oxygen for everyone, the pregnant mum and the child, and asking for more ambulances.',
+    outcomes: [
+      'Puts scene safety first and recognises carbon monoxide poisoning',
+      'Gives oxygen to everyone and prioritises the pregnant mum and the child',
+      'Asks for more ambulances early',
+    ],
     guidelines: ['cpg-5-4', 'cpg-1-11', 'cpg-7-1', 'cpg-8-3'],
     patients: [
       {
@@ -1188,13 +1413,19 @@ export const scenarios = [
   },
   {
     id: 'bus-v-pedestrians',
-    level: 5,
+    complexity: 3,
+    load: 'several',
     title: 'Bus versus pedestrians',
     suburb: 'Te Aro',
     story:
       'A bus mounted the kerb on Courtenay Place at 11 pm on a Friday. Three people are hurt and a crowd has gathered.',
     intention:
       'Take charge of a scene with several patients: triage, call for resources and give a clear handover. Watch for the first report, the triage order, management of the head injury and a safe crowd.',
+    outcomes: [
+      'Sends a clear first report and calls for resources',
+      'Triages in a sensible order and manages the head injury',
+      'Keeps the crowd safe and gives a clear handover',
+    ],
     guidelines: ['cpg-1-11', 'cpg-4-2', 'cpg-4-10', 'cpg-1-9'],
     patients: [
       {
@@ -1252,13 +1483,19 @@ export const scenarios = [
   },
   {
     id: 'rest-home-gastro',
-    level: 5,
+    complexity: 2,
+    load: 'several',
     title: 'Rest-home gastro',
     suburb: 'Naenae',
     story:
       'A rest home has a vomiting bug. The nurse has asked you to see three residents who are getting worse.',
     intention:
       'Prioritise several elderly patients with fluid loss and decide who goes. Watch for infection precautions, the frailty of older patients, advance care plans and referral decisions for those who stay.',
+    outcomes: [
+      'Uses infection precautions',
+      'Prioritises by frailty and fluid loss and checks advance care plans',
+      'Makes sound referral decisions for those who stay',
+    ],
     guidelines: ['cpg-12-13', 'cpg-6-9', 'cpg-12-9', 'cpg-1-6'],
     patients: [
       {
@@ -1316,7 +1553,8 @@ export const scenarios = [
   },
   {
     id: 'expressway-crash',
-    level: 5,
+    complexity: 3,
+    load: 'several',
     title: 'Expressway crash',
     suburb: 'Peka Peka',
     rural: true,
@@ -1324,6 +1562,11 @@ export const scenarios = [
       'A car has gone off the Kāpiti Expressway into a ditch at Peka Peka. Inside are a pregnant driver and a child in a car seat. You are the only crew for 20 minutes.',
     intention:
       'Manage two very different patients far from a trauma centre. Watch for triage, assessing a pregnant trauma patient, the child in the car seat, and when to ask for a helicopter and more crews.',
+    outcomes: [
+      'Triages both patients and asks early for a helicopter and more crews',
+      'Assesses the pregnant trauma patient correctly',
+      'Assesses the child in the car seat',
+    ],
     guidelines: ['cpg-4-2', 'cpg-8-3', 'cpg-7-1', 'cpg-1-12', 'cpg-1-11'],
     patients: [
       {

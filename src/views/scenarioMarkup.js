@@ -9,30 +9,51 @@
  */
 import { escapeHtml } from '../logic.js';
 import { guidelineById } from '../guidelines.js';
-import { SCENARIO_HASH_PREFIX, SCENARIO_LEVELS, SCENARIO_VITALS } from '../constants.js';
+import {
+  SCENARIO_HASH_PREFIX,
+  SCENARIO_COMPLEXITY,
+  SCENARIO_LOADS,
+  SCENARIO_VITALS,
+} from '../constants.js';
 
 const boxAttrs = (editing, path) => (editing ? editing.attrs(path) : '');
 const openForm = (editing, path) => (editing ? editing.formFor(path) : '');
 
-/** The level pill: "Level 2". */
-export const levelPillHtml = (level, editing) =>
-  openForm(editing, 'level') ||
-  `<span class="scenario-level"${boxAttrs(editing, 'level')}>Level ${level}</span>`;
+const complexityName = (scenario) => SCENARIO_COMPLEXITY[scenario.complexity]?.name || '';
+const loadName = (scenario) => SCENARIO_LOADS[scenario.load]?.name || '';
 
-/** One row of the list: title and suburb, then `metaHtml` (such as when it was last run). */
+/** The complexity and scene load in words: "Common presentation · Delegation". */
+export const scenarioTagsText = (scenario) => `${complexityName(scenario)} · ${loadName(scenario)}`;
+
+/** The two pills, complexity and scene load; an editor taps either to change it. */
+export const scenarioTagsHtml = (scenario, editing) =>
+  `<p class="scenario-tags">${
+    openForm(editing, 'complexity') ||
+    `<span class="scenario-level"${boxAttrs(editing, 'complexity')}>${escapeHtml(complexityName(scenario))}</span>`
+  } ${
+    openForm(editing, 'load') ||
+    `<span class="scenario-level scenario-level--load"${boxAttrs(editing, 'load')}>${escapeHtml(loadName(scenario))}</span>`
+  }</p>`;
+
+/**
+ * One row of the list: title, suburb and the scene load when it is not a single patient, then
+ * `metaHtml` (such as when it was last run and its score).
+ */
 export function scenarioRowHtml(scenario, href, metaHtml = '') {
+  const where =
+    scenario.load === 'single' ? scenario.suburb : `${scenario.suburb} · ${loadName(scenario)}`;
   return `<a class="scenario-row" href="${href}">
     <span class="scenario-row__text"><b>${escapeHtml(scenario.title)}</b>
-    <small>${escapeHtml(scenario.suburb)}</small>${metaHtml}</span><span aria-hidden="true">›</span></a>`;
+    <small>${escapeHtml(where)}</small>${metaHtml}</span><span aria-hidden="true">›</span></a>`;
 }
 
-/** The scenarios in one card per level, in level order. `rowFor` draws each row. */
+/** The scenarios in one card per complexity, simplest first. `rowFor` draws each row. */
 export function scenarioGroupsHtml(scenarios, rowFor) {
-  return Object.entries(SCENARIO_LEVELS)
-    .map(([level, name]) => {
-      const rows = scenarios.filter((scenario) => scenario.level === Number(level));
+  return Object.entries(SCENARIO_COMPLEXITY)
+    .map(([complexity, { name }]) => {
+      const rows = scenarios.filter((scenario) => scenario.complexity === Number(complexity));
       if (!rows.length) return '';
-      return `<section class="scenario-card"><h2 class="scenario-group-title">Level ${level} · ${name}</h2>
+      return `<section class="scenario-card"><h2 class="scenario-group-title">${escapeHtml(name)}</h2>
         ${rows.map(rowFor).join('')}</section>`;
     })
     .join('');
@@ -110,17 +131,26 @@ function guidelinesHtml(scenario, editing) {
 }
 
 /**
- * The scenario as learners see it: the story card, each patient, the intention (folded in the
- * app, open for an editor) and the guidelines.
+ * The scenario as learners see it: the story card, each patient, the intention and intended
+ * outcomes (folded in the app, open for an editor) and the guidelines.
  */
 export function scenarioBodyHtml(scenario, editing) {
   const text = (path, tag, className) =>
     openForm(editing, path) ||
     `<${tag} class="${className}"${boxAttrs(editing, path)}>${escapeHtml(scenario[path])}</${tag}>`;
-  return `<section class="scenario-card">${levelPillHtml(scenario.level, editing)}
+  const outcomes =
+    openForm(editing, 'outcomes') ||
+    `<ul class="scenario-fact scenario-outcomes"${boxAttrs(editing, 'outcomes')}>${(
+      scenario.outcomes || []
+    )
+      .map((outcome) => `<li>${escapeHtml(outcome)}</li>`)
+      .join('')}</ul>`;
+  const intention = `${text('intention', 'p', 'scenario-fact')}
+    <p class="scenario-label">Intended outcomes</p>${outcomes}`;
+  return `<section class="scenario-card">${scenarioTagsHtml(scenario, editing)}
       ${text('title', 'h1', 'scenario-title')}${text('suburb', 'p', 'scenario-label')}
       ${text('story', 'p', 'scenario-story')}</section>
     ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
-    ${foldHtml('Scenario intention', text('intention', 'p', 'scenario-fact'), Boolean(editing))}
+    ${foldHtml('Scenario intention', intention, Boolean(editing))}
     ${guidelinesHtml(scenario, editing)}`;
 }

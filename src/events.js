@@ -37,6 +37,7 @@ import { makeSnippet, appendComment } from './comments.js';
 import { getStatus, plural } from './logic.js';
 import { scenarioById, renderScenario, renderScenarioList } from './views/scenarioView.js';
 import { saveScenarioRun } from './scenarioRunState.js';
+import { scoreOf } from './scenarioLogic.js';
 import { applyUpdate } from './updateState.js';
 import {
   startSession,
@@ -88,6 +89,7 @@ import {
   SEARCH_PAUSE_MS,
   GUIDELINE_QUIZ_HASH,
   MAX_QUEUE_SIZE,
+  DEBRIEF_TEXTS,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -246,9 +248,17 @@ function showScenarioDebrief(scenarioId) {
   if (scenario) renderScenario(scenario);
 }
 
+/** The rating ticked for each intended outcome (null when left blank), in outcome order. */
+function readOutcomeRatings(scenario) {
+  return (scenario.outcomes || []).map((outcome, index) => {
+    const ticked = app.querySelector(`input[name="rating-${index}"]:checked`);
+    return ticked ? Number(ticked.value) : null;
+  });
+}
+
 /**
- * Saves the run with its debrief, adds the ticked guidelines to Guidelines to learn, and says
- * how many fitted.
+ * Saves the run with its debrief (ratings and notes), adds the ticked guidelines to Guidelines
+ * to learn, and says the score and how many guidelines fitted.
  */
 function saveScenarioDebrief(button) {
   const scenario = scenarioById(button.dataset.id);
@@ -256,8 +266,12 @@ function saveScenarioDebrief(button) {
   const struggled = [...app.querySelectorAll('input[name="struggled"]:checked')].map(
     (box) => box.value,
   );
-  const note = byId('scenario-debrief-note').value.trim();
-  saveScenarioRun(scenario.id, { at: Date.now(), struggled, note });
+  const ratings = readOutcomeRatings(scenario);
+  const texts = Object.fromEntries(
+    DEBRIEF_TEXTS.map(([key]) => [key, byId(`scenario-debrief-${key}`).value.trim()]),
+  );
+  saveScenarioRun(scenario.id, { at: Date.now(), struggled, ratings, ...texts });
+  const score = scoreOf(ratings);
   const before = getQueue();
   const after = addToQueue(before, struggled);
   const added = after.length - before.length;
@@ -266,6 +280,7 @@ function saveScenarioDebrief(button) {
   const notAdded = struggled.filter((id) => !after.some((item) => item.id === id));
   byId('scenario-queue-message').textContent =
     'Run saved.' +
+    (score === null ? '' : ` Score ${score}%.`) +
     (added ? ` Added ${plural(added, 'guideline')} to Guidelines to learn.` : '') +
     (notAdded.length
       ? ` ${plural(notAdded.length, 'guideline')} didn't fit (the list holds ${MAX_QUEUE_SIZE}).`
@@ -457,7 +472,8 @@ const clickActions = {
   'add-to-queue': addGuidelineToQueue,
   'add-all-to-queue': addAllRelatedToQueue,
   'remove-from-queue': removeGuidelineFromQueue,
-  'scenario-level': (button) => setScenarioFilter('level', Number(button.dataset.value)),
+  'scenario-complexity': (button) => setScenarioFilter('complexity', Number(button.dataset.value)),
+  'scenario-load': (button) => setScenarioFilter('load', button.dataset.value),
   'scenario-finish': () => showScenarioDebrief(state.scenarioReturn),
   'scenario-finish-cancel': () => showScenarioDebrief(null),
   'scenario-finish-save': saveScenarioDebrief,
