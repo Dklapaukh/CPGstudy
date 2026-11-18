@@ -1,16 +1,28 @@
 /* Styles for the NZCPG study app. Class names say what the element is (see README). */
 :root {
-  --colour-background: #fff;
+  /* Light theme "Glacier": white cards on a pale green-grey page. */
+  --colour-background: #ecf1ef;
   --colour-surface: #fff;
-  --colour-text: #121212;
-  /* Secondary text: 6.85:1 on white, 6.01:1 on the grey controls (WCAG AA asks for 4.5:1). */
-  --colour-muted: #565c58;
-  --colour-line: #e4e7e5;
-  /* Status colours dark enough for white text: green 5.12:1, orange 4.83:1. */
-  --colour-green: #1a7d53;
-  --colour-green-soft: #e3f1ea;
-  --colour-review: #b35900;
-  --colour-control: #edf1ef;
+  --colour-text: #0d1a16;
+  /* Secondary text: 7.29:1 on white, 6.38:1 on the page, 5.86:1 on the controls (AA: 4.5:1). */
+  --colour-muted: #4a5a54;
+  --colour-line: #e1e8e5;
+  /* Status colours dark enough for white text: green 5.32:1, orange 6.26:1. */
+  --colour-green: #0b7a5a;
+  --colour-green-soft: #ddf5ea;
+  --colour-review: #9a4a00;
+  --colour-control: #e1e8e5;
+  /* Green for text and outlines (the dark theme needs a lighter one). */
+  --colour-accent-text: #0b7a5a;
+  /* Ring arcs are graphics, not text, so they can be brighter (3:1 is enough). */
+  --colour-ring-complete: #17a673;
+  --colour-ring-review: #f59e0b;
+  /* Cards and pills: no border, a soft shadow. The dark theme swaps the shadow for a line. */
+  --pill-border: transparent;
+  --shadow-card: 0 1px 3px rgba(13, 40, 30, 0.06), 0 6px 16px rgba(13, 40, 30, 0.05);
+  --radius-card: 18px;
+  --colour-streak: #9a4a00;
+  --streak-border: transparent;
   /* Wrong answers in the guideline quiz: border only, the text stays dark (right and wrong are
      also said in words, so colour is never the only sign). */
   --colour-wrong: #b3261e;
@@ -33,7 +45,8 @@ body {
   background: var(--colour-background);
   color: var(--colour-text);
   font:
-    15px/1.5 Roboto,
+    15px/1.5 'Plus Jakarta Sans',
+    Roboto,
     'Helvetica Neue',
     'Segoe UI',
     system-ui,
@@ -156,10 +169,10 @@ h1 {
   stroke: var(--colour-line);
 }
 .completion-ring__arc--complete {
-  stroke: var(--colour-green);
+  stroke: var(--colour-ring-complete);
 }
 .completion-ring__arc--review {
-  stroke: var(--colour-review);
+  stroke: var(--colour-ring-review);
 }
 .completion-ring__tick {
   fill: none;
@@ -185,7 +198,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 1.05rem;
 }
 /* Played once, when the ring has just reached 100%. Skipped for people who ask for less motion. */
@@ -265,12 +278,13 @@ h1 {
 }
 
 /* List screen header: tabs, quiz choice, progress card, filters and search. Built on the
-   theme colours, so it follows dark mode. Pills have a subtle border. */
+   theme colours, so it follows dark mode. Pills and cards are white with a soft shadow; the
+   chosen tab and filter, and the progress card, have a green outline. */
 .home-header {
   --header-bg: var(--colour-background);
   --header-card: var(--colour-surface);
   --header-control: var(--colour-surface);
-  --header-border: var(--colour-line);
+  --header-border: var(--pill-border);
   --header-text: var(--colour-text);
   --header-muted: var(--colour-muted);
   --header-accent: var(--colour-green);
@@ -278,20 +292,21 @@ h1 {
   background: var(--header-bg);
   color: var(--header-text);
   padding: 1rem 0.8rem 0.4rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--header-border);
+  margin-bottom: 0.4rem;
 }
 /* The title sits just above the filter pills, with the edition on its own line. */
 .home-header h1 {
-  font-size: 1.3rem;
+  font-size: 1.625rem;
   line-height: 1.2;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.025em;
   margin: 1rem 0 0;
 }
 .home-header__edition {
   color: var(--header-muted);
   font-size: 0.95rem;
   font-weight: 600;
+  letter-spacing: 0;
 }
 .home-header .filter-chips {
   margin-top: 0.6rem;
@@ -316,7 +331,9 @@ h1 {
   height: 40px;
   border: 1px solid var(--header-border);
   border-radius: 50%;
-  color: var(--header-accent);
+  background: var(--header-control);
+  box-shadow: var(--shadow-card);
+  color: var(--header-text);
   text-decoration: none;
 }
 .settings-button svg {
@@ -351,6 +368,7 @@ h1 {
   border: 1px solid var(--header-border);
   border-radius: 999px;
   background: var(--header-control);
+  box-shadow: var(--shadow-card);
   color: var(--header-text);
   font: inherit;
   font-size: 0.9rem;
@@ -358,10 +376,13 @@ h1 {
   text-decoration: none;
   cursor: pointer;
 }
-.home-tab[aria-expanded='true'] {
-  background: var(--colour-green-soft);
-  border-color: var(--header-accent);
-  color: var(--header-text);
+/* Chosen tab and filter: white with a green outline and green text. */
+.home-tab[aria-expanded='true'],
+.home-header .filter-chip[aria-pressed='true'] {
+  background: var(--header-control);
+  border: 1.5px solid var(--colour-accent-text);
+  color: var(--colour-accent-text);
+  font-weight: 600;
 }
 .home-tab__count {
   color: var(--header-accent);
@@ -385,22 +406,28 @@ h1 {
   min-height: 76px;
   padding: 0.8rem;
   border: 1px solid var(--header-border);
-  border-radius: 10px;
-  background: var(--colour-green-soft);
+  border-radius: 14px;
+  background: var(--header-card);
+  box-shadow: var(--shadow-card);
   color: var(--header-text);
   font-weight: 600;
   line-height: 1.3;
   text-decoration: none;
 }
 .quiz-button__icon {
-  width: 22px;
-  height: 22px;
-  color: var(--header-accent);
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--colour-green-soft);
+  color: var(--colour-accent-text);
 }
+/* The overall progress card has the same green outline as the chosen Quiz tab. */
 .home-card {
   background: var(--header-card);
-  border: 1px solid var(--header-border);
-  border-radius: 12px;
+  border: 1.5px solid var(--colour-accent-text);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
   padding: 0.8rem;
 }
 .home-header .overall-progress {
@@ -451,16 +478,15 @@ h1 {
   white-space: nowrap;
   background: var(--header-control);
   border: 1px solid var(--header-border);
+  box-shadow: var(--shadow-card);
   color: var(--header-text);
 }
-.home-header .filter-chip[aria-pressed='true'] {
-  background: var(--header-accent);
-  border-color: var(--header-accent);
-  color: #fff;
-}
 .home-header .text-input {
-  background: var(--colour-control);
+  min-height: 46px;
+  border-radius: 999px;
+  background: var(--header-control);
   border: 1px solid var(--header-border);
+  box-shadow: var(--shadow-card);
   color: var(--header-text);
 }
 
@@ -597,7 +623,27 @@ h1 {
   --colour-review: #c86a12;
   --colour-control: #262b29;
   --colour-wrong-soft: #3b1f1d;
+  --colour-accent-text: #4cc38a;
+  --colour-ring-complete: #1a7d53;
+  --colour-ring-review: #c86a12;
+  --pill-border: var(--colour-line);
+  --shadow-card: none;
+  --colour-streak: #e08a00;
+  --streak-border: #f5c451;
   color-scheme: dark;
+}
+/* Dark mode keeps its filled green for the chosen filter and its tinted chosen tab. */
+:root[data-theme='dark'] .home-header .filter-chip[aria-pressed='true'] {
+  background: var(--colour-green);
+  border-color: var(--colour-green);
+  color: #fff;
+}
+:root[data-theme='dark'] .home-tab[aria-expanded='true'] {
+  background: var(--colour-green-soft);
+  color: var(--colour-text);
+}
+:root[data-theme='dark'] .settings-button {
+  color: var(--colour-green);
 }
 :root[data-theme='dark'] .guideline-body {
   background: var(--colour-surface);
@@ -649,11 +695,13 @@ h1 {
 }
 
 /* Guideline list */
+/* Each section is its own card, 8px apart. */
 details.section-group {
-  margin: 0;
+  margin: 0 0 0.5rem;
   background: var(--colour-surface);
-  border: 0;
-  border-bottom: 1px solid var(--colour-line);
+  border: 1px solid var(--pill-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 details.section-group > summary {
@@ -663,8 +711,8 @@ details.section-group > summary {
   display: flex;
   justify-content: space-between;
   gap: 0.7rem;
-  font-weight: 400;
-  font-size: calc(1.15rem - 2pt);
+  font-weight: 500;
+  font-size: 1rem;
   min-height: 56px;
   align-items: center;
   background: var(--colour-surface);
@@ -675,8 +723,8 @@ details.section-group > summary:after {
   flex: none;
   width: 0.55rem;
   height: 0.55rem;
-  border-right: 2px solid #8a8f8c;
-  border-top: 2px solid #8a8f8c;
+  border-right: 2px solid var(--colour-muted);
+  border-top: 2px solid var(--colour-muted);
   transform: rotate(45deg);
   margin: 0 0.3rem 0 0.2rem;
 }
@@ -712,7 +760,7 @@ details.section-group > summary .section-count {
   text-decoration: none;
   color: inherit;
   min-height: 56px;
-  background: #fafbfa;
+  background: var(--colour-surface);
 }
 .guideline-row:first-of-type {
   border-top: 0;
@@ -721,7 +769,7 @@ details.section-group > summary .section-count {
   background: var(--colour-green-soft);
 }
 .guideline-row b {
-  font-weight: 400;
+  font-weight: 500;
   font-size: calc(1.1rem - 2pt);
   line-height: 1.3;
   display: block;
@@ -781,7 +829,7 @@ details.section-group > summary .section-count {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #b5bab7;
+  border: 2px solid #9aa19d;
   margin-top: 0.2rem;
 }
 .status-dot--complete {
@@ -1300,7 +1348,7 @@ td.table-cell--coloured {
   margin: 0 0 0.8rem;
   padding: 0.5rem 0.7rem;
   border-radius: 10px;
-  background: #f4f6f5;
+  background: var(--colour-control);
   color: var(--colour-muted);
   font-size: 0.78rem;
   line-height: 1.4;
@@ -1853,7 +1901,8 @@ td.table-cell--coloured {
   border: 1px solid var(--header-border);
   border-radius: 999px;
   color: var(--header-muted);
-  background: none;
+  background: var(--header-control);
+  box-shadow: var(--shadow-card);
   font: inherit;
   font-weight: 800;
   text-decoration: none;
@@ -1867,8 +1916,8 @@ td.table-cell--coloured {
   filter: grayscale(0.4);
 }
 .streak-button--active {
-  color: #e08a00;
-  border-color: #f5c451;
+  color: var(--colour-streak);
+  border-color: var(--streak-border);
 }
 .streak-button--active .rat {
   filter: drop-shadow(0 0 2px rgba(255, 196, 0, 0.9)) drop-shadow(0 0 5px rgba(255, 120, 0, 0.6));

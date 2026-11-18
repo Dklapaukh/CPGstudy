@@ -2,6 +2,13 @@
 
 Newest first. One short entry per change; the detail is in the README and the git history.
 
+- 2026-11-18: Light mode restyled to the "Glacier" design: a pale green-grey page with white
+  cards and pills that have a soft shadow and no border, each guideline section its own rounded
+  card, the Plus Jakarta Sans font and a larger 26px title. The chosen tab and filter and the
+  overall progress card have a green outline; the streak count is darker orange for contrast.
+  Dark mode keeps its colours but takes the new shapes (rounded section cards, pill search,
+  outlined progress card, font).
+
 - 2026-11-18: Home header: the Home tab is gone; Quiz and To learn now share the top bar with
   the streak and Settings, and the tracker name sits just below. The four Quiz choices have
   simple icons (capsule, book, clipboard, four squares).
