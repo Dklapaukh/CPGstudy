@@ -258,7 +258,7 @@ function readOutcomeRatings(scenario) {
 
 /**
  * Saves the run with its debrief (ratings and notes), adds the ticked guidelines to Guidelines
- * to learn, and says the score and how many guidelines fitted.
+ * to learn, says the score and how many guidelines fitted, and plays any streak power-up.
  */
 function saveScenarioDebrief(button) {
   const scenario = scenarioById(button.dataset.id);
@@ -277,6 +277,7 @@ function saveScenarioDebrief(button) {
   const added = after.length - before.length;
   if (added) changeQueue(after);
   showScenarioDebrief(null);
+  showPendingCelebration();
   const notAdded = struggled.filter((id) => !after.some((item) => item.id === id));
   byId('scenario-queue-message').textContent =
     'Run saved.' +

@@ -3,13 +3,14 @@
  * scenario (SCENARIO_RUN_ENTRY_PREFIX + scenario id, status always Incomplete, note = JSON), so it
  * is saved, uploaded and merged by the same code as the guidelines and needs no backend change.
  * The learner presses Finish on their own phone (decision 18 Nov 2026), so the run lands in
- * their tracker.
- * Depends on state.js, sync.js, logic.js, scenarioLogic.js and constants.js.
+ * their tracker. Saving a run counts the streak day, like finishing a quiz.
+ * Depends on state.js, sync.js, logic.js, scenarioLogic.js, streakState.js and constants.js.
  */
 import { state, saveSession } from './state.js';
 import { scheduleSync } from './sync.js';
 import { nextTimestamp } from './logic.js';
 import { parseScenarioRuns, withScenarioRun } from './scenarioLogic.js';
+import { recordQuizFinished } from './streakState.js';
 import { SCENARIO_RUN_ENTRY_PREFIX, STATUS } from './constants.js';
 
 /** The scenario's record: { count, runs } (see parseScenarioRuns). */
@@ -18,7 +19,7 @@ export function getScenarioRuns(scenarioId) {
   return parseScenarioRuns(entry ? entry.n : '');
 }
 
-/** Records one run: `run` is { at, struggled, note }. */
+/** Records one run (`run` is { at, struggled, ratings, notes }) and counts today's streak day. */
 export function saveScenarioRun(scenarioId, run) {
   const entryId = SCENARIO_RUN_ENTRY_PREFIX + scenarioId;
   const previous = state.entries[entryId];
@@ -32,4 +33,5 @@ export function saveScenarioRun(scenarioId, run) {
   state.pendingChanges[entryId] = { ...entry };
   saveSession();
   scheduleSync();
+  recordQuizFinished();
 }

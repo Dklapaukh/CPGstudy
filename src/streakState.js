@@ -1,6 +1,7 @@
 /*
- * Study streak (feature 14): the local days on which at least one quiz was finished (a
- * Medicines session or practice run, or a guideline quiz play). Saved as one extra entry
+ * Study streak (feature 14): the local days on which at least one Quiz-tab activity was finished
+ * (a Medicines session or practice run, a guideline quiz play, a Pick the guideline round, a
+ * Medicine test or a scenario run). Saved as one extra entry
  * (STREAK_ENTRY_ID, note = JSON { days: [day numbers] }), so it is uploaded and merged like any
  * other entry and needs no backend change (its id has no prefix the backend reads).
  * The pure functions take the days and return numbers, so they are tested without the page.

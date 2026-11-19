@@ -3,6 +3,14 @@
 Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-19: **Scenario runs count for the streak; docs brought up to date** (no redeploy
+  needed). Saving a scenario run now counts today's streak day and shows the power-up, like
+  every quiz (ST-I). Docs: `docs/scenarios.md` describes complexity and scene load (not levels
+  1 to 5), the PEARLS debrief, outcome ratings and the score; new `docs/streak-and-stats.md`
+  (streak, rat, Data tab); README intro, feature list and saved-entry table (`scenario-run-`,
+  `study-streak`); behaviour checklist covers scenarios, streak, editor and Add a scenario;
+  `docs/manager.md` gives the current backend version text; plan action count and status fixed;
+  `streakState.js` header lists every activity that counts.
 - 2026-11-19: **Longest functions split** (no behaviour change, no redeploy needed). Editor
   `render` tries one small function per screen (`ADDRESS_SCREENS`) before the home screen;
   `attachWheel` and `startCardDrag` keep their shared state in one object passed to small

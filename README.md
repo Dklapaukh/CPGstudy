@@ -1,7 +1,8 @@
 # NZCPG study app
 
 A phone-first web app for studying the EAS clinical practice guidelines: the guidelines, a status
-and notes for each, two quizzes, and a tracker saved in a Google Sheet. People make their own account (a passcode)
+and notes for each, four quizzes (Medicines quiz, Guideline quiz, Medicine test, Pick the
+guideline), mentor-run scenarios, a study streak, and a tracker saved in a Google Sheet. People make their own account (a passcode)
 in the app; first visits open a shared demo.
 Published at <https://dklapaukh.github.io/CPGstudy/>. Study aid only, not for clinical use.
 
@@ -20,7 +21,8 @@ How each part works, one file each in `docs/`:
 - [Medicines quiz](docs/medicines-quiz.md)
 - [Guideline quiz](docs/guideline-quiz.md): includes Pick the guideline
 - [Medicine test](docs/medicine-test.md)
-- [Scenarios](docs/scenarios.md)
+- [Scenarios](docs/scenarios.md): includes the debrief and the Add a scenario form
+- [Streak and Data tab](docs/streak-and-stats.md)
 - [Content updates](docs/content-updates.md): publishing new guidelines, the daily PDF check, rebuilding from the PDF
 - [Manager view](docs/manager.md)
 - [Editor page](docs/editor.md)
@@ -46,7 +48,7 @@ How each part works, one file each in `docs/`:
 | `src/sortQuiz.js`, `src/sortQuizState.js`                                      | Pick the guideline: pieces of 2 or 3 related guidelines, pure logic; the round in memory.         |
 | `src/medicineTest.js`, `src/medicineTestState.js`                              | Medicine test: one medicine's cards as tick-all and one-of-four questions; best scores.           |
 | `src/practiceLevels.js`, `content/practice-level-overrides.js`                 | Medicines quiz ATP filter: reads the 1.1 table (pure); hand-set rows for unmatched medicines.     |
-| `src/streakState.js`                                                           | Study streak: the days with a finished quiz, saved as one extra entry (pure).                     |
+| `src/streakState.js`                                                           | Study streak: the days with a finished Quiz-tab activity, saved as one extra entry.               |
 | `src/report.js`                                                                | "Report a mistake or request" email.                                                              |
 | `src/updates.js`, `src/updateState.js`, `version.json`                         | Update prompt: pure logic, checking and downloading, the published date and file list.            |
 | `src/views/`                                                                   | One file per screen or screen part.                                                               |
@@ -102,6 +104,8 @@ path, so new features need no backend change. Do not edit these rows by hand.
 | `quiz-settings`               | Daily limits and practice level (ATP), as JSON        | 1                |
 | `quiz-order-<guideline id>`   | Guideline quiz best and most recent score, as JSON    | up to 85         |
 | `medicine-test-<medicine id>` | Medicine test best score per practice level, as JSON  | up to 45         |
+| `scenario-run-<scenario id>`  | Run count and the last 3 runs with debriefs, as JSON  | one per scenario |
+| `study-streak`                | The study days (last 750), as JSON                    | 1                |
 
 The backend cuts a note at 5000 characters. A whole entry is replaced on save, so two phones
 changing the same entry before syncing keep only the newer one.

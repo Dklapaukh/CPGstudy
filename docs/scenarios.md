@@ -1,20 +1,43 @@
 # Scenarios
 
-Quiz > Scenarios (`#scenarios`) lists 40 hand-written openings for a mentor to run
-(`content/scenarios.js`), each in the Wellington region, grouped by level: 1 Assessment
-structure, 2 Common presentations, 3 Added complexity, 4 Delegation, 5 Several patients. Two
-rows of chips filter the list by level and by theme. The themes are Paediatrics, Obstetrics,
-Mental health, Respiratory, Cardiac, Trauma, Toxicology, Elderly and Rural. A theme comes from
-the sections of a scenario's guidelines (`SCENARIO_THEMES` in `src/constants.js`); Rural comes
-from the scenario's `rural` field.
+Quiz > Scenarios (`#scenarios`) lists 40 or more hand-written openings for a mentor to run
+(`content/scenarios.js`, plus any added on the editor page), each in the Wellington region.
+Each scenario has two tags (decision 19 Nov 2026, SC-E), which replaced the old levels 1 to 5:
 
-A scenario (`#scenario-<id>`) shows level, title, suburb and story, vitals in one row, the
-patient background, the intention (folded) and its guidelines. A guideline opened from it has
-"Back to scenario". **Finish scenario** opens the debrief on the learner's phone: tick the
-guidelines they struggled with (they go to Guidelines to learn, which holds 5) and write an
-optional note (up to 1000 characters). The run is saved in the learner's tracker as one extra
-entry (`scenario-run-<id>`) holding the run count and the last 3 runs, so the backend doesn't
-change. The list shows "✓ Run <date>", and the scenario shows the last debrief, folded.
+- **Complexity:** Straightforward, Common presentation, or Complex or atypical
+  (`SCENARIO_COMPLEXITY`). The list is grouped by it.
+- **Scene load:** Single patient, Delegation or Several patients (`SCENARIO_LOADS`).
+
+Two rows of chips (All plus the three of each) and a theme dropdown filter the list. The themes
+are Paediatrics, Obstetrics, Mental health, Respiratory, Cardiac, Trauma, Toxicology, Elderly and
+Rural. A theme comes from the sections or guideline numbers of a scenario's guidelines
+(`SCENARIO_THEMES` in `src/constants.js`); Rural comes from the scenario's `rural` field. Once
+anything has been run, a progress table at the top gives, for each complexity and scene load,
+how many have been run and their average latest score.
+
+A scenario (`#scenario-<id>`) shows its tags, title, suburb and story, vitals in one row, the
+patient background, the intention with its intended outcomes (folded) and its guidelines. A
+guideline opened from it has "Back to scenario".
+
+**Finish scenario** opens the debrief on the learner's phone (SC-F), for the mentor to fill in
+with the learner:
+
+- a **Debrief guide** (folded): the four PEARLS steps (Eppich and Cheng 2015): Reactions,
+  Description, Analysis, Summary;
+- a **rating for each intended outcome** on how much help the learner needed, after the
+  O-SCORE: Not done, Talked through, Prompted, Independent (0 to 3, `DEBRIEF_RATINGS`). An
+  outcome that didn't come up is left blank;
+- **Guidelines to learn:** tick the guidelines they struggled with (they go to Guidelines to
+  learn, which holds 5);
+- three optional notes, each up to 400 characters (`MAX_DEBRIEF_NOTE`): Went well, To work on,
+  and the learner's take-away.
+
+**Save the run** gives the score: the ratings as a percentage of the most possible, blanks left
+out (`scoreOf` in `src/scenarioLogic.js`; no ratings, no score). Saving also counts today's
+streak day (see [Streak and Data tab](streak-and-stats.md)). The run is saved in the learner's
+tracker as one extra entry (`scenario-run-<id>`) holding the run count and the last 3 runs, so
+the backend doesn't change. The list shows "✓ Run <date> · <score>%", and the scenario shows
+its debriefs, folded. A score only compares well when the same mentor rates consistently.
 
 ## Add a scenario (staff jobs)
 

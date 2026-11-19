@@ -266,6 +266,8 @@ Choices made while building (Claude, 16 Nov 2026; say if any should change):
   burst at 2 s (was the landing at 1.3 s), so the count and Continue come a second later; once
   powered, a faint buzz and a flex every 2.4 s instead of hops and fist pumps. Plain CSS
   keyframes, no outside animation service needed.
+- ST-I (owner, 19 Nov 2026): finishing any Quiz-tab activity counts the streak day, so a
+  scenario run (Save the run) now counts too, with the same power-up.
 
 **Editor page, later changes**
 
@@ -391,7 +393,7 @@ Claude's, say if any should change)**
    Option B: leave it as built: Paramedics do not get the Eclampsia card.
 
 3. **Replacing the Google Sheet backend** (asked 18 Nov 2026). The app reaches the backend only
-   through `src/api.js` (one address, nine actions in `backend/Code.gs`), so a move means a new
+   through `src/api.js` (one address; ten actions plus the editor ones in `backend/Code.gs`), so a move means a new
    backend, a new `BACKEND_URL` and copying the Sheet's rows; the screens stay as they are. The
    people lists (Managers, Assignments, Editors) are now edited by hand in the Sheet and would
    need another way to edit them.
@@ -500,7 +502,7 @@ Goal: a programmer who does not know the project can read any function once and 
 
 History is in `CHANGELOG.md` and the git history; this section holds only where things stand.
 
-**18 Nov 2026.** Features 1 to 18 are built and on `main`. The owner has checked every function
+**18 Nov 2026.** Features 1 to 18 are built and on `main` (feature 19, scenarios, on 19 Nov). The owner has checked every function
 on several phones and all work. A tidy-up (rule 9) the same day merged repeated helpers and
 removed dead CSS and stale notes, with no behaviour change.
 

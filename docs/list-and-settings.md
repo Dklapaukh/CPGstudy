@@ -3,15 +3,17 @@
 ## List, marking and settings
 
 - Header: one top bar with the Quiz and To learn tabs on the left and the streak rat and
-  Settings cog on the right; the tracker name sits just below it. Quiz opens four choices,
-  each with a small icon (Medicines quiz, Guideline quiz, Medicine test, Pick the guideline);
+  Settings cog on the right; the tracker name sits just below it. Quiz opens the choices, each
+  with a small icon (Medicines quiz, Guideline quiz, Medicine test, Pick the guideline,
+  Scenarios);
   a round button opens a random guideline (weights in `SUGGESTION_WEIGHT`; from the one open
   section if exactly one is open).
 - A guideline page has Review and Complete (no Incomplete), plus Quiz when it has a guideline
   quiz. Pressing Review or Complete, even when already selected, sets the marked date shown on
   its list row. Opening a guideline or editing its notes does not.
-- Settings: dark mode (this phone only), "Mark guidelines for review N days after they're marked
-  Complete" (0 = off, up to 180; shared with the tracker), and Switch tracker.
+- Settings has two tabs. General: dark mode (this phone only), "Mark guidelines for review N
+  days after they're marked Complete" (0 = off, up to 180; shared with the tracker), and Switch
+  tracker. Data: study stats and the streak (see [Streak and Data tab](streak-and-stats.md)).
 - Search uses the plain words of each guideline and redraws the list 150 ms after typing stops.
 - The 💬 button on a point adds a comment line to the notes and highlights the point. The line
   starts with the first 70 characters of the point, or more when another point of the guideline

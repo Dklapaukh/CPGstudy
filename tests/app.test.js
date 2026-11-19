@@ -871,7 +871,11 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   $$('input[name="struggled"]')[0].checked = true;
   $('#scenario-debrief-delta').value = 'Slow to check for a pressure injury';
   $('#scenario-debrief-takeaway').value = 'Ask why they fell first';
+  const { state } = await import('../src/state.js');
+  delete state.entries['study-streak']; // so the run is today's first activity
   click($('[data-action="scenario-finish-save"]'));
+  assert.ok($('.streak-celebration'), 'a scenario run lights the streak, like a quiz');
+  click($('.streak-celebration__button'));
   assert.match($('#scenario-queue-message').textContent, /^Run saved\. Score 67%\./);
   assert.ok(!$('#scenario-debrief-delta'), 'the form closes');
   const debrief = $('.scenario-screen').textContent;

@@ -59,8 +59,9 @@ scores.
    stays the same, so nothing in the app needs changing.
    **Check it worked:** open
    <https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec>
-   in a browser. It must say "CPG tracker service is running, version with the manager view
-   (16 Nov 2026)". If it says only "CPG tracker service is running", the app's address still
+   in a browser. It must say "CPG tracker service is running, version with scenario runs and
+   submissions (19 Nov 2026)" (or a later version: the text is `BACKEND_VERSION` in
+   `backend/Code.gs`). If it says only "CPG tracker service is running", the app's address still
    runs the old code: in Manage deployments make sure you edit the deployment whose Web app URL
    is the address above, and choose New version. If the manager page says "still running an
    older version of the backend", the same applies.
