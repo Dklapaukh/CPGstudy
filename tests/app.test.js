@@ -1,6 +1,6 @@
 /*
  * Behaviour check of the whole app in a simulated browser (jsdom) with a fake backend.
- * Mirrors the behaviour checklist in README.md.
+ * Mirrors the behaviour checklist in docs/behaviour-checklist.md.
  */
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';

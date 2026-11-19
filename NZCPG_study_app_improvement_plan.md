@@ -1,6 +1,6 @@
 # NZCPG study app – working rules, decisions and open items
 
-The project memory. What the app does and how to run it is in `README.md`; what changed and when
+The project memory. What the app does and how to run it is in `README.md` (feature detail in `docs/`); what changed and when
 is in `CHANGELOG.md`. The original plan, code review, refactor plan and full status history
 (written 10 to 15 Nov 2026) were removed from this file on 15 Nov 2026 once everything in them
 was built or closed; they are in the git history of this file.
@@ -21,7 +21,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 3. **This document is the project memory.** Record decisions and status here; do not repeat
    analysis already written here.
 4. **Verify by running checks**, not by reading code back: `npm run check` and the behaviour
-   checklist in the README.
+   checklist in `docs/behaviour-checklist.md`.
 5. **One feature per chat.** When a chat has grown long, a feature finishes or the topic changes,
    Claude says so and gives a ready-to-paste prompt for a new chat.
 6. **Update sections 8 and 13 before ending a chat.**
@@ -72,7 +72,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 ### 8.2 Decisions in force
 
 The letter and number codes are the ones used in code comments. Details of how each feature
-behaves are in the README.
+behaves are in `docs/`, one file per feature.
 
 **General**
 
@@ -477,7 +477,7 @@ Goal: a programmer who does not know the project can read any function once and 
 10. Every file starts with a short header: its purpose and what it depends on.
 11. Every function has a one-to-three line comment: what it is for, what it takes and returns.
 12. Comments explain why, not what; a rule that came from a real need says so.
-13. The README describes the app as it is now. The change log gets a short dated entry per change.
+13. The README and `docs/` describe the app as it is now; a feature change updates its own doc. The change log gets a short dated entry per change.
 
 **Safety and quality**
 
@@ -523,8 +523,13 @@ scenario trends (SC-G) once the backend is redeployed with the 19 Nov 2026 `Code
 
 **Add a scenario (19 Nov 2026):** `submit.html`, no sign-in, sends anonymised jobs with ECG
 photos; editors edit and approve them (as new scenarios) or reject them on the editor page, and
-the daily copy publishes the photos approved scenarios use (README, "Add a scenario"). Owner's changes the same day: History label, optional suburb, vitals sets with
+the daily copy publishes the photos approved scenarios use (`docs/scenarios.md`, "Add a scenario"). Owner's changes the same day: History label, optional suburb, vitals sets with
 notes, treatment after vitals, no Rural tick, validated guidelines, teaching and debrief points
 last, no ECG blackout, complexity and scene load; then editing a job before approving. Waits
 on 8.4 task 11. Possible follow-ups: cropping photos in the form; tap-editing the treatment and
 later vitals of an approved scenario (today they are changed only before approving).
+
+**Code audit (19 Nov 2026):** `npm run audit` measures section 10 (errors fail `npm run check`);
+shared editor markup helpers, dead code removed. Feature docs split out of the README into
+`docs/`; `backend/Code.gs` now linted and formatted. Next: the longest functions the audit
+lists (`editor/main.js` render, `attachWheel`, `startCardDrag`, `Code.gs` `handleRequest_`).

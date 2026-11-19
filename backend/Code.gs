@@ -134,7 +134,7 @@ const HEADERS = {
   ],
 };
 // An edited question's id (src/guidelineQuizPlay.js, src/quizCards.js) and the longest edit kept.
-const EDIT_ID_PATTERN = /^[\w.|\-]{1,120}$/;
+const EDIT_ID_PATTERN = /^[\w.|-]{1,120}$/;
 const MAX_EDIT_LENGTH = 20000;
 
 /**
@@ -345,7 +345,10 @@ function submitScenario_(request) {
   // The time, plus a random part so two jobs in the same millisecond still differ.
   const id = 'job-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   const title = String(submission.title || 'Untitled').slice(0, MAX_TITLE_LENGTH);
-  const sender = String(submission.name || '').trim().slice(0, MAX_NAME_LENGTH) || 'Anonymous';
+  const sender =
+    String(submission.name || '')
+      .trim()
+      .slice(0, MAX_NAME_LENGTH) || 'Anonymous';
   const photos = images.map(function (image, index) {
     return saveSubmissionPhoto_(id, index, image);
   });
@@ -378,7 +381,7 @@ function readSubmissions_(status, withPhotoData) {
           return shown;
         }),
       });
-    } catch (err) {
+    } catch {
       console.error('Submissions row ' + (i + 1) + ' is not JSON'); // left for the owner to fix
     }
   }
@@ -465,7 +468,7 @@ function submissionFolder_() {
   if (folderId) {
     try {
       return DriveApp.getFolderById(folderId);
-    } catch (err) {
+    } catch {
       console.error('Submission folder gone, making a new one'); // the owner deleted it
     }
   }
@@ -513,7 +516,7 @@ function readEdits_() {
   for (let i = 1; i < rows.length; i++) {
     try {
       edits[String(cell_(rows[i], EDIT_COLUMN.ID))] = JSON.parse(cell_(rows[i], EDIT_COLUMN.EDIT));
-    } catch (err) {
+    } catch {
       console.error('Edits row ' + (i + 1) + ' is not JSON'); // left for the owner to fix
     }
   }
@@ -530,11 +533,7 @@ function saveEdit_(editorName, id, edit) {
   const isObject = edit === null || (typeof edit === 'object' && !Array.isArray(edit));
   if (!EDIT_ID_PATTERN.test(questionId) || !isObject || text.length > MAX_EDIT_LENGTH) return false;
   const sheet = getSheet_(SHEET.EDITS);
-  const found = sheet
-    .getRange('A:A')
-    .createTextFinder(questionId)
-    .matchEntireCell(true)
-    .findNext();
+  const found = sheet.getRange('A:A').createTextFinder(questionId).matchEntireCell(true).findNext();
   if (edit === null) {
     if (found) sheet.deleteRow(found.getRow());
     return true;
@@ -698,7 +697,7 @@ function quizScore_(note) {
   let saved;
   try {
     saved = JSON.parse(note);
-  } catch (err) {
+  } catch {
     return null; // a note edited by hand: no score, as the app treats it
   }
   if (!saved || !isFinite(saved.best) || typeof saved.best !== 'number') return null;
@@ -720,7 +719,7 @@ function scenarioRecord_(note) {
   let saved;
   try {
     saved = JSON.parse(note);
-  } catch (err) {
+  } catch {
     return { count: 0, runs: [] }; // a damaged note: no runs, as the app treats it
   }
   const runs = [];
@@ -729,7 +728,8 @@ function scenarioRecord_(note) {
     runs.push({
       at: run.at,
       ratings: (Array.isArray(run.ratings) ? run.ratings : []).map(function (rating) {
-        const isRating = rating === Math.floor(rating) && rating >= 0 && rating <= DEBRIEF_RATING_TOP;
+        const isRating =
+          rating === Math.floor(rating) && rating >= 0 && rating <= DEBRIEF_RATING_TOP;
         return typeof rating === 'number' && isRating ? rating : null;
       }),
       struggled: (Array.isArray(run.struggled) ? run.struggled : []).filter(function (id) {
@@ -765,7 +765,7 @@ function flashcardNumbers_(note) {
   let stored;
   try {
     stored = JSON.parse(note);
-  } catch (err) {
+  } catch {
     return []; // a damaged note: no cards, as the app treats it
   }
   if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return [];
@@ -868,12 +868,17 @@ function backfillHistory_() {
   let firstLoggedTime = Infinity;
   for (let i = 1; i < existing.length; i++) {
     if (String(cell_(existing[i], HISTORY_COLUMN.SOURCE)) === BACKFILL_SOURCE) return;
-    firstLoggedTime = Math.min(firstLoggedTime, Number(cell_(existing[i], HISTORY_COLUMN.TIME)) || 0);
+    firstLoggedTime = Math.min(
+      firstLoggedTime,
+      Number(cell_(existing[i], HISTORY_COLUMN.TIME)) || 0,
+    );
   }
   const rows = getSheet_(SHEET.DATA).getDataRange().getValues();
   const statusByKey = {};
   for (let i = 1; i < rows.length; i++) {
-    statusByKey[String(cell_(rows[i], DATA_COLUMN.KEY))] = String(cell_(rows[i], DATA_COLUMN.STATUS));
+    statusByKey[String(cell_(rows[i], DATA_COLUMN.KEY))] = String(
+      cell_(rows[i], DATA_COLUMN.STATUS),
+    );
   }
   const history = [];
   for (let i = 1; i < rows.length; i++) {
@@ -922,7 +927,7 @@ function readData_(code) {
 /** Cleans one change from the app: valid id, known status, limited note, limited time. */
 function cleanChange_(change) {
   const id = String(change.id || '');
-  if (!/^[\w.\-]{1,40}$/.test(id)) return null;
+  if (!/^[\w.-]{1,40}$/.test(id)) return null;
   const isKnownStatus = change.s === STATUS.COMPLETE || change.s === STATUS.REVIEW;
   const now = Date.now();
   return {
@@ -945,11 +950,7 @@ function saveChanges_(code, changes) {
     const clean = cleanChange_(change);
     if (!clean) return;
     const key = code + '|' + clean.id;
-    const found = sheet
-      .getRange('A:A')
-      .createTextFinder(key)
-      .matchEntireCell(true)
-      .findNext();
+    const found = sheet.getRange('A:A').createTextFinder(key).matchEntireCell(true).findNext();
     if (!found) {
       sheet.appendRow([key, code, clean.id, clean.status, clean.note, clean.updated]);
       historyRows_(code, clean, STATUS.INCOMPLETE, '').forEach(function (row) {
@@ -977,7 +978,14 @@ function saveChanges_(code, changes) {
 function newPasscode_() {
   let code;
   do {
-    code = pickWord_() + '-' + pickWord_() + '-' + pickWord_() + '-' + (10 + Math.floor(Math.random() * 90));
+    code =
+      pickWord_() +
+      '-' +
+      pickWord_() +
+      '-' +
+      pickWord_() +
+      '-' +
+      (10 + Math.floor(Math.random() * 90));
   } while (findTracker_(code) || findManager_(code));
   return code;
 }

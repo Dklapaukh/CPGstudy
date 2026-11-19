@@ -7,7 +7,8 @@ import { createHash } from 'node:crypto';
 import * as espree from 'espree';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const CODE_DIRS = ['src', 'scripts'];
+const CODE_DIRS = ['src', 'scripts', 'backend'];
+const CODE_EXTENSIONS = new Set(['.js', '.gs']); // .gs: Apps Script, plain JavaScript
 const SKIP = new Set(['node_modules', '.git', 'content']);
 const MAX_FUNCTION_LINES = 30; // Rule 5
 const SELF_EXPLAINING_LINES = 3; // Shorter named helpers need no comment (rule 1 names them)
@@ -27,11 +28,11 @@ function listFiles(directory) {
 }
 
 /** Parses a JS file into an AST with comments and line numbers; null if it does not parse. */
-function parse(source) {
+function parse(source, sourceType) {
   try {
     return espree.parse(source, {
       ecmaVersion: 'latest',
-      sourceType: 'module',
+      sourceType,
       loc: true,
       comment: true,
     });
@@ -77,7 +78,7 @@ function auditJsFile(path, source) {
   const firstLine = source.split('\n').find((text) => text.trim());
   if (!/^\s*(\/\/|\/\*)/.test(firstLine ?? '')) add('error', 10, 1, 'No file header comment');
 
-  const ast = parse(source);
+  const ast = parse(source, path.endsWith('.gs') ? 'script' : 'module');
   if (!ast) return findings;
   const commentEndLines = new Set(ast.comments.map((comment) => comment.loc.end.line));
 
@@ -208,8 +209,8 @@ function findUnusedCss(markupSources) {
 
 /** Runs every check and prints a grouped report; returns the exit code. */
 function main() {
-  const codePaths = CODE_DIRS.flatMap((dir) => listFiles(join(ROOT, dir))).filter(
-    (path) => extname(path) === '.js',
+  const codePaths = CODE_DIRS.flatMap((dir) => listFiles(join(ROOT, dir))).filter((path) =>
+    CODE_EXTENSIONS.has(extname(path)),
   );
   const files = codePaths.map((path) => ({ path, source: readFileSync(path, 'utf8') }));
   const docPaths = listFiles(ROOT).filter((path) => extname(path) === '.md');

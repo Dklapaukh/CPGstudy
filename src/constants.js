@@ -65,7 +65,7 @@ export const RELATED_REASON_TEXT = {
 };
 
 // Feature 7, the update prompt. version.json is published next to index.html and names the
-// guideline export date and every file of the app (see README, "Publishing an update").
+// guideline export date and every file of the app (see docs/content-updates.md).
 export const VERSION_FILE_URL = 'version.json';
 export const UPDATE_STORAGE_KEY = 'eas-cpg-update-v1'; // separate from STORAGE_KEY on purpose
 // Opening the app fires both start-up and "pageshow", so checks closer together are skipped.
@@ -88,7 +88,7 @@ export const MESSAGES = {
   CODE_NOT_RECOGNISED: 'That passcode wasn’t recognised',
   GENERIC_ERROR: 'Something went wrong. Please try again.',
   // The backend address answered "stats" with "bad-action": it still runs the code from before
-  // the manager view, so no passcode can work until it is redeployed (README, "Manager view").
+  // the manager view, so no passcode can work until it is redeployed (docs/manager.md).
   OLD_BACKEND:
     'The app’s backend address is still running an older version of the backend, so no passcode can work yet. In Apps Script press Deploy, Manage deployments, the pencil, Version: New version, Deploy. Then try again.',
   UNSENT_CHANGES:

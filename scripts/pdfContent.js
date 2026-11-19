@@ -4,7 +4,7 @@
  * spans are runs of text in one font and colour, rects are drawn shapes (bands, boxes, outlines,
  * bullet markers, table rules). No AI and no randomness: one PDF always gives the same content.
  * The rules copy how the current content/guidelines.js was made, so the 24.09.2026 PDF rebuilds
- * it; see tests/pdfContent.test.js and README "Rebuilding the content from the PDF".
+ * it; see tests/pdfContent.test.js and docs/content-updates.md.
  * A content block is a list such as ['b', text, level, colour]; every kind of block is listed
  * at the top of scripts/contentCheck.js.
  * Depends on scripts/pdfRows.js (rows of text) and scripts/pdfTables.js (tables).

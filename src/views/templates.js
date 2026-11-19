@@ -1,6 +1,6 @@
 /*
  * Small markup helpers shared by the screens. Returns strings of markup, touches nothing else.
- * Guideline text is trusted content built into the app (see README, "Content").
+ * Guideline text is trusted content built into the app (see docs/content-updates.md).
  * Colours that come from the content are passed as CSS custom properties, not as styles.
  */
 import { BLOCK, MESSAGES } from '../constants.js';

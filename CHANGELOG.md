@@ -1,7 +1,14 @@
 # Change log
 
-Newest first. One short entry per change; the detail is in the README and the git history.
+Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
+19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-19: **Docs split and backend checks** (no behaviour change, no redeploy needed). The
+  README keeps the overview, structure, how to run and how data is saved; each feature's detail
+  is now its own file in `docs/` (10 files), and code comments point there. `backend/Code.gs` is
+  now formatted by Prettier and checked by ESLint (Apps Script services declared as globals)
+  and by `npm run audit`. Lint fixes in `Code.gs`: unused `err` bindings dropped, two regexes
+  written without a needless escape (same matches).
 - 2026-11-19: **Code audit** (tidy-up, no behaviour change). New `npm run audit`
   (`scripts/audit.js`) reports style-guide gaps: file headers, function comments and length,
   empty catches, static inline styles, copied blocks, unused exports and CSS; `npm run check`

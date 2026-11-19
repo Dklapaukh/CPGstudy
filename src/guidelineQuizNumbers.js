@@ -9,7 +9,7 @@
  * times and one tenth of it. Some questions (WRONG_UNIT_CHANCE) also offer the right number
  * with a wrong unit, for example 300 mcg for 300 mg. A wrong choice is never a value that also
  * appears in the same line. These rules were made without AI and are to be reviewed: see the
- * README, "Guideline quiz".
+ * docs/guideline-quiz.md.
  * Depends on logic.js and guidelineQuizRounds.js (shuffled).
  */
 import { escapeForPattern } from './logic.js';

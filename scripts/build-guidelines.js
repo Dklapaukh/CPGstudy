@@ -66,7 +66,7 @@ function writeJson(path, value) {
 
 /**
  * Throws when the converter no longer gives the rebuild recorded for this same PDF. That means
- * the converter's output has changed (re-record the baseline if that was intended, see README)
+ * the converter's output has changed (re-record the baseline if that was intended, see docs/content-updates.md)
  * or the PDF changed without a new export date.
  */
 function confirmRecordedRebuild(exportedOn, rebuilt) {
