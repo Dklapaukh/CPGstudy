@@ -3,6 +3,14 @@
 Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-19: **Longest functions split** (no behaviour change, no redeploy needed). Editor
+  `render` tries one small function per screen (`ADDRESS_SCREENS`) before the home screen;
+  `attachWheel` and `startCardDrag` keep their shared state in one object passed to small
+  helpers; `Code.gs` `handleRequest_` looks the action up in `REQUEST_HANDLERS` (own string
+  keys only, so `"toString"` or `["open"]` stay a bad-action). Checked by running old and new
+  side by side: 276 backend requests, card drags (drop, cancel, edge scroll, listener
+  clean-up), wheel keys, taps and scrolls with saves, and every editor screen including jobs
+  and drafts gave identical output. Audit rule 5 warnings: 31 to 27.
 - 2026-11-19: **Docs split and backend checks** (no behaviour change, no redeploy needed). The
   README keeps the overview, structure, how to run and how data is saved; each feature's detail
   is now its own file in `docs/` (10 files), and code comments point there. `backend/Code.gs` is

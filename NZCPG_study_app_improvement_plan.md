@@ -336,10 +336,10 @@ Claude's, say if any should change)**
   small file to a phone's update, an exception to MV-H.
 - AU-B: `content/card-edits.yaml` stays next to the `.js`, as with the other override files
   (ED-A): the YAML is the readable record. Not changed.
-- AU-C: left as they are: `attachEventListeners`, `startCardDrag`, `attachWheel`, `chartSvg`
-  and `overTimeHtml` are 43 to 53 lines (rule 5 says normally under 30); the rest is mostly
-  markup or listeners sharing local state, and splitting further would make them harder to
-  follow. The manager and editor sign-in screens are still two functions because their covers
+- AU-C: left as they are: `attachEventListeners` and `chartSvg` are over 40 lines (rule 5 says
+  normally under 30); the rest is mostly markup or listeners sharing local state, and splitting
+  further would make them harder to follow. (`startCardDrag` and `attachWheel` were split on
+  19 Nov 2026: their shared state became one object passed to small helpers.) The manager and editor sign-in screens are still two functions because their covers
   now differ.
 - SC-A (18 Nov 2026): the scenario list filters by level and theme chips (option A1). Themes
   come from guideline sections (`SCENARIO_THEMES`); Rural is a hand-set `rural` field.
@@ -531,5 +531,6 @@ later vitals of an approved scenario (today they are changed only before approvi
 
 **Code audit (19 Nov 2026):** `npm run audit` measures section 10 (errors fail `npm run check`);
 shared editor markup helpers, dead code removed. Feature docs split out of the README into
-`docs/`; `backend/Code.gs` now linted and formatted. Next: the longest functions the audit
-lists (`editor/main.js` render, `attachWheel`, `startCardDrag`, `Code.gs` `handleRequest_`).
+`docs/`; `backend/Code.gs` now linted and formatted. The four longest functions (editor
+`render`, `attachWheel`, `startCardDrag`, `handleRequest_`) are split, with old and new output
+compared; the rest of the audit's rule 5 warnings are 31 to 49 lines.

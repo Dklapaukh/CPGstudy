@@ -106,56 +106,63 @@ function daysForKey(key, shown) {
   return null;
 }
 
+/**
+ * Shows `days` as the wheel's choice: its spoken value, the chosen item and the summary sentence.
+ * `drum` is the wheel's live state (see attachWheel).
+ */
+function showDays(drum, days) {
+  drum.shown = days;
+  drum.wheel.setAttribute('aria-valuenow', String(days));
+  drum.wheel.setAttribute('aria-valuetext', dayText(days));
+  drum.items.forEach((item, index) => item.classList.toggle('wheel__item--chosen', index === days));
+  app.querySelector('#review-days-summary').firstChild.textContent = `${summaryText(days)} `;
+}
+
+/** Saves the shown days once the wheel has been still for SAVE_DELAY_MS, if they changed. */
+function saveWhenStill(drum) {
+  clearTimeout(drum.saveTimer);
+  drum.saveTimer = setTimeout(() => {
+    if (drum.shown === drum.saved) return;
+    drum.saved = drum.shown;
+    saveReviewAfterDays(drum.shown);
+  }, SAVE_DELAY_MS);
+}
+
+/** Turns the wheel to `days` (kept within range), smoothly where the browser can, and saves. */
+function turnWheelTo(drum, days, smooth) {
+  const { wheel, items } = drum;
+  const target = Math.min(REVIEW_AFTER_DAYS.MAX, Math.max(REVIEW_AFTER_DAYS.MIN, days));
+  if (smooth && wheel.scrollTo) wheel.scrollTo({ top: target * ITEM_HEIGHT, behavior: 'smooth' });
+  else wheel.scrollTop = target * ITEM_HEIGHT;
+  showDays(drum, target);
+  drawDrum(wheel, items);
+  saveWhenStill(drum);
+}
+
 /** Connects the wheel: scrolling, tapping a day or the arrow keys; it saves once it stops. */
 function attachWheel(startDays) {
   const wheel = app.querySelector('#review-days-wheel');
   const items = [...wheel.children];
-  let shown = startDays;
-  let saved = startDays;
-  let saveTimer = 0;
-
-  const show = (days) => {
-    shown = days;
-    wheel.setAttribute('aria-valuenow', String(days));
-    wheel.setAttribute('aria-valuetext', dayText(days));
-    items.forEach((item, index) => item.classList.toggle('wheel__item--chosen', index === days));
-    app.querySelector('#review-days-summary').firstChild.textContent = `${summaryText(days)} `;
-  };
-  const saveSoon = () => {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      if (shown === saved) return;
-      saved = shown;
-      saveReviewAfterDays(shown);
-    }, SAVE_DELAY_MS);
-  };
-  const scrollToDays = (days, smooth) => {
-    const target = Math.min(REVIEW_AFTER_DAYS.MAX, Math.max(REVIEW_AFTER_DAYS.MIN, days));
-    if (smooth && wheel.scrollTo) wheel.scrollTo({ top: target * ITEM_HEIGHT, behavior: 'smooth' });
-    else wheel.scrollTop = target * ITEM_HEIGHT;
-    show(target);
-    drawDrum(wheel, items);
-    saveSoon();
-  };
+  const drum = { wheel, items, shown: startDays, saved: startDays, saveTimer: 0 };
 
   wheel.addEventListener('scroll', () => {
     drawDrum(wheel, items);
     const days = Math.round(wheel.scrollTop / ITEM_HEIGHT);
-    if (days !== shown) show(days);
-    saveSoon();
+    if (days !== drum.shown) showDays(drum, days);
+    saveWhenStill(drum);
   });
   wheel.addEventListener('click', (event) => {
     const item = event.target.closest('.wheel__item');
-    if (item) scrollToDays(Number(item.dataset.value), true);
+    if (item) turnWheelTo(drum, Number(item.dataset.value), true);
   });
   wheel.addEventListener('keydown', (event) => {
-    const days = daysForKey(event.key, shown);
+    const days = daysForKey(event.key, drum.shown);
     if (days === null) return;
     event.preventDefault();
-    scrollToDays(days, false);
+    turnWheelTo(drum, days, false);
   });
 
-  show(startDays);
+  showDays(drum, startDays);
   wheel.scrollTop = startDays * ITEM_HEIGHT;
   drawDrum(wheel, items);
 }

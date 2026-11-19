@@ -180,73 +180,96 @@ function doPost(e) {
   );
 }
 
+/** `open`: a tracker's passcode opens it with its data; a wrong one is answered slowly. */
+function openTracker_(request, code) {
+  const tracker = findTracker_(code);
+  if (tracker) {
+    return { ok: true, role: 'tracker', label: tracker.label, data: readData_(code) };
+  }
+  return { ok: false, error: 'not-found', delayBeforeReply: true };
+}
+
+/** `demo`: the shared demo tracker, with its passcode and data, for trying the app. */
+function openDemo_() {
+  const demo = findTrackerByLabel_(DEMO_LABEL);
+  if (!demo) return { ok: false, error: 'not-found' };
+  return { ok: true, code: demo.code, label: demo.label, data: readData_(demo.code) };
+}
+
+/** `load`: a tracker's label and data, read again by an app that already has its passcode. */
+function loadTracker_(request, code) {
+  const tracker = findTracker_(code);
+  if (!tracker) return { ok: false, error: 'not-found' };
+  return { ok: true, label: tracker.label, data: readData_(code) };
+}
+
+/** `save`: writes the app's changes to a tracker and replies with its data as now saved. */
+function saveTracker_(request, code) {
+  if (!findTracker_(code)) return { ok: false, error: 'not-found' };
+  const saved = saveChanges_(code, request.changes || []);
+  return { ok: true, saved: saved, data: readData_(code) };
+}
+
+/** `stats` (manager page): the stats and history of the trackers a manager's passcode can see. */
+function readViewerStats_(request, code) {
+  const viewer = findViewer_(code);
+  if (!viewer) return { ok: false, error: 'not-found', delayBeforeReply: true };
+  const trackers = viewerTrackers_(viewer);
+  return {
+    ok: true,
+    role: viewer.role,
+    name: viewer.name,
+    trackers: readStats_(trackers),
+    history: readHistory_(trackers),
+  };
+}
+
+/**
+ * The editor page (editor.html): sign in, save or remove one question's edit, look at a
+ * submitted job's photo, and approve or reject a submitted job. The passcode is checked first.
+ */
+function editorAction_(request, code) {
+  const editor = findPerson_(SHEET.EDITORS, EDITOR_COLUMN, code);
+  if (!editor) return { ok: false, error: 'not-found', delayBeforeReply: true };
+  return editorRequest_(editor, request);
+}
+
+/** `approved-scenarios`, read by the daily copy, which publishes them: approved jobs and photos. */
+function readApprovedScenarios_() {
+  return { ok: true, submissions: readSubmissions_(SUBMISSION_STATUS.APPROVED, true) };
+}
+
+/**
+ * The reply function for each action; each takes (request, normalised passcode). The editor
+ * actions (EDITOR_ACTIONS) all go through editorAction_.
+ */
+const REQUEST_HANDLERS = {
+  open: openTracker_,
+  demo: openDemo_,
+  signup: (request) => signUp_(request),
+  load: loadTracker_,
+  save: saveTracker_,
+  stats: readViewerStats_,
+  // Read by the daily copy into the repo (scripts/sync-edits.js). Edits are published anyway.
+  edits: () => ({ ok: true, edits: readEdits_() }),
+  'scenario-submit': (request) => submitScenario_(request),
+  'approved-scenarios': readApprovedScenarios_,
+};
+
 /**
  * Works out the reply for one request: open, demo, signup, load, save, stats, one of the
- * edits ones, scenario-submit or approved-scenarios.
+ * editor ones, edits, scenario-submit or approved-scenarios; any other action is a bad-action.
  */
 function handleRequest_(request) {
   const code = normalise_(request.code);
   const action = request.action;
-
-  if (action === 'open') {
-    const tracker = findTracker_(code);
-    if (tracker) {
-      return { ok: true, role: 'tracker', label: tracker.label, data: readData_(code) };
-    }
-    return { ok: false, error: 'not-found', delayBeforeReply: true };
+  if (EDITOR_ACTIONS.indexOf(action) >= 0) return editorAction_(request, code);
+  // A string and an own key only: ["open"] or "toString" must stay a bad-action, as before.
+  const isKnown =
+    typeof action === 'string' && Object.prototype.hasOwnProperty.call(REQUEST_HANDLERS, action);
+  if (isKnown) {
+    return REQUEST_HANDLERS[action](request, code);
   }
-
-  if (action === 'demo') {
-    const demo = findTrackerByLabel_(DEMO_LABEL);
-    if (!demo) return { ok: false, error: 'not-found' };
-    return { ok: true, code: demo.code, label: demo.label, data: readData_(demo.code) };
-  }
-
-  if (action === 'signup') return signUp_(request);
-
-  if (action === 'load') {
-    const tracker = findTracker_(code);
-    if (!tracker) return { ok: false, error: 'not-found' };
-    return { ok: true, label: tracker.label, data: readData_(code) };
-  }
-
-  if (action === 'save') {
-    if (!findTracker_(code)) return { ok: false, error: 'not-found' };
-    const saved = saveChanges_(code, request.changes || []);
-    return { ok: true, saved: saved, data: readData_(code) };
-  }
-
-  if (action === 'stats') {
-    const viewer = findViewer_(code);
-    if (!viewer) return { ok: false, error: 'not-found', delayBeforeReply: true };
-    const trackers = viewerTrackers_(viewer);
-    return {
-      ok: true,
-      role: viewer.role,
-      name: viewer.name,
-      trackers: readStats_(trackers),
-      history: readHistory_(trackers),
-    };
-  }
-
-  // The editor page (editor.html): sign in, save or remove one question's edit, look at a
-  // submitted job's photo, and approve or reject a submitted job.
-  if (EDITOR_ACTIONS.indexOf(action) >= 0) {
-    const editor = findPerson_(SHEET.EDITORS, EDITOR_COLUMN, code);
-    if (!editor) return { ok: false, error: 'not-found', delayBeforeReply: true };
-    return editorRequest_(editor, request);
-  }
-
-  // Read by the daily copy into the repo (scripts/sync-edits.js). Edits are published anyway.
-  if (action === 'edits') return { ok: true, edits: readEdits_() };
-
-  if (action === 'scenario-submit') return submitScenario_(request);
-
-  // Read by the daily copy, which publishes them: approved jobs with their photos.
-  if (action === 'approved-scenarios') {
-    return { ok: true, submissions: readSubmissions_(SUBMISSION_STATUS.APPROVED, true) };
-  }
-
   return { ok: false, error: 'bad-action' };
 }
 

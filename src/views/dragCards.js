@@ -64,6 +64,53 @@ function liftCard(card, box) {
   return gap;
 }
 
+/** Moves the lifted card with the pointer and the gap to where it would land. */
+function followPointer(drag, clientY) {
+  drag.lastY = clientY;
+  drag.card.style.top = `${clientY - drag.offsetY}px`;
+  placeGap(drag.lists, drag.card, drag.gap, clientY);
+}
+
+/** One tick of edge scrolling: near the window's top or bottom the page moves, and the gap too. */
+function scrollNearEdge(drag) {
+  if (drag.lastY < EDGE_PX) window.scrollBy(0, -SCROLL_STEP_PX);
+  else if (drag.lastY > window.innerHeight - EDGE_PX) window.scrollBy(0, SCROLL_STEP_PX);
+  else return;
+  placeGap(drag.lists, drag.card, drag.gap, drag.lastY);
+}
+
+/** Puts the card back as it was; if `dropped`, tells `onDrop` the card, list and position. */
+function dropCard(drag, dropped, onDrop) {
+  const { card, gap } = drag;
+  const list = gap.parentElement;
+  const position = gapPosition(gap, card);
+  gap.remove();
+  card.removeAttribute('style');
+  card.classList.remove('order-card--dragging');
+  if (dropped) onDrop(Number(card.dataset.card), list.dataset.dropList, position);
+}
+
+/** Follows the pointer until it is released (a drop) or cancelled, then stops listening. */
+function followUntilRelease(drag, onDrop) {
+  const onMove = (moveEvent) => {
+    moveEvent.preventDefault();
+    followPointer(drag, moveEvent.clientY);
+  };
+  const finish = (dropped) => {
+    clearInterval(drag.scrollTimer);
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    dropCard(drag, dropped, onDrop);
+  };
+  const onUp = () => finish(true);
+  const onCancel = () => finish(false);
+  window.addEventListener('pointermove', onMove, { passive: false });
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onCancel);
+  drag.scrollTimer = setInterval(() => scrollNearEdge(drag), SCROLL_EVERY_MS);
+}
+
 /**
  * Starts dragging the card whose grip got `event` (a pointerdown). `onDrop(cardIndex, listName,
  * position)` is called on release with the list's data-drop-list name.
@@ -73,44 +120,14 @@ export function startCardDrag(event, onDrop) {
   const card = grip && grip.closest('.order-card');
   if (!card || event.button > 0) return;
   event.preventDefault();
-  const lists = [...document.querySelectorAll('[data-drop-list]')];
   const box = card.getBoundingClientRect();
-  const offsetY = event.clientY - box.top;
-  const gap = liftCard(card, box);
-  let lastY = event.clientY;
-  let scrollTimer = null;
-
-  const follow = (clientY) => {
-    lastY = clientY;
-    card.style.top = `${clientY - offsetY}px`;
-    placeGap(lists, card, gap, clientY);
+  const drag = {
+    card,
+    lists: [...document.querySelectorAll('[data-drop-list]')],
+    offsetY: event.clientY - box.top,
+    gap: liftCard(card, box),
+    lastY: event.clientY,
+    scrollTimer: null,
   };
-  const scrollStep = () => {
-    if (lastY < EDGE_PX) window.scrollBy(0, -SCROLL_STEP_PX);
-    else if (lastY > window.innerHeight - EDGE_PX) window.scrollBy(0, SCROLL_STEP_PX);
-    else return;
-    placeGap(lists, card, gap, lastY);
-  };
-  const onMove = (moveEvent) => {
-    moveEvent.preventDefault();
-    follow(moveEvent.clientY);
-  };
-  const finish = (dropped) => {
-    clearInterval(scrollTimer);
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', onUp);
-    window.removeEventListener('pointercancel', onCancel);
-    const list = gap.parentElement;
-    const position = gapPosition(gap, card);
-    gap.remove();
-    card.removeAttribute('style');
-    card.classList.remove('order-card--dragging');
-    if (dropped) onDrop(Number(card.dataset.card), list.dataset.dropList, position);
-  };
-  const onUp = () => finish(true);
-  const onCancel = () => finish(false);
-  window.addEventListener('pointermove', onMove, { passive: false });
-  window.addEventListener('pointerup', onUp);
-  window.addEventListener('pointercancel', onCancel);
-  scrollTimer = setInterval(scrollStep, SCROLL_EVERY_MS);
+  followUntilRelease(drag, onDrop);
 }

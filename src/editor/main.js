@@ -526,6 +526,95 @@ function guidelineItems(guideline) {
   }));
 }
 
+/** Draws a submitted job's page if the address names one; true when it drew. */
+function renderSubmission(viewer) {
+  const submissionId = currentSubmissionId();
+  if (!submissionId) return false;
+  const view = submissionViewFor(submissionId);
+  app.innerHTML = view
+    ? submissionHtml(viewer, view, SIGNED_IN_BUTTONS)
+    : goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
+  if (view) loadPhotos(view.submission);
+  return true;
+}
+
+/**
+ * Draws the new scenario form filled in from a job if the address asks to edit and approve one;
+ * true when it drew. The draft is made from the job only when a different job is opened.
+ */
+function renderApproval(viewer) {
+  const approveId = currentApproveId();
+  if (!approveId) return false;
+  const submission = state.submissions.find((each) => each.id === approveId);
+  if (!submission) {
+    app.innerHTML = goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
+    return true;
+  }
+  if (state.approvingJob !== approveId) {
+    state.draft = scenarioDraftOf(scenarioOfJob(submission), numberOfGuideline);
+    state.draftError = null;
+    state.approvingJob = approveId;
+  }
+  const draft = draftWithPreviews(state.draft);
+  app.innerHTML = newScenarioHtml(viewer, draft, state.draftError, SIGNED_IN_BUTTONS, {
+    id: approveId,
+  });
+  loadPhotos(submission);
+  return true;
+}
+
+/** Draws the blank new scenario form if the address asks for it; true when it drew. */
+function renderNewScenario(viewer) {
+  if (location.hash !== NEW_SCENARIO_HASH) return false;
+  // A job's draft is not carried into a blank new scenario.
+  if (state.approvingJob) {
+    state.draft = emptyScenarioDraft();
+    state.approvingJob = '';
+  }
+  app.innerHTML = newScenarioHtml(viewer, state.draft, state.draftError, SIGNED_IN_BUTTONS);
+  return true;
+}
+
+/** Draws a scenario's editor, or why it can't be edited, if the address names one; true if drawn. */
+function renderScenario(viewer) {
+  const scenarioId = currentScenarioId();
+  if (!scenarioId) return false;
+  const view = scenarioViewFor(scenarioId);
+  if (view.edit?.deleted) app.innerHTML = deletedScenarioHtml(viewer, SIGNED_IN_BUTTONS);
+  else {
+    const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
+    app.innerHTML = draw(viewer, view, SIGNED_IN_BUTTONS);
+  }
+  return true;
+}
+
+/** Draws a guideline's questions if the address names one; true when it drew. */
+function renderGuideline(viewer) {
+  const guideline = currentGuideline();
+  if (!guideline) return false;
+  app.innerHTML = guidelineHtml(viewer, guideline, guidelineItems(guideline), state);
+  return true;
+}
+
+/** Draws the first screen: edits to review, jobs, scenarios and the guideline list. */
+function renderHome(viewer) {
+  const scenarioSection = scenarioSectionHtml(
+    scenarioRows(),
+    Boolean(state.openSections.Scenarios),
+  );
+  const sections = submissionSectionHtml(state.submissions) + scenarioSection;
+  app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, sections);
+}
+
+// The screens an address can ask for, tried in this order; the first that matches draws.
+const ADDRESS_SCREENS = [
+  renderSubmission,
+  renderApproval,
+  renderNewScenario,
+  renderScenario,
+  renderGuideline,
+];
+
 /** Draws the screen the state and the address call for. */
 function render() {
   if (!state.name) {
@@ -533,64 +622,8 @@ function render() {
     return;
   }
   const viewer = { name: state.name, message: state.message };
-  const submissionId = currentSubmissionId();
-  if (submissionId) {
-    const view = submissionViewFor(submissionId);
-    app.innerHTML = view
-      ? submissionHtml(viewer, view, SIGNED_IN_BUTTONS)
-      : goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
-    if (view) loadPhotos(view.submission);
-    return;
-  }
-  const approveId = currentApproveId();
-  if (approveId) {
-    const submission = state.submissions.find((each) => each.id === approveId);
-    if (!submission) {
-      app.innerHTML = goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
-      return;
-    }
-    if (state.approvingJob !== approveId) {
-      state.draft = scenarioDraftOf(scenarioOfJob(submission), numberOfGuideline);
-      state.draftError = null;
-      state.approvingJob = approveId;
-    }
-    const draft = draftWithPreviews(state.draft);
-    app.innerHTML = newScenarioHtml(viewer, draft, state.draftError, SIGNED_IN_BUTTONS, {
-      id: approveId,
-    });
-    loadPhotos(submission);
-    return;
-  }
-  if (location.hash === NEW_SCENARIO_HASH) {
-    // A job's draft is not carried into a blank new scenario.
-    if (state.approvingJob) {
-      state.draft = emptyScenarioDraft();
-      state.approvingJob = '';
-    }
-    app.innerHTML = newScenarioHtml(viewer, state.draft, state.draftError, SIGNED_IN_BUTTONS);
-    return;
-  }
-  const scenarioId = currentScenarioId();
-  if (scenarioId) {
-    const view = scenarioViewFor(scenarioId);
-    if (view.edit?.deleted) app.innerHTML = deletedScenarioHtml(viewer, SIGNED_IN_BUTTONS);
-    else {
-      const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
-      app.innerHTML = draw(viewer, view, SIGNED_IN_BUTTONS);
-    }
-    return;
-  }
-  const guideline = currentGuideline();
-  if (guideline) {
-    app.innerHTML = guidelineHtml(viewer, guideline, guidelineItems(guideline), state);
-    return;
-  }
-  const scenarioSection = scenarioSectionHtml(
-    scenarioRows(),
-    Boolean(state.openSections.Scenarios),
-  );
-  const sections = submissionSectionHtml(state.submissions) + scenarioSection;
-  app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, sections);
+  if (ADDRESS_SCREENS.some((drawScreen) => drawScreen(viewer))) return;
+  renderHome(viewer);
 }
 
 /* ---------- Reading the form ---------- */
