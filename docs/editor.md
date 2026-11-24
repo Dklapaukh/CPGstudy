@@ -71,9 +71,26 @@ many edits need review.
 
 **Switching it on (once).**
 
-1. Paste `backend/Code.gs` into Apps Script, run `setup` (it adds the `Editors` and `Edits`
-   tabs) and redeploy with Manage deployments, New version: steps 1 to 4 under "Manager view".
-   The backend address must then say "version with the editor page (17 Nov 2026)".
+1. Redeploy the backend ([Backend, "Redeploying the backend"](backend.md#redeploying-the-backend));
+   `setup` adds the `Editors` and `Edits` tabs.
 2. **Fill the `Editors` tab:** a name in column A and a long passcode you make up in column B,
    one line per editor. Send each passcode privately.
 3. Open the editor page and sign in. Leave the `Edits` tab alone: the page writes it.
+
+## Decisions
+
+- ED-A (owner, 17 Nov 2026): questions are built from the guidelines at run time; only edits
+  are stored (`content/card-edits.yaml` and `.js`). AU-B: the YAML stays as the readable record.
+- ED-B (owner): the page saves to the `Edits` tab; a daily workflow copies it to the repo.
+  Rejected: the backend committing with a GitHub token; editors sending files to the owner.
+  Local-only storage was also rejected (managers read the Sheet; Safari clears data after 7 days).
+- ED-C (owner): editors change a question, its answers, an ordering round's steps, or leave it out.
+- ED-D (Claude): review is per question; an edit whose question changed stays live until kept or
+  dropped.
+- ED-E (Claude): question ids leave out digits, so a changed dose keeps its edit for review.
+- ED-F (owner, 17 Nov 2026): laid out like the study app; no longer loads `manager.css`.
+- ED-G (owner, 17 Nov 2026): questions shown as learners see them, in the answered-right state;
+  random wrong answers seeded by question id; markup shared via `src/views/quizMarkup.js`.
+- ED-H (owner, 18 Nov 2026): tap any box to edit it in place; "Edit all" keeps the whole form
+  (the only place to leave a question out); markup shared via an optional `editing` argument.
+- SC-D (18 Nov 2026): scenarios are edited in place; edits go in `Edits` as `scenario|<id>`.

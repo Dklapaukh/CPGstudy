@@ -91,7 +91,7 @@ function medicineRows(medicine, table, overrides) {
   return rowsForMedicine(medicine.t, table.rows);
 }
 
-/* ---------- Feature 11: routes and indication limits (plan 8.6) ---------- */
+/* ---------- Feature 11: routes and indication limits (Z18 to Z22, docs/medicines-quiz.md) ---- */
 
 // A grant with this in place of a route list covers every route ("Adrenaline (all routes)").
 export const ANY_ROUTE = 'any';

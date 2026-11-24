@@ -1,7 +1,5 @@
 # List, marking and settings
 
-## List, marking and settings
-
 - Header: one top bar with the Quiz and To learn tabs on the left and the streak rat and
   Settings cog on the right; the tracker name sits just below it. Quiz opens the choices, each
   with a small icon (Medicines quiz, Guideline quiz, Medicine test, Pick the guideline,
@@ -41,3 +39,18 @@
   `FEEDBACK_ADDRESS_PARTS` and joined only when the button is tapped (a test checks the page
   holds no whole address). The app sends nothing itself. `[]` hides the button. Filter email on
   the subject "NZCPG study app:".
+
+## Decisions
+
+- No view tracking: only Review or Complete records anything.
+- Rings: green Complete, orange Needs review, empty Incomplete; animation only on newly reaching
+  100%.
+- Random guideline: weights 6 / 3 / 1 (Incomplete / Needs review / Complete); no memory of
+  earlier picks.
+- Marked date: one entry `marked-<id>`. Review-after-days shared with the tracker
+  (`app-settings`); dark mode per phone.
+- R4: comment snippet rule above; points with identical text cannot be told apart. R8: search
+  as above.
+- L: 5 related. M: no automatic queue. P: ranked by link score, then status. O: queue saved
+  through the backend (`review-queue`). Q: queue on the To learn screen only. R: at most 5.
+  S: empties itself when every item is done. Differential-diagnosis links rank first.

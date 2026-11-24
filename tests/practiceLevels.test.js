@@ -226,7 +226,8 @@ test('cardForLevel uses a line override and drops a route the table never names'
   assert.equal(cardForLevel({ ...card, isRsi: true }, 'EMT', access), null, 'RSI: ICP only here');
 });
 
-// The real content: the six medicines of plan 8.6 and the two hand-made line corrections.
+// The real content: the six medicines checked for Z18 to Z22 (docs/medicines-quiz.md) and the
+// two hand-made line corrections.
 const realCards = buildQuizCards(guidelineData.sections, QUIZ_SECTION_NAME);
 const realAccess = {
   grantsByMedicine: medicineGrants(medicines, atpTable, practiceLevelOverrides),

@@ -1,8 +1,10 @@
 # Change log
 
-Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
-19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
+Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
+history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-24: **Guiding docs tidied** (no app change). Decisions moved from plan 8.2 to the end
+  of each `docs/` file; closed plan items removed; one backend redeploy section in `backend.md`.
 - 2026-11-24: **Plan: benchmark and per-level scenario sets noted** (SC-L, feature 22; no
   code change). To do once the scenarios are refined.
 - 2026-11-24: **Review card: levels not ticked** (editor page only). Under "Suits these

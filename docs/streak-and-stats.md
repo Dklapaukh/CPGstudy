@@ -29,3 +29,16 @@ Read only, drawn from what is already saved (`src/views/dataView.js`):
   score.
 - **Medicines:** cards learnt (interval above 0) and locked in (next review 21 or more days
   away).
+
+## Decisions
+
+- ST-D (owner, 17 Nov 2026): the power-up stays until Continue; no timeout.
+- ST-E (owner, 17 Nov 2026): the rat is drawn from the owner's reference photo (inspiration, not
+  a copy): dark fur, mint-framed shield sunglasses, aura, no gold hair.
+- ST-F (owner; Claude chose the reset): on `demo`, a double tap takes today off and back on;
+  earlier days are kept.
+- ST-G (owner, 17 Nov 2026): top-bar rat side on with kit (`ratSvg`); power-up uses the hype rat
+  (`hypeRatSvg`); both in `src/views/ratDrawings.js`.
+- ST-H (owner, 18 Nov 2026): power-up moves like a super-Saiyan charge (no hair), burst at 2 s,
+  plain CSS keyframes.
+- ST-I (owner, 19 Nov 2026): any finished Quiz-tab activity counts, scenario runs included.

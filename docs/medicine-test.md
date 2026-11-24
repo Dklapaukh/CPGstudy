@@ -18,3 +18,13 @@
   (`medicine-test-<medicine id>`); the medicine picker shows "best n%" at the chosen level and
   the end shows the best with its date ("new best" when it is). The editor page does not show
   these questions.
+
+## Decisions
+
+- MT-A (owner, 18 Nov 2026): every card of one medicine as multiple choice, at the practice level.
+- MT-B (owner, Claude's numbers): tick-all-that-apply, 5 points, 1 to 3 right.
+- MT-C (owner, Claude for onset and duration): one blanked number, wrong values as Z14.
+- MT-D (Claude): mechanism against three other medicines' first sentences; option filters above.
+- MT-E (Claude): not on the editor page.
+- MT-F (owner, 18 Nov 2026): level chosen on the test screen (shared with the Medicines quiz);
+  best per medicine and level saved in `medicine-test-<medicine id>`.

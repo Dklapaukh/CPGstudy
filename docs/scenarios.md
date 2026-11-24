@@ -127,3 +127,22 @@ publishes new scenarios as before and fetches approved jobs' photos (`approved-s
 writing to `content/scenario-photos/` only the photos a new scenario shows, so a photo taken out
 before approving is never published. In the app, later vitals and treatment are in a folded
 "What happened next (for the mentor)" and photos in a folded "ECGs and photos".
+
+## Decisions
+
+- SC-A (18 Nov 2026): level and theme filters; themes from guideline sections
+  (`SCENARIO_THEMES`), Rural from a hand-set field. SC-B: no recommendations for now.
+- SC-C: Finish ticks struggled guidelines (to Guidelines to learn) and saves `scenario-run-<id>`
+  (run count and last 3 runs) on the learner's tracker.
+- SC-E (19 Nov 2026, after a literature review): levels 1 to 5 replaced by complexity and scene
+  load. Easy-to-hard is well supported (Issenberg 2005; Cook 2013, effect size 0.68), but old
+  levels 4 and 5 added scene load, not clinical difficulty, so that is its own axis (4C/ID).
+- SC-F (19 Nov 2026): 3 intended outcomes, PEARLS guide (Eppich and Cheng 2015), O-SCORE-style
+  ratings (entrustment anchors are more reliable than norm-based ones), score as above.
+- SC-H (owner, 24 Nov 2026): levels a scenario suits; "Supervised paramedic" kept (owner).
+- SC-I (Claude, 24 Nov 2026): the Review card as above, one review per editor per scenario.
+- SC-J (owner, 24 Nov 2026): in-line comments, editors see only their own, aim 3 editors.
+  Order of work: review the scenarios first, then rewrite marked ones and build the generator;
+  no learner-facing changes until the review is complete.
+- SC-L (owner, 24 Nov 2026; after the rewrites): a benchmark set to place a learner at a level,
+  and per-level "move on" series. Not designed yet.

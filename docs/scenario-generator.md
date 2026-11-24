@@ -1,6 +1,6 @@
 # Scenario generator (design, not built)
 
-Status: approach chosen 24 Nov 2026 (plan 8.3 item 4: Option A, a bank written as data, no
+Status: approach chosen 24 Nov 2026 (SC-K below: Option A, a bank written as data, no
 AI at run time). **Not started on purpose:** the owner asked that building waits until the
 review of the written scenarios is complete (3 editors each), so the level profiles and the
 bank's debrief points can be drawn from the editors' level notes in
@@ -81,3 +81,11 @@ fit" or "Needs rewriting" are shown to the owner to fix, and can be weighted dow
 3. Picking problems or guidelines, and Guidelines to learn.
 4. Complicating factors and look-alikes for the higher levels.
 5. Save to the bank and review.
+
+## Decisions
+
+- SC-K (owner, 24 Nov 2026): Option A, a bank of problems, complicating factors and level
+  profiles as data, drafted by Claude, reviewed by editors, put together on the phone by fixed
+  rules and a seed; no AI at run time. Rejected: B, remixing the written scenarios (only as
+  varied as those); C, AI at run time (needs a paid key and signal; content unchecked). Building
+  waits for the review (SC-J).

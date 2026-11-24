@@ -5,7 +5,8 @@ unless marked "by hand".
 
 - Sign in with a tracker passcode; a wrong (or old mentor) passcode shows the message.
 - A first visit opens the demo with Make an account; signing up shows the passcode and opens
-  the new tracker (`tests/signup.test.js`).
+  the new tracker (`tests/signup.test.js`). The passcode screen says "Enter code demo to take a
+  look".
 - List shows 14 sections and 180 guidelines with correct counts; sections stay as left (by hand).
 - Filters (All, Incomplete, Needs review, Complete) and search.
 - Opening a guideline shows all content; headings fold and unfold; previous and next (by hand).
@@ -41,7 +42,7 @@ unless marked "by hand".
   a round with the one picked; Check marks every piece and gives "n of N right".
 - Medicine test: the practice level can be changed on its screen; tick questions toggle and
   Check; choice questions mark at once; the end shows the score and the best, and the picker
-  shows "best n%". The passcode screen says "Enter code demo to take a look".
+  shows "best n%".
 - Scenarios: in the Quiz choice; complexity and scene load chips and the theme dropdown filter
   the list; a scenario shows its vitals, tags and guidelines; a guideline opened from it has
   "Back to scenario", forgotten once another guideline is opened; Finish shows the PEARLS guide

@@ -9,9 +9,6 @@ edits; it checks the passcode against the `Trackers` tab, reads or writes the
 editor page it reads and writes the `Edits` tab for passcodes in the `Editors` tab, and gives
 the edits to the daily copy ("edits", no passcode: they are published anyway).
 
-- Update it: Sheet, Extensions, Apps Script, paste `backend/Code.gs`, run `setup` if the
-  version adds tabs, then Deploy, Manage deployments, edit, New version. The address stays the
-  same. Needs the V8 runtime. Every step is spelt out under "Manager view".
 - A "stats" request reads the `Data` and `History` tabs whole and sends all of the viewer's
   History lines; the page does the sums. `History` grows by one line per status change or quiz
   play.
@@ -21,6 +18,36 @@ the edits to the daily copy ("edits", no passcode: they are published anyway).
   Anyone with a tracker passcode can read and change that tracker, so keep passcodes long.
 - Every request reads the whole `Data` tab. Revisit that (for example one tab per tracker) at
   about 20,000 rows, roughly 40 full trackers, or when a sync takes more than 3 seconds.
+
+## Redeploying the backend
+
+Needed whenever `backend/Code.gs` changes (the changelog says "needs the backend redeployed").
+No programming needed; allow 10 minutes. Needs the V8 runtime.
+
+1. **Open the script.** Open the Google Sheet. In the menu choose Extensions, then Apps Script.
+   A new browser tab opens showing a file called `Code.gs`.
+2. **Paste the new code.** In another tab open
+   <https://github.com/Dklapaukh/CPGstudy/blob/main/backend/Code.gs> and press the "Copy raw
+   file" button (two overlapping squares, top right of the code). Go back to the Apps Script
+   tab, click in the code, select all of it (Ctrl+A, or Cmd+A on a Mac), and paste (Ctrl+V or
+   Cmd+V) so the new code replaces the old. Press the Save button (the disk picture).
+3. **Run `setup`.** In the bar above the code is a small drop-down list of names; choose
+   `setup`, then press Run. If Google asks for permission (for example "Send email as you" or
+   Drive), press Review permissions, choose your account and press Allow. Wait for "Execution
+   completed" at the bottom. `setup` adds any missing tabs (`Managers`, `Assignments`,
+   `History`, `Editors`, `Edits`, `Submissions`) and, the first time, fills `History` from the
+   dates already saved. Nothing in the old tabs is changed, and running it again does no harm.
+4. **Redeploy at the same address.** Top right, press Deploy, then **Manage deployments** (not
+   "New deployment": that would make a new address and the app would stop working). Press the
+   pencil (Edit). Under Version choose **New version**. Press Deploy, then Done. The address
+   stays the same, so nothing in the app needs changing.
+5. **Check it worked:** open
+   <https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec>
+   in a browser. It must say "CPG tracker service is running, " followed by `BACKEND_VERSION`
+   from `backend/Code.gs` (today "version with scenario runs and submissions (19 Nov 2026)").
+   If it says only "CPG tracker service is running", or a page says "still running an older
+   version of the backend", the address still runs the old code: in Manage deployments edit the
+   deployment whose Web app URL is the address above, and choose New version.
 
 ## Demo and sign-up
 
@@ -41,9 +68,14 @@ the edits to the daily copy ("edits", no passcode: they are published anyway).
   must have been open at least 3 seconds, and at most 20 sign-ups per hour across everyone
   (`SIGNUP_MAX_PER_HOUR` in `backend/Code.gs`). A name needs a letter and cannot be "demo".
   If bots get past these, the next step is a Cloudflare Turnstile check (free, needs a key).
-- **Switching it on:** paste `backend/Code.gs` into Apps Script, press Run on `setup` once so
-  Google asks for the new permission ("Send email as you"), allow it, then Deploy, Manage
-  deployments, the pencil, Version: New version, Deploy. Opening the backend address should
-  say "version without mentors (18 Nov 2026)" (or a later version, such as "version with
-  scenario runs (19 Nov 2026)"). Check there is a `Trackers` row
-  labelled `demo`.
+- Needs a `Trackers` row labelled `demo` with passcode `demo`.
+
+## Decisions
+
+- Extra entries: everything saved beyond a guideline's status and notes is an extra entry in the
+  Data sheet (list in the README), so the backend never changes for a new feature. Entry fields
+  stay `s`, `n`, `t`; the saved-on-phone format stays `{c, l, s, p}`.
+- C2: edit times more than 5 minutes ahead of the backend's clock are cut back
+  (`MAX_CLOCK_AHEAD_MS`).
+- C4 (owner): passcodes stay plain text in the Sheet (see plan 8.3 item 3).
+- C5: revisit reading the whole Data tab at about 20,000 rows or a sync over 3 seconds.

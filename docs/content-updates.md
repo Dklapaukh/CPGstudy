@@ -60,3 +60,16 @@
 - Guideline text is put on the page as markup without escaping. That is safe because the
   converter writes only escaped text, `<b>` and `<br>`, and `scripts/contentCheck.js` stops the
   rebuild and fails `npm run check` on any other tag, entity, colour format or block shape.
+
+## Decisions
+
+- I1, I3: the owner has permission to download the PDF automatically and, from their medical
+  director, to publish St John's text.
+- D: semi-automatic: a plain script rebuilds and opens a pull request; the owner merges (fully
+  automatic is open, plan 8.3 item 1).
+- Y: an unchanged rebuild keeps its published text (above). The change signal is the export
+  date plus each guideline's newest version entry, not the file fingerprint.
+- T: the banner is for new guideline content only. U: nothing reloads until "Update now".
+  V: "Updated" tags last until opened on that phone.
+- R13: `scripts/contentCheck.js` refuses other markup (above).
+- No service worker (the app needs signal to open); not taken.

@@ -1,7 +1,5 @@
 # Guideline quiz
 
-## Guideline quiz
-
 - Opened from the Quiz tab (pick a guideline or Random guideline) or from a guideline's Quiz
   pill. From the pill, "Back to the guideline" returns to the same scroll position and unfolded
   headings. Everything is built from `content/guidelines.js` when a play starts, with no AI.
@@ -50,3 +48,20 @@
   side (green, blue); three are rows (green, blue, purple). Tap a placed piece to take it back.
   Check marks each piece, names the right guideline of a wrong one and counts the streak day.
   Nothing else is saved, and the editor page does not show these questions.
+
+## Decisions
+
+- Z12: one ordering round per situation, 2 or more actions. Z13: 2 distractors a round.
+- Z14: wrong numbers as above; the owner reviewed them (16 Nov 2026) and kept them.
+- Z15: only questions that can be read from the layout; nothing needing AI. Red-flag questions
+  stay (owner, 16 Nov 2026: up to three a play; the code asks at most two). Rationale questions
+  were withdrawn.
+- Z16: best and most recent score per guideline, `quiz-order-<id>`. Guidelines with no quiz show
+  no Quiz pill.
+- PG-B (owner, Claude's numbers) and PG-C (Claude): piece rules and counts as above; colours by
+  place.
+- PG-D (owner): not editable. PG-E (Claude): nothing saved but the streak day.
+- PG-F (owner, 18 Nov 2026): first guideline random, the others from its five related (replaced
+  PG-A, first related link).
+- PG-G (owner): Two or Three guidelines; three as rows. PG-H (Claude): drag onto a name, button
+  or box; buttons stay for tapping and screen readers.

@@ -1,6 +1,6 @@
 /*
- * Review list for the practice level (ATP) filter of the Medicines quiz (feature 11, plan 8.6
- * step 6). Usage: node scripts/practice-level-review.js
+ * Review list for the practice level (ATP) filter of the Medicines quiz (feature 11,
+ * docs/medicines-quiz.md). Usage: node scripts/practice-level-review.js
  * Prints, for each practice level, the medicines it does not study at all, every dose card
  * dropped and every answer line shown greyed with the levels that may give it, so the owner can
  * check the result against the guidelines. Run it again after every PDF update. A wrong case is

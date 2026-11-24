@@ -30,8 +30,8 @@
   "Magnesium IV") is in the medicine's title. Exceptions are in
   `content/practice-level-overrides.js` (Glucose Gel, the two GTN guidelines); a test fails if a
   medicine matches no row and has no override. Schedules of hidden medicines are kept.
-- With a level chosen, dose cards are also filtered by route and indication (plan 8.2, Z18 to
-  Z22). Each 1.1 row gives its level a set of routes ("IN, IM, nebulised and topical"; "(all routes)") and,
+- With a level chosen, dose cards are also filtered by route and indication (Z18 to
+  Z22 below). Each 1.1 row gives its level a set of routes ("IN, IM, nebulised and topical"; "(all routes)") and,
   from an "(… only)" bracket, a limit on indications ("cardiac arrest only"). An answer line's
   routes are the route words in it (IM, IV, IN, IO, SC, PO, SL, MDI in capitals; nebulised,
   topical, inhaled; an infusion is IV); a line with none takes those of the line it sits under,
@@ -48,3 +48,20 @@
   starts that card again as new.
 - If medicine names in the guidelines change, check `TABLE_NAME_OVERRIDES` in
   `src/quizCards.js`.
+
+## Decisions
+
+- E: progress saved through the backend, one entry per medicine. Z1: Again, Hard, Good, Easy
+  (SM-2). Z4: medicines only. No paediatric doses anywhere.
+- Z6: 10 to 200 reviews a day, default 30. Z7: 1 to 10 new medicines a day, default 2.
+- Z8 to Z10: Adrenaline, Midazolam, Morphine get one adult-dose card per guideline that doses
+  them; guidelines with identical instructions share a card.
+- Z11: Morphine 14.32 is cut short in St John's PDF; wait for St John to fix it.
+- Z17 (owner, 16 Nov 2026): the quiz can be limited to one practice level from the CPG 1.1 table.
+- Z18 (owner): higher-level lines are greyed under a label, so the learner sees what backup gives.
+- Z19 (owner): the bracketed limits in CPG 1.1 apply ("cardiac arrest only" and so on).
+- Z20 (owner): limits come from CPG 1.1 only, not a medicine's own "Authorised practice levels".
+- Z21 (owner): no Adrenaline, Midazolam or Morphine indication card is removed from the quiz.
+- Z22: how a line gets its level (above); wrong cases fixed per line in
+  `content/practice-level-overrides.js`.
+- GM-A (owner, 18 Nov 2026): mastered = interval of at least 21 days.

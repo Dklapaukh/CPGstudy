@@ -11,7 +11,8 @@ to them: <https://dklapaukh.github.io/CPGstudy/manager.html> (see [docs/manager.
 editor page, lets editors change the quiz questions:
 <https://dklapaukh.github.io/CPGstudy/editor.html> (see [docs/editor.md](docs/editor.md)).
 
-Working rules, decisions and open items are in `NZCPG_study_app_improvement_plan.md`.
+Working rules, open items and next steps are in `NZCPG_study_app_improvement_plan.md`;
+each feature's decisions are at the end of its doc.
 
 ## Feature docs
 
@@ -84,8 +85,7 @@ How each part works, one file each in `docs/`:
 - Run locally: `npx serve .` (ES modules do not load from a file opened directly).
 - Check: `npm install` once, then `npm run check` (formatting, lint, tests). GitHub runs it on
   every push. `npm run audit` reports style-guide gaps (plan section 10); errors fail it.
-- Publish: GitHub Pages serves the root of `main`. Claude pushes every update straight to `main`
-  after `npm run check` passes, with a `CHANGELOG.md` entry (see `CLAUDE.md`).
+- Publish: GitHub Pages serves the root of `main` (publishing rules in `CLAUDE.md`).
 - App code changes show no banner. Phones pick them up on a reload once GitHub Pages' cache
   (about 10 minutes) has expired.
 
