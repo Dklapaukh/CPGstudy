@@ -205,3 +205,27 @@
   text-align: center;
   text-decoration: none;
 }
+
+/* In-line comments on a scenario's parts: a small button at the end of each part, and the
+   editor's saved comment above it. */
+.comment-slot {
+  margin: 0.4rem 0;
+}
+.comment-button {
+  min-height: 44px;
+  font-size: 0.9rem;
+}
+.comment-saved {
+  margin: 0.2rem 0;
+  font-size: 0.95rem;
+}
+.comment-questions {
+  margin: 0.2rem 0 0.5rem;
+  padding-left: 1.2rem;
+  color: var(--colour-muted);
+}
+/* The Review card's summary questions: one short box per question and per level. */
+.review-answer {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}

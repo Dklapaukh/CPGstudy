@@ -4,8 +4,10 @@
  * and clicking any value opens a box to change it in place. A new scenario is written in one form
  * (#new-scenario), and any scenario can be deleted for good after a second tap. Each function takes prepared data and
  * returns text; main.js puts it on the page and handles the clicks. Text is escaped.
- * Depends on logic.js, constants.js, guidelines.js, scenarioEdits.js, staffPage.js and
- * views/scenarioMarkup.js.
+ * Each part (story, vitals, background, intention, debrief points, guidelines) has a Comment
+ * button that opens a box with that part's questions (scenarioComments.js).
+ * Depends on logic.js, constants.js, guidelines.js, scenarioEdits.js, scenarioComments.js,
+ * scenarioReviews.js, staffPage.js and views/scenarioMarkup.js.
  */
 import { escapeHtml } from '../logic.js';
 import { warningHtml, noteHtml, actionButtonHtml } from '../staffPage.js';
@@ -24,6 +26,9 @@ import {
 } from '../scenarioEdits.js';
 import { scenarioBodyHtml, scenarioTagsText, levelsText } from '../views/scenarioMarkup.js';
 import { reviewCardHtml } from './reviewView.js';
+import { partName, questionsOf, partKind, MAX_COMMENT } from '../scenarioComments.js';
+import { REVIEWS_GOAL } from '../scenarioReviews.js';
+import { DEBRIEF_RATINGS } from '../constants.js';
 
 export const SCENARIO_EDITOR_HASH_PREFIX = '#s-';
 // Not under #s-, so no scenario id can clash with it.
@@ -91,7 +96,7 @@ export function scenarioSectionHtml(rows, isOpen) {
       <div class="guideline-row__text"><b>${escapeHtml(row.title)}</b>
       <small>${escapeHtml(scenarioTagsText(row))} · ${escapeHtml(row.suburb)}${
         levelsText(row) ? ` · ${escapeHtml(levelsText(row))}` : ''
-      }${row.isReviewed ? ' · ✓ reviewed' : ''}</small></div>
+      }${row.isReviewed ? ' · ✓ you reviewed' : ''} · ${row.reviewerCount || 0}/${REVIEWS_GOAL} editors</small></div>
       ${row.badge ? `<span class="row-meta"><span class="editor-badge">${row.badge}</span></span>` : ''}</a>`,
     )
     .join('');
@@ -114,6 +119,59 @@ function boxFormHtml(scenario, path, text, error) {
       ${actionButtonHtml('close', 'Cancel')}</div></div>`;
 }
 
+/** Guidelines as "4.11 Chest pain" lines, for the suggested additions. */
+const guidelineListHtml = (ids) =>
+  ids
+    .map(guidelineById)
+    .filter(Boolean)
+    .map((guideline) => `<li><b>${escapeHtml(guideline.n)}</b> ${escapeHtml(guideline.t)}</li>`)
+    .join('');
+
+/** The open comment box of a part: its questions, the comment, and for guidelines, additions. */
+function commentBoxHtml(part, comments) {
+  const name = partName(part, comments.patientCount);
+  const questions = questionsOf(part)
+    .map((question) => `<li>${escapeHtml(question)}</li>`)
+    .join('');
+  const guidelines =
+    partKind(part) === 'guidelines'
+      ? `<label class="editor-label" for="comment-guidelines">Guidelines to add (CPG numbers)</label>
+    <input class="text-input" id="comment-guidelines" type="text" inputmode="decimal"
+      value="${escapeHtml(comments.guidelinesText)}">
+    ${noteHtml('Separated by commas, for example 1.17, 4.11. Each is checked against the app’s list.')}`
+      : '';
+  return `<div class="editor-inline comment-box" id="comment-box">
+    <p class="editor-label">Comment on ${escapeHtml(name)}</p>
+    ${questions ? `<ul class="comment-questions">${questions}</ul>` : ''}
+    <textarea class="text-input editor-box" id="comment-text" rows="3" maxlength="${MAX_COMMENT}"
+      aria-label="Comment on ${escapeHtml(name)}">${escapeHtml(comments.text)}</textarea>
+    ${guidelines}${warningHtml(comments.error)}
+    <div class="editor-buttons">${actionButtonHtml('comment-save', 'Save comment', '', 'button')}
+      ${actionButtonHtml('comment-cancel', 'Cancel')}</div></div>`;
+}
+
+/**
+ * A part's comment: the open box, or this editor's saved comment (and suggested guidelines)
+ * with a button to write or change it.
+ */
+function commentHtml(part, comments) {
+  if (comments.openPart === part) return commentBoxHtml(part, comments);
+  const text = comments.saved?.comments?.[part] || '';
+  const added = partKind(part) === 'guidelines' ? comments.saved?.addGuidelines || [] : [];
+  const shown = text ? `<p class="comment-saved"><b>Your comment:</b> ${escapeHtml(text)}</p>` : '';
+  const addedHtml = added.length
+    ? `<p class="comment-saved"><b>You suggest adding:</b></p><ul class="comment-saved">${guidelineListHtml(added)}</ul>`
+    : '';
+  const label = text || added.length ? 'Change comment' : 'Comment';
+  const button = actionButtonHtml(
+    'comment-open',
+    `💬 ${label}`,
+    ` data-part="${escapeHtml(part)}" aria-label="${label} on ${escapeHtml(partName(part, comments.patientCount))}"`,
+    'switch-button comment-button',
+  );
+  return `<div class="comment-slot">${shown}${addedHtml}${button}</div>`;
+}
+
 /** Makes the markup editable: every value clickable, the open one drawn as a box. */
 function editingFor(view) {
   return {
@@ -121,8 +179,24 @@ function editingFor(view) {
       ` data-action="edit-box" data-path="${escapeHtml(path)}" tabindex="0" title="Tap to change"`,
     formFor: (path) =>
       path === view.openPath ? boxFormHtml(view.written, path, view.boxText, view.boxError) : '',
+    commentFor: view.comments ? (part) => commentHtml(part, view.comments) : null,
   };
 }
+
+/** Who has reviewed this scenario so far, against the aim of REVIEWS_GOAL editors. */
+function reviewersHtml(reviewers) {
+  if (!reviewers) return '';
+  const names = reviewers.length ? `: ${reviewers.map(escapeHtml).join(', ')}` : '';
+  return noteHtml(
+    `Reviewed by ${reviewers.length} of ${REVIEWS_GOAL} editors${names}. Your comments and review are saved under your name.`,
+  );
+}
+
+/** What the debrief does with the debrief points, so an editor can judge them here. */
+const debriefNoteHtml = () =>
+  noteHtml(
+    `After Finish, the mentor rates each debrief point (${DEBRIEF_RATINGS.map((rating) => rating.name).join(', ')}) and ticks the guidelines the learner struggled with. Tap 💬 Comment under any part to answer its questions.`,
+  );
 
 /** The values a change to content/scenarios.js altered under the edit, with what to do. */
 function reviewHtml(view) {
@@ -170,6 +244,7 @@ export function scenarioEditorHtml(viewer, view, signedInButtons) {
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
     ${noteHtml('The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.')}
+    ${view.comments ? debriefNoteHtml() : ''}${reviewersHtml(view.reviewers)}
     <p>${badgesHtml(view)}</p>${reviewHtml(view)}
     <div class="editor-preview scenario-screen">${scenarioBodyHtml(live, editingFor(view))}</div>
     ${view.review ? reviewCardHtml(view.review) : ''}

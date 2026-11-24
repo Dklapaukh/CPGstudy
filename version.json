@@ -35,6 +35,7 @@
     "src/sortQuiz.js",
     "src/sortQuizState.js",
     "src/report.js",
+    "src/scenarioComments.js",
     "src/scenarioEdits.js",
     "src/scenarioReviews.js",
     "src/scenarioLogic.js",

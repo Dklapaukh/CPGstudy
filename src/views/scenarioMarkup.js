@@ -4,7 +4,9 @@
  * Each function takes data and returns text; nothing here touches the page.
  * On the editor page an optional `editing` argument makes each value clickable and puts the
  * editor's box in place of the open one: { attrs(path), formFor(path) }, where a path names one
- * value as in scenarioEdits.js. Without it the markup is the app's. With `readOnly: true` (a
+ * value as in scenarioEdits.js. It may also have commentFor(part), which gives the in-line
+ * comment button and box of a part (scenarioComments.js) to put at the end of that part.
+ * Without it the markup is the app's. With `readOnly: true` (a
  * submitted job waiting for approval) it is the editor's layout with nothing to tap.
  * Depends on logic.js, guidelines.js, constants.js and scenarioEdits.js.
  */
@@ -21,6 +23,7 @@ import { tidyLevels } from '../scenarioEdits.js';
 
 const boxAttrs = (editing, path) => (editing ? editing.attrs(path) : '');
 const openForm = (editing, path) => (editing ? editing.formFor(path) : '');
+const commentSlot = (editing, part) => (editing?.commentFor ? editing.commentFor(part) : '');
 
 const complexityName = (scenario) => SCENARIO_COMPLEXITY[scenario.complexity]?.name || '';
 const loadName = (scenario) => SCENARIO_LOADS[scenario.load]?.name || '';
@@ -125,7 +128,7 @@ const vitalsNoteHtml = (text) => (text ? `<p class="scenario-label">${escapeHtml
  * then the treatment and response. Folded in the app, so the mentor reveals it when it fits.
  * Nothing when the patient has neither.
  */
-function nextHtml(patient, editing) {
+function nextHtml(patient, index, editing) {
   const later = (patient.laterVitals || [])
     .map((set) => `${vitalsNoteHtml(set.note)}${vitalsTableHtml(set.vitals, '')}`)
     .join('');
@@ -134,7 +137,12 @@ function nextHtml(patient, editing) {
       <p class="scenario-fact">${escapeHtml(patient.treatment)}</p>`
     : '';
   if (!later && !treatment) return '';
-  return foldHtml('What happened next (for the mentor)', later + treatment, Boolean(editing));
+  const comment = commentSlot(editing, `patients.${index}.next`);
+  return foldHtml(
+    'What happened next (for the mentor)',
+    later + treatment + comment,
+    Boolean(editing),
+  );
 }
 
 /** A submitted job's photos (ECGs, the monitor) with captions, folded in the app. */
@@ -149,7 +157,8 @@ function photosHtml(scenario, editing) {
       </figure>`,
     )
     .join('');
-  return foldHtml(`ECGs and photos (${photos.length})`, figures, Boolean(editing));
+  const comment = commentSlot(editing, 'photos');
+  return foldHtml(`ECGs and photos (${photos.length})`, figures + comment, Boolean(editing));
 }
 
 /** The vitals and background of one patient, then what happened next when it is known. */
@@ -160,9 +169,13 @@ function patientHtml(patient, index, editing) {
     factHtml('Medications', patient.medications, `${prefix}.medications`, editing) +
     factHtml('Allergies', patient.allergies, `${prefix}.allergies`, editing) +
     factHtml('Social history', patient.social, `${prefix}.social`, editing);
+  const vitals =
+    vitalsNoteHtml(patient.vitalsNote) +
+    vitalsTableHtml(patient.vitals, prefix, editing) +
+    commentSlot(editing, `${prefix}.vitals`);
   return `${patientLabelHtml(patient, prefix, editing)}
-    ${foldHtml('Vitals', vitalsNoteHtml(patient.vitalsNote) + vitalsTableHtml(patient.vitals, prefix, editing), true)}
-    ${foldHtml('Patient background', background, true)}${nextHtml(patient, editing)}`;
+    ${foldHtml('Vitals', vitals, true)}
+    ${foldHtml('Patient background', background + commentSlot(editing, `${prefix}.background`), true)}${nextHtml(patient, index, editing)}`;
 }
 
 /** One guideline row: a link in the app, plain text for an editor (the list is one box). */
@@ -181,7 +194,11 @@ function guidelinesHtml(scenario, editing) {
   const body =
     openForm(editing, 'guidelines') ||
     (editing ? `<div${boxAttrs(editing, 'guidelines')}>${rows}</div>` : rows);
-  return foldHtml(`Guidelines (${scenario.guidelines.length})`, body, true);
+  return foldHtml(
+    `Guidelines (${scenario.guidelines.length})`,
+    body + commentSlot(editing, 'guidelines'),
+    true,
+  );
 }
 
 /**
@@ -200,13 +217,16 @@ export function scenarioBodyHtml(scenario, editing) {
     )
       .map((outcome) => `<li>${escapeHtml(outcome)}</li>`)
       .join('')}</ul>`;
-  const intention = `${text('intention', 'p', 'scenario-fact')}
-    <p class="scenario-label">Intended outcomes</p>${outcomes}`;
+  // On the editor page the outcomes are named for what they become: the debrief's points.
+  const outcomesLabel = editing ? 'Intended outcomes (debrief points)' : 'Intended outcomes';
+  const intention = `${text('intention', 'p', 'scenario-fact')}${commentSlot(editing, 'intention')}
+    <p class="scenario-label">${outcomesLabel}</p>${outcomes}${commentSlot(editing, 'outcomes')}`;
+  const intentionTitle = editing ? 'Intention and debrief points' : 'Scenario intention';
   return `<section class="scenario-card">${scenarioTagsHtml(scenario, editing)}
       ${text('title', 'h1', 'scenario-title')}${text('suburb', 'p', 'scenario-label')}
-      ${text('story', 'p', 'scenario-story')}</section>
+      ${text('story', 'p', 'scenario-story')}${commentSlot(editing, 'story')}</section>
     ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
     ${photosHtml(scenario, editing)}
-    ${foldHtml('Scenario intention', intention, Boolean(editing))}
+    ${foldHtml(intentionTitle, intention, Boolean(editing))}
     ${guidelinesHtml(scenario, editing)}`;
 }

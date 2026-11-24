@@ -11,6 +11,8 @@ import {
   nextUnreviewed,
   reviewedCount,
   reviewReport,
+  reviewersOf,
+  fullyReviewedCount,
 } from '../src/scenarioReviews.js';
 import {
   tidyLevels,
@@ -28,6 +30,8 @@ const form = {
   verdict: 'tweak',
   problems: ['too-easy', 'made-up'],
   note: '  Add a red herring.  ',
+  answers: { teaches: ' Long lies ', unsafe: '', made: 'x' },
+  levelNotes: { icp: 'Add rhabdo and hyperkalaemia', nope: 'x' },
 };
 
 test('a review id names the scenario and editor, and is never taken for a scenario edit', () => {
@@ -52,6 +56,8 @@ test('a review needs an overall call; unknown levels, grades and problems are dr
     verdict: 'tweak',
     problems: ['too-easy'],
     note: 'Add a red herring.',
+    answers: { teaches: 'Long lies' },
+    levelNotes: { icp: 'Add rhabdo and hyperkalaemia' },
   });
   assert.equal(cleanReview({ ...review, kind: 'scenario' }), null);
   assert.equal(cleanReview({ ...review, at: 'today' }), null);
@@ -66,6 +72,8 @@ test('the form starts from your saved review, or from the levels the scenario ha
     verdict: '',
     problems: [],
     note: '',
+    answers: {},
+    levelNotes: {},
   });
 });
 
@@ -88,10 +96,14 @@ test('the report sums verdicts, grades and problems, then lists each scenario’
     'Sam',
     Date.UTC(2026, 10, 25),
   ).review;
-  const report = reviewReport([first, second], (id) => (id === 'long-lie' ? 'Long lie' : ''));
+  const titleOf = (id) => (id === 'long-lie' ? 'Long lie' : '');
+  const report = reviewReport([first, second], { titleOf });
   assert.deepEqual(report.summary, {
     reviews: 2,
     scenarios: 1,
+    goal: '3 editors per scenario',
+    scenariosAtGoal: 0,
+    reviewers: { Eve: 1, Sam: 1 },
     verdicts: { keep: 1, tweak: 1 },
     averageScores: { realism: 2.5, accuracy: 2, teaching: null, difficulty: null },
     problems: { 'too-easy': 2 },
@@ -105,7 +117,23 @@ test('the report sums verdicts, grades and problems, then lists each scenario’
     verdict: 'Small changes',
     problems: ['Too easy'],
     note: 'Add a red herring.',
+    answers: { 'What does it teach best?': 'Long lies' },
+    levelNotes: { ICP: 'Add rhabdo and hyperkalaemia' },
   });
+  assert.equal(report.scenarios[0].reviewers, 2);
+  assert.deepEqual(report.levelNotes, { ICP: ['long-lie (Eve): Add rhabdo and hyperkalaemia'] });
+});
+
+test('who reviewed a scenario, and how many scenarios have three editors’ reviews', () => {
+  const edits = {};
+  ['Eve', 'Sam', 'Ana'].forEach((name, index) => {
+    edits[reviewEditId('a', name)] = { kind: 'scenario-review', reviewer: name, at: index };
+  });
+  edits[reviewEditId('b', 'Eve')] = { kind: 'scenario-review', reviewer: 'Eve', at: 5 };
+  edits[reviewEditId('ab', 'Sam')] = { kind: 'scenario-review', reviewer: 'Sam', at: 6 };
+  assert.deepEqual(reviewersOf('a', edits), ['Eve', 'Sam', 'Ana']);
+  assert.deepEqual(reviewersOf('b', edits), ['Eve'], 'not confused with "ab"');
+  assert.equal(fullyReviewedCount(['a', 'b', 'ab'], edits), 1);
 });
 
 test('the daily copy keeps whole reviews apart from question and scenario edits', () => {

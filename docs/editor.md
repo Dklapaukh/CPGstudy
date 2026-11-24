@@ -29,8 +29,12 @@ all edits" removes the edit. A scenario edit is saved in the same `Edits` tab un
 `scenario|<id>` and keeps what each value said when it was edited. When `content/scenarios.js`
 later changes that value, the scenario is listed under "Needs review".
 
-**Reviewing scenarios.** Under each scenario a Review card grades it and sets the levels it
-suits; the first screen counts how many you have reviewed and opens the next. See
+**Reviewing scenarios.** On the editor page every part of a scenario is shown open, the
+intention with its intended outcomes as "Intention and debrief points". Each part has a 💬
+Comment button with that part's questions; under the scenario a Review card grades it, sets the
+levels it suits and ends with short summary questions, one per level. Reviews and comments are
+saved under the editor's name, aiming for 3 editors per scenario; the first screen counts how
+many you have reviewed and opens the next. See
 [Scenarios](scenarios.md), "Reviewing scenarios".
 
 **New and deleted scenarios.** "+ New scenario" at the top of the Scenarios section opens one

@@ -25,6 +25,7 @@ import {
   scenarioEditDeleted,
 } from '../src/scenarioEdits.js';
 import { isReviewEditId, cleanReview, reviewReport } from '../src/scenarioReviews.js';
+import { allComments, partName } from '../src/scenarioComments.js';
 import { guidelineById } from '../src/guidelines.js';
 import { scenarios } from '../content/scenarios.js';
 import { SCENARIO_PHOTO_FOLDER } from '../src/constants.js';
@@ -120,18 +121,25 @@ export function cleanReviews(edits) {
     .sort((first, second) => first.at - second.at);
 }
 
-const REVIEWS_HEADER = `Editors' reviews of scenarios (src/scenarioReviews.js): a summary, then each reviewed
-scenario. Read this before writing new scenarios. Written by\n${WRITTEN_BY}`;
+const REVIEWS_HEADER = `Editors' reviews of scenarios (src/scenarioReviews.js): a summary, each level's notes,
+then each reviewed scenario with its in-line comments (src/scenarioComments.js). Read this before writing new scenarios. Written by\n${WRITTEN_BY}`;
 
-/** Writes the reviews' readable record; the app doesn't load it, so there is no .js file. */
-function writeReviews(reviews, scenarioEditsById) {
+/**
+ * Writes the reviews' and in-line comments' readable record; the app doesn't load it, so there
+ * is no .js file.
+ */
+function writeReviews(reviews, comments, scenarioEditsById) {
   const added = Object.values(scenarioEditsById)
     .map((edit) => edit.added)
     .filter(Boolean);
-  const titleOf = (id) =>
-    [...scenarios, ...added].find((scenario) => scenario.id === id)?.title || '';
+  const scenarioOf = (id) => [...scenarios, ...added].find((scenario) => scenario.id === id);
+  const names = {
+    titleOf: (id) => scenarioOf(id)?.title || '',
+    partNameOf: (id, part) => partName(part, scenarioOf(id)?.patients.length || 1),
+    numberOf: (id) => guidelineById(id)?.n || id,
+  };
   const header = REVIEWS_HEADER.replace(/^/gm, '# ');
-  const report = reviewReport(reviews, titleOf);
+  const report = reviewReport(reviews, names, comments);
   writeFileSync(contentPath('scenario-reviews.yaml'), `${header}\n${stringify(report)}`);
 }
 
@@ -199,8 +207,11 @@ async function main() {
   writeEdits(FILES.cards, edits);
   writeEdits(FILES.scenarios, scenarioEditsById);
   const reviews = cleanReviews(reply.edits || {});
-  writeReviews(reviews, scenarioEditsById);
-  console.log(`${reviews.length} scenario reviews written.`);
+  const comments = allComments(reply.edits || {}, isGuidelineId);
+  writeReviews(reviews, comments, scenarioEditsById);
+  console.log(
+    `${reviews.length} scenario reviews and ${comments.length} editors' comments written.`,
+  );
   const toReview = editsToReview(edits, scenarioEditsById);
   const count = Object.keys(edits).length + Object.keys(scenarioEditsById).length;
   console.log(`${count} edits written; ${toReview.length} need review.`);

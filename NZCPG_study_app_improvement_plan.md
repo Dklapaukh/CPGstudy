@@ -389,6 +389,18 @@ Claude's, say if any should change)**
   teaching point, Right difficulty) each Poor, OK or Good; eight one-tap problems; an overall
   call (needed) and a note. One review per editor per scenario in the Edits tab; the daily copy
   writes `content/scenario-reviews.yaml`, read before writing scenarios (CLAUDE.md).
+- SC-J (24 Nov 2026, owner asked; details Claude's choices): on the editor page each part of a
+  scenario has a Comment button showing that part's questions; suggested guidelines are
+  validated; comments are saved per editor (`scenario-notes|<id>|<editor>`) and editors see
+  only their own. The Review card ends with two short questions and one line per level. Aim: 3
+  editors per scenario, with names shown. Owner's order of work: (1) review the written
+  scenarios for realism and accuracy and build up what makes a scenario fit each level; (2)
+  only then rewrite the marked scenarios and build the generator. No changes to the learners'
+  app until the review is complete.
+- SC-K (24 Nov 2026, owner answered 8.3 items 4 and 5): generator approach Option A (a bank of
+  problems, complicating factors and level profiles as data, drafted by Claude, reviewed by
+  editors with the Review card, put together on the phone by fixed rules and a seed; no AI at
+  run time). The level stays "Supervised paramedic". Building waits for the review (SC-J).
 
 ### 8.3 Open decisions (owner)
 
@@ -415,6 +427,8 @@ Claude's, say if any should change)**
    passcodes hashed. Closest to today's design; the free plan does not pause when idle.
    Option C: Supabase (Postgres with sign-in and row-level security): real per-person accounts.
    Most secure, biggest rewrite; free projects pause after a week without use.
+
+Items 4 and 5 below were answered on 24 Nov 2026 (SC-K in 8.2: A and A); kept for the record.
 
 4. **Scenario generator: the approach** (asked 24 Nov 2026; design in
    `docs/scenario-generator.md`). Claude recommends Option A.
@@ -536,11 +550,14 @@ on several phones and all work. A tidy-up (rule 9) the same day merged repeated 
 removed dead CSS and stale notes, with no behaviour change.
 
 **Scenario reviews (24 Nov 2026):** editors grade scenarios and set their levels on the
-editor page (SC-H, SC-I); reviews arrive in `content/scenario-reviews.yaml` each morning. Next:
-the owner reviews the 40 scenarios, then Claude rewrites those marked for change and answers
-8.3 items 4 and 5 before building the generator.
+editor page (SC-H, SC-I), with in-line comments per part, summary questions and a line per
+level (SC-J); reviews and comments arrive in `content/scenario-reviews.yaml` each morning. On
+24 Nov the file held 0 reviews, so no scenario was marked for change yet. Next: editors (aim 3
+per scenario) review the 40 scenarios; then Claude rewrites those marked Small changes or
+Needs rewriting and drafts the level profiles from the level notes; only then step 1 of
+`docs/scenario-generator.md` (SC-K). No learner-facing changes until the review is complete.
 
-**Open:** 8.3 items 1 to 5; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
+**Open:** 8.3 items 1 to 3; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
 a best score for Pick the guideline; changing its second or third guideline too.
 

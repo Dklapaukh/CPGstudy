@@ -56,13 +56,33 @@ button to the next one. Under each scenario a **Review this scenario** card has:
 - **Problems**, any of eight one-tap faults such as "Vitals don't fit the story" or "Gives the
   answer away" (`REVIEW_PROBLEMS`), so they can be counted;
 - **Overall** (needed): Use as it is, Small changes, Needs rewriting, Take it out;
-- **What would make it better**, up to 600 characters.
+- **What would make it better**, up to 600 characters;
+- a short **Summary** (decision 24 Nov 2026, SC-J): "What does it teach best?", "Anything
+  unsafe or wrong?" (`REVIEW_QUESTIONS`) and, for each level, one line "To suit each level,
+  change…" (`levelNotes`), each up to 200 characters.
+
+**In-line comments.** Each part of the scenario on the editor page (story, each patient's
+vitals, background and what happened next, the photos, the intention, the debrief points and
+the guidelines) ends with a **💬 Comment** button. It opens a box showing that part's questions
+(`COMMENT_PARTS` in `src/scenarioComments.js`, such as "Do the vitals fit the story, the age and
+how unwell they are?") above the comment. The guidelines' box also takes **guidelines to add**
+as CPG numbers, each checked against the app's list (not a real number, or one the scenario
+already has, is refused). An editor's comments on a scenario are one row in the Edits tab,
+`scenario-notes|<scenario id>|<editor>`; emptying them all removes it. Editors see only their
+own comments, so each review stays independent.
+
+**Who reviewed.** Every review and comment is saved under the editor's name. The aim is **3
+editors per scenario** (`REVIEWS_GOAL`): the scenario screen says "Reviewed by N of 3 editors:
+names", each row of the list shows "N/3 editors", and the first screen counts how many
+scenarios have 3.
 
 **Save and next** saves and opens the next scenario you haven't reviewed; **Save review**
 stays. Each editor has one review per scenario (saving again replaces it), kept in the Edits
 tab as `scenario-review|<scenario id>|<editor>`, so no backend change was needed. The daily
 copy writes them all to `content/scenario-reviews.yaml`: a summary (verdicts, the average of
-each grade, problems by how often), then each scenario's reviews. The app never loads it.
+each grade, problems by how often, reviews per editor, scenarios with 3 reviews), every level's
+notes gathered by level (`levelNotes`, what makes a scenario fit that level), then each
+scenario's reviews and in-line comments. The app never loads it.
 **Read it before writing new scenarios**, and fix the scenarios marked Small changes or Needs
 rewriting.
 

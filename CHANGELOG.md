@@ -3,6 +3,17 @@
 Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-24: **In-line comments and summary questions for scenario reviews** (editor page
+  only, no redeploy needed; the app's scenario screens are unchanged). Each part of a scenario
+  on the editor page (story, vitals, background, what happened next, photos, intention, debrief
+  points, guidelines) has a 💬 Comment button that opens a box with that part's questions;
+  suggested extra guidelines are checked against the app's list. Comments are saved per editor
+  (`scenario-notes|<id>|<editor>`). The editor's view shows everything open, the intention fold
+  is "Intention and debrief points", and a line says how the debrief uses them. The Review card
+  ends with two short questions and one line per level ("To suit each level, change…"), says
+  who is reviewing, and the page shows who has reviewed each scenario against the aim of 3
+  editors. `content/scenario-reviews.yaml` gains reviewers, scenarios at 3 reviews, every level's
+  notes in one place and each editor's comments. Plan 8.3 items 4 and 5 answered (A and A).
 - 2026-11-24: **Reviewing scenarios and the levels they suit** (no redeploy needed). The
   editor page has a Review card under each scenario: the levels it suits (Student, Grad,
   Supervised, Paramedic, ICP), four grades (Realistic, Clinically consistent, Clear teaching

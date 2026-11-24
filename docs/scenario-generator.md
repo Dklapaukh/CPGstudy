@@ -1,6 +1,10 @@
 # Scenario generator (design, not built)
 
-Status: proposed 24 Nov 2026. The approach is open decision 4 in section 8.3 of the plan. This
+Status: approach chosen 24 Nov 2026 (plan 8.3 item 4: Option A, a bank written as data, no
+AI at run time). **Not started on purpose:** the owner asked that building waits until the
+review of the written scenarios is complete (3 editors each), so the level profiles and the
+bank's debrief points can be drawn from the editors' level notes in
+`content/scenario-reviews.yaml`. This
 page says how a generator could work **without AI on the phone**, so it can be built in steps.
 
 ## What it should do

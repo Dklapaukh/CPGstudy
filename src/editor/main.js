@@ -6,7 +6,8 @@
  * Sheet's Edits tab straight away and reach the app the next morning, when scripts/sync-edits.js
  * copies them into content/card-edits.js and content/scenario-edits.js.
  * Under each scenario a Review card grades it and sets the levels it suits (scenarioReviews.js);
- * "Save and next" opens the next one this editor hasn't reviewed.
+ * "Save and next" opens the next one this editor hasn't reviewed. Each part of a scenario has a
+ * Comment button for in-line comments, saved under the editor's name (scenarioComments.js).
  * Jobs sent with the Add a scenario form wait in their own section; one (#j-<id>) is shown as the
  * scenario it would make, to approve (published the next morning) or reject.
  * One state object, one way to draw: every change calls render().
@@ -55,7 +56,16 @@ import {
   reviewFormOf,
   nextUnreviewed,
   reviewedCount,
+  reviewersOf,
+  fullyReviewedCount,
 } from '../scenarioReviews.js';
+import {
+  commentEditId,
+  isCommentEditId,
+  commentsWith,
+  readSuggestedGuidelines,
+  partKind,
+} from '../scenarioComments.js';
 import { REVIEW_FORM_ID, reviewProgressHtml } from './reviewView.js';
 import { guidelines, guidelineById } from '../guidelines.js';
 import { cardEdits } from '../../content/card-edits.js';
@@ -126,6 +136,10 @@ const state = {
   photoBySrc: {}, // fetched photos by the address they will have once published (for previews)
   reviewForm: null, // the open scenario's Review card as ticked so far: { scenarioId, form }
   reviewError: '', // why the review couldn't be saved
+  openComment: '', // the scenario part whose comment box is open (scenarioComments.js)
+  commentText: '', // what that box holds, kept for any redraw
+  commentGuidelines: '', // the guidelines box of the guidelines part, as CPG numbers
+  commentError: '', // why the comment couldn't be saved
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -190,8 +204,11 @@ const isScenarioEdit = (id) => Boolean(scenarioIdOfEdit(id));
 const isPublished = (id) =>
   JSON.stringify((isScenarioEdit(id) ? scenarioEdits : cardEdits)[id]) ===
   JSON.stringify(state.edits[id]);
+/** The ids of the quiz question edits: not scenario edits, reviews or comments. */
 const questionEditIds = () =>
-  Object.keys(state.edits).filter((id) => !isScenarioEdit(id) && !isReviewEditId(id));
+  Object.keys(state.edits).filter(
+    (id) => !isScenarioEdit(id) && !isReviewEditId(id) && !isCommentEditId(id),
+  );
 
 /** One question as the screens show it: built, as learners see it, its edit and its state. */
 function itemFor(id) {
@@ -279,6 +296,19 @@ function reviewViewFor(scenarioId, live) {
     error: isOpen ? state.reviewError : '',
     savedAt: saved?.at || 0,
     nextId: nextUnreviewed(scenarioOrder(), state.edits, state.name, scenarioId),
+    reviewer: state.name,
+  };
+}
+
+/** The in-line comments' data for a scenario (see editor/scenarioView.js commentHtml). */
+function commentsViewFor(scenarioId, live) {
+  return {
+    saved: state.edits[commentEditId(scenarioId, state.name)] || null,
+    openPart: state.openComment,
+    text: state.commentText,
+    guidelinesText: state.commentGuidelines,
+    error: state.commentError,
+    patientCount: live.patients.length,
   };
 }
 
@@ -290,7 +320,8 @@ function reviewProgress() {
   const ids = scenarioOrder();
   const nextId = nextUnreviewed(ids, state.edits, state.name);
   const href = nextId ? `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(nextId)}` : '';
-  return reviewProgressHtml(reviewedCount(ids, state.edits, state.name), ids.length, href);
+  const reviewed = reviewedCount(ids, state.edits, state.name);
+  return reviewProgressHtml(reviewed, ids.length, href, fullyReviewedCount(ids, state.edits));
 }
 
 /** Scenario edits that need review, for the first screen's list. */
@@ -323,6 +354,7 @@ function scenarioRows() {
       ...view.live,
       badge: badgeOf(view.edit),
       isReviewed: Boolean(state.edits[reviewEditId(view.live.id, state.name)]),
+      reviewerCount: reviewersOf(view.live.id, state.edits).length,
     }));
 }
 
@@ -384,12 +416,18 @@ function reviewFormOnPage() {
     if (value) scores[key] = Number(value);
   });
   const note = card.querySelector('#review-note').value;
+  const textsOf = (data) =>
+    Object.fromEntries(
+      [...card.querySelectorAll(`[data-${data}]`)].map((box) => [box.dataset[data], box.value]),
+    );
   return {
     levels: checked('levels'),
     scores,
     verdict: checked('verdict')[0] || '',
     problems: checked('problems'),
     note,
+    answers: textsOf('answer'),
+    levelNotes: textsOf('level'),
   };
 }
 
@@ -430,6 +468,60 @@ async function saveReview(goNext) {
   if (goNext && nextId)
     location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(nextId)}`;
   else render();
+}
+
+/* ---------- In-line comments ---------- */
+
+/** Opens one part's comment box with this editor's saved comment in it. */
+function openComment(part) {
+  const saved = state.edits[commentEditId(currentScenarioId(), state.name)];
+  state.openComment = part;
+  state.commentText = saved?.comments?.[part] || '';
+  state.commentGuidelines = (saved?.addGuidelines || []).map(numberOfGuideline).join(', ');
+  state.commentError = '';
+  render();
+  document.getElementById('comment-text')?.focus();
+}
+
+/** Closes the comment box without saving. */
+function closeComment() {
+  state.openComment = '';
+  state.commentError = '';
+  render();
+}
+
+/**
+ * Saves the open comment under this editor's name; for the guidelines part the guidelines to
+ * add are checked against the app's list first. Emptying every comment removes the row.
+ */
+async function saveComment() {
+  const scenarioId = currentScenarioId();
+  const view = scenarioViewFor(scenarioId);
+  const part = state.openComment;
+  let addGuidelines;
+  if (partKind(part) === 'guidelines') {
+    const read = readSuggestedGuidelines(
+      state.commentGuidelines,
+      guidelineIdOfNumber,
+      view.live.guidelines,
+    );
+    state.commentError = read.error || '';
+    if (read.error) {
+      render();
+      return;
+    }
+    addGuidelines = read.value;
+  }
+  const id = commentEditId(scenarioId, state.name);
+  const edit = commentsWith(state.edits[id] || null, {
+    scenarioId,
+    reviewer: state.name,
+    at: Date.now(),
+    part,
+    text: state.commentText,
+    addGuidelines,
+  });
+  if (await request({ action: 'edit-save', id, edit })) closeComment();
 }
 
 /* ---------- The new scenario form ---------- */
@@ -686,7 +778,11 @@ function renderScenario(viewer) {
   if (!scenarioId) return false;
   const view = scenarioViewFor(scenarioId);
   // Only one scenario's screen has a Review card (the list builds views without one).
-  if (view.live) view.review = reviewViewFor(scenarioId, view.live);
+  if (view.live) {
+    view.review = reviewViewFor(scenarioId, view.live);
+    view.comments = commentsViewFor(scenarioId, view.live);
+    view.reviewers = reviewersOf(scenarioId, state.edits);
+  }
   if (view.edit?.deleted) app.innerHTML = deletedScenarioHtml(viewer, SIGNED_IN_BUTTONS);
   else {
     const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
@@ -802,6 +898,8 @@ const ACTIONS = {
   'scenario-box-save': saveScenarioBox,
   'review-save': () => saveReview(false),
   'review-save-next': () => saveReview(true),
+  'comment-save': saveComment,
+  'comment-cancel': closeComment,
   'submission-approve': approveAsItIs,
   'submission-edit': (id) => (location.hash = `${APPROVE_HASH_PREFIX}${encodeURIComponent(id)}`),
   'submission-reject': (id) => {
@@ -841,6 +939,7 @@ app.addEventListener('click', (event) => {
   if (!button) return;
   const { action, path } = button.dataset;
   if (action === 'edit-box') openBox(button);
+  else if (action === 'comment-open') openComment(button.dataset.part);
   else if (action === 'scenario-keep') {
     changeScenarioEdit((view) => keepScenarioPath(view.written, view.edit, path));
   } else if (action === 'scenario-drop')
@@ -877,6 +976,15 @@ app.addEventListener('keydown', (event) => {
 // Only the list is redrawn while typing, so the search box keeps its place. The new scenario
 // form is not redrawn at all: each box's text is kept in the draft as it is typed.
 app.addEventListener('input', (event) => {
+  // The comment box is not redrawn while typing; what it holds is kept for any redraw.
+  if (event.target.id === 'comment-text') {
+    state.commentText = event.target.value;
+    return;
+  }
+  if (event.target.id === 'comment-guidelines') {
+    state.commentGuidelines = event.target.value;
+    return;
+  }
   // The Review card is not redrawn while ticking; what it holds is kept for any redraw.
   if (event.target.closest(`#${REVIEW_FORM_ID}`)) {
     state.reviewForm = { scenarioId: currentScenarioId(), form: reviewFormOnPage() };
@@ -908,6 +1016,8 @@ window.addEventListener('hashchange', () => {
   state.isDeleting = false;
   state.reviewForm = null;
   state.reviewError = '';
+  state.openComment = '';
+  state.commentError = '';
   state.openId = '';
   state.openBox = null;
   state.openPath = '';
