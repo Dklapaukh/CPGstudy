@@ -119,6 +119,16 @@ Decisions across the whole app:
 
 ### 8.4 Open tasks (owner, by hand)
 
+0. **Scenario editing is paused until the scenario review is finished** (owner, 25 Nov 2026,
+   SC-M in `docs/editor.md`). One flag, `SCENARIO_EDITING_ENABLED = false` in
+   `src/constants.js`, hides every way to change a scenario on the editor page (tap-to-edit,
+   leave out, undo, delete, keep or drop, + New scenario, approving a submitted job) and the
+   page refuses any save of a `scenario|<id>` edit; the levels ticked in a review are kept in the
+   review only. Reviews, comments, rejecting jobs and the learners' app are unchanged. The
+   backend still accepts scenario edits; the block is in the page.
+   **To re-enable:** set the flag to `true` in `src/constants.js`, add a `CHANGELOG.md` line,
+   run `npm run check` (the editing tests run again, the "paused" ones skip) and push to `main`.
+   Levels ticked in reviews meanwhile are in `content/scenario-reviews.yaml` to apply by hand.
 1. **Switch on Add a scenario and scenario trends:** redeploy the backend
    (`docs/backend.md`, "Redeploying the backend"; allow the Drive permission at `setup`). Until
    then the form and the daily copy fail ("Is it redeployed?") and the manager page shows no
@@ -186,13 +196,15 @@ Goal: a programmer who does not know the project can read any function once and 
 
 **Now (24 Nov 2026).** Features 1 to 20 are built and on `main`, checked by the owner on
 several phones. Scenarios use complexity and scene load (SC-E) with the PEARLS debrief and score
-(SC-F); editors can edit, add, delete and review scenarios and approve submitted jobs. The
+(SC-F); editors review and comment on scenarios. Editing, adding, deleting scenarios and
+approving jobs are paused until the review is finished (8.4 task 0). The
 backend redeploy for Add a scenario and scenario trends is still to do (8.4 task 1).
 `content/scenario-reviews.yaml` held 0 reviews on 24 Nov.
 
 **Next.**
 
-1. Editors review the 40 scenarios (aim 3 each, SC-J).
+1. Editors review the 40 scenarios (aim 3 each, SC-J); then switch scenario editing back on
+   (8.4 task 0).
 2. Claude rewrites those marked Small changes or Needs rewriting and drafts the level profiles
    from the review notes.
 3. Scenario generator, step 1 of `docs/scenario-generator.md` (SC-K).

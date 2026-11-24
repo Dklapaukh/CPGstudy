@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-25: **Scenario editing paused** (editor page only, SC-M). `SCENARIO_EDITING_ENABLED`
+  hides scenario edit controls and blocks scenario saves; reviews and comments unchanged.
 - 2026-11-24: **Lookup commands** (no app change). `npm run guideline` and `npm run scenario`
   print one guideline or one scenario with its reviews; `package-lock.json` is now committed.
 - 2026-11-24: **Guiding docs tidied** (no app change). Decisions moved from plan 8.2 to the end

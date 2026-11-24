@@ -8,7 +8,7 @@
  */
 import { escapeHtml } from '../logic.js';
 import { warningHtml, noteHtml, actionButtonHtml } from '../staffPage.js';
-import { SCENARIO_LEVELS } from '../constants.js';
+import { SCENARIO_LEVELS, SCENARIO_EDITING_ENABLED } from '../constants.js';
 import {
   REVIEW_CRITERIA,
   REVIEW_SCORES,
@@ -93,7 +93,14 @@ export function reviewCardHtml(review) {
   return `<section class="scenario-card review-card" id="${REVIEW_FORM_ID}">
     <h2 class="scenario-group-title">Review this scenario</h2>
     ${noteHtml(escapeHtml(who) + saved)}
-    ${groupHtml('Suits these levels', levels, true, 'Tick every level it suits. This changes the scenario in the app too.')}
+    ${groupHtml(
+      'Suits these levels',
+      levels,
+      true,
+      SCENARIO_EDITING_ENABLED
+        ? 'Tick every level it suits. This changes the scenario in the app too.'
+        : 'Tick every level it suits. While scenario editing is paused this is saved with your review only.',
+    )}
     ${otherLevelsHtml(form.otherLevels)}
     ${criteriaHtml(form.scores)}
     ${groupHtml('Problems', problems, true, 'Tick any that apply.')}

@@ -17,6 +17,7 @@ import {
   SCENARIO_COMPLEXITY,
   SCENARIO_LOADS,
   SCENARIO_VITALS,
+  SCENARIO_EDITING_ENABLED,
 } from '../constants.js';
 import {
   scenarioValue,
@@ -100,7 +101,9 @@ export function scenarioSectionHtml(rows, isOpen) {
       ${row.badge ? `<span class="row-meta"><span class="editor-badge">${row.badge}</span></span>` : ''}</a>`,
     )
     .join('');
-  const newLink = `<a class="switch-button editor-new-link" href="${NEW_SCENARIO_HASH}">+ New scenario</a>`;
+  const newLink = SCENARIO_EDITING_ENABLED
+    ? `<a class="switch-button editor-new-link" href="${NEW_SCENARIO_HASH}">+ New scenario</a>`
+    : '';
   return `<details class="section-group" data-section="Scenarios"${isOpen ? ' open' : ''}>
     <summary><span class="section-name">Scenarios</span>
     <span class="section-count">${rows.length}</span></summary>${newLink}${items}</details>`;
@@ -172,14 +175,19 @@ function commentHtml(part, comments) {
   return `<div class="comment-slot">${shown}${addedHtml}${button}</div>`;
 }
 
-/** Makes the markup editable: every value clickable, the open one drawn as a box. */
+/**
+ * Makes the markup editable: every value clickable, the open one drawn as a box. While scenario
+ * editing is paused only the Comment buttons are added.
+ */
 function editingFor(view) {
+  const commentFor = view.comments ? (part) => commentHtml(part, view.comments) : null;
+  if (!SCENARIO_EDITING_ENABLED) return { attrs: () => '', formFor: () => '', commentFor };
   return {
     attrs: (path) =>
       ` data-action="edit-box" data-path="${escapeHtml(path)}" tabindex="0" title="Tap to change"`,
     formFor: (path) =>
       path === view.openPath ? boxFormHtml(view.written, path, view.boxText, view.boxError) : '',
-    commentFor: view.comments ? (part) => commentHtml(part, view.comments) : null,
+    commentFor,
   };
 }
 
@@ -198,6 +206,13 @@ const debriefNoteHtml = () =>
     `After Finish, the mentor rates each debrief point (${DEBRIEF_RATINGS.map((rating) => rating.name).join(', ')}) and ticks the guidelines the learner struggled with. Tap 💬 Comment under any part to answer its questions.`,
   );
 
+/** Keep the edit or use the file's version: hidden while scenario editing is paused. */
+function keepOrDropHtml(view, data) {
+  if (!SCENARIO_EDITING_ENABLED) return '';
+  return `<div class="editor-buttons">${view.written ? actionButtonHtml('scenario-keep', 'Keep the edit', data, 'button') : ''}
+      ${actionButtonHtml('scenario-drop', view.written ? 'Use the file’s version' : 'Remove this change', data)}</div>`;
+}
+
 /** The values a change to content/scenarios.js altered under the edit, with what to do. */
 function reviewHtml(view) {
   if (!view.toReview.length) return '';
@@ -210,8 +225,7 @@ function reviewHtml(view) {
       <div class="editor-columns">${column('When edited', view.edit.fields[path].was, path)}
       ${column('Learners see now', view.edit.fields[path].to, path)}
       ${column('Now in the scenario file', now, path)}</div>
-      <div class="editor-buttons">${view.written ? actionButtonHtml('scenario-keep', 'Keep the edit', data, 'button') : ''}
-      ${actionButtonHtml('scenario-drop', view.written ? 'Use the file’s version' : 'Remove this change', data)}</div></div>`;
+      ${keepOrDropHtml(view, data)}</div>`;
   });
   return `${noteHtml('The scenario file changed after these were edited. Until you choose, the app keeps showing the edit.')}${items.join('')}`;
 }
@@ -243,13 +257,28 @@ export function scenarioEditorHtml(viewer, view, signedInButtons) {
       <div class="guideline-meta">Scenario · ${escapeHtml(scenarioTagsText(live))} · ${live.patients.length} patient${live.patients.length === 1 ? '' : 's'}<br>
         Signed in as ${escapeHtml(viewer.name)}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${noteHtml('The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.')}
+    ${noteHtml(SCENARIO_EDITING_ENABLED ? 'The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.' : PAUSED_NOTE)}
     ${view.comments ? debriefNoteHtml() : ''}${reviewersHtml(view.reviewers)}
     <p>${badgesHtml(view)}</p>${reviewHtml(view)}
     <div class="editor-preview scenario-screen">${scenarioBodyHtml(live, editingFor(view))}</div>
-    ${view.review ? reviewCardHtml(view.review) : ''}
-    <div class="editor-buttons">${actionButtonHtml('scenario-off', offLabel)}${undo}</div>
-    ${deleteHtml(view.isDeleting)}</main>`;
+    ${view.review ? reviewCardHtml(view.review) : ''}${
+      SCENARIO_EDITING_ENABLED
+        ? `<div class="editor-buttons">${actionButtonHtml('scenario-off', offLabel)}${undo}</div>
+    ${deleteHtml(view.isDeleting)}`
+        : ''
+    }</main>`;
+}
+
+// Why a scenario can't be changed now; shown on its screen and on the paused forms.
+const PAUSED_NOTE =
+  'The scenario as learners see it, edits included. Scenario editing is paused until the scenario review is finished: review it and comment on each part below.';
+
+/** The screen shown for the new scenario form and Edit and approve while editing is paused. */
+export function editingPausedHtml(viewer, signedInButtons) {
+  return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
+    ${signedInButtons}</div>
+    <main class="page-padding">${warningHtml(viewer.message)}<h1>Scenario editing is paused</h1>
+    ${noteHtml('New scenarios and approving submitted jobs wait until the scenario review is finished. Jobs can still be checked and rejected.')}</main>`;
 }
 
 /** The delete button, or after one tap the question that makes sure. */
@@ -416,5 +445,5 @@ export function goneScenarioHtml(viewer, view, signedInButtons) {
     <main class="page-padding">${warningHtml(viewer.message)}
     <h1>Scenario no longer in the app</h1>
     ${noteHtml('This scenario was taken out of the scenario file, so its edit does nothing.')}
-    ${reviewHtml(view)}<div class="editor-buttons">${actionButtonHtml('scenario-undo', 'Remove the edit', '', 'button')}</div></main>`;
+    ${reviewHtml(view)}${SCENARIO_EDITING_ENABLED ? `<div class="editor-buttons">${actionButtonHtml('scenario-undo', 'Remove the edit', '', 'button')}</div>` : ''}</main>`;
 }

@@ -28,6 +28,9 @@ as CPG numbers) to change it in place. "Leave this scenario out of the app" hide
 all edits" removes the edit. A scenario edit is saved in the same `Edits` tab under
 `scenario|<id>` and keeps what each value said when it was edited. When `content/scenarios.js`
 later changes that value, the scenario is listed under "Needs review".
+**Paused for now (SC-M):** while `SCENARIO_EDITING_ENABLED` in `src/constants.js` is `false`,
+scenarios are shown read-only with their Review card and comments; none of the changes in this
+and the next paragraph, nor approving a job, can be made.
 
 **Reviewing scenarios.** On the editor page every part of a scenario is shown open, the
 intention with its intended outcomes as "Intention and debrief points". Each part has a 💬
@@ -94,3 +97,5 @@ many edits need review.
 - ED-H (owner, 18 Nov 2026): tap any box to edit it in place; "Edit all" keeps the whole form
   (the only place to leave a question out); markup shared via an optional `editing` argument.
 - SC-D (18 Nov 2026): scenarios are edited in place; edits go in `Edits` as `scenario|<id>`.
+- SC-M (owner, 25 Nov 2026): scenario editing paused until the review is finished, behind one
+  flag (`SCENARIO_EDITING_ENABLED`); the page blocks every scenario write. Re-enable: plan 8.4.

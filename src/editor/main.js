@@ -78,7 +78,7 @@ import {
   identifierWarnings,
   photoName,
 } from '../scenarioSubmission.js';
-import { SCENARIO_PHOTO_FOLDER } from '../constants.js';
+import { SCENARIO_PHOTO_FOLDER, SCENARIO_EDITING_ENABLED } from '../constants.js';
 import {
   SUBMISSION_HASH_PREFIX,
   APPROVE_HASH_PREFIX,
@@ -101,6 +101,7 @@ import {
   goneScenarioHtml,
   deletedScenarioHtml,
   newScenarioHtml,
+  editingPausedHtml,
   boxTextOf,
   pathName,
 } from './scenarioView.js';
@@ -144,8 +145,26 @@ const state = {
 
 /* ---------- Talking to the backend ---------- */
 
+// Shown when a scenario change is refused while SCENARIO_EDITING_ENABLED is false.
+const SCENARIO_EDITING_PAUSED_MESSAGE =
+  'Scenario editing is paused until the scenario review is finished. Reviews and comments still save.';
+
+/**
+ * True when a request would change a scenario: saving a scenario edit (scenario|<id>) or
+ * approving a submitted job, which saves a new one. Reviews and comments have other ids.
+ */
+const changesScenario = (body) =>
+  (body.action === 'edit-save' && isScenarioEdit(body.id)) ||
+  (body.action === 'submission-decide' && body.decision === 'approve');
+
 /** Sends a request; on success keeps the edits it returns. Returns true when it worked. */
 async function request(body) {
+  // The one gate for every scenario write while editing is paused, whichever button led here.
+  if (!SCENARIO_EDITING_ENABLED && changesScenario(body)) {
+    state.message = SCENARIO_EDITING_PAUSED_MESSAGE;
+    render();
+    return false;
+  }
   state.isLoading = true;
   state.message = '';
   render();
@@ -449,7 +468,8 @@ async function saveReview(goNext) {
   const form = reviewFormOnPage();
   state.reviewForm = { scenarioId, form };
   const read = readReview(form, scenarioId, state.name, Date.now());
-  const levels = read.error ? {} : levelsEdit(view, form.levels);
+  // While scenario editing is paused the ticked levels are kept in the review only.
+  const levels = read.error || !SCENARIO_EDITING_ENABLED ? {} : levelsEdit(view, form.levels);
   state.reviewError = read.error || levels.error || '';
   if (state.reviewError) {
     render();
@@ -742,6 +762,10 @@ function renderSubmission(viewer) {
 function renderApproval(viewer) {
   const approveId = currentApproveId();
   if (!approveId) return false;
+  if (!SCENARIO_EDITING_ENABLED) {
+    app.innerHTML = editingPausedHtml(viewer, SIGNED_IN_BUTTONS);
+    return true;
+  }
   const submission = state.submissions.find((each) => each.id === approveId);
   if (!submission) {
     app.innerHTML = goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
@@ -763,6 +787,10 @@ function renderApproval(viewer) {
 /** Draws the blank new scenario form if the address asks for it; true when it drew. */
 function renderNewScenario(viewer) {
   if (location.hash !== NEW_SCENARIO_HASH) return false;
+  if (!SCENARIO_EDITING_ENABLED) {
+    app.innerHTML = editingPausedHtml(viewer, SIGNED_IN_BUTTONS);
+    return true;
+  }
   // A job's draft is not carried into a blank new scenario.
   if (state.approvingJob) {
     state.draft = emptyScenarioDraft();

@@ -242,6 +242,13 @@ export const SUBMISSION_LIMITS = {
 };
 // Where the daily copy puts approved jobs' photos, as the app addresses them.
 export const SCENARIO_PHOTO_FOLDER = 'content/scenario-photos';
+// Scenario editing on the editor page, paused until the editors' scenario review is finished
+// (owner, 25 Nov 2026; plan section 8.4). While false the page shows no way to change a
+// scenario (tap-to-edit, leave out, undo, delete, keep or drop, + New scenario, approving a
+// submitted job) and refuses every save of a `scenario|<id>` edit, including the levels a review
+// ticks. Reviews, comments, rejecting jobs and the learners' app are unchanged.
+// To switch editing back on, set this to true and push; nothing else needs changing.
+export const SCENARIO_EDITING_ENABLED = false;
 
 // Settings screen. Dark mode belongs to this phone (saved in localStorage under THEME_STORAGE_KEY).
 // "Mark for review N days after Complete" belongs to the tracker, so every phone using it shares it:

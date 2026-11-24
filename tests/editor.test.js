@@ -27,6 +27,12 @@ import {
   shownWrong,
 } from '../src/editor/questions.js';
 import { cleanEdits, cleanScenarioEdits } from '../scripts/sync-edits.js';
+import { SCENARIO_EDITING_ENABLED } from '../src/constants.js';
+
+// Tests of changing scenarios run only while scenario editing is on (see constants.js); while it
+// is paused, the "paused" tests below check that nothing can change a scenario.
+const EDITING_ONLY = { skip: !SCENARIO_EDITING_ENABLED && 'scenario editing is paused' };
+const PAUSED_ONLY = { skip: SCENARIO_EDITING_ENABLED && 'scenario editing is on' };
 
 const sections = guidelineData.sections;
 const cards = buildQuizCards(sections, 'Medicines');
@@ -397,139 +403,158 @@ test('page: a marked choice can be tapped to change it on the editor page', asyn
   assert.ok($('.editor-inline #box-text'));
 });
 
-test('page: a scenario is shown as learners see it, and tapping a value changes it', async () => {
-  dom.window.location.hash = '';
-  await sleep(20);
-  const row = $('[data-section="Scenarios"] a[href="#s-long-lie"]');
-  assert.ok(row, 'the Scenarios section lists every scenario');
-  dom.window.location.hash = '#s-long-lie';
-  await sleep(20);
-  assert.equal($('.editor-preview .scenario-title').textContent, 'Long lie');
-  click($('[data-path="patients.0.vitals.hr"]'));
-  $('#box-text').value = '130';
-  click($('[data-action="scenario-box-save"]'));
-  await sleep(20);
-  assert.deepEqual(sheetEdits['scenario|long-lie'].fields['patients.0.vitals.hr'].to, '130');
-  assert.equal($$('.scenario-vitals tbody td')[3].textContent, '130');
-  assert.match($('main').textContent, /Edited.*Not in the app yet/s);
-  click($('[data-path="guidelines"]'));
-  $('#box-text').value = '13.3, 99.9';
-  click($('[data-action="scenario-box-save"]'));
-  assert.match($('.editor-inline').textContent, /No guideline numbered 99\.9/);
-  $('#box-text').value = '13.3, 1.18';
-  click($('[data-action="scenario-box-save"]'));
-  await sleep(20);
-  assert.deepEqual(sheetEdits['scenario|long-lie'].fields.guidelines.to, ['cpg-13-3', 'cpg-1-18']);
-  assert.equal($$('.scenario-guideline').length, 2);
-  click($('[data-action="scenario-off"]'));
-  await sleep(20);
-  assert.equal(sheetEdits['scenario|long-lie'].off, true);
-  click($('[data-action="scenario-undo"]'));
-  await sleep(20);
-  assert.equal(sheetEdits['scenario|long-lie'], undefined);
-});
+test(
+  'page: a scenario is shown as learners see it, and tapping a value changes it',
+  EDITING_ONLY,
+  async () => {
+    dom.window.location.hash = '';
+    await sleep(20);
+    const row = $('[data-section="Scenarios"] a[href="#s-long-lie"]');
+    assert.ok(row, 'the Scenarios section lists every scenario');
+    dom.window.location.hash = '#s-long-lie';
+    await sleep(20);
+    assert.equal($('.editor-preview .scenario-title').textContent, 'Long lie');
+    click($('[data-path="patients.0.vitals.hr"]'));
+    $('#box-text').value = '130';
+    click($('[data-action="scenario-box-save"]'));
+    await sleep(20);
+    assert.deepEqual(sheetEdits['scenario|long-lie'].fields['patients.0.vitals.hr'].to, '130');
+    assert.equal($$('.scenario-vitals tbody td')[3].textContent, '130');
+    assert.match($('main').textContent, /Edited.*Not in the app yet/s);
+    click($('[data-path="guidelines"]'));
+    $('#box-text').value = '13.3, 99.9';
+    click($('[data-action="scenario-box-save"]'));
+    assert.match($('.editor-inline').textContent, /No guideline numbered 99\.9/);
+    $('#box-text').value = '13.3, 1.18';
+    click($('[data-action="scenario-box-save"]'));
+    await sleep(20);
+    assert.deepEqual(sheetEdits['scenario|long-lie'].fields.guidelines.to, [
+      'cpg-13-3',
+      'cpg-1-18',
+    ]);
+    assert.equal($$('.scenario-guideline').length, 2);
+    click($('[data-action="scenario-off"]'));
+    await sleep(20);
+    assert.equal(sheetEdits['scenario|long-lie'].off, true);
+    click($('[data-action="scenario-undo"]'));
+    await sleep(20);
+    assert.equal(sheetEdits['scenario|long-lie'], undefined);
+  },
+);
 
-test('page: a scenario edit whose value changed in the file is listed for review', async () => {
-  sheetEdits['scenario|long-lie'] = {
-    kind: 'scenario',
-    fields: { title: { was: 'An older title', to: 'Edited title' } },
-  };
-  dom.window.location.hash = '';
-  click($('[data-action="refresh"]'));
-  await sleep(20);
-  assert.match($('main').textContent, /Needs review \(1\)/);
-  dom.window.location.hash = '#s-long-lie';
-  await sleep(20);
-  assert.match(
-    $('.editor-review').textContent,
-    /When edited.*Learners see now.*Now in the scenario file/s,
-  );
-  click($('[data-action="scenario-keep"]'));
-  await sleep(20);
-  assert.equal(sheetEdits['scenario|long-lie'].fields.title.was, 'Long lie');
-  assert.equal($('.editor-review'), null);
-  delete sheetEdits['scenario|long-lie'];
-});
+test(
+  'page: a scenario edit whose value changed in the file is listed for review',
+  EDITING_ONLY,
+  async () => {
+    sheetEdits['scenario|long-lie'] = {
+      kind: 'scenario',
+      fields: { title: { was: 'An older title', to: 'Edited title' } },
+    };
+    dom.window.location.hash = '';
+    click($('[data-action="refresh"]'));
+    await sleep(20);
+    assert.match($('main').textContent, /Needs review \(1\)/);
+    dom.window.location.hash = '#s-long-lie';
+    await sleep(20);
+    assert.match(
+      $('.editor-review').textContent,
+      /When edited.*Learners see now.*Now in the scenario file/s,
+    );
+    click($('[data-action="scenario-keep"]'));
+    await sleep(20);
+    assert.equal(sheetEdits['scenario|long-lie'].fields.title.was, 'Long lie');
+    assert.equal($('.editor-review'), null);
+    delete sheetEdits['scenario|long-lie'];
+  },
+);
 
-test('page: a new scenario is written in one form, saved, then changed in place', async () => {
-  dom.window.location.hash = '';
-  await sleep(20);
-  assert.ok($('[data-section="Scenarios"] a[href="#new-scenario"]'));
-  dom.window.location.hash = '#new-scenario';
-  await sleep(20);
-  const type = (path, value) => {
-    const box = $(`[data-draft="${path}"]`);
-    box.value = value;
-    box.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-  };
-  type('title', 'Fall at the marae');
-  type('suburb', 'Ōtaki');
-  click($('[data-action="draft-add-patient"]'));
-  await sleep(20);
-  assert.equal($('[data-draft="title"]').value, 'Fall at the marae', 'typing survives a redraw');
-  assert.equal($$('.editor-patient').length, 2);
-  click($('[data-action="draft-remove-patient"][data-index="1"]'));
-  await sleep(20);
-  assert.equal($$('.editor-patient').length, 1);
-  click($('[data-action="draft-save"]'));
-  await sleep(20);
-  assert.match($('.warning-message').textContent, /Story: This can’t be empty/);
-  type('story', 'A kuia slipped on wet steps.');
-  type('intention', 'Falls in the elderly.');
-  type('outcomes', 'Checks for a head injury\nAsks why she fell');
-  type('guidelines', '1.17, 12.9');
-  ['history', 'medications', 'allergies', 'social'].forEach((field) =>
-    type(`patients.0.${field}`, 'Nil'),
-  );
-  ['gcs', 'rr', 'spo2', 'hr', 'bp', 'temp', 'bgl', 'pain'].forEach((key) =>
-    type(`patients.0.vitals.${key}`, '–'),
-  );
-  click($('[data-action="draft-save"]'));
-  await sleep(20);
-  const saved = sheetEdits['scenario|fall-at-the-marae'];
-  assert.equal(saved.added.title, 'Fall at the marae');
-  assert.deepEqual(saved.added.guidelines, ['cpg-1-17', 'cpg-12-9']);
-  assert.equal(dom.window.location.hash, '#s-fall-at-the-marae');
-  assert.match($('main').textContent, /New.*Not in the app yet/s);
-  assert.equal($('[data-action="scenario-undo"]'), null, 'a new scenario is deleted, not undone');
-  click($('[data-path="patients.0.vitals.hr"]'));
-  $('#box-text').value = '96';
-  click($('[data-action="scenario-box-save"]'));
-  await sleep(20);
-  assert.equal(sheetEdits['scenario|fall-at-the-marae'].added.patients[0].vitals.hr, '96');
-  dom.window.location.hash = '';
-  await sleep(20);
-  assert.ok($('[data-section="Scenarios"] a[href="#s-fall-at-the-marae"]'));
-});
+test(
+  'page: a new scenario is written in one form, saved, then changed in place',
+  EDITING_ONLY,
+  async () => {
+    dom.window.location.hash = '';
+    await sleep(20);
+    assert.ok($('[data-section="Scenarios"] a[href="#new-scenario"]'));
+    dom.window.location.hash = '#new-scenario';
+    await sleep(20);
+    const type = (path, value) => {
+      const box = $(`[data-draft="${path}"]`);
+      box.value = value;
+      box.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    };
+    type('title', 'Fall at the marae');
+    type('suburb', 'Ōtaki');
+    click($('[data-action="draft-add-patient"]'));
+    await sleep(20);
+    assert.equal($('[data-draft="title"]').value, 'Fall at the marae', 'typing survives a redraw');
+    assert.equal($$('.editor-patient').length, 2);
+    click($('[data-action="draft-remove-patient"][data-index="1"]'));
+    await sleep(20);
+    assert.equal($$('.editor-patient').length, 1);
+    click($('[data-action="draft-save"]'));
+    await sleep(20);
+    assert.match($('.warning-message').textContent, /Story: This can’t be empty/);
+    type('story', 'A kuia slipped on wet steps.');
+    type('intention', 'Falls in the elderly.');
+    type('outcomes', 'Checks for a head injury\nAsks why she fell');
+    type('guidelines', '1.17, 12.9');
+    ['history', 'medications', 'allergies', 'social'].forEach((field) =>
+      type(`patients.0.${field}`, 'Nil'),
+    );
+    ['gcs', 'rr', 'spo2', 'hr', 'bp', 'temp', 'bgl', 'pain'].forEach((key) =>
+      type(`patients.0.vitals.${key}`, '–'),
+    );
+    click($('[data-action="draft-save"]'));
+    await sleep(20);
+    const saved = sheetEdits['scenario|fall-at-the-marae'];
+    assert.equal(saved.added.title, 'Fall at the marae');
+    assert.deepEqual(saved.added.guidelines, ['cpg-1-17', 'cpg-12-9']);
+    assert.equal(dom.window.location.hash, '#s-fall-at-the-marae');
+    assert.match($('main').textContent, /New.*Not in the app yet/s);
+    assert.equal($('[data-action="scenario-undo"]'), null, 'a new scenario is deleted, not undone');
+    click($('[data-path="patients.0.vitals.hr"]'));
+    $('#box-text').value = '96';
+    click($('[data-action="scenario-box-save"]'));
+    await sleep(20);
+    assert.equal(sheetEdits['scenario|fall-at-the-marae'].added.patients[0].vitals.hr, '96');
+    dom.window.location.hash = '';
+    await sleep(20);
+    assert.ok($('[data-section="Scenarios"] a[href="#s-fall-at-the-marae"]'));
+  },
+);
 
-test('page: deleting asks first; a new scenario goes, a written one is deleted for good', async () => {
-  dom.window.location.hash = '#s-fall-at-the-marae';
-  await sleep(20);
-  click($('[data-action="scenario-delete"]'));
-  await sleep(20);
-  assert.match($('.editor-confirm').textContent, /can’t be put back/);
-  click($('[data-action="scenario-delete-no"]'));
-  await sleep(20);
-  assert.equal($('.editor-confirm'), null);
-  assert.ok(sheetEdits['scenario|fall-at-the-marae']);
-  click($('[data-action="scenario-delete"]'));
-  click($('[data-action="scenario-delete-yes"]'));
-  await sleep(20);
-  assert.equal(sheetEdits['scenario|fall-at-the-marae'], undefined);
-  assert.equal(dom.window.location.hash, '');
-  dom.window.location.hash = '#s-long-lie';
-  await sleep(20);
-  click($('[data-action="scenario-delete"]'));
-  click($('[data-action="scenario-delete-yes"]'));
-  await sleep(20);
-  assert.deepEqual(sheetEdits['scenario|long-lie'], { kind: 'scenario', deleted: true });
-  assert.equal($('[data-section="Scenarios"] a[href="#s-long-lie"]'), null);
-  dom.window.location.hash = '#s-long-lie';
-  await sleep(20);
-  assert.match($('main').textContent, /Scenario deleted/);
-  assert.equal($('[data-action="scenario-undo"]'), null);
-  delete sheetEdits['scenario|long-lie'];
-});
+test(
+  'page: deleting asks first; a new scenario goes, a written one is deleted for good',
+  EDITING_ONLY,
+  async () => {
+    dom.window.location.hash = '#s-fall-at-the-marae';
+    await sleep(20);
+    click($('[data-action="scenario-delete"]'));
+    await sleep(20);
+    assert.match($('.editor-confirm').textContent, /can’t be put back/);
+    click($('[data-action="scenario-delete-no"]'));
+    await sleep(20);
+    assert.equal($('.editor-confirm'), null);
+    assert.ok(sheetEdits['scenario|fall-at-the-marae']);
+    click($('[data-action="scenario-delete"]'));
+    click($('[data-action="scenario-delete-yes"]'));
+    await sleep(20);
+    assert.equal(sheetEdits['scenario|fall-at-the-marae'], undefined);
+    assert.equal(dom.window.location.hash, '');
+    dom.window.location.hash = '#s-long-lie';
+    await sleep(20);
+    click($('[data-action="scenario-delete"]'));
+    click($('[data-action="scenario-delete-yes"]'));
+    await sleep(20);
+    assert.deepEqual(sheetEdits['scenario|long-lie'], { kind: 'scenario', deleted: true });
+    assert.equal($('[data-section="Scenarios"] a[href="#s-long-lie"]'), null);
+    dom.window.location.hash = '#s-long-lie';
+    await sleep(20);
+    assert.match($('main').textContent, /Scenario deleted/);
+    assert.equal($('[data-action="scenario-undo"]'), null);
+    delete sheetEdits['scenario|long-lie'];
+  },
+);
 
 test('page: a scenario is reviewed, its levels set, and "Save and next" opens the next one', async () => {
   dom.window.location.hash = '';
@@ -554,8 +579,11 @@ test('page: a scenario is reviewed, its levels set, and "Save and next" opens th
   otherLevels.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
   click($('[data-action="review-save-next"]'));
   await sleep(40);
-  assert.deepEqual(sheetEdits['scenario|netball-ankle'].fields.levels.to, ['student']);
   const review = sheetEdits['scenario-review|netball-ankle|eve'];
+  if (SCENARIO_EDITING_ENABLED)
+    assert.deepEqual(sheetEdits['scenario|netball-ankle'].fields.levels.to, ['student']);
+  else assert.equal(sheetEdits['scenario|netball-ankle'], undefined, 'levels kept in the review');
+  assert.deepEqual(review.levels, ['student']);
   assert.equal(review.verdict, 'keep');
   assert.deepEqual(review.scores, { realism: 3 });
   assert.equal(review.otherLevels, 'ICP: add a second patient');
@@ -564,7 +592,7 @@ test('page: a scenario is reviewed, its levels set, and "Save and next" opens th
   assert.match($('#review-form').textContent, /Not reviewed by you yet/);
   dom.window.location.hash = '#s-netball-ankle';
   await sleep(20);
-  assert.match($('.scenario-tags').textContent, /Suits Student/);
+  if (SCENARIO_EDITING_ENABLED) assert.match($('.scenario-tags').textContent, /Suits Student/);
   assert.match($('#review-form').textContent, /saved on/);
 });
 
@@ -601,4 +629,41 @@ test('page: each part has a Comment button with its questions; comments are save
   assert.deepEqual(sheetEdits[id].addGuidelines, ['cpg-1-17']);
   assert.deepEqual(sheetEdits[id].comments, { outcomes: 'Add a handover point' });
   assert.match($('.editor-preview').textContent, /You suggest adding/);
+});
+
+test(
+  'paused: a scenario is shown and can be reviewed, but has no way to change it',
+  PAUSED_ONLY,
+  async () => {
+    dom.window.location.hash = '';
+    await sleep(20);
+    assert.ok($('[data-section="Scenarios"] a[href="#s-long-lie"]'), 'scenarios are still listed');
+    assert.equal($('a[href="#new-scenario"]'), null);
+    dom.window.location.hash = '#s-long-lie';
+    await sleep(20);
+    assert.equal($('.editor-preview .scenario-title').textContent, 'Long lie');
+    assert.match($('main').textContent, /Scenario editing is paused/);
+    ['edit-box', 'scenario-off', 'scenario-undo', 'scenario-delete'].forEach((action) =>
+      assert.equal($(`[data-action="${action}"]`), null, `no ${action} button`),
+    );
+    assert.ok($('[data-action="comment-open"]'), 'comments stay');
+    assert.ok($('#review-form'), 'the Review card stays');
+    dom.window.location.hash = '#new-scenario';
+    await sleep(20);
+    assert.match($('main').textContent, /Scenario editing is paused/);
+    assert.equal($('[data-action="draft-save"]'), null);
+  },
+);
+
+test('paused: any scenario save that still reaches the page is refused', PAUSED_ONLY, async () => {
+  dom.window.location.hash = '#s-long-lie';
+  await sleep(20);
+  // A stray button (an old page, a script) is blocked where the page talks to the backend.
+  const stray = doc.createElement('button');
+  stray.dataset.action = 'scenario-off';
+  $('main').append(stray);
+  click(stray);
+  await sleep(20);
+  assert.equal(sheetEdits['scenario|long-lie'], undefined);
+  assert.match($('.warning-message').textContent, /Scenario editing is paused/);
 });
