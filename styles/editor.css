@@ -182,3 +182,26 @@
 :root[data-theme='dark'] .editor-buttons .switch-button.editor-danger {
   color: #f2a19b;
 }
+
+/* Reviewing scenarios: many pills run onto more lines, at most three to a line. */
+.review-pills {
+  flex-wrap: wrap;
+}
+.review-pills .rating-pill {
+  flex: 1 1 30%;
+}
+.review-help {
+  margin: 0 0 0.4rem;
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+}
+.review-card {
+  margin-top: 1rem;
+}
+.review-progress {
+  margin: 0.8rem 0;
+}
+.review-next-link {
+  text-align: center;
+  text-decoration: none;
+}

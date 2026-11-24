@@ -13,6 +13,7 @@ import {
   DEBRIEF_TEXTS,
   SCENARIO_COMPLEXITY,
   SCENARIO_LOADS,
+  SCENARIO_LEVELS,
 } from './constants.js';
 
 /**
@@ -35,15 +36,23 @@ export const themesInUse = (scenarios, sectionOf) =>
     scenarios.some((scenario) => scenarioThemes(scenario, sectionOf).includes(name)),
   );
 
+/** The levels (keys of SCENARIO_LEVELS) at least one scenario suits, lowest first. */
+export const levelsInUse = (scenarios) =>
+  Object.keys(SCENARIO_LEVELS).filter((key) =>
+    scenarios.some((scenario) => Array.isArray(scenario.levels) && scenario.levels.includes(key)),
+  );
+
 /**
- * The scenarios matching the chosen complexity (0 = any), scene load ('' = any) and theme
- * ('' = any).
+ * The scenarios matching the chosen complexity (0 = any), scene load ('' = any), level the
+ * scenario suits ('' = any) and theme ('' = any).
  */
 export function filterScenarios(scenarios, filter, sectionOf) {
   return scenarios.filter(
     (scenario) =>
       (!filter.complexity || scenario.complexity === filter.complexity) &&
       (!filter.load || scenario.load === filter.load) &&
+      (!filter.level ||
+        (Array.isArray(scenario.levels) && scenario.levels.includes(filter.level))) &&
       (!filter.theme || scenarioThemes(scenario, sectionOf).includes(filter.theme)),
   );
 }

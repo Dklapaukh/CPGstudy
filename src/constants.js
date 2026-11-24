@@ -204,6 +204,15 @@ export const SCENARIO_LOADS = {
   delegation: { name: 'Delegation', short: 'Delegate' },
   several: { name: 'Several patients', short: 'Several' },
 };
+// Who a scenario suits (decision 24 Nov 2026), lowest first. A scenario may suit several; editors
+// set them on the editor page while reviewing. `short` is the pill's and dropdown's text.
+export const SCENARIO_LEVELS = {
+  student: { name: 'Student', short: 'Student' },
+  grad: { name: 'Graduate paramedic', short: 'Grad' },
+  supervised: { name: 'Supervised paramedic', short: 'Supervised' },
+  paramedic: { name: 'Paramedic', short: 'Paramedic' },
+  icp: { name: 'Intensive care paramedic', short: 'ICP' },
+};
 // The vitals row, in this order.
 export const SCENARIO_VITALS = [
   ['gcs', 'GCS'],

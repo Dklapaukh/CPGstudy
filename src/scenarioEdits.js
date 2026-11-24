@@ -6,7 +6,8 @@
  * An edit is saved in the Sheet's Edits tab under SCENARIO_EDIT_PREFIX + scenario id, beside the
  * quiz question edits, so it needs no backend change. Its shape:
  *   { kind: 'scenario', off?: true, fields: { <path>: { was, to } } }
- * A path names one value: 'title', 'complexity', 'load', 'outcomes', 'guidelines', 'patients.0.history',
+ * A path names one value: 'title', 'complexity', 'load', 'levels', 'outcomes', 'guidelines',
+ * 'patients.0.history',
  * 'patients.1.vitals.hr'. `to` is what learners see; `was` is the value in content/scenarios.js
  * when the edit was made, so a later change to that file is noticed and shown for review.
  * Two more shapes (decision 19 Nov 2026):
@@ -18,7 +19,12 @@
  * `photos` ([{ src, caption }], published by the daily copy into content/scenario-photos).
  * Depends on constants.js.
  */
-import { SCENARIO_COMPLEXITY, SCENARIO_LOADS, SCENARIO_VITALS } from './constants.js';
+import {
+  SCENARIO_COMPLEXITY,
+  SCENARIO_LOADS,
+  SCENARIO_LEVELS,
+  SCENARIO_VITALS,
+} from './constants.js';
 
 export const SCENARIO_EDIT_PREFIX = 'scenario|';
 export const SCENARIO_EDIT_KIND = 'scenario';
@@ -42,9 +48,19 @@ const MAX_NOTE_TEXT = 80;
 const MAX_CAPTION_TEXT = 120;
 const PHOTO_SRC_PATTERN = /^content\/scenario-photos\/[a-z0-9-]+\.jpg$/;
 // The scenario-wide values an editor may change, besides the text fields.
-const OTHER_FIELDS = ['complexity', 'load', 'outcomes', 'guidelines'];
+const OTHER_FIELDS = ['complexity', 'load', 'levels', 'outcomes', 'guidelines'];
 
 const sameValue = (first, second) => JSON.stringify(first) === JSON.stringify(second);
+
+/**
+ * The levels a scenario suits (keys of SCENARIO_LEVELS), known ones only, lowest first and each
+ * once; undefined when none, so a scenario without levels has no `levels` key at all.
+ */
+export function tidyLevels(levels) {
+  if (!Array.isArray(levels)) return undefined;
+  const kept = Object.keys(SCENARIO_LEVELS).filter((key) => levels.includes(key));
+  return kept.length ? kept : undefined;
+}
 
 /** The Edits-tab id of a scenario's edit, and the scenario id back from one (or ''). */
 export const scenarioEditId = (scenarioId) => SCENARIO_EDIT_PREFIX + scenarioId;
@@ -92,7 +108,12 @@ export function applyScenarioEdit(scenario, edit) {
 export function scenarioEditWith(scenario, edit, path, value) {
   const fields = { ...(edit?.fields || {}) };
   const written = scenarioValue(scenario, path);
-  if (sameValue(written, value)) delete fields[path];
+  // No levels is the same however it is written (no key, or an empty list).
+  const isSame =
+    path === 'levels'
+      ? sameValue(tidyLevels(written), tidyLevels(value))
+      : sameValue(written, value);
+  if (isSame) delete fields[path];
   else fields[path] = { was: written, to: value };
   return tidyEdit(edit?.off, fields);
 }
@@ -436,6 +457,8 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
     patients,
     ...(photos.length ? { photos } : {}),
   };
+  const levels = tidyLevels(scenario.levels);
+  if (levels) clean.levels = levels;
   return patientsProblem(clean) ? null : clean;
 }
 
@@ -464,6 +487,7 @@ export function readScenarioBox(path, text, guidelineIdOfNumber) {
       : { error: 'The complexity is a number, 1 to 3.' };
   }
   if (path === 'load') return readLoad(trimmed);
+  if (path === 'levels') return readLevels(trimmed);
   if (path === 'outcomes') return readOutcomes(trimmed);
   if (path === 'guidelines') return readGuidelineNumbers(trimmed, guidelineIdOfNumber);
   if (trimmed.length > MAX_SCENARIO_TEXT) return { error: 'That is too long to keep.' };
@@ -487,6 +511,31 @@ function readLoad(text) {
     (each) => each === typed || SCENARIO_LOADS[each].name.toLowerCase() === typed,
   );
   return key ? { value: key } : { error: 'Write single, delegation or several.' };
+}
+
+/**
+ * The levels a scenario suits, typed as keys, short names or names separated by commas or
+ * lines ("student, grad"); empty means none.
+ */
+function readLevels(text) {
+  const typed = text
+    .toLowerCase()
+    .split(/[,\n]+/)
+    .map((each) => each.trim())
+    .filter(Boolean);
+  const keyOf = (word) =>
+    Object.keys(SCENARIO_LEVELS).find((key) =>
+      [
+        key,
+        SCENARIO_LEVELS[key].short.toLowerCase(),
+        SCENARIO_LEVELS[key].name.toLowerCase(),
+      ].includes(word),
+    );
+  const unknown = typed.filter((word) => !keyOf(word));
+  if (unknown.length) {
+    return { error: `Write the levels from: ${Object.keys(SCENARIO_LEVELS).join(', ')}.` };
+  }
+  return { value: tidyLevels(typed.map(keyOf)) || [] };
 }
 
 /** Intended outcomes, one per line; blank lines are skipped. */

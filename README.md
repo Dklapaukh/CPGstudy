@@ -21,7 +21,8 @@ How each part works, one file each in `docs/`:
 - [Medicines quiz](docs/medicines-quiz.md)
 - [Guideline quiz](docs/guideline-quiz.md): includes Pick the guideline
 - [Medicine test](docs/medicine-test.md)
-- [Scenarios](docs/scenarios.md): includes the debrief and the Add a scenario form
+- [Scenarios](docs/scenarios.md): includes the debrief, reviewing scenarios and the Add a scenario form
+- [Scenario generator](docs/scenario-generator.md): a design, not built
 - [Streak and Data tab](docs/streak-and-stats.md)
 - [Content updates](docs/content-updates.md): publishing new guidelines, the daily PDF check, rebuilding from the PDF
 - [Manager view](docs/manager.md)
@@ -61,6 +62,7 @@ How each part works, one file each in `docs/`:
 | `scripts/sync-edits.js`                                                        | Copies the Sheet's Edits tab into the two files above (daily, `edits-sync.yml`).                  |
 | `content/scenarios.js`, `content/scenario-edits.js` (and `.yaml`)              | Hand-written scenarios; editors' changes to them, written by `sync-edits.js`.                     |
 | `src/scenarioEdits.js`, `src/scenarioLogic.js`, `src/scenarioRunState.js`      | Scenarios: applying edits; themes, filters and runs (pure); saving a run and debrief.             |
+| `src/scenarioReviews.js`, `src/editor/reviewView.js`                           | Editors' reviews of scenarios: grades and report (pure); the Review card on the editor page.      |
 | `src/views/scenarioView.js`, `src/views/scenarioMarkup.js`                     | Scenario screens; markup shared with the editor page (`src/editor/scenarioView.js`).              |
 | `content/guidelines.js`                                                        | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.                |
 | `content/related.js`, `content/related-overrides.js`                           | Related-guideline links (built) and the hand-edited overrides.                                    |

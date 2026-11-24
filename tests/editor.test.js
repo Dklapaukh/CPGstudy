@@ -530,3 +530,35 @@ test('page: deleting asks first; a new scenario goes, a written one is deleted f
   assert.equal($('[data-action="scenario-undo"]'), null);
   delete sheetEdits['scenario|long-lie'];
 });
+
+test('page: a scenario is reviewed, its levels set, and "Save and next" opens the next one', async () => {
+  dom.window.location.hash = '';
+  await sleep(20);
+  assert.match($('.review-progress').textContent, /reviewed 0 of/);
+  dom.window.location.hash = '#s-netball-ankle';
+  await sleep(20);
+  const tick = (name, value) => {
+    const input = $(`#review-form input[name="${name}"][value="${value}"]`);
+    input.checked = true;
+    input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  };
+  tick('levels', 'student');
+  tick('score-realism', '3');
+  click($('[data-action="review-save"]'));
+  await sleep(20);
+  assert.match($('#review-form').textContent, /Choose an overall call/);
+  assert.ok($('#review-form input[name="levels"][value="student"]').checked, 'ticks are kept');
+  tick('verdict', 'keep');
+  click($('[data-action="review-save-next"]'));
+  await sleep(40);
+  assert.deepEqual(sheetEdits['scenario|netball-ankle'].fields.levels.to, ['student']);
+  const review = sheetEdits['scenario-review|netball-ankle|eve'];
+  assert.equal(review.verdict, 'keep');
+  assert.deepEqual(review.scores, { realism: 3 });
+  assert.notEqual(dom.window.location.hash, '#s-netball-ankle');
+  assert.match($('#review-form').textContent, /Not reviewed by you yet/);
+  dom.window.location.hash = '#s-netball-ankle';
+  await sleep(20);
+  assert.match($('.scenario-tags').textContent, /Suits Student/);
+  assert.match($('#review-form').textContent, /saved on/);
+});

@@ -8,6 +8,11 @@ Each scenario has two tags (decision 19 Nov 2026, SC-E), which replaced the old 
   (`SCENARIO_COMPLEXITY`). The list is grouped by it.
 - **Scene load:** Single patient, Delegation or Several patients (`SCENARIO_LOADS`).
 
+A scenario may also have the **levels it suits** (decision 24 Nov 2026): any of Student,
+Graduate paramedic, Supervised paramedic, Paramedic and Intensive care paramedic
+(`SCENARIO_LEVELS`, the optional `levels` field). They show as a "Suits …" pill, and once any
+scenario has levels a **Suits** dropdown filters the list. Editors set them while reviewing.
+
 Two rows of chips (All plus the three of each) and a theme dropdown filter the list. The themes
 are Paediatrics, Obstetrics, Mental health, Respiratory, Cardiac, Trauma, Toxicology, Elderly and
 Rural. A theme comes from the sections or guideline numbers of a scenario's guidelines
@@ -38,6 +43,30 @@ streak day (see [Streak and Data tab](streak-and-stats.md)). The run is saved in
 tracker as one extra entry (`scenario-run-<id>`) holding the run count and the last 3 runs, so
 the backend doesn't change. The list shows "✓ Run <date> · <score>%", and the scenario shows
 its debriefs, folded. A score only compares well when the same mentor rates consistently.
+
+## Reviewing scenarios (editors)
+
+So later scenarios can be written better (decision 24 Nov 2026), editors grade each scenario on
+the editor page, on a phone. The first screen says "You have reviewed N of M scenarios" with a
+button to the next one. Under each scenario a **Review this scenario** card has:
+
+- **Suits these levels**: tick every level; saving changes the scenario's `levels` too;
+- four grades, each Poor, OK or Good: **Realistic**, **Clinically consistent**, **Clear teaching
+  point**, **Right difficulty** (`REVIEW_CRITERIA` in `src/scenarioReviews.js`);
+- **Problems**, any of eight one-tap faults such as "Vitals don't fit the story" or "Gives the
+  answer away" (`REVIEW_PROBLEMS`), so they can be counted;
+- **Overall** (needed): Use as it is, Small changes, Needs rewriting, Take it out;
+- **What would make it better**, up to 600 characters.
+
+**Save and next** saves and opens the next scenario you haven't reviewed; **Save review**
+stays. Each editor has one review per scenario (saving again replaces it), kept in the Edits
+tab as `scenario-review|<scenario id>|<editor>`, so no backend change was needed. The daily
+copy writes them all to `content/scenario-reviews.yaml`: a summary (verdicts, the average of
+each grade, problems by how often), then each scenario's reviews. The app never loads it.
+**Read it before writing new scenarios**, and fix the scenarios marked Small changes or Needs
+rewriting.
+
+A scenario generator is designed but not built: see [Scenario generator](scenario-generator.md).
 
 ## Add a scenario (staff jobs)
 

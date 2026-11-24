@@ -2,11 +2,13 @@
  * Copies the editors' changes from the Sheet's Edits tab into the app: content/card-edits.yaml
  * (the readable record, one entry per edited question) and content/card-edits.js (what the app
  * loads), and the scenario edits (changed, new and deleted scenarios) into
- * content/scenario-edits.yaml and content/scenario-edits.js. It also copies the photos of approved submitted jobs that new scenarios use
+ * content/scenario-edits.yaml and content/scenario-edits.js, and the editors' reviews of scenarios
+ * into content/scenario-reviews.yaml (read before writing new scenarios). It also copies the photos of approved submitted jobs that new scenarios use
  * into content/scenario-photos. Run every morning by .github/workflows/edits-sync.yml, or by hand with
  * `node scripts/sync-edits.js`. Prints how many edits need an editor's review after a guideline
  * update (the editor page lists them).
- * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/guidelines.js,
+ * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/scenarioReviews.js,
+ * src/guidelines.js,
  * src/editor/questions.js, content/scenarios.js and the yaml package.
  */
 import { writeFileSync, readdirSync, unlinkSync } from 'node:fs';
@@ -22,6 +24,7 @@ import {
   cleanAddedScenario,
   scenarioEditDeleted,
 } from '../src/scenarioEdits.js';
+import { isReviewEditId, cleanReview, reviewReport } from '../src/scenarioReviews.js';
 import { guidelineById } from '../src/guidelines.js';
 import { scenarios } from '../content/scenarios.js';
 import { SCENARIO_PHOTO_FOLDER } from '../src/constants.js';
@@ -108,6 +111,30 @@ const FILES = {
   },
 };
 
+/** The reviews among the edits, each checked, oldest first; bad ones are dropped. */
+export function cleanReviews(edits) {
+  return Object.keys(edits)
+    .filter(isReviewEditId)
+    .map((id) => cleanReview(edits[id]))
+    .filter(Boolean)
+    .sort((first, second) => first.at - second.at);
+}
+
+const REVIEWS_HEADER = `Editors' reviews of scenarios (src/scenarioReviews.js): a summary, then each reviewed
+scenario. Read this before writing new scenarios. Written by\n${WRITTEN_BY}`;
+
+/** Writes the reviews' readable record; the app doesn't load it, so there is no .js file. */
+function writeReviews(reviews, scenarioEditsById) {
+  const added = Object.values(scenarioEditsById)
+    .map((edit) => edit.added)
+    .filter(Boolean);
+  const titleOf = (id) =>
+    [...scenarios, ...added].find((scenario) => scenario.id === id)?.title || '';
+  const header = REVIEWS_HEADER.replace(/^/gm, '# ');
+  const report = reviewReport(reviews, titleOf);
+  writeFileSync(contentPath('scenario-reviews.yaml'), `${header}\n${stringify(report)}`);
+}
+
 /** Writes one kind of edit to its two files (see FILES). */
 function writeEdits(file, edits) {
   const yamlHeader = file.header.replace(/^/gm, '# ');
@@ -171,6 +198,9 @@ async function main() {
   const scenarioEditsById = cleanScenarioEdits(reply.edits || {});
   writeEdits(FILES.cards, edits);
   writeEdits(FILES.scenarios, scenarioEditsById);
+  const reviews = cleanReviews(reply.edits || {});
+  writeReviews(reviews, scenarioEditsById);
+  console.log(`${reviews.length} scenario reviews written.`);
   const toReview = editsToReview(edits, scenarioEditsById);
   const count = Object.keys(edits).length + Object.keys(scenarioEditsById).length;
   console.log(`${count} edits written; ${toReview.length} need review.`);

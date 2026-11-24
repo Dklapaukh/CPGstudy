@@ -1,0 +1,14 @@
+# Editors' reviews of scenarios (src/scenarioReviews.js): a summary, then each reviewed
+# scenario. Read this before writing new scenarios. Written by
+# scripts/sync-edits.js from the Sheet's Edits tab every morning; do not edit by hand.
+summary:
+  reviews: 0
+  scenarios: 0
+  verdicts: {}
+  averageScores:
+    realism: null
+    accuracy: null
+    teaching: null
+    difficulty: null
+  problems: {}
+scenarios: []

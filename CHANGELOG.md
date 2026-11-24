@@ -3,6 +3,15 @@
 Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-24: **Reviewing scenarios and the levels they suit** (no redeploy needed). The
+  editor page has a Review card under each scenario: the levels it suits (Student, Grad,
+  Supervised, Paramedic, ICP), four grades (Realistic, Clinically consistent, Clear teaching
+  point, Right difficulty: Poor, OK or Good), one-tap problems, an overall call and a note.
+  "Save and next" opens the next one you haven't reviewed; the first screen counts them.
+  Reviews are saved in the Edits tab (`scenario-review|<id>|<editor>`) and the daily copy writes
+  them to `content/scenario-reviews.yaml`. In the app a scenario shows "Suits …" and the list
+  gets a Suits dropdown once levels are set. New `docs/scenario-generator.md`: a design for a
+  generator without AI (decision 4 in 8.3 of the plan).
 - 2026-11-19: **Scenario runs count for the streak; docs brought up to date** (no redeploy
   needed). Saving a scenario run now counts today's streak day and shows the power-up, like
   every quiz (ST-I). Docs: `docs/scenarios.md` describes complexity and scene load (not levels

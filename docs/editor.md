@@ -29,6 +29,10 @@ all edits" removes the edit. A scenario edit is saved in the same `Edits` tab un
 `scenario|<id>` and keeps what each value said when it was edited. When `content/scenarios.js`
 later changes that value, the scenario is listed under "Needs review".
 
+**Reviewing scenarios.** Under each scenario a Review card grades it and sets the levels it
+suits; the first screen counts how many you have reviewed and opens the next. See
+[Scenarios](scenarios.md), "Reviewing scenarios".
+
 **New and deleted scenarios.** "+ New scenario" at the top of the Scenarios section opens one
 form (`#new-scenario`): title, suburb, story, intention, complexity, scene load, intended
 outcomes (one per line), guidelines (CPG numbers) and one or more patients (up to 4), each with

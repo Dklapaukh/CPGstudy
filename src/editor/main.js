@@ -5,10 +5,13 @@
  * (#new-scenario) or deleted for good. Edits are saved to the
  * Sheet's Edits tab straight away and reach the app the next morning, when scripts/sync-edits.js
  * copies them into content/card-edits.js and content/scenario-edits.js.
+ * Under each scenario a Review card grades it and sets the levels it suits (scenarioReviews.js);
+ * "Save and next" opens the next one this editor hasn't reviewed.
  * Jobs sent with the Add a scenario form wait in their own section; one (#j-<id>) is shown as the
  * scenario it would make, to approve (published the next morning) or reject.
  * One state object, one way to draw: every change calls render().
- * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, guidelines.js,
+ * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, scenarioReviews.js,
+ * guidelines.js,
  * content/card-edits.js, content/scenarios.js, content/scenario-edits.js and the other files of
  * this folder.
  */
@@ -42,7 +45,18 @@ import {
   readNewScenario,
   addedScenarioEditWith,
   withScenarioValue,
+  tidyLevels,
 } from '../scenarioEdits.js';
+import {
+  REVIEW_CRITERIA,
+  reviewEditId,
+  isReviewEditId,
+  readReview,
+  reviewFormOf,
+  nextUnreviewed,
+  reviewedCount,
+} from '../scenarioReviews.js';
+import { REVIEW_FORM_ID, reviewProgressHtml } from './reviewView.js';
 import { guidelines, guidelineById } from '../guidelines.js';
 import { cardEdits } from '../../content/card-edits.js';
 import { scenarios } from '../../content/scenarios.js';
@@ -110,6 +124,8 @@ const state = {
   confirmingReject: '', // the job whose Reject is waiting for "Yes, reject it"
   approvingJob: '', // the submitted job the new scenario form holds, '' for a blank form
   photoBySrc: {}, // fetched photos by the address they will have once published (for previews)
+  reviewForm: null, // the open scenario's Review card as ticked so far: { scenarioId, form }
+  reviewError: '', // why the review couldn't be saved
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -174,7 +190,8 @@ const isScenarioEdit = (id) => Boolean(scenarioIdOfEdit(id));
 const isPublished = (id) =>
   JSON.stringify((isScenarioEdit(id) ? scenarioEdits : cardEdits)[id]) ===
   JSON.stringify(state.edits[id]);
-const questionEditIds = () => Object.keys(state.edits).filter((id) => !isScenarioEdit(id));
+const questionEditIds = () =>
+  Object.keys(state.edits).filter((id) => !isScenarioEdit(id) && !isReviewEditId(id));
 
 /** One question as the screens show it: built, as learners see it, its edit and its state. */
 function itemFor(id) {
@@ -253,6 +270,29 @@ function scenarioViewFor(scenarioId) {
   };
 }
 
+/** The Review card's data for a scenario (see reviewCardHtml): the form, any error, and more. */
+function reviewViewFor(scenarioId, live) {
+  const saved = state.edits[reviewEditId(scenarioId, state.name)] || null;
+  const isOpen = state.reviewForm?.scenarioId === scenarioId;
+  return {
+    form: isOpen ? state.reviewForm.form : reviewFormOf(saved, live),
+    error: isOpen ? state.reviewError : '',
+    savedAt: saved?.at || 0,
+    nextId: nextUnreviewed(scenarioOrder(), state.edits, state.name, scenarioId),
+  };
+}
+
+/** Every scenario's id in the order of the first screen's list, for "Save and next". */
+const scenarioOrder = () => scenarioRows().map((row) => row.id);
+
+/** The first screen's review line: how many this editor has reviewed, and the next. */
+function reviewProgress() {
+  const ids = scenarioOrder();
+  const nextId = nextUnreviewed(ids, state.edits, state.name);
+  const href = nextId ? `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(nextId)}` : '';
+  return reviewProgressHtml(reviewedCount(ids, state.edits, state.name), ids.length, href);
+}
+
 /** Scenario edits that need review, for the first screen's list. */
 function scenarioReviewItems() {
   return Object.keys(state.edits)
@@ -279,7 +319,11 @@ function scenarioRows() {
     .map((scenario) => scenarioViewFor(scenario.id))
     .filter((view) => view.live)
     .sort((first, second) => first.live.complexity - second.live.complexity)
-    .map((view) => ({ ...view.live, badge: badgeOf(view.edit) }));
+    .map((view) => ({
+      ...view.live,
+      badge: badgeOf(view.edit),
+      isReviewed: Boolean(state.edits[reviewEditId(view.live.id, state.name)]),
+    }));
 }
 
 /** The scenario in the address ("#s-long-lie"), or '' on any other screen. */
@@ -325,6 +369,67 @@ async function deleteScenario() {
   ) {
     location.hash = '';
   }
+}
+
+/* ---------- Reviews ---------- */
+
+/** What the Review card on the page holds now: { levels, scores, verdict, problems, note }. */
+function reviewFormOnPage() {
+  const card = document.getElementById(REVIEW_FORM_ID);
+  const checked = (name) =>
+    [...card.querySelectorAll(`input[name="${name}"]:checked`)].map((input) => input.value);
+  const scores = {};
+  REVIEW_CRITERIA.forEach(({ key }) => {
+    const [value] = checked(`score-${key}`);
+    if (value) scores[key] = Number(value);
+  });
+  const note = card.querySelector('#review-note').value;
+  return {
+    levels: checked('levels'),
+    scores,
+    verdict: checked('verdict')[0] || '',
+    problems: checked('problems'),
+    note,
+  };
+}
+
+/**
+ * The scenario's edit with the levels ticked in the review: { edit } (undefined when they are
+ * unchanged) or { error }.
+ */
+function levelsEdit(view, levels) {
+  const same = JSON.stringify(tidyLevels(view.live.levels)) === JSON.stringify(tidyLevels(levels));
+  if (same) return {};
+  if (view.edit?.added) return addedScenarioEditWith(view.edit, 'levels', levels, isGuidelineId);
+  return { edit: scenarioEditWith(view.written, view.edit, 'levels', levels) };
+}
+
+/** Saves the open scenario's review (and its levels, when changed); then the next, if asked. */
+async function saveReview(goNext) {
+  const scenarioId = currentScenarioId();
+  const view = scenarioViewFor(scenarioId);
+  const form = reviewFormOnPage();
+  state.reviewForm = { scenarioId, form };
+  const read = readReview(form, scenarioId, state.name, Date.now());
+  const levels = read.error ? {} : levelsEdit(view, form.levels);
+  state.reviewError = read.error || levels.error || '';
+  if (state.reviewError) {
+    render();
+    return;
+  }
+  if (
+    levels.edit !== undefined &&
+    !(await request({ action: 'edit-save', id: view.id, edit: levels.edit }))
+  ) {
+    return;
+  }
+  const id = reviewEditId(scenarioId, state.name);
+  if (!(await request({ action: 'edit-save', id, edit: read.review }))) return;
+  state.reviewForm = null;
+  const nextId = nextUnreviewed(scenarioOrder(), state.edits, state.name, scenarioId);
+  if (goNext && nextId)
+    location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(nextId)}`;
+  else render();
 }
 
 /* ---------- The new scenario form ---------- */
@@ -580,6 +685,8 @@ function renderScenario(viewer) {
   const scenarioId = currentScenarioId();
   if (!scenarioId) return false;
   const view = scenarioViewFor(scenarioId);
+  // Only one scenario's screen has a Review card (the list builds views without one).
+  if (view.live) view.review = reviewViewFor(scenarioId, view.live);
   if (view.edit?.deleted) app.innerHTML = deletedScenarioHtml(viewer, SIGNED_IN_BUTTONS);
   else {
     const draw = view.written ? scenarioEditorHtml : goneScenarioHtml;
@@ -602,7 +709,7 @@ function renderHome(viewer) {
     scenarioRows(),
     Boolean(state.openSections.Scenarios),
   );
-  const sections = submissionSectionHtml(state.submissions) + scenarioSection;
+  const sections = submissionSectionHtml(state.submissions) + reviewProgress() + scenarioSection;
   app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, sections);
 }
 
@@ -693,6 +800,8 @@ const ACTIONS = {
     render();
   },
   'scenario-box-save': saveScenarioBox,
+  'review-save': () => saveReview(false),
+  'review-save-next': () => saveReview(true),
   'submission-approve': approveAsItIs,
   'submission-edit': (id) => (location.hash = `${APPROVE_HASH_PREFIX}${encodeURIComponent(id)}`),
   'submission-reject': (id) => {
@@ -768,6 +877,11 @@ app.addEventListener('keydown', (event) => {
 // Only the list is redrawn while typing, so the search box keeps its place. The new scenario
 // form is not redrawn at all: each box's text is kept in the draft as it is typed.
 app.addEventListener('input', (event) => {
+  // The Review card is not redrawn while ticking; what it holds is kept for any redraw.
+  if (event.target.closest(`#${REVIEW_FORM_ID}`)) {
+    state.reviewForm = { scenarioId: currentScenarioId(), form: reviewFormOnPage() };
+    return;
+  }
   const { draft } = event.target.dataset;
   if (draft) {
     state.draft = withScenarioValue(state.draft, draft, event.target.value);
@@ -792,6 +906,8 @@ app.addEventListener(
 );
 window.addEventListener('hashchange', () => {
   state.isDeleting = false;
+  state.reviewForm = null;
+  state.reviewError = '';
   state.openId = '';
   state.openBox = null;
   state.openPath = '';

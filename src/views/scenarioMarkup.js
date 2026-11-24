@@ -14,8 +14,10 @@ import {
   SCENARIO_HASH_PREFIX,
   SCENARIO_COMPLEXITY,
   SCENARIO_LOADS,
+  SCENARIO_LEVELS,
   SCENARIO_VITALS,
 } from '../constants.js';
+import { tidyLevels } from '../scenarioEdits.js';
 
 const boxAttrs = (editing, path) => (editing ? editing.attrs(path) : '');
 const openForm = (editing, path) => (editing ? editing.formFor(path) : '');
@@ -26,7 +28,23 @@ const loadName = (scenario) => SCENARIO_LOADS[scenario.load]?.name || '';
 /** The complexity and scene load in words: "Common presentation · Delegation". */
 export const scenarioTagsText = (scenario) => `${complexityName(scenario)} · ${loadName(scenario)}`;
 
-/** The two pills, complexity and scene load; an editor taps either to change it. */
+/** The levels a scenario suits in short words, "Student–Grad" style: "Student, Grad", or ''. */
+export const levelsText = (scenario) =>
+  (tidyLevels(scenario.levels) || []).map((key) => SCENARIO_LEVELS[key].short).join(', ');
+
+/** The levels pill; on the editor page it shows "Levels not set" so it can be tapped. */
+function levelsPillHtml(scenario, editing) {
+  const text = levelsText(scenario);
+  if (!text && !editing) return '';
+  return (
+    openForm(editing, 'levels') ||
+    `<span class="scenario-level scenario-level--levels"${boxAttrs(editing, 'levels')}>${
+      text ? `Suits ${escapeHtml(text)}` : 'Levels not set'
+    }</span>`
+  );
+}
+
+/** The pills: complexity, scene load and the levels it suits; an editor taps any to change it. */
 export const scenarioTagsHtml = (scenario, editing) =>
   `<p class="scenario-tags">${
     openForm(editing, 'complexity') ||
@@ -34,7 +52,7 @@ export const scenarioTagsHtml = (scenario, editing) =>
   } ${
     openForm(editing, 'load') ||
     `<span class="scenario-level scenario-level--load"${boxAttrs(editing, 'load')}>${escapeHtml(loadName(scenario))}</span>`
-  }</p>`;
+  } ${levelsPillHtml(scenario, editing)}</p>`;
 
 /**
  * One row of the list: title, suburb and the scene load when it is not a single patient, then

@@ -68,6 +68,8 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 17   | "Pick the guideline" quiz (sort pieces of 2 or 3 related guidelines) | Built 18 Nov 2026 (PG-A to PG-H)    |
 | 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
 | 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
+| 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
+| 21   | Scenario generator (no AI), `docs/scenario-generator.md`        | Designed 24 Nov 2026; approach open (8.3 item 4) |
 
 ### 8.2 Decisions in force
 
@@ -378,6 +380,16 @@ Claude's, say if any should change)**
   complexity and scene load; plus a weekly average scenario score chart and the guidelines most
   often struggled with (over the saved runs). No back-fill of History for scenarios.
 
+- SC-H (24 Nov 2026, owner asked; levels named by Claude, see 8.3 item 5): a scenario may suit
+  any of Student, Graduate paramedic, Supervised paramedic, Paramedic and Intensive care
+  paramedic (`SCENARIO_LEVELS`, optional `levels`). Shown as a "Suits" pill and dropdown in the
+  app; set by editors.
+- SC-I (24 Nov 2026, Claude's choices; say if any should change): editors grade scenarios on
+  the editor page to improve later ones. Four grades (Realistic, Clinically consistent, Clear
+  teaching point, Right difficulty) each Poor, OK or Good; eight one-tap problems; an overall
+  call (needed) and a note. One review per editor per scenario in the Edits tab; the daily copy
+  writes `content/scenario-reviews.yaml`, read before writing scenarios (CLAUDE.md).
+
 ### 8.3 Open decisions (owner)
 
 1. **Decision D again: how a new PDF is published** (asked 16 Nov 2026, unanswered). The owner
@@ -403,6 +415,23 @@ Claude's, say if any should change)**
    passcodes hashed. Closest to today's design; the free plan does not pause when idle.
    Option C: Supabase (Postgres with sign-in and row-level security): real per-person accounts.
    Most secure, biggest rewrite; free projects pause after a week without use.
+
+4. **Scenario generator: the approach** (asked 24 Nov 2026; design in
+   `docs/scenario-generator.md`). Claude recommends Option A.
+   Option A: a bank of problems, complicating factors and level profiles written as data
+   (drafted by Claude, reviewed by editors with the Review card), put together on the phone by
+   fixed rules and a seed. No AI at run time, works offline, every part checkable by tests;
+   the work is in writing the bank, starting with about 10 common presentations.
+   Option B: remix the written scenarios: keep a scenario's problem and change the person,
+   suburb, vitals within safe ranges and the debrief points for the level. Quickest to build,
+   but only as varied as the scenarios already written.
+   Option C: AI at run time: the backend asks a language model for a scenario from the level,
+   problems and guidelines. Most varied, but needs an API key and paid use, a signal on the
+   job, and its clinical content can't be checked before a learner sees it.
+5. **Level names** (asked 24 Nov 2026). The owner wrote "superviser paramedic"; it is built as
+   "Supervised paramedic" (between Graduate and Paramedic). Option A: keep "Supervised
+   paramedic". Option B: "Supervising paramedic" (a paramedic who mentors, above Paramedic).
+   Option C: another name the owner gives.
 
 Answered 16 Nov 2026:
 
@@ -506,7 +535,12 @@ History is in `CHANGELOG.md` and the git history; this section holds only where 
 on several phones and all work. A tidy-up (rule 9) the same day merged repeated helpers and
 removed dead CSS and stale notes, with no behaviour change.
 
-**Open:** 8.3 items 1 to 3; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
+**Scenario reviews (24 Nov 2026):** editors grade scenarios and set their levels on the
+editor page (SC-H, SC-I); reviews arrive in `content/scenario-reviews.yaml` each morning. Next:
+the owner reviews the 40 scenarios, then Claude rewrites those marked for change and answers
+8.3 items 4 and 5 before building the generator.
+
+**Open:** 8.3 items 1 to 5; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
 a best score for Pick the guideline; changing its second or third guideline too.
 

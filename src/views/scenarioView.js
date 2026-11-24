@@ -19,13 +19,20 @@ import { guidelineById } from '../guidelines.js';
 import { scenarios } from '../../content/scenarios.js';
 import { scenarioEdits } from '../../content/scenario-edits.js';
 import { liveScenarios } from '../scenarioEdits.js';
-import { filterScenarios, themesInUse, latestScore, scenarioProgress } from '../scenarioLogic.js';
+import {
+  filterScenarios,
+  themesInUse,
+  levelsInUse,
+  latestScore,
+  scenarioProgress,
+} from '../scenarioLogic.js';
 import { getScenarioRuns } from '../scenarioRunState.js';
 import {
   SCENARIOS_HASH,
   SCENARIO_HASH_PREFIX,
   SCENARIO_COMPLEXITY,
   SCENARIO_LOADS,
+  SCENARIO_LEVELS,
   DEBRIEF_RATINGS,
   DEBRIEF_TEXTS,
   MAX_DEBRIEF_NOTE,
@@ -73,9 +80,25 @@ function chipRowHtml(label, action, groups, chosen, allTip) {
     <span class="scenario-chip-label">${label}</span>${chips.join('')}</div>`;
 }
 
-/** The complexity and scene-load chips (one row each) and the theme dropdown. */
+/** The level dropdown, offering only levels some scenario suits; '' when none has levels yet. */
+function levelChoiceHtml(chosen) {
+  const levels = levelsInUse(shownScenarios);
+  if (!levels.length) return '';
+  const options = ['<option value="">All levels</option>']
+    .concat(
+      levels.map(
+        (key) =>
+          `<option value="${key}"${chosen === key ? ' selected' : ''}>${escapeHtml(SCENARIO_LEVELS[key].name)}</option>`,
+      ),
+    )
+    .join('');
+  return `<label class="quiz-setting scenario-theme-setting">Suits
+    <select id="scenario-level-choice">${options}</select></label>`;
+}
+
+/** The complexity and scene-load chips (one row each), and the level and theme dropdowns. */
 function filtersHtml() {
-  const { complexity, load, theme } = state.scenarioFilter;
+  const { complexity, load, level, theme } = state.scenarioFilter;
   const options = ['<option value="">All themes</option>']
     .concat(
       themesInUse(shownScenarios, sectionOf).map(
@@ -86,7 +109,7 @@ function filtersHtml() {
     .join('');
   return `${chipRowHtml('Complexity', 'scenario-complexity', SCENARIO_COMPLEXITY, complexity, 'Any complexity')}
     ${chipRowHtml('Scene', 'scenario-load', SCENARIO_LOADS, load, 'Any scene load')}
-    <label class="quiz-setting scenario-theme-setting">Theme
+    ${levelChoiceHtml(level)}    <label class="quiz-setting scenario-theme-setting">Theme
     <select id="scenario-theme-choice">${options}</select></label>`;
 }
 
@@ -132,7 +155,7 @@ export function renderScenarioList() {
   const shown = filterScenarios(shownScenarios, state.scenarioFilter, sectionOf);
   const groups = shown.length
     ? scenarioGroupsHtml(shown, rowHtml)
-    : '<p class="empty-message">No scenario matches. Try another complexity, scene or theme.</p>';
+    : '<p class="empty-message">No scenario matches. Try another complexity, scene, level or theme.</p>';
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding scenario-screen"><h1 class="quiz-title">Scenarios</h1>
     <p class="scenario-intro">Openings for a mentor to run. Start with straightforward,

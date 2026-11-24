@@ -22,7 +22,8 @@ import {
   MAX_LATER_VITALS,
   PATIENT_TEXT_FIELDS,
 } from '../scenarioEdits.js';
-import { scenarioBodyHtml, scenarioTagsText } from '../views/scenarioMarkup.js';
+import { scenarioBodyHtml, scenarioTagsText, levelsText } from '../views/scenarioMarkup.js';
+import { reviewCardHtml } from './reviewView.js';
 
 export const SCENARIO_EDITOR_HASH_PREFIX = '#s-';
 // Not under #s-, so no scenario id can clash with it.
@@ -35,6 +36,7 @@ const FIELD_NAMES = {
   intention: 'Scenario intention',
   complexity: 'Complexity',
   load: 'Scene load',
+  levels: 'Suits these levels',
   outcomes: 'Intended outcomes',
   guidelines: 'Guidelines',
   label: 'Patient label',
@@ -52,6 +54,7 @@ const HINTS = {
   complexity: '1 Straightforward, 2 Common presentation, 3 Complex or atypical.',
   load: 'single, delegation or several (several only when there is more than one patient).',
   outcomes: 'One per line, short and observable. The debrief rates each one.',
+  levels: 'Any of student, grad, supervised, paramedic, icp, separated by commas. Empty for none.',
   guidelines: 'CPG numbers in the order shown, separated by commas, for example 1.17, 4.11.',
   label: 'Shown above the patient. Needed when there are several patients.',
 };
@@ -76,6 +79,7 @@ export function boxTextOf(value, path) {
     return (value || []).map((id) => guidelineById(id)?.n || id).join(', ');
   }
   if (path === 'outcomes') return (value || []).join('\n');
+  if (path === 'levels') return (value || []).join(', ');
   return value === undefined || value === null ? '' : String(value);
 }
 
@@ -85,7 +89,9 @@ export function scenarioSectionHtml(rows, isOpen) {
     .map(
       (row) => `<a class="guideline-row" href="${SCENARIO_EDITOR_HASH_PREFIX}${escapeHtml(row.id)}">
       <div class="guideline-row__text"><b>${escapeHtml(row.title)}</b>
-      <small>${escapeHtml(scenarioTagsText(row))} · ${escapeHtml(row.suburb)}</small></div>
+      <small>${escapeHtml(scenarioTagsText(row))} · ${escapeHtml(row.suburb)}${
+        levelsText(row) ? ` · ${escapeHtml(levelsText(row))}` : ''
+      }${row.isReviewed ? ' · ✓ reviewed' : ''}</small></div>
       ${row.badge ? `<span class="row-meta"><span class="editor-badge">${row.badge}</span></span>` : ''}</a>`,
     )
     .join('');
@@ -166,6 +172,7 @@ export function scenarioEditorHtml(viewer, view, signedInButtons) {
     ${noteHtml('The scenario as learners see it, edits included. Tap any text, vital, the complexity, the scene load, the outcomes or the guidelines to change it. Saved edits reach the app the next morning.')}
     <p>${badgesHtml(view)}</p>${reviewHtml(view)}
     <div class="editor-preview scenario-screen">${scenarioBodyHtml(live, editingFor(view))}</div>
+    ${view.review ? reviewCardHtml(view.review) : ''}
     <div class="editor-buttons">${actionButtonHtml('scenario-off', offLabel)}${undo}</div>
     ${deleteHtml(view.isDeleting)}</main>`;
 }
