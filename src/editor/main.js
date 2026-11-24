@@ -427,7 +427,7 @@ function reviewFormOnPage() {
     problems: checked('problems'),
     note,
     answers: textsOf('answer'),
-    levelNotes: textsOf('level'),
+    otherLevels: card.querySelector('#review-other-levels').value,
   };
 }
 

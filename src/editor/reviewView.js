@@ -1,7 +1,7 @@
 /*
  * Editor page: markup for grading scenarios. The Review card under a scenario (who it suits,
- * a grade per criterion, problems, an overall call, a note, then short summary questions and
- * what would make it fit each level) and the line on the first screen that says how many you
+ * and how it could suit the levels not ticked, a grade per criterion, problems, an overall
+ * call, a note, then short summary questions) and the line on the first screen that says how many you
  * have reviewed, how many scenarios have their REVIEWS_GOAL editors, and opens the next one. Each function takes prepared data
  * and returns text; main.js reads the form and saves it. Text is escaped.
  * Depends on logic.js, staffPage.js, constants.js and scenarioReviews.js.
@@ -18,7 +18,8 @@ import {
   MAX_REVIEW_ANSWER,
   REVIEW_QUESTIONS,
   REVIEWS_GOAL,
-  LEVEL_NOTE_PLACEHOLDER,
+  OTHER_LEVELS_QUESTION,
+  OTHER_LEVELS_PLACEHOLDER,
 } from '../scenarioReviews.js';
 
 export const REVIEW_FORM_ID = 'review-form';
@@ -48,27 +49,26 @@ const criteriaHtml = (scores) =>
     ),
   ).join('');
 
-/** One short answer box: a label, then a line of text kept in `data-answer` or `data-level`. */
+/** One short answer box: a label, then a line of text kept in `data-answer`. */
 const answerBoxHtml = (data, key, label, value, placeholder) =>
   `<label class="scenario-label" for="review-${data}-${key}">${escapeHtml(label)}</label>
     <input class="text-input review-answer" id="review-${data}-${key}" type="text"
       data-${data}="${key}" maxlength="${MAX_REVIEW_ANSWER}" value="${escapeHtml(value || '')}"
       placeholder="${escapeHtml(placeholder)}">`;
 
-/** The summary at the end: the short questions, then what would make it fit each level. */
+/** The summary at the end: the short questions. */
 function summaryHtml(form) {
   const questions = REVIEW_QUESTIONS.map(([key, question, placeholder]) =>
     answerBoxHtml('answer', key, question, form.answers?.[key], placeholder),
   ).join('');
-  const levels = Object.entries(SCENARIO_LEVELS)
-    .map(([key, level]) =>
-      answerBoxHtml('level', key, level.name, form.levelNotes?.[key], LEVEL_NOTE_PLACEHOLDER),
-    )
-    .join('');
-  return `<h3 class="scenario-group-title">Summary</h3>${questions}
-    <p class="scenario-label">To suit each level, change…</p>
-    <p class="review-help">One line each; leave a level empty if you have nothing to add.</p>${levels}`;
+  return `<h3 class="scenario-group-title">Summary</h3>${questions}`;
 }
+
+/** Under the levels ticked: a free-text answer on how it could suit the levels not ticked. */
+const otherLevelsHtml = (text) =>
+  `<label class="scenario-label" for="review-other-levels">${escapeHtml(OTHER_LEVELS_QUESTION)}</label>
+    <textarea class="text-input scenario-note" id="review-other-levels" name="otherLevels" rows="3"
+      maxlength="${MAX_REVIEW_NOTE}" placeholder="${escapeHtml(OTHER_LEVELS_PLACEHOLDER)}">${escapeHtml(text || '')}</textarea>`;
 
 /**
  * The Review card. `review` is { form ({ levels, scores, verdict, problems, note }), error,
@@ -94,6 +94,7 @@ export function reviewCardHtml(review) {
     <h2 class="scenario-group-title">Review this scenario</h2>
     ${noteHtml(escapeHtml(who) + saved)}
     ${groupHtml('Suits these levels', levels, true, 'Tick every level it suits. This changes the scenario in the app too.')}
+    ${otherLevelsHtml(form.otherLevels)}
     ${criteriaHtml(form.scores)}
     ${groupHtml('Problems', problems, true, 'Tick any that apply.')}
     ${groupHtml('Overall', verdicts, true)}

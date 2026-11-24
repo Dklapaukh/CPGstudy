@@ -51,6 +51,8 @@ the editor page, on a phone. The first screen says "You have reviewed N of M sce
 button to the next one. Under each scenario a **Review this scenario** card has:
 
 - **Suits these levels**: tick every level; saving changes the scenario's `levels` too;
+- under it, **How could it be changed to suit the levels not ticked?** (`otherLevels`),
+  free text up to 600 characters; it is for the review only and changes nothing in the app;
 - four grades, each Poor, OK or Good: **Realistic**, **Clinically consistent**, **Clear teaching
   point**, **Right difficulty** (`REVIEW_CRITERIA` in `src/scenarioReviews.js`);
 - **Problems**, any of eight one-tap faults such as "Vitals don't fit the story" or "Gives the
@@ -58,8 +60,7 @@ button to the next one. Under each scenario a **Review this scenario** card has:
 - **Overall** (needed): Use as it is, Small changes, Needs rewriting, Take it out;
 - **What would make it better**, up to 600 characters;
 - a short **Summary** (decision 24 Nov 2026, SC-J): "What does it teach best?", "Anything
-  unsafe or wrong?" (`REVIEW_QUESTIONS`) and, for each level, one line "To suit each level,
-  change…" (`levelNotes`), each up to 200 characters.
+  unsafe or wrong?" (`REVIEW_QUESTIONS`), each up to 200 characters.
 
 **In-line comments.** Each part of the scenario on the editor page (story, each patient's
 vitals, background and what happened next, the photos, the intention, the debrief points and
@@ -80,9 +81,9 @@ scenarios have 3.
 stays. Each editor has one review per scenario (saving again replaces it), kept in the Edits
 tab as `scenario-review|<scenario id>|<editor>`, so no backend change was needed. The daily
 copy writes them all to `content/scenario-reviews.yaml`: a summary (verdicts, the average of
-each grade, problems by how often, reviews per editor, scenarios with 3 reviews), every level's
-notes gathered by level (`levelNotes`, what makes a scenario fit that level), then each
-scenario's reviews and in-line comments. The app never loads it.
+each grade, problems by how often, reviews per editor, scenarios with 3 reviews), any older
+one-line-per-level notes gathered by level (`levelNotes`), then each scenario's reviews (with
+`otherLevels`) and in-line comments. The app never loads it.
 **Read it before writing new scenarios**, and fix the scenarios marked Small changes or Needs
 rewriting.
 

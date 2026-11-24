@@ -31,6 +31,7 @@ const form = {
   problems: ['too-easy', 'made-up'],
   note: '  Add a red herring.  ',
   answers: { teaches: ' Long lies ', unsafe: '', made: 'x' },
+  otherLevels: ' ICP: add rhabdo ',
   levelNotes: { icp: 'Add rhabdo and hyperkalaemia', nope: 'x' },
 };
 
@@ -57,6 +58,7 @@ test('a review needs an overall call; unknown levels, grades and problems are dr
     problems: ['too-easy'],
     note: 'Add a red herring.',
     answers: { teaches: 'Long lies' },
+    otherLevels: 'ICP: add rhabdo',
     levelNotes: { icp: 'Add rhabdo and hyperkalaemia' },
   });
   assert.equal(cleanReview({ ...review, kind: 'scenario' }), null);
@@ -73,6 +75,7 @@ test('the form starts from your saved review, or from the levels the scenario ha
     problems: [],
     note: '',
     answers: {},
+    otherLevels: '',
     levelNotes: {},
   });
 });
@@ -118,6 +121,7 @@ test('the report sums verdicts, grades and problems, then lists each scenario’
     problems: ['Too easy'],
     note: 'Add a red herring.',
     answers: { 'What does it teach best?': 'Long lies' },
+    otherLevels: 'ICP: add rhabdo',
     levelNotes: { ICP: 'Add rhabdo and hyperkalaemia' },
   });
   assert.equal(report.scenarios[0].reviewers, 2);

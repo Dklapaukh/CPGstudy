@@ -8,9 +8,11 @@
  * overwrite each other and it needs no backend change. Its shape:
  *   { kind: 'scenario-review', scenario, reviewer, at (milliseconds), levels (keys of
  *     SCENARIO_LEVELS), scores { <criterion>: 1 to 3 }, verdict, problems (keys), note,
- *     answers { <summary question>: text }, levelNotes { <level>: text } }
- * The summary questions and level notes (decision 24 Nov 2026, SC-J) collect, across editors,
- * what makes a scenario fit each level, for the scenario generator's level profiles.
+ *     answers { <summary question>: text }, otherLevels (text), levelNotes { <level>: text } }
+ * The summary questions and the note on how it could suit the levels not ticked (`otherLevels`,
+ * decision 24 Nov 2026, SC-J) collect, across editors, what makes a scenario fit each level, for
+ * the scenario generator's level profiles. `levelNotes` (one line per level) is no longer asked
+ * but is kept for reviews saved with it.
  * Each scenario aims for REVIEWS_GOAL editors' reviews.
  * The daily copy (scripts/sync-edits.js) writes them to content/scenario-reviews.yaml, which is
  * read before writing new scenarios. The app never loads them.
@@ -78,7 +80,9 @@ export const REVIEW_QUESTIONS = [
   ['teaches', 'What does it teach best?', 'One line'],
   ['unsafe', 'Anything unsafe or wrong?', 'Leave empty if none'],
 ];
-export const LEVEL_NOTE_PLACEHOLDER = 'What would make it fit, or why it can’t';
+// The question under the levels ticked; the answer is for the review only, not the app.
+export const OTHER_LEVELS_QUESTION = 'How could it be changed to suit the levels not ticked?';
+export const OTHER_LEVELS_PLACEHOLDER = 'What would make it fit each one, or why it can’t';
 
 /** The editor's name as it goes in an id: lower case, letters and digits joined by "-". */
 export const reviewerPart = (name) =>
@@ -134,6 +138,9 @@ export function cleanReview(review) {
     problems,
     note: isText(review.note) ? review.note.trim().slice(0, MAX_REVIEW_NOTE) : '',
     answers: shortTexts(review.answers, QUESTION_KEYS),
+    otherLevels: isText(review.otherLevels)
+      ? review.otherLevels.trim().slice(0, MAX_REVIEW_NOTE)
+      : '',
     levelNotes: shortTexts(review.levelNotes, Object.keys(SCENARIO_LEVELS)),
   };
 }
@@ -158,8 +165,8 @@ export function readReview(form, scenarioId, reviewerName, at) {
 export function reviewFormOf(savedReview, scenario) {
   if (savedReview) {
     const { levels, scores, verdict, problems, note } = savedReview;
-    const { answers = {}, levelNotes = {} } = savedReview;
-    return { levels, scores, verdict, problems, note, answers, levelNotes };
+    const { answers = {}, otherLevels = '', levelNotes = {} } = savedReview;
+    return { levels, scores, verdict, problems, note, answers, otherLevels, levelNotes };
   }
   return {
     levels: tidyLevels(scenario?.levels) || [],
@@ -168,6 +175,7 @@ export function reviewFormOf(savedReview, scenario) {
     problems: [],
     note: '',
     answers: {},
+    otherLevels: '',
     levelNotes: {},
   };
 }
@@ -238,6 +246,7 @@ const reportedReview = (review) => {
     problems: problems.map((key) => REVIEW_PROBLEMS[key]),
     note,
     ...(Object.keys(answers).length ? { answers } : {}),
+    ...(review.otherLevels ? { otherLevels: review.otherLevels } : {}),
     ...(Object.keys(levelNotes).length ? { levelNotes } : {}),
   };
 };
