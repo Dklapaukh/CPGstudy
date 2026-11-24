@@ -11,6 +11,10 @@
   section 10.
 - Feature detail is in `docs/`, one file per feature, with its decisions at the end: read only
   the one the task needs.
-- Never read `content/guidelines.js` whole: it is about 1.3 MB of guideline data.
+- Never read `content/guidelines.js` whole: it is about 1.3 MB of guideline data. Use
+  `npm run -s guideline -- <number>` (`--heading <text>`, `--headings`, `--find <phrase>`, `--list`).
 - When giving the owner options, show the full text of every option.
-- Before writing or changing scenarios, read `content/scenario-reviews.yaml` (editors' grades).
+- Before writing or changing scenarios, read its editors' grades: `npm run -s scenario -- <id>` prints
+  one scenario as learners see it with its reviews (`--list` for all); the whole record is
+  `content/scenario-reviews.yaml`.
+- Set up with `npm ci` (the lock file is committed).

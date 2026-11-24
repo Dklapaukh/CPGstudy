@@ -75,6 +75,7 @@ How each part works, one file each in `docs/`:
 | `scripts/build-related.js`                                                     | Rebuilds `content/related.js`.                                                                    |
 | `scripts/audit.js`                                                             | `npm run audit`: style-guide report (headers, comments, length, copies, dead code).               |
 | `scripts/practice-level-review.js`                                             | Prints what each practice level is shown in the Medicines quiz, for checking.                     |
+| `scripts/guideline.js`, `scenario.js`, `lookupText.js`                         | `npm run guideline` / `npm run scenario`: print one guideline or scenario (with reviews) as text. |
 | `docs/`                                                                        | How each feature works, one file each (list above).                                               |
 | `backend/Code.gs`                                                              | The Google Apps Script service; linted and formatted with the app (a plain script, not a module). |
 | `.github/workflows/`                                                           | `checks.yml` (every push), `pdf-check.yml` and `edits-sync.yml` (daily).                          |

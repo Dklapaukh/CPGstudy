@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "node --test",
     "audit": "node scripts/audit.js",
-    "check": "npm run format:check && npm run lint && npm test && npm run audit -- --quiet"
+    "check": "npm run format:check && npm run lint && npm test && npm run audit -- --quiet",
+    "guideline": "node scripts/guideline.js",
+    "scenario": "node scripts/scenario.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
