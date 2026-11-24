@@ -3,6 +3,8 @@
 Newest first. One short entry per change; the detail is in `docs/` and the git history. Entries before
 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-24: **Plan: benchmark and per-level scenario sets noted** (SC-L, feature 22; no
+  code change). To do once the scenarios are refined.
 - 2026-11-24: **Review card: levels not ticked** (editor page only). Under "Suits these
   levels" the card now asks "How could it be changed to suit the levels not ticked?" with a
   free-text box (`otherLevels`, saved with the review only), in place of the one line per level

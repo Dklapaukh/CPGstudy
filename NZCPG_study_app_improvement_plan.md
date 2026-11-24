@@ -70,6 +70,7 @@ Section numbers are kept from the old plan because `CLAUDE.md` and code comments
 | 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
 | 21   | Scenario generator (no AI), `docs/scenario-generator.md`        | Designed 24 Nov 2026; approach open (8.3 item 4) |
+| 22   | Level benchmark scenarios and per-level "move on" sets (SC-L)  | Noted 24 Nov 2026; waits for the scenario review |
 
 ### 8.2 Decisions in force
 
@@ -401,6 +402,10 @@ Claude's, say if any should change)**
   problems, complicating factors and level profiles as data, drafted by Claude, reviewed by
   editors with the Review card, put together on the phone by fixed rules and a seed; no AI at
   run time). The level stays "Supervised paramedic". Building waits for the review (SC-J).
+- SC-L (owner, 24 Nov 2026; to do once the scenarios are refined): (1) a **benchmark set**,
+  scenarios spanning every level, used to place a learner at a level; (2) for each level a
+  **recommended series** framed as "you should be able to do all of these to move on". Not
+  designed yet; starts after the review and rewrites (SC-J).
 
 ### 8.3 Open decisions (owner)
 
@@ -555,7 +560,8 @@ level (SC-J); reviews and comments arrive in `content/scenario-reviews.yaml` eac
 24 Nov the file held 0 reviews, so no scenario was marked for change yet. Next: editors (aim 3
 per scenario) review the 40 scenarios; then Claude rewrites those marked Small changes or
 Needs rewriting and drafts the level profiles from the level notes; only then step 1 of
-`docs/scenario-generator.md` (SC-K). No learner-facing changes until the review is complete.
+`docs/scenario-generator.md` (SC-K). No learner-facing changes until the review is complete. After the
+scenarios are refined: benchmark and per-level "move on" sets (SC-L, feature 22).
 
 **Open:** 8.3 items 1 to 3; 8.4 tasks 3 to 7. Known to watch: the `demo` tracker is
 shared by every visitor, so their marks mix (it could be made read-only). Possible follow-ups:
