@@ -72,10 +72,11 @@ const otherLevelsHtml = (text) =>
 
 /**
  * The Review card. `review` is { form ({ levels, scores, verdict, problems, note }), error,
- * savedAt (milliseconds, or 0 when not yet reviewed by this editor), nextId ('' when none) }.
+ * savedAt (milliseconds, or 0 when not yet reviewed by this editor), nextId ('' when none),
+ * justSaved (true just after a save worked) }.
  */
 export function reviewCardHtml(review) {
-  const { form, error, savedAt, nextId, reviewer } = review;
+  const { form, error, savedAt, nextId, reviewer, justSaved } = review;
   const levels = Object.entries(SCENARIO_LEVELS).map(([key, level]) =>
     pillHtml('checkbox', 'levels', key, level.short, form.levels.includes(key), level.name),
   );
@@ -90,6 +91,15 @@ export function reviewCardHtml(review) {
     : 'Not reviewed by you yet.';
   const who = reviewer ? `Reviewing as ${reviewer}. ` : '';
   const next = nextId ? actionButtonHtml('review-save-next', 'Save and next', '', 'button') : '';
+  // By the buttons: that the save worked, and why Save and next is missing when nothing is left.
+  const savedNow = justSaved ? '<div class="success-box"><b>Review saved.</b></div>' : '';
+  const lastOne = nextId
+    ? ''
+    : noteHtml(
+        savedAt || justSaved
+          ? 'You have reviewed every scenario, so there is no next one.'
+          : 'This is the last scenario you haven’t reviewed, so there is no next one.',
+      );
   return `<section class="scenario-card review-card" id="${REVIEW_FORM_ID}">
     <h2 class="scenario-group-title">Review this scenario</h2>
     ${noteHtml(escapeHtml(who) + saved)}
@@ -108,7 +118,7 @@ export function reviewCardHtml(review) {
     <label class="scenario-label" for="review-note">What would make it better</label>
     <textarea class="text-input scenario-note" id="review-note" name="note" rows="3"
       maxlength="${MAX_REVIEW_NOTE}">${escapeHtml(form.note)}</textarea>
-    ${summaryHtml(form)}${warningHtml(error)}
+    ${summaryHtml(form)}${warningHtml(error)}${savedNow}${lastOne}
     <div class="editor-buttons">${next}${actionButtonHtml('review-save', 'Save review', '', nextId ? 'switch-button' : 'button')}</div>
   </section>`;
 }

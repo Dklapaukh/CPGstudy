@@ -287,6 +287,7 @@ const sheetEdits = {};
 const $ = (selector) => doc.querySelector(selector);
 const $$ = (selector) => [...doc.querySelectorAll(selector)];
 const click = (element) => element.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+let isOffline = false; // when true, every request fails as if there were no signal
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 before(() => {
@@ -302,6 +303,7 @@ before(() => {
     sessionStorage: dom.window.sessionStorage,
     location: dom.window.location,
     fetch: async (url, options) => {
+      if (isOffline) throw new Error('no signal');
       const body = JSON.parse(options.body);
       if (body.code !== 'editor-1')
         return { json: async () => ({ ok: false, error: 'not-found' }) };
@@ -594,6 +596,26 @@ test('page: a scenario is reviewed, its levels set, and "Save and next" opens th
   await sleep(20);
   if (SCENARIO_EDITING_ENABLED) assert.match($('.scenario-tags').textContent, /Suits Student/);
   assert.match($('#review-form').textContent, /saved on/);
+});
+
+test('page: a failed review save says why by the buttons; a save that works says so', async () => {
+  dom.window.location.hash = '#s-long-lie';
+  await sleep(20);
+  const verdict = $('#review-form input[name="verdict"][value="keep"]');
+  verdict.checked = true;
+  verdict.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  isOffline = true;
+  click($('[data-action="review-save"]'));
+  await sleep(20);
+  isOffline = false;
+  assert.ok($('#review-form .warning-message'), 'the error is in the Review card');
+  assert.ok($('#review-form input[name="verdict"][value="keep"]').checked, 'ticks are kept');
+  assert.equal(sheetEdits['scenario-review|long-lie|eve'], undefined);
+  click($('[data-action="review-save"]'));
+  await sleep(20);
+  assert.match($('#review-form .success-box').textContent, /Review saved/);
+  assert.equal($('#review-form .warning-message'), null);
+  delete sheetEdits['scenario-review|long-lie|eve'];
 });
 
 test('page: each part has a Comment button with its questions; comments are saved by editor', async () => {

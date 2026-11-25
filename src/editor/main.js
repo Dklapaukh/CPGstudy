@@ -137,6 +137,7 @@ const state = {
   photoBySrc: {}, // fetched photos by the address they will have once published (for previews)
   reviewForm: null, // the open scenario's Review card as ticked so far: { scenarioId, form }
   reviewError: '', // why the review couldn't be saved
+  reviewSavedId: '', // the scenario whose review was just saved, for the note by its buttons
   openComment: '', // the scenario part whose comment box is open (scenarioComments.js)
   commentText: '', // what that box holds, kept for any redraw
   commentGuidelines: '', // the guidelines box of the guidelines part, as CPG numbers
@@ -313,6 +314,7 @@ function reviewViewFor(scenarioId, live) {
   return {
     form: isOpen ? state.reviewForm.form : reviewFormOf(saved, live),
     error: isOpen ? state.reviewError : '',
+    justSaved: state.reviewSavedId === scenarioId,
     savedAt: saved?.at || 0,
     nextId: nextUnreviewed(scenarioOrder(), state.edits, state.name, scenarioId),
     reviewer: state.name,
@@ -471,6 +473,7 @@ async function saveReview(goNext) {
   // While scenario editing is paused the ticked levels are kept in the review only.
   const levels = read.error || !SCENARIO_EDITING_ENABLED ? {} : levelsEdit(view, form.levels);
   state.reviewError = read.error || levels.error || '';
+  state.reviewSavedId = '';
   if (state.reviewError) {
     render();
     return;
@@ -482,8 +485,15 @@ async function saveReview(goNext) {
     return;
   }
   const id = reviewEditId(scenarioId, state.name);
-  if (!(await request({ action: 'edit-save', id, edit: read.review }))) return;
+  if (!(await request({ action: 'edit-save', id, edit: read.review }))) {
+    // Show why by the buttons, where the editor is looking, not at the top of the page.
+    state.reviewError = state.message;
+    state.message = '';
+    render();
+    return;
+  }
   state.reviewForm = null;
+  state.reviewSavedId = scenarioId;
   const nextId = nextUnreviewed(scenarioOrder(), state.edits, state.name, scenarioId);
   if (goNext && nextId)
     location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(nextId)}`;
@@ -1044,6 +1054,7 @@ window.addEventListener('hashchange', () => {
   state.isDeleting = false;
   state.reviewForm = null;
   state.reviewError = '';
+  state.reviewSavedId = '';
   state.openComment = '';
   state.commentError = '';
   state.openId = '';
