@@ -1,14 +1,942 @@
-# Editors' reviews of scenarios (src/scenarioReviews.js): a summary, then each reviewed
-# scenario. Read this before writing new scenarios. Written by
+# Editors' reviews of scenarios (src/scenarioReviews.js): a summary, each level's notes,
+# then each reviewed scenario with its in-line comments (src/scenarioComments.js). Read this before writing new scenarios. Written by
 # scripts/sync-edits.js from the Sheet's Edits tab every morning; do not edit by hand.
 summary:
-  reviews: 0
-  scenarios: 0
-  verdicts: {}
+  reviews: 40
+  scenarios: 40
+  goal: 3 editors per scenario
+  scenariosAtGoal: 0
+  reviewers:
+    Danya: 40
+  verdicts:
+    keep: 33
+    tweak: 7
   averageScores:
-    realism: null
-    accuracy: null
-    teaching: null
-    difficulty: null
+    realism: 3
+    accuracy: 3
+    teaching: 3
+    difficulty: 2.9
   problems: {}
-scenarios: []
+levelNotes: {}
+scenarios:
+  - id: after-the-party
+    title: After the party
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Small changes
+        problems: []
+        note: ''
+        otherLevels: Variation would come with how combative/ aggressive the patient
+          took. Also the potential for multiple agents or something which may
+          contraindicate one of our sedation options
+  - id: baby-not-feeding
+    title: Baby not feeding
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+  - id: back-gone-lifting
+    title: Back gone lifting
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+          - Supervised
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: Common presentations we wouldn't normally think to do
+            a verbal scenario on
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Story: He should have walked inside and now be lying on the couch unable to move
+  - id: birth-in-the-bathroom
+    title: Birth in the bathroom
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: Include prompt to potentially discuss birthing complications to vary the
+          scenario
+  - id: bleeding-nine-weeks
+    title: Bleeding at nine weeks
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: |-
+          Increase severity 
+          Hx could be a false flag and actually be a UTI or GI bleed
+  - id: bus-stop-dizzy
+    title: Dizzy at the bus stop
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: Good choice of subject - vertigo is a common
+            presentations that we want staff to have a clear and consistent
+            approach to
+        otherLevels: >-
+          Higher levels could involve the diagnostic uncertainty but then
+          deterioration as a result of cerebral haemorrhage and requirement for
+          RSI. The former is better than the latter. 
+
+
+          Regardless the guidance/ intention should include a brief note as to
+          diagnostic process - ie the learner should consider and assess
+          possibly involved body systems (neurological, cardiac, inner ear) then
+          consider specific pathologies
+  - id: bus-v-pedestrians
+    title: Bus versus pedestrians
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: This could be done with lower levels but would likely require them
+          having done multi patient scenarios before and the mentor helping. We
+          may need to have prerequisites for this scenario
+  - id: cafe-anaphylaxis
+    title: Café anaphylaxis
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          ICP would have to require IV adrenaline 
+
+
+          Add administration of steroids to the outcomes 
+
+
+          Higher levels could have a less clear description of anaphylaxis, resp
+          and GI symptoms without hives for example
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Intention: No airway intervention here is needed remove airway please
+  - id: cant-talk-asthma
+    title: Can't talk
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: This is a good critical asthmatic scenario. The
+            history doesn't give it away. The vitals are appropriate
+  - id: chest-pain-lawns
+    title: Chest pain mowing the lawns
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          SP/ P could result in a different diagnosis. PE would be the easiest.
+          Potentially pericardial effusion with a slightly different history to
+          teach the importance of maintaining a broad differential with common
+          complaints 
+
+
+          ICP similar but could also lead to shock requiring vasopressors. ICP
+          will likely need to be split into phase 1 and 2. Phase 1 would be
+          simple scenarios to just get used to the new skills/ drugs, phase 2 to
+          challenge thinking
+  - id: copd-or-sepsis
+    title: COPD or sepsis?
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+        scores: {}
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          This is pretty straightforward as written. Increase complexity by
+          reducing the degree of fever so sepsis isn't as clear. 
+
+          Increase severity by having work of breathing remain high or increase
+          despite 02 so CPAP needs to be considered - if CPAP is given the BP
+          should start normal unless ICP
+  - id: croup-2am
+    title: Croup at 2 am
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: SP+ should discuss differentials. Bacterial tracheitis in kapiti
+          could prompt a discussion to consult for antibiotics
+  - id: expressway-crash
+    title: Expressway crash
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 2
+        verdict: Use as it is
+        problems: []
+        note: ''
+  - id: generator-garage
+    title: Generator in the garage
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          This is a good intro to doing a scenario with multiple patients 
+
+          An inexperienced mentor may struggle with this so include a prompt to
+          have the learner note separately all the patients
+  - id: gym-collapse
+    title: Collapse at the gym
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: Higher levels could introduce special circumstances
+  - id: head-strike-warfarin
+    title: Head strike on warfarin
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+        scores:
+          realism: 3
+        verdict: Small changes
+        problems: []
+        note: ''
+        otherLevels: This is extremely obvious as currently written unless there was
+          actually a medical cause of a fall, another more serious injury or he
+          deteriorated
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Story: This is very common
+  - id: headache-36-weeks
+    title: Headache at 36 weeks
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 2
+        verdict: Use as it is
+        problems: []
+        note: ''
+    comments:
+      - reviewer: Danya
+        date: 2026-11-25
+        comments:
+          Debrief points: Recognises early need for ICP and/ or consult for magnesium
+  - id: home-birth-haemorrhage
+    title: Home birth haemorrhage
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+  - id: hot-toddler
+    title: Hot toddler
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: Possibility to discuss assessment differences and
+            techniques in paediatric patients
+        otherLevels: Only paramedic level should have a child well enough to stay at
+          home. Lower levels the child should be sick enough to warrant
+          transport - higher vitals is the easiest way. The key for lower levels
+          is discussing how assessment of a child differs. For higher levels
+          scenarios should challenge when consulting for antibiotics may be
+          necessary for children as there is an age restriction.
+  - id: hypo-building-site
+    title: Hypo on the building site
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Small changes
+        problems: []
+        note: ''
+        otherLevels: >-
+          Very obvious 
+
+          Even for a grad the history doesn't need to say that he missed lunch 
+
+          For an SP the background shouldn't immediately say he has type 1
+          diabetes 
+
+          For paramedic+ could introduce diagnostic uncertainty by making the
+          patient older with comorbidities or increase severity by having a
+          seizure as the call reason or potentially an accidental/ deliberate
+          insulin overdose
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Patient background: Just type 1 diabetes for history and insulin for meds is fine
+  - id: in-the-cells
+    title: In the cells
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+  - id: long-lie
+    title: Long lie
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Intention: We don't carry codeine, make the allergy to fentanyl please. You know
+            what medication we carry as they are all listed in the medicines
+            section of the guidelines. For your information fentanyl is used far
+            more than morphine as a matter of preference. Tramadol is used
+            relatively infreuqently.
+  - id: mums-pills
+    title: Her mum's pills
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Small changes
+        problems: []
+        note: ''
+        otherLevels: The improvement here may be to have a bank of different
+          medications/ classes of medication and record symptoms that match
+          overdoses with them and what the max dose is
+  - id: netball-ankle
+    title: Netball ankle
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+          - Supervised
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: Instruction to complete a primary and secondary survey
+            is good. At all levels instruction to follow clear structure is
+            important and a key part of scenarios
+        otherLevels: >-
+          Paramedic - fracture/ dislocation requiring reduction. Needs to call
+          for ICP and go through preparation for dissociation checklist. And/ or
+          diagnostic uncertainty by introducing a possible medical cause of fall
+          which requires treatment 
+
+
+          ICP - as above but also perform reduction safely
+  - id: not-himself
+    title: Just not himself
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Small changes
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: Structured assessment to then go through diagnostic
+            process - most appropriate at paramedic level when diagnosis is
+            unclear
+        otherLevels: Needs clearer symptoms for lower levels. Prostate history and
+          temperature that low alone are hard to link to possible UTI but the
+          diagnostic uncertainty is good for SP/ paramedic level, if this
+          uncertain more suited to paramedic. A higher fever makes it more
+          appropriate for lower levels. But the story likely needs clearer
+          symptoms for newer mentors. Symptoms could be added as an additional
+          section
+  - id: otaki-forks-tramper
+    title: Tramper at Ōtaki Forks
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 2
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Small changes
+        problems: []
+        note: ''
+    comments:
+      - reviewer: Danya
+        date: 2026-11-25
+        comments:
+          Story: Otaki forks isn't in our catchment. Makara peak or colonial knob are the
+            most common spots for this kind of job
+  - id: phone-call-newtown
+    title: The phone call
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores: {}
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          This is likely always too hard for a student 
+
+          For higher levels prompt the person running the scenario to consider
+          intoxication, violence, refusal
+  - id: rash-in-the-hostel
+    title: Rash in the hostel
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: ICP would need a shocked patient requiring pressors
+    comments:
+      - reviewer: Danya
+        date: 2026-11-25
+        comments:
+          Story: >-
+            Note for this job and almost all others 
+
+
+            The first sentence normally should be the call notes (yes there are
+            normally more but too much gives it away) the second sentence should
+            be history so the mentor can give it and the learner find it out
+  - id: refuses-transport
+    title: Doesn't want to go
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels: []
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        answers:
+          What does it teach best?: Capacity assessment and consideration for referral
+        otherLevels: This is applicable to all levels. Higher levels could introduce
+          aspects to challenge capacity like alcohol or possibility of abuse.
+          Higher levels should also be able to demonstrate better understanding
+          of factors that contribute to falls risk and how to mitigate them.
+  - id: remutaka-motorbike
+    title: Remutaka Hill motorbike
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Grad
+          - Supervised
+          - Paramedic
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          Paramedic could include discussion on when consulting for ketamine is
+          appropriate and risks associated 
+
+
+          Complexity by increasing number of injuries, comorbidities/ age etc
+  - id: rest-home-gastro
+    title: Rest-home gastro
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Paramedic
+        scores:
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+  - id: right-abdo-pain
+    title: Right-sided abdominal pain
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+          - Supervised
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: The addition of discussion of differentials is key
+        answers:
+          What does it teach best?: Clear illness script leads to good discussions of
+            diagnostic reasoning if prompted well
+        otherLevels: The main change by level would be to have more discussion about the
+          differential diagnosis for lower right abdo pain. Changing the gender
+          and age could increase complexity
+  - id: seizure-coastlands
+    title: Seizure at Coastlands
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: This is fine as a very simple run through for beginners
+  - id: stemi-arrest-tawa
+    title: STEMI that arrests
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels:
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+  - id: stroke-breakfast
+    title: Stroke at breakfast
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+        scores: {}
+        verdict: Use as it is
+        problems: []
+        note: The history makes the diagnosis extremely clear so the only real value is
+          for brand new people
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Debrief points: We don't decide on clot retrieval the guideline is to transport
+            a stroke patient to the nearest stroke centre
+          Patient background: This implies missing a single dose of apixaban caused a
+            stroke remove it please
+          Vitals: The formatting of irregular will need to be changed so that it doesn't
+            drag the table column lines down and there isn't a line break
+            between 'irreg' and 'ular'
+  - id: svt-lambton-quay
+    title: Racing heart at work
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+          - Supervised
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          Patient could be made older or add diagnostic uncertainty 
+
+          Could look at AVRT vs AVNRT 
+
+          Less clear ECG diagnoses 
+
+
+          These could just be prompts to the person running the scenario.
+          Prompts to the person running the scenario should be taken as a
+          principle across all scenarios. Ie the point of these is only to be a
+          starting point so the person running it can do what they want with it.
+          Sometimes all they need is a small prompt to do something different or
+          give them a novel idea to match their learner
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Debrief points: A stated intention here should include a structured workout so
+            the learner isn't locked into the obvious diagnosis or end up with
+            premature closure or something to that effect
+  - id: toddler-in-the-pool
+    title: Toddler in the pool
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-25
+        levels: []
+        scores: {}
+        verdict: Use as it is
+        problems: []
+        note: This scenario will need to be tested typically we would say this kind of
+          thing is better as a practical thing but maybe doing it verbally is a
+          good idea
+  - id: trampoline-wrist
+    title: Off the trampoline
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+          - Supervised
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: |-
+          Same as netball ankle injury 
+          With the mechanism higher levels could include greater injuries
+  - id: transmission-gully-crash
+    title: Transmission Gully crash
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Paramedic
+          - ICP
+        scores: {}
+        verdict: Small changes
+        problems: []
+        note: ''
+        otherLevels: This is quite challenging even for a paramedic if single crewed
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Debrief points: A helicopter is not indicated here it's too close, it would have
+            to be at least paekakariki
+  - id: wheezy-at-school
+    title: Wheezy at school
+    reviewers: 1
+    reviews:
+      - reviewer: Danya
+        date: 2026-11-24
+        levels:
+          - Student
+          - Grad
+          - Supervised
+          - Paramedic
+          - ICP
+        scores:
+          realism: 3
+          accuracy: 3
+          teaching: 3
+          difficulty: 3
+        verdict: Use as it is
+        problems: []
+        note: ''
+        otherLevels: >-
+          Severity - often the key question is does the patient require
+          immediate IM adrenaline as the first intervention or at the same time
+          as the first neb 
+
+          Various levels of history - ie how brittle is this asthmatic 
+
+          A prompt that the patient doesn't improve 
+
+          An older patient with comorbidities that create diagnostic
+          uncertainty 
+           Diagnostic uncertainty with possible anaphylaxis in a young patient
+    comments:
+      - reviewer: Danya
+        date: 2026-11-24
+        comments:
+          Vitals: Sp02 below 97 suggests an asthma attack more severe than I think you're
+            intending
