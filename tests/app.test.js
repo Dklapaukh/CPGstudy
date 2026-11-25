@@ -858,9 +858,10 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   assert.equal($$('.scenario-vitals tbody td')[4].textContent, '168/92');
   assert.equal($$('.scenario-guideline').length, 4);
   assert.equal($('.scenario-guideline').getAttribute('href'), '#cpg-13-3');
-  assert.equal(
+  // A "Suits …" pill follows when editors have set the levels (content/scenario-edits.js).
+  assert.match(
     $('.scenario-tags').textContent.trim().replace(/\s+/g, ' '),
-    'Common presentation Single patient',
+    /^Common presentation Single patient( Suits .+)?$/,
   );
   assert.equal($$('.scenario-outcomes li').length, 3, 'the intended outcomes are in the intention');
   click($('[data-action="scenario-finish"]'));
