@@ -11,7 +11,7 @@ import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from './scenarioEdits.js';
 // The opening boxes, in the order shown. `max` is the most characters kept; `lines` > 1 is a
 // text area. The suburb is optional: it can be changed or made up to protect the patient.
 // Dispatch notes, history, assessment and follow up are joined into the scenario's story, so
-// their limits (and the paragraph labels) add up to under its 2000 characters.
+// their limits (and the paragraph labels) add up to under its 4000 characters.
 export const JOB_FIELDS = [
   {
     key: 'title',
@@ -32,7 +32,7 @@ export const JOB_FIELDS = [
     key: 'story',
     label: 'History',
     hint: 'Age and sex are fine; no names, NHI, addresses or dates.',
-    max: 900,
+    max: 1800,
     lines: 5,
     required: true,
   },
@@ -40,7 +40,7 @@ export const JOB_FIELDS = [
     key: 'assessment',
     label: 'Assessment',
     hint: 'Your findings and working diagnosis',
-    max: 400,
+    max: 800,
     lines: 5,
   },
 ];

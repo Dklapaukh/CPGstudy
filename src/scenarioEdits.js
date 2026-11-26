@@ -34,6 +34,10 @@ export const SCENARIO_TEXT_FIELDS = ['title', 'suburb', 'story', 'intention'];
 export const PATIENT_TEXT_FIELDS = ['label', 'history', 'medications', 'allergies', 'social'];
 // The longest text one box keeps, so one edit stays well inside the Sheet's limit.
 export const MAX_SCENARIO_TEXT = 2000;
+// The story is longer: a sent job joins its dispatch notes, history, assessment and follow up there.
+export const MAX_SCENARIO_STORY = 4000;
+/** The longest text the box at `path` keeps. */
+const maxTextOf = (path) => (path === 'story' ? MAX_SCENARIO_STORY : MAX_SCENARIO_TEXT);
 // Intended outcomes: one per line in the box, at most this many, each at most this long.
 export const MAX_OUTCOMES = 6;
 export const MAX_OUTCOME_TEXT = 200;
@@ -461,7 +465,7 @@ function cleanCards(cards) {
 
 /** Whether a new scenario has every text, tag, outcome, real guideline and whole patient. */
 const isWholeScenario = (scenario, patients, isGuidelineId) =>
-  SCENARIO_TEXT_FIELDS.every((field) => isText(scenario[field])) &&
+  SCENARIO_TEXT_FIELDS.every((field) => isText(scenario[field], maxTextOf(field))) &&
   Boolean(SCENARIO_COMPLEXITY[scenario.complexity]) &&
   Boolean(SCENARIO_LOADS[scenario.load]) &&
   isTextList(scenario.outcomes, MAX_OUTCOMES, MAX_OUTCOME_TEXT) &&
@@ -531,7 +535,7 @@ export function readScenarioBox(path, text, guidelineIdOfNumber) {
   if (path === 'giveIfAsked') return readGiveIfAsked(trimmed);
   if (path === 'variations') return readVariations(trimmed);
   if (path === 'guidelines') return readGuidelineNumbers(trimmed, guidelineIdOfNumber);
-  if (trimmed.length > MAX_SCENARIO_TEXT) return { error: 'That is too long to keep.' };
+  if (trimmed.length > maxTextOf(path)) return { error: 'That is too long to keep.' };
   if (!trimmed && !path.endsWith('.label')) return { error: 'This can’t be empty.' };
   return { value: trimmed };
 }

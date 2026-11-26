@@ -57,7 +57,7 @@ test('tidySubmission: trims, cuts to length and keeps only known keys and values
     isRealId,
   );
   assert.equal(job.title, 'Chest pain');
-  assert.equal(job.story.length, 900);
+  assert.equal(job.story.length, 1800);
   assert.equal(job.complexity, 0);
   assert.equal(job.load, 'single');
   assert.equal('rural' in job, false);
@@ -295,10 +295,10 @@ test('base64OfDataUrl: the part after the comma', () => {
 test('the story parts at their longest fit a scenario story', () => {
   const long = (max) => 'x'.repeat(max);
   const job = fullJob({
-    dispatch: long(2000),
-    story: long(2000),
-    assessment: long(2000),
-    followUp: long(2000),
+    dispatch: long(5000),
+    story: long(5000),
+    assessment: long(5000),
+    followUp: long(5000),
   });
-  assert.ok(scenarioFromSubmission(job, 'job-5').story.length <= 2000);
+  assert.ok(scenarioFromSubmission(job, 'job-5').story.length <= 4000);
 });
