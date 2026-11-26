@@ -200,7 +200,7 @@ function photosHtml(photos, isReading) {
       : `<input class="submit-file-input" id="submit-photo-input" type="file" accept="image/*"
           multiple data-action="add-photos">
         <label class="button button--secondary submit-add-photo" for="submit-photo-input">
-          ${isReading ? 'Reading the photo…' : 'Take or add a photo'}</label>`;
+          ${isReading ? 'Reading the photo…' : 'Add a photo'}</label>`;
   return `<section class="submit-card" aria-labelledby="submit-photos-title">
     <h2 class="submit-card__title" id="submit-photos-title">Photos (optional)</h2>
     ${noteHtml(`ECGs, rhythm strips or the monitor. Photograph straight on and fill the frame with the
