@@ -44,7 +44,7 @@ const FIELD_NAMES = {
   complexity: 'Presentation',
   load: 'Scene load',
   levels: 'Suits these levels',
-  outcomes: 'Intended outcomes',
+  outcomes: 'What this scenario emphasises',
   giveIfAsked: 'Give if asked',
   variations: 'Ways to vary it',
   guidelines: 'Guidelines',
@@ -63,7 +63,8 @@ const HINTS = {
   complexity:
     '1 Common presentation, 2 Undifferentiated presentation (X or Y), 3 Complex or atypical (X and Y).',
   load: 'single, delegation or several (several only when there is more than one patient).',
-  outcomes: 'One per line, short and observable. The debrief rates each one.',
+  outcomes:
+    'One per line, short and observable. The debrief lists them above the competency ratings.',
   variations:
     'One card per line: lever (levels): what changes. Levers: Uncertainty, Complexity (add a rung: unrelated, complementary, overlapping or contradictory), Severity, Deterioration, Escalation, Scene load. For example: Complexity, overlapping (Paramedic, ICP): She also has heart failure.',
   giveIfAsked:

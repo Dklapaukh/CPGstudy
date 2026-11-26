@@ -158,7 +158,7 @@ export function overTimeHtml(range, weeks, subject) {
 
 /**
  * The team screen. `viewer` is { name, role, message }; `rows` is one teamRow per tracker with
- * its `index`; `scenarios` is { totals, groups, struggled } for the whole team; `overTime` is
+ * its `index`; `scenarios` is { totals, groups, struggled, competencies } for the whole team; `overTime` is
  * ready-made markup for the charts.
  */
 export function teamHtml(viewer, rows, scenarios, overTime) {
@@ -254,15 +254,33 @@ function scenarioTilesHtml(totals, scenariosTotal) {
   ]);
 }
 
-const SCENARIO_SCORE_NOTE = `A run’s score is its outcome ratings (Not done 0, Talked through 1,
-  Prompted 2, Independent 3) as a percentage of the most possible, counting only the outcomes
-  rated. First and latest are a scenario’s first and latest rated runs, so the gap between them
+/** The six competencies (SC-R): how many runs rated each, and its average. */
+function competenciesHtml(competencies) {
+  if (!competencies.some((competency) => competency.rated)) {
+    return '<p class="subtitle">No run rated on the competencies yet.</p>';
+  }
+  return tableHtml(
+    'Competencies',
+    ['Competency', 'Runs rated', 'Average'],
+    competencies.map(
+      (competency) =>
+        `<th scope="row">${escapeHtml(competency.name)}</th>` +
+        numberCells([competency.rated, percentText(competency.average)]),
+    ),
+  );
+}
+
+const SCENARIO_SCORE_NOTE = `A run’s score is its ratings (Not done 0, Talked through 1,
+  Prompted 2, Independent 3) of the six competencies, or of the scenario’s outcomes for runs
+  before 26 Nov 2026, as a percentage of the most possible, counting only those rated.
+  Competencies are averaged over the last 3 runs of each scenario. First and latest are a scenario’s first and latest rated runs, so the gap between them
   is the trend. Scores compare best when the same mentor rates.`;
 
 /** The Scenarios section of the team screen. */
-function teamScenariosHtml({ totals, groups, struggled }) {
+function teamScenariosHtml({ totals, groups, struggled, competencies }) {
   return `<section class="stats-section"><h2 class="section-title">Scenarios</h2>
     ${scenarioTilesHtml(totals, 0)}
+    ${competenciesHtml(competencies)}
     ${scenarioGroupsHtml(groups, true)}
     <h3 class="chart-title">Guidelines most often struggled with</h3>
     ${struggledHtml(struggled, true)}
@@ -272,9 +290,9 @@ function teamScenariosHtml({ totals, groups, struggled }) {
 
 /**
  * The Scenarios section of the person screen. `scenarios` is { totals, groups, rows, struggled,
- * total }; each row also has `struggledNames`.
+ * competencies, total }; each row also has `struggledNames`.
  */
-function personScenariosHtml({ totals, groups, rows, struggled, total }) {
+function personScenariosHtml({ totals, groups, rows, struggled, competencies, total }) {
   const scenarioLines = rows.map(
     (row) =>
       `<th scope="row">${escapeHtml(row.title)}</th>` +
@@ -308,6 +326,7 @@ function personScenariosHtml({ totals, groups, rows, struggled, total }) {
     : '<p class="subtitle">No scenarios run yet.</p>';
   return `<section class="stats-section"><h2 class="section-title">Scenarios</h2>
     ${scenarioTilesHtml(totals, total)}
+    ${competenciesHtml(competencies)}
     ${scenarioGroupsHtml(groups, false)}
     ${table}
     <h3 class="chart-title">Guidelines struggled with</h3>

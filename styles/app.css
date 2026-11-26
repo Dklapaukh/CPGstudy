@@ -3315,6 +3315,10 @@ ul.sort-piece__text {
   margin-bottom: 0.4rem;
   font-weight: 500;
 }
+/* What to look for under each competency's name (SC-R). */
+.scenario-competency-help {
+  margin: -0.2rem 0 0.4rem;
+}
 .rating-pills {
   display: flex;
   gap: 0.3rem;

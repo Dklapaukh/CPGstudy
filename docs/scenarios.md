@@ -38,9 +38,16 @@ with the learner:
 
 - a **Debrief guide** (folded): the four PEARLS steps (Eppich and Cheng 2015): Reactions,
   Description, Analysis, Summary;
-- a **rating for each intended outcome** on how much help the learner needed, after the
-  O-SCORE: Not done, Talked through, Prompted, Independent (0 to 3, `DEBRIEF_RATINGS`). An
-  outcome that didn't come up is left blank;
+- the **learner's level** (Student to Intensive care paramedic, or Not said), starting on the
+  level saved with this tracker's last run (`level`; `lastLearnerLevel`);
+- **What this scenario emphasises**: the scenario's intended outcomes, as a list, not rated;
+- a **rating for each of six competencies** (SC-R, `DEBRIEF_COMPETENCIES`, each with a line on
+  what to look for): Structured assessment, Problem representation, Differentials, Management to
+  the CPG, Escalation and consultation, Handover and communication. Each is rated on how much
+  help the learner needed, after the O-SCORE: Not done, Talked through, Prompted, Independent
+  (0 to 3, `DEBRIEF_RATINGS`). One that didn't come up is left blank. Runs saved before 26 Nov
+  2026 rated each intended outcome instead; a run's `rated` field says which (none means
+  outcomes), and their debriefs still show those ratings;
 - **Guidelines to learn:** tick the guidelines they struggled with (they go to Guidelines to
   learn, which holds 5);
 - three optional notes, each up to 400 characters (`MAX_DEBRIEF_NOTE`): Went well, To work on,
@@ -96,7 +103,7 @@ one-line-per-level notes gathered by level (`levelNotes`), then each scenario's 
 **Read it before writing new scenarios**, and fix the scenarios marked Small changes or Needs
 rewriting.
 
-The next scenario design (three levels, new openings, variation cards in place of a generator) is decided but not built: see [Scenario design and variations](scenario-variations.md).
+The scenario design (three levels, openings, variation cards, competency ratings) is in [Scenario design and variations](scenario-variations.md).
 
 ## Add a scenario (staff jobs)
 

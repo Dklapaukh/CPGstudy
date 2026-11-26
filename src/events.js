@@ -90,6 +90,8 @@ import {
   GUIDELINE_QUIZ_HASH,
   MAX_QUEUE_SIZE,
   DEBRIEF_TEXTS,
+  DEBRIEF_COMPETENCIES,
+  RATED_ON,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -248,12 +250,27 @@ function showScenarioDebrief(scenarioId) {
   if (scenario) renderScenario(scenario);
 }
 
-/** The rating ticked for each intended outcome (null when left blank), in outcome order. */
-function readOutcomeRatings(scenario) {
-  return (scenario.outcomes || []).map((outcome, index) => {
+/** The rating ticked for each competency (null when left blank), in DEBRIEF_COMPETENCIES order. */
+function readCompetencyRatings() {
+  return DEBRIEF_COMPETENCIES.map((competency, index) => {
     const ticked = app.querySelector(`input[name="rating-${index}"]:checked`);
     return ticked ? Number(ticked.value) : null;
   });
+}
+
+/** The run the Finish form describes: struggled guidelines, level, ratings and notes. */
+function readDebrief() {
+  const texts = Object.fromEntries(
+    DEBRIEF_TEXTS.map(([key]) => [key, byId(`scenario-debrief-${key}`).value.trim()]),
+  );
+  return {
+    at: Date.now(),
+    struggled: [...app.querySelectorAll('input[name="struggled"]:checked')].map((box) => box.value),
+    rated: RATED_ON.COMPETENCIES,
+    ratings: readCompetencyRatings(),
+    level: byId('scenario-debrief-level').value,
+    ...texts,
+  };
 }
 
 /**
@@ -263,15 +280,10 @@ function readOutcomeRatings(scenario) {
 function saveScenarioDebrief(button) {
   const scenario = scenarioById(button.dataset.id);
   if (!scenario) return;
-  const struggled = [...app.querySelectorAll('input[name="struggled"]:checked')].map(
-    (box) => box.value,
-  );
-  const ratings = readOutcomeRatings(scenario);
-  const texts = Object.fromEntries(
-    DEBRIEF_TEXTS.map(([key]) => [key, byId(`scenario-debrief-${key}`).value.trim()]),
-  );
-  saveScenarioRun(scenario.id, { at: Date.now(), struggled, ratings, ...texts });
-  const score = scoreOf(ratings);
+  const run = readDebrief();
+  const { struggled } = run;
+  saveScenarioRun(scenario.id, run);
+  const score = scoreOf(run.ratings);
   const before = getQueue();
   const after = addToQueue(before, struggled);
   const added = after.length - before.length;

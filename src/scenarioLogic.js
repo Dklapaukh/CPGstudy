@@ -14,6 +14,7 @@ import {
   SCENARIO_COMPLEXITY,
   SCENARIO_LOADS,
   SCENARIO_LEVELS,
+  RATED_ON,
 } from './constants.js';
 
 /**
@@ -59,9 +60,11 @@ export function filterScenarios(scenarios, filter, sectionOf) {
 
 /**
  * A scenario's saved record read from its entry note: { count, runs }, runs newest first, each
- * { at (milliseconds), struggled (guideline ids), ratings (one per outcome: 0 to
- * DEBRIEF_RATING_TOP, or null when not rated), score (0 to 100, or null), plus, delta, takeaway,
- * note }. Runs saved before ratings existed have only a note. Bad or missing text gives no runs.
+ * { at (milliseconds), struggled (guideline ids), rated (RATED_ON: what the ratings are of),
+ * ratings (one per competency, or per outcome in older runs: 0 to DEBRIEF_RATING_TOP, or null
+ * when not rated), level (the learner's level, a SCENARIO_LEVELS key, or ''), score (0 to 100,
+ * or null), plus, delta, takeaway, note }. Runs saved before ratings existed have only a note.
+ * Bad or missing text gives no runs.
  */
 export function parseScenarioRuns(savedText) {
   let parsed;
@@ -78,6 +81,9 @@ export function parseScenarioRuns(savedText) {
 const isRun = (run) => Number.isFinite(run?.at) && Array.isArray(run.struggled);
 const isRating = (rating) =>
   Number.isInteger(rating) && rating >= 0 && rating <= DEBRIEF_RATING_TOP;
+const ratedOn = (value) =>
+  value === RATED_ON.COMPETENCIES ? RATED_ON.COMPETENCIES : RATED_ON.OUTCOMES;
+const levelOf = (value) => (Object.hasOwn(SCENARIO_LEVELS, value) ? value : '');
 const textOf = (value) => (typeof value === 'string' ? value.slice(0, MAX_DEBRIEF_NOTE) : '');
 
 /** A run with every field present and of the right kind. */
@@ -89,7 +95,9 @@ function tidyRun(run) {
   return {
     at: run.at,
     struggled: run.struggled.filter((id) => typeof id === 'string'),
+    rated: ratedOn(run.rated),
     ratings,
+    level: levelOf(run.level),
     score: scoreOf(ratings),
     ...texts,
     note: typeof run.note === 'string' ? run.note : '',
@@ -120,12 +128,24 @@ export function withScenarioRun(record, run) {
   return next();
 }
 
-/** A run as saved: tidy, without the score (worked out again when read) or an empty note. */
+/**
+ * A run as saved: tidy, without the score (worked out again when read), an empty note or level,
+ * or `rated` for an outcome-rated run (older runs have none, so none means outcomes).
+ */
 function savedRun(run) {
   const saved = tidyRun(run);
   delete saved.score;
   if (!saved.note) delete saved.note;
+  if (!saved.level) delete saved.level;
+  if (saved.rated === RATED_ON.OUTCOMES) delete saved.rated;
   return saved;
+}
+
+/** The learner's level saved with the newest run of any of these records, or '' when none has. */
+export function latestLevel(records) {
+  const runs = records.flatMap((record) => record.runs).filter((run) => run.level);
+  runs.sort((a, b) => b.at - a.at);
+  return runs.length ? runs[0].level : '';
 }
 
 /** The latest score of a scenario's record, or null when no run has one. */

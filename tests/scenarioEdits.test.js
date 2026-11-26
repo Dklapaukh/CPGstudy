@@ -33,6 +33,7 @@ import {
   parseScenarioRuns,
   withScenarioRun,
   scoreOf,
+  latestLevel,
   latestScore,
   scenarioProgress,
 } from '../src/scenarioLogic.js';
@@ -374,6 +375,45 @@ test('runs saved before ratings keep their note and have no score', () => {
   const record = withScenarioRun(parseScenarioRuns(old), { at: 6, struggled: [], ratings: [2] });
   assert.equal(record.runs[1].note, 'Old note');
   assert.equal(record.runs[0].note, undefined, 'a new run saves no empty note');
+});
+
+test('runs: competency-rated runs and the learner level are kept; older runs read as outcomes', () => {
+  let record = parseScenarioRuns(
+    JSON.stringify({ count: 1, runs: [{ at: 1, struggled: [], ratings: [3] }] }),
+  );
+  record = withScenarioRun(record, {
+    at: 2,
+    struggled: [],
+    rated: 'competencies',
+    ratings: [3, 2, null, null, null, 1],
+    level: 'grad',
+  });
+  const [newer, older] = parseScenarioRuns(JSON.stringify(record)).runs;
+  assert.equal(newer.rated, 'competencies');
+  assert.equal(newer.level, 'grad');
+  assert.equal(newer.score, 67);
+  assert.equal(older.rated, 'outcomes', 'a run with no `rated` rated outcomes');
+  assert.equal(older.level, '');
+  assert.equal(record.runs[1].rated, undefined, 'an outcome run saves no `rated`');
+  const bad = parseScenarioRuns(
+    JSON.stringify({ runs: [{ at: 3, struggled: [], rated: 'x', level: 'chief' }] }),
+  ).runs[0];
+  assert.deepEqual([bad.rated, bad.level], ['outcomes', '']);
+});
+
+test('latest level: from the newest run that saved one, across scenarios', () => {
+  const runs = (list) => ({ count: list.length, runs: list });
+  assert.equal(latestLevel([]), '');
+  assert.equal(
+    latestLevel([
+      runs([{ at: 5, level: '' }]),
+      runs([
+        { at: 4, level: 'paramedic' },
+        { at: 1, level: 'student' },
+      ]),
+    ]),
+    'paramedic',
+  );
 });
 
 test('the saved record always fits, dropping the oldest runs if needed', () => {

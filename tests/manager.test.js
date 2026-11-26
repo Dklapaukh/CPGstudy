@@ -26,6 +26,7 @@ import {
   scenarioGroups,
   scenarioTotals,
   struggledGuidelines,
+  competencyAverages,
 } from '../src/manager/stats.js';
 import { chartSvg, CHART_KIND } from '../src/manager/chart.js';
 
@@ -202,6 +203,26 @@ test('scenarios: saved runs fill History gaps; rows show first, latest and chang
   assert.deepEqual(scenarioRows(scenarioList, { scenarios: undefined }, []), []);
   const [week] = weeklySeries(merged, monday, at(22, 23));
   assert.deepEqual([week.scenarioCount, week.scenarioAverage], [2, 67]);
+});
+
+test('scenarios: competencies are averaged over runs rated on them; outcome runs are left out', () => {
+  const run = (rated, ratings) => ({ at: 1, rated, ratings, struggled: [] });
+  const tracker = {
+    scenarios: {
+      a: { count: 2, runs: [run('competencies', [3, 1, null]), run('outcomes', [0, 0, 0])] },
+      b: { count: 1, runs: [run('competencies', [3, 2])] },
+    },
+  };
+  const [assessment, problem, differentials, ...rest] = competencyAverages([tracker, {}]);
+  assert.deepEqual(assessment, {
+    key: 'assessment',
+    name: 'Structured assessment',
+    rated: 2,
+    average: 100,
+  });
+  assert.deepEqual([problem.rated, problem.average], [2, 50]);
+  assert.deepEqual([differentials.rated, differentials.average], [0, null]);
+  assert.equal(rest.length, 3);
 });
 
 test('scenarios: struggled guidelines are counted over saved runs, most often first', () => {

@@ -11,6 +11,9 @@ import {
   SCENARIO_RUN_ENTRY_PREFIX,
   SCENARIO_COMPLEXITY,
   SCENARIO_LOADS,
+  DEBRIEF_COMPETENCIES,
+  DEBRIEF_RATING_TOP,
+  RATED_ON,
 } from '../constants.js';
 import { scoreOf } from '../scenarioLogic.js';
 
@@ -266,6 +269,28 @@ export function struggledGuidelines(trackers, limit) {
     .sort((a, b) => b.times - a.times || b.people.size - a.people.size || a.id.localeCompare(b.id))
     .slice(0, limit)
     .map(({ id, times, people }) => ({ id, times, people: people.size }));
+}
+
+/**
+ * For each of the six competencies (SC-R), over the saved runs rated on them (the last 3 per
+ * scenario) of these trackers: [{ key, name, rated, average }], `rated` the runs that rated it
+ * and `average` its ratings as a percentage of the most possible (null when none did). Runs
+ * rated on a scenario's outcomes, from before the competencies, are left out.
+ */
+export function competencyAverages(trackers) {
+  const runs = trackers.flatMap((tracker) =>
+    Object.values(tracker.scenarios || {}).flatMap((record) =>
+      record.runs.filter((run) => run.rated === RATED_ON.COMPETENCIES),
+    ),
+  );
+  return DEBRIEF_COMPETENCIES.map(({ key, name }, index) => {
+    const ratings = runs.map((run) => (run.ratings || [])[index]).filter(hasScore);
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const average = ratings.length
+      ? Math.round((total / (ratings.length * DEBRIEF_RATING_TOP)) * 100)
+      : null;
+    return { key, name, rated: ratings.length, average };
+  });
 }
 
 /** The start (local midnight on Monday) of the week a time falls in, in milliseconds. */

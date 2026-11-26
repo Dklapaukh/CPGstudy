@@ -874,9 +874,12 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   assert.match($('.scenario-variations li').textContent, /Severity\s*· Supervised, Paramedic/);
   click($('[data-action="scenario-finish"]'));
   assert.equal($$('.scenario-guide li').length, 4, 'the PEARLS guide has four steps');
-  assert.equal($$('.scenario-outcome').length, 3, 'one rating row per outcome');
+  assert.equal($$('.scenario-outcome').length, 6, 'one rating row per competency (SC-R)');
+  assert.match($('.scenario-debrief').textContent, /What this scenario emphasises/);
+  assert.equal($('#scenario-debrief-level').value, '', 'no level until a run has saved one');
+  $('#scenario-debrief-level').value = 'grad';
   $('input[name="rating-0"][value="3"]').checked = true;
-  $('input[name="rating-1"][value="1"]').checked = true; // the third is left blank
+  $('input[name="rating-1"][value="1"]').checked = true; // the other four are left blank
   $$('input[name="struggled"]')[0].checked = true;
   $('#scenario-debrief-delta').value = 'Slow to check for a pressure injury';
   $('#scenario-debrief-takeaway').value = 'Ask why they fell first';
@@ -891,7 +894,11 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   assert.match(debrief, /Slow to check for a pressure injury/);
   assert.match(debrief, /Ask why they fell first/);
   assert.match(debrief, /Score: 67% \(/);
-  assert.match(debrief, /Independent/);
+  assert.match(debrief, /Structured assessment: Independent/);
+  assert.match(debrief, /Learner’s level\s*Graduate paramedic/);
+  click($('[data-action="scenario-finish"]'));
+  assert.equal($('#scenario-debrief-level').value, 'grad', 'the next debrief starts on it');
+  click($('[data-action="scenario-finish-cancel"]'));
   dom.window.location.hash = '#scenarios';
   await sleep(30);
   assert.match($('.scenario-run').textContent, /· 67%$/, 'the list shows the run and its score');

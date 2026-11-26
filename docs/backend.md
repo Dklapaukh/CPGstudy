@@ -44,7 +44,7 @@ No programming needed; allow 10 minutes. Needs the V8 runtime.
 5. **Check it worked:** open
    <https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec>
    in a browser. It must say "CPG tracker service is running, " followed by `BACKEND_VERSION`
-   from `backend/Code.gs` (today "version with scenario runs and submissions (19 Nov 2026)").
+   from `backend/Code.gs` (today "version with competency ratings (26 Nov 2026)").
    If it says only "CPG tracker service is running", or a page says "still running an older
    version of the backend", the address still runs the old code: in Manage deployments edit the
    deployment whose Web app URL is the address above, and choose New version.

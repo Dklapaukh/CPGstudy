@@ -45,8 +45,9 @@ unless marked "by hand".
   shows "best n%".
 - Scenarios: in the Quiz choice; presentation and scene load chips and the theme dropdown filter
   the list; a scenario shows its vitals, tags and guidelines; a guideline opened from it has
-  "Back to scenario", forgotten once another guideline is opened; Finish shows the PEARLS guide
-  and one rating row per outcome; Save the run gives the score, adds ticked guidelines to
+  "Back to scenario", forgotten once another guideline is opened; Finish shows the PEARLS guide,
+  the learner's level (starting on the last run's), what the scenario emphasises and one
+  rating row per competency (six); Save the run gives the score, adds ticked guidelines to
   Guidelines to learn and shows the debrief; the list shows the run, its score and the progress
   table.
 - Streak: the first finished activity of the day (any quiz, or a scenario run) shows the

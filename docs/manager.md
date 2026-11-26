@@ -15,7 +15,10 @@ It uses the same guideline data and backend as the study app and is published th
   flashcards learnt and due today); Scenarios; general numbers; charts.
 - **Scenarios** (team and person pages): scenarios run, runs recorded, the average first and
   latest scores and how many scenarios went up or down since their first run; the same by
-  presentation and scene load; the guidelines most often ticked as struggled. A person page also
+  presentation and scene load; a **Competencies** table (each of the six, SC-R: runs that rated
+  it and its average, over the last 3 runs of each scenario; runs rated on outcomes, from before
+  26 Nov 2026, are left out); the guidelines most often ticked as struggled. Scores count both
+  kinds of run, so they stay one simple trend. A person page also
   lists each scenario run with its runs, first, latest and change in score, last run date and
   the guidelines struggled with in the latest run. Debrief notes are never sent.
 - **Over time**: a From and To date and three charts by week, guidelines marked complete, the
@@ -83,3 +86,6 @@ Claude's choices, 16 Nov 2026 (say if any should change):
 - SC-G (19 Nov 2026): scenario trends are first rated run against latest rated run, plus a
   weekly average and the most-struggled guidelines; debrief texts never sent; each run adds a
   History row; no back-fill for scenarios.
+- SC-R (Claude, 26 Nov 2026; the owner asked to keep the page a simple overview): one
+  Competencies table added; score trends unchanged and counting outcome- and competency-rated
+  runs alike. Rejected: separate trends for competency-rated runs, per-competency trends.

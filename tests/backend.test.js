@@ -131,7 +131,7 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with scenario runs and submissions \(19 Nov 2026\)/);
+  assert.match(doGet().text, /running, version with competency ratings \(26 Nov 2026\)/);
 });
 
 test('open: a tracker, and a wrong or old mentor passcode that is delayed after the lock', () => {
@@ -277,8 +277,9 @@ test('scenario runs: each new run is logged with its score; stats send numbers, 
   const record = (runs, count) =>
     JSON.stringify({
       count,
-      runs: runs.map(([at, ratings]) => ({
+      runs: runs.map(([at, ratings, rated]) => ({
         at,
+        rated,
         ratings,
         struggled: ['cpg-2-1'],
         plus: 'secret plus',
@@ -295,7 +296,7 @@ test('scenario runs: each new run is logged with its score; stats send numbers, 
   save(
     record(
       [
-        [now + 20, []],
+        [now + 20, [], 'competencies'],
         [now + 10, [0, 0, 3]],
         [now, [3, 2, null]],
       ],
@@ -313,9 +314,15 @@ test('scenario runs: each new run is logged with its score; stats send numbers, 
   assert.equal(sam.scenarios.x.count, 3);
   assert.deepEqual(sam.scenarios.x.runs[1], {
     at: now + 10,
+    rated: 'outcomes',
     ratings: [0, 0, 3],
     struggled: ['cpg-2-1'],
   });
+  assert.equal(
+    sam.scenarios.x.runs[0].rated,
+    'competencies',
+    'the manager page can tell them apart',
+  );
   const runRows = reply.history.filter((row) => row[1] === 'scenario-run-x');
   assert.deepEqual(
     runRows.map((row) => row[2]),

@@ -67,8 +67,8 @@ Publishing (push to `main`) and the `content/guidelines.js` rule are in `CLAUDE.
 | 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
 | 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
-| 21   | Scenario levels, openings and variation cards, `docs/scenario-variations.md` | Built 26 Nov 2026 (SC-N, SC-O, SC-P, SC-U); SC-Q, SC-R, SC-T to build |
-| 22   | Level benchmark scenarios and per-level "move on" sets (SC-L)  | Noted 24 Nov 2026; after the competency ratings (SC-R) |
+| 21   | Scenario levels, openings, variation cards and competency ratings, `docs/scenario-variations.md` | Built 26 Nov 2026 (SC-N to SC-P, SC-R, SC-U); SC-Q dropped |
+| 22   | Level benchmark and "move on" sets, 5 scenarios per learner level (SC-L) | Decided 26 Nov 2026; to build |
 
 ### 8.2 Decisions
 
@@ -119,7 +119,7 @@ Decisions across the whole app:
 
 ### 8.4 Open tasks (owner, by hand)
 
-1. **Switch on Add a scenario and scenario trends:** redeploy the backend
+1. **Switch on Add a scenario, scenario trends and the Competencies table:** redeploy the backend
    (`docs/backend.md`, "Redeploying the backend"; allow the Drive permission at `setup`). Until
    then the form and the daily copy fail ("Is it redeployed?") and the manager page shows no
    scenario trends.
@@ -195,15 +195,18 @@ are Claude's drafts for editors to check on the editor page. Points for the owne
 the review asked for steroids in the anaphylaxis outcomes, but CPG 12.12 has none, so the
 outcome names its additional treatments instead; `remutaka-motorbike` gained a hidden chest
 injury as a "give if asked" fact; Colonial Knob replaced Ōtaki Forks with no helicopter. The
-backend redeploy for Add a scenario and scenario trends is still to do (8.4 task 1).
+debrief now rates the six competencies every run (SC-R) and saves the learner's level; the
+manager page has a Competencies table. Decision points (SC-Q) were dropped. The backend
+redeploy for Add a scenario, scenario trends and the Competencies table is still to do (8.4
+task 1; the running version should then read "version with competency ratings (26 Nov 2026)").
 
 **Next** (steps in `docs/scenario-variations.md`).
 
-1. Competency ratings in the debrief (SC-R: the six agreed competencies rated every run, in
-   place of each scenario's outcomes; old runs keep their outcome ratings), then level
-   suggestions with the benchmark and "move on" sets (SC-L, feature 22; SC-T).
-2. Decision points (SC-Q), starting with the most-run scenarios.
-3. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
+1. Benchmark and "move on" sets (SC-L, feature 22): 5 scenarios per learner level, presentation
+   levels matched to the grade (table in `docs/scenario-variations.md`); Claude drafts them, a
+   filter on the Scenarios list, editors change them on the editor page. No automatic
+   next-level suggestion for now (SC-T).
+2. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
    note in `bus-v-pedestrians`' intention; the bank of overdoses by medicine class.
 
 Open owner questions: 8.3 items 1 to 3.

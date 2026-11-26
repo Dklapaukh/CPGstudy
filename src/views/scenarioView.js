@@ -4,8 +4,8 @@
  * (#scenario-<id>). A scenario is only an opening for a mentor to run: story, suburb, vitals,
  * "give if asked" facts and patient background, the intention and intended outcomes (folded)
  * and its guidelines.
- * Finish scenario opens the debrief: a PEARLS guide, a rating of each intended outcome, the
- * guidelines the learner struggled with (they go to Guidelines to learn) and three short notes;
+ * Finish scenario opens the debrief: a PEARLS guide, the learner's level, what the scenario
+ * emphasises (its outcomes), a rating of each of the six competencies (SC-R), the guidelines the learner struggled with (they go to Guidelines to learn) and three short notes;
  * the run and its score are saved (scenarioRunState.js).
  * A guideline opened from here gets a "Back to scenario" link (state.scenarioReturn).
  * The list ends with a link to the Add a scenario form (submit.html).
@@ -27,7 +27,7 @@ import {
   latestScore,
   scenarioProgress,
 } from '../scenarioLogic.js';
-import { getScenarioRuns } from '../scenarioRunState.js';
+import { getScenarioRuns, lastLearnerLevel } from '../scenarioRunState.js';
 import {
   SCENARIOS_HASH,
   SCENARIO_HASH_PREFIX,
@@ -35,6 +35,8 @@ import {
   SCENARIO_LOADS,
   SCENARIO_LEVELS,
   DEBRIEF_RATINGS,
+  DEBRIEF_COMPETENCIES,
+  RATED_ON,
   DEBRIEF_TEXTS,
   MAX_DEBRIEF_NOTE,
   SUBMIT_PAGE,
@@ -143,7 +145,7 @@ function progressHtml() {
       .join('');
   if (!progress.complexity.some((row) => row.run)) return '';
   const body = `<p class="scenario-intro">Scenarios run on this tracker, and the average of each
-    one's latest score against its intended outcomes.</p>
+    one's latest score (older runs were rated on the scenario's outcomes).</p>
     <table class="scenario-progress"><thead><tr><th scope="col">Presentation</th><th scope="col">Run</th>
     <th scope="col">Average</th></tr></thead><tbody>${rows(progress.complexity)}</tbody>
     <thead><tr><th scope="col">Scene</th><th scope="col"></th><th scope="col"></th></tr></thead>
@@ -167,9 +169,16 @@ export function renderScenarioList() {
     to as a scenario</a></div>`;
 }
 
-/** The latest run's rating of each intended outcome, as a list. */
+/**
+ * A run's ratings, as a list: of the six competencies, or for a run saved before them, of the
+ * scenario's intended outcomes.
+ */
 function ratingsHtml(scenario, run) {
-  const items = (scenario.outcomes || [])
+  const names =
+    run.rated === RATED_ON.COMPETENCIES
+      ? DEBRIEF_COMPETENCIES.map((competency) => competency.name)
+      : scenario.outcomes || [];
+  const items = names
     .map((outcome, index) => {
       const rating = DEBRIEF_RATINGS.find((each) => each.value === run.ratings[index]);
       return `<li>${escapeHtml(outcome)}: <b>${rating ? escapeHtml(rating.name) : 'not rated'}</b></li>`;
@@ -201,7 +210,8 @@ function debriefsHtml(scenario) {
   const runsText = count === 1 ? 'Run once' : `Run ${count} times`;
   const body = `<p class="scenario-label">${runsText}</p>
     <p class="scenario-fact scenario-scores">${runs.length === 1 ? 'Score' : 'Scores, newest first'}: ${scores}</p>
-    ${last.ratings.length ? `<p class="scenario-label">Latest outcomes</p>${ratingsHtml(scenario, last)}` : ''}
+    ${last.level ? `<p class="scenario-label">Learner’s level</p><p class="scenario-fact">${escapeHtml(SCENARIO_LEVELS[last.level].name)}</p>` : ''}
+    ${last.ratings.length ? `<p class="scenario-label">${last.rated === RATED_ON.COMPETENCIES ? 'Latest competencies' : 'Latest outcomes'}</p>${ratingsHtml(scenario, last)}` : ''}
     <p class="scenario-label">Struggled with</p>
     ${struggled ? `<ul class="scenario-fact">${struggled}</ul>` : '<p class="scenario-fact">Nothing ticked</p>'}
     ${texts}`;
@@ -217,7 +227,7 @@ const DEBRIEF_GUIDE = [
   ],
   [
     'Analysis',
-    'Go through the outcomes below. Ask what went well and what they would change. Where there was a gap, say what you saw and ask what they were thinking at the time. Teach directly when the gap is knowledge.',
+    'Go through the competencies below, starting with what this scenario emphasises. Ask what went well and what they would change. Where there was a gap, say what you saw and ask what they were thinking at the time. Teach directly when the gap is knowledge.',
   ],
   ['Summary', 'Ask for one or two things they will do next time, in their own words.'],
 ];
@@ -230,20 +240,47 @@ function guideHtml() {
   return foldHtml('Debrief guide', `<ol class="scenario-guide">${steps}</ol>`, true);
 }
 
-/** One outcome with its four ratings, as radio buttons drawn as pills. */
-function outcomeRatingHtml(outcome, index) {
+/** One competency with what to look for and its four ratings, as radio buttons drawn as pills. */
+function competencyRatingHtml(competency, index) {
   const pills = DEBRIEF_RATINGS.map(
     (rating) => `<label class="rating-pill" title="${escapeHtml(rating.help)}">
       <input type="radio" name="rating-${index}" value="${rating.value}">
       <span>${escapeHtml(rating.name)}</span></label>`,
   ).join('');
-  return `<fieldset class="scenario-outcome"><legend>${escapeHtml(outcome)}</legend>
+  return `<fieldset class="scenario-outcome"><legend>${escapeHtml(competency.name)}</legend>
+    <p class="scenario-intro scenario-competency-help">${escapeHtml(competency.help)}</p>
     <div class="rating-pills">${pills}</div></fieldset>`;
 }
 
-/** The Finish form: the guide, a rating per outcome, the hard guidelines and three notes. */
+/** The learner's level dropdown, starting on the level of this tracker's last run. */
+function learnerLevelHtml() {
+  const chosen = lastLearnerLevel();
+  const options = ['<option value="">Not said</option>']
+    .concat(
+      Object.entries(SCENARIO_LEVELS).map(
+        ([key, level]) =>
+          `<option value="${key}"${chosen === key ? ' selected' : ''}>${escapeHtml(level.name)}</option>`,
+      ),
+    )
+    .join('');
+  return `<label class="quiz-setting scenario-theme-setting">Learner’s level
+    <select id="scenario-debrief-level">${options}</select></label>`;
+}
+
+/** What the scenario emphasises (its intended outcomes), as a list; '' when it has none. */
+function emphasisHtml(scenario) {
+  const items = (scenario.outcomes || [])
+    .map((outcome) => `<li>${escapeHtml(outcome)}</li>`)
+    .join('');
+  return items
+    ? `<h3 class="scenario-label">What this scenario emphasises</h3>
+    <ul class="scenario-fact">${items}</ul>`
+    : '';
+}
+
+/** The Finish form: the guide, level, emphasis, competency ratings, hard guidelines and notes. */
 function debriefFormHtml(scenario) {
-  const outcomes = (scenario.outcomes || []).map(outcomeRatingHtml).join('');
+  const competencies = DEBRIEF_COMPETENCIES.map(competencyRatingHtml).join('');
   const scale = DEBRIEF_RATINGS.map(
     (rating) => `<b>${escapeHtml(rating.name)}</b>: ${escapeHtml(rating.help)}`,
   ).join('; ');
@@ -267,13 +304,10 @@ function debriefFormHtml(scenario) {
   ).join('');
   return `<section class="scenario-card scenario-debrief">
     <h2 class="scenario-group-title">Finish scenario</h2>${guideHtml()}
-    ${
-      outcomes
-        ? `<h3 class="scenario-label">Intended outcomes</h3>
+    ${learnerLevelHtml()}${emphasisHtml(scenario)}
+    <h3 class="scenario-label">Competencies</h3>
     <p class="scenario-intro">Rate how much help the learner needed. ${scale}. Leave one blank if
-    it didn't come up.</p>${outcomes}`
-        : ''
-    }
+    it didn't come up.</p>${competencies}
     <h3 class="scenario-label">Guidelines to learn</h3>
     <p class="scenario-intro">Tick the guidelines the learner struggled with. They go to
     Guidelines to learn.</p>${boxes}${texts}

@@ -163,7 +163,7 @@ export const SCENARIO_RUNS_KEPT = 3;
 export const MAX_DEBRIEF_NOTE = 400;
 export const MAX_SCENARIO_RECORD = 4500;
 // The debrief (decision 19 Nov 2026): a PEARLS guide (Eppich and Cheng 2015) for the mentor,
-// then each intended outcome rated on how much help the learner needed (an entrustment-style
+// then each competency (once each intended outcome) rated on how much help the learner needed (an entrustment-style
 // scale, after the O-SCORE). A run's score is its ratings as a percentage of the most possible.
 export const DEBRIEF_RATINGS = [
   { value: 0, name: 'Not done', help: 'missed, or I had to do it' },
@@ -172,6 +172,43 @@ export const DEBRIEF_RATINGS = [
   { value: 3, name: 'Independent', help: 'done well without help' },
 ];
 export const DEBRIEF_RATING_TOP = 3;
+// What the debrief rates (SC-R, 26 Nov 2026): the same six competencies in every run, so scores
+// compare across scenarios. A scenario's outcomes stay as what it emphasises and are not rated.
+// Runs saved before then rated the outcomes instead; a run's `rated` field says which (a run
+// with no `rated` rated outcomes). `help` says what to look for.
+export const DEBRIEF_COMPETENCIES = [
+  {
+    key: 'assessment',
+    name: 'Structured assessment',
+    help: 'A systematic primary and secondary survey, history and vitals',
+  },
+  {
+    key: 'problem',
+    name: 'Problem representation',
+    help: 'Sums up the patient and the main problem in a sentence or two',
+  },
+  {
+    key: 'differentials',
+    name: 'Differentials',
+    help: 'Names the likely and the dangerous alternatives, and looks for them',
+  },
+  {
+    key: 'management',
+    name: 'Management to the CPG',
+    help: 'Treatment, doses and destination follow the guidelines',
+  },
+  {
+    key: 'escalation',
+    name: 'Escalation and consultation',
+    help: 'Calls for more help, an ICP or clinical advice when it is needed',
+  },
+  {
+    key: 'handover',
+    name: 'Handover and communication',
+    help: 'A clear, structured handover; clear talk with the patient, family and crew',
+  },
+];
+export const RATED_ON = { OUTCOMES: 'outcomes', COMPETENCIES: 'competencies' };
 // The three free-text parts of the debrief, saved with the run (key, label, placeholder).
 export const DEBRIEF_TEXTS = [
   ['plus', 'Went well', 'What the learner did well'],

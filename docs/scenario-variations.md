@@ -3,8 +3,9 @@
 Status: decided 26 Nov 2026 (SC-N to SC-U below) after the owner's review of all 40 scenarios
 (`content/scenario-reviews.yaml`) and a look at how other fields train decision-making with
 scenarios. It replaces the rule-based generator planned in SC-K. Built so far: the three levels
-(shown as "Presentation", stored as `complexity`), the openings and "give if asked" facts, and
-the variation cards (steps 1 to 4 below). Not yet built: competency ratings, decision points.
+(shown as "Presentation", stored as `complexity`), the openings and "give if asked" facts, the
+variation cards and the competency ratings (steps 1 to 5 below). Not yet built: level
+suggestions and the benchmark and "move on" sets (SC-T, SC-L). Decision points were dropped.
 
 ## What a scenario is for
 
@@ -70,12 +71,11 @@ The cards are drafted by Claude from the owner's review notes (`otherLevels`, no
 comments) and reviewed on the editor page like any scenario change. Cards are the same data a
 generator would need, so a generator can still be built on them later if variety runs short.
 
-## Decision points (SC-Q)
+## Decision points (SC-Q): dropped
 
-Two or three **decision points** per scenario, each with "what an experienced paramedic
-notices, does and why". They support a new mentor's debrief (the review flagged inexperienced
-mentors several times) and could later let a learner practise alone and compare with the
-expert view (ShadowBox, Klein and Hintze). Written first for the scenarios run most.
+Planned as two or three "what an experienced paramedic notices, does and why" points per
+scenario. Dropped (owner, 26 Nov 2026): scenarios are meant to be initial prompts, and the
+variation cards and debrief already add enough content.
 
 ## Rating the same competencies every run (SC-R)
 
@@ -84,7 +84,10 @@ outcomes, so scores compare across scenarios and can suggest the next level (avi
 assesses competencies across scenarios, not single events). The set (agreed 26 Nov 2026):
 structured assessment; problem representation; differentials; management to the CPG;
 escalation and consultation; handover and communication. A scenario's intention still names what it
-emphasises. The O-SCORE ratings (SC-F) stay as the scale.
+emphasises. The O-SCORE ratings (SC-F) stay as the scale. Built 26 Nov 2026 (see
+[Scenarios](scenarios.md)): any competency may be left blank, and the debrief saves the
+learner's level with the run, a few characters in the same saved entry (no extra backend
+requests or rows), for the level suggestions later.
 
 ## Running high-severity scenarios (SC-S)
 
@@ -94,9 +97,27 @@ practice, Hunt 2014), or the usual PEARLS debrief at the end. No tag; the mentor
 
 ## Progression (SC-T)
 
-Guided, not locked: the app suggests the next level from the competency ratings, and mentors can
-pick any scenario. Some scenarios need earlier ones first (`bus-v-pedestrians` after a
+Guided, not locked: mentors can pick any scenario. No automatic "next level" suggestion from
+the ratings for now (owner, 26 Nov 2026); progression comes from the benchmark and "move on"
+sets below. Some scenarios need earlier ones first (`bus-v-pedestrians` after a
 multi-patient scenario such as `generator-garage`); these get a "Do first" note.
+
+## Benchmark and "move on" sets (SC-L)
+
+For each learner level, Claude drafts **5 scenarios**: a benchmark set to place a learner, and a
+"move on" series, drawn from the levels ticked in the reviews. The presentation levels match
+the grade (owner, 26 Nov 2026):
+
+| Learner level        | Common | Undifferentiated | Complex |
+| -------------------- | ------ | ---------------- | ------- |
+| Student              | 5      |                  |         |
+| Graduate paramedic   | 3      | 2                |         |
+| Supervised paramedic | 2      | 3                |         |
+| Paramedic            | 1      | 2                | 2       |
+| ICP                  |        | 1                | 4       |
+
+They show as a filter on the Scenarios list, and editors change them on the editor page. Not
+built yet.
 
 ## Lessons from the review for writing content
 
@@ -123,8 +144,9 @@ multi-patient scenario such as `generator-garage`); these get a "Do first" note.
 3. ~~Variation cards drafted from the review notes~~ (done 26 Nov 2026: 109 cards on all 40,
    for editors to review and change on the editor page).
 4. ~~Show cards on the scenario screen ("Ways to vary it", folded, for the mentor)~~ (done).
-5. Competency ratings in the debrief (SC-R), then level suggestions (SC-T, with SC-L).
-6. Decision points, starting with the most-run scenarios.
+5. ~~Competency ratings in the debrief (SC-R)~~ (done 26 Nov 2026).
+6. Benchmark and "move on" sets, 5 per learner level (SC-L, table above).
+7. ~~Decision points~~ (dropped 26 Nov 2026).
 
 ## Decisions
 
@@ -138,10 +160,17 @@ multi-patient scenario such as `generator-garage`); these get a "Do first" note.
   dominant problems count as Unrelated.
 - SC-P (owner, 26 Nov 2026): one opening (call notes, then history) plus "give if asked" mentor
   notes. Rejected: staged layers; a separate opening per level.
-- SC-Q (owner, 26 Nov 2026): decision points with an expert's view.
+- SC-Q (owner, 26 Nov 2026): decision points with an expert's view. **Dropped** the same day
+  after seeing examples: too much content for what are meant to be initial prompts.
 - SC-R (owner, 26 Nov 2026): a fixed set of competencies rated every run.
 - SC-S (owner, 26 Nov 2026): pause-and-correct offered in the debrief guide, mentor's choice.
-- SC-T (owner, 26 Nov 2026): guided progression, not locked.
+- SC-T (owner, 26 Nov 2026): guided progression, not locked. No suggestion of the next level
+  from the ratings for now (rejected: a score rule; a rule per competency by learner level).
+- SC-R built (owner, 26 Nov 2026): a competency may be left blank (rejected: all six required);
+  the debrief asks the learner's level, starting on the last run's, saved with the run
+  (rejected: a Settings field; not saving it).
+- SC-L (owner, 26 Nov 2026): 5 scenarios per learner level, presentation levels as in the table
+  above; Claude drafts, editors change them.
 - SC-U (owner, 26 Nov 2026): level 2 is named **Undifferentiated presentation** (the story fits
   more than one condition and the learner narrows it; pairs with "Common presentation").
   Rejected: "Look-alikes", "Differential diagnosis", "Uncertain diagnosis". One review per

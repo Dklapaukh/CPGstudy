@@ -264,8 +264,8 @@ export function scenarioBodyHtml(scenario, editing) {
     )
       .map((outcome) => `<li>${escapeHtml(outcome)}</li>`)
       .join('')}</ul>`;
-  // On the editor page the outcomes are named for what they become: the debrief's points.
-  const outcomesLabel = editing ? 'Intended outcomes (debrief points)' : 'Intended outcomes';
+  // The outcomes are what the scenario emphasises; the debrief rates the six competencies (SC-R).
+  const outcomesLabel = 'What this scenario emphasises';
   const intention = `${text('intention', 'p', 'scenario-fact')}${commentSlot(editing, 'intention')}
     <p class="scenario-label">${outcomesLabel}</p>${outcomes}${commentSlot(editing, 'outcomes')}`;
   const intentionTitle = editing ? 'Intention and debrief points' : 'Scenario intention';

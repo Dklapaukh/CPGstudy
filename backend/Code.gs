@@ -26,7 +26,7 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with scenario runs and submissions (19 Nov 2026)';
+const BACKEND_VERSION = 'version with competency ratings (26 Nov 2026)';
 
 // The tracker with this label (any case) opens for first-time visitors (action "demo").
 const DEMO_LABEL = 'demo';
@@ -735,7 +735,8 @@ function quizScore_(note) {
 
 /**
  * The numbers in a scenario's record (src/scenarioLogic.js): { count, runs }, runs newest first
- * as { at, ratings, struggled }. The debrief texts (Went well, To work on, take-away, note) are
+ * as { at, rated, ratings, struggled }; `rated` is 'competencies' for a run rated on the six
+ * competencies (SC-R) and 'outcomes' for an older one. The debrief texts (Went well, To work on, take-away, note) are
  * left out. A rating that is not 0 to DEBRIEF_RATING_TOP is null. Bad data gives no runs.
  */
 function scenarioRecord_(note) {
@@ -750,6 +751,7 @@ function scenarioRecord_(note) {
     if (!run || !isFinite(run.at) || typeof run.at !== 'number') return;
     runs.push({
       at: run.at,
+      rated: run.rated === 'competencies' ? 'competencies' : 'outcomes',
       ratings: (Array.isArray(run.ratings) ? run.ratings : []).map(function (rating) {
         const isRating =
           rating === Math.floor(rating) && rating >= 0 && rating <= DEBRIEF_RATING_TOP;

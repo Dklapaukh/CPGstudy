@@ -34,6 +34,7 @@ import {
   scenarioGroups,
   scenarioTotals,
   struggledGuidelines,
+  competencyAverages,
 } from './stats.js';
 import { signInHtml, teamHtml, personHtml, overTimeHtml } from './view.js';
 
@@ -155,6 +156,7 @@ function teamScenarios() {
     totals: scenarioTotals(rows),
     groups: scenarioGroups(content().scenarios, rows),
     struggled: struggledList(state.trackers),
+    competencies: competencyAverages(state.trackers),
   };
 }
 
@@ -188,6 +190,7 @@ function personScenarios(index) {
     groups: scenarioGroups(content().scenarios, rows),
     rows,
     struggled: struggledList([state.trackers[index]]),
+    competencies: competencyAverages([state.trackers[index]]),
     total: content().scenarios.length,
   };
 }
