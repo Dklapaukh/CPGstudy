@@ -67,8 +67,8 @@ Publishing (push to `main`) and the `content/guidelines.js` rule are in `CLAUDE.
 | 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
 | 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
-| 21   | Scenario levels, openings and variation cards, `docs/scenario-variations.md` | Designed 26 Nov 2026 (SC-N to SC-T); replaces the generator (SC-K) |
-| 22   | Level benchmark scenarios and per-level "move on" sets (SC-L)  | Noted 24 Nov 2026; waits for the scenario review |
+| 21   | Scenario levels, openings and variation cards, `docs/scenario-variations.md` | Built 26 Nov 2026 (SC-N, SC-O, SC-P, SC-U); SC-Q, SC-R, SC-T to build |
+| 22   | Level benchmark scenarios and per-level "move on" sets (SC-L)  | Noted 24 Nov 2026; after the competency ratings (SC-R) |
 
 ### 8.2 Decisions
 
@@ -184,27 +184,29 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Where things stand
 
-**Now (26 Nov 2026).** Features 1 to 20 are built and on `main`, checked by the owner on
-several phones. Scenarios use complexity and scene load (SC-E) with the PEARLS debrief and score
-(SC-F); editors review and comment on scenarios. The owner has reviewed all 40 scenarios (one
-review each, in `content/scenario-reviews.yaml`; 7 marked Small changes, none to rewrite or take
-out). From that review the scenario design was decided (feature 21, SC-N to SC-T): three levels,
-call-notes-then-history openings with "give if asked" notes, variation cards in place of the
-generator, decision points, competencies rated every run, guided progression. Editing, adding,
-deleting scenarios and approving jobs are still paused (8.4 task 0). The backend redeploy for Add
-a scenario and scenario trends is still to do (8.4 task 1).
+**Now (26 Nov 2026).** Features 1 to 21 are built and on `main`. The owner's scenario review
+(one review each, `content/scenario-reviews.yaml`) is finished and scenario editing is back on
+(SC-U). From it (feature 21, `docs/scenario-variations.md`): the 7 Small-changes scenarios and
+every in-line comment are fixed; every scenario has a call-notes-then-history opening and "give
+if asked" facts; scenarios are re-tagged to three presentations (Common, Undifferentiated,
+Complex; 23, 9 and 8); and 109 variation cards ("Ways to vary it") are drafted from the review
+notes. The levels ticked in reviews are in `content/scenarios.js`. The re-tags, facts and cards
+are Claude's drafts for editors to check on the editor page. Points for the owner to check:
+the review asked for steroids in the anaphylaxis outcomes, but CPG 12.12 has none, so the
+outcome names its additional treatments instead; `remutaka-motorbike` gained a hidden chest
+injury as a "give if asked" fact; Colonial Knob replaced Ōtaki Forks with no helicopter. The
+backend redeploy for Add a scenario and scenario trends is still to do (8.4 task 1).
 
 **Next** (steps in `docs/scenario-variations.md`).
 
-1. Owner: 8.3 items 4 to 6 (level 2 name, whether the review is finished, the competencies).
-2. Claude rewrites the 7 scenarios marked Small changes and applies the in-line comments.
-3. New openings and "give if asked" notes for every scenario; re-tag them to levels 1 to 3.
-4. Variation cards drafted from the review notes, reviewed by editors, then shown in the app.
-5. Competency ratings in the debrief, then level suggestions with the benchmark and "move on"
-   sets (SC-L, feature 22).
-6. Decision points, starting with the most-run scenarios.
+1. Competency ratings in the debrief (SC-R: the six agreed competencies rated every run, in
+   place of each scenario's outcomes; old runs keep their outcome ratings), then level
+   suggestions with the benchmark and "move on" sets (SC-L, feature 22; SC-T).
+2. Decision points (SC-Q), starting with the most-run scenarios.
+3. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
+   note in `bus-v-pedestrians`' intention; the bank of overdoses by medicine class.
 
-No learner-facing changes until the review is complete. Open owner questions: 8.3 items 1 to 6.
+Open owner questions: 8.3 items 1 to 3.
 
 **Known gaps and possible follow-ups.** The `demo` tracker is shared by every visitor, so marks
 mix (it could be read-only). A score only compares well when the same mentor rates consistently. Possible: a best score for
