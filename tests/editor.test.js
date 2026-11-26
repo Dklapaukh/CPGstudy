@@ -569,12 +569,14 @@ test('page: a scenario is reviewed, its levels set, and "Save and next" opens th
     input.checked = true;
     input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
   };
-  tick('levels', 'student');
+  // Netball ankle already suits Student to Supervised (content/scenarios.js); the review adds ICP.
+  const suits = ['student', 'grad', 'supervised', 'icp'];
+  tick('levels', 'icp');
   tick('score-realism', '3');
   click($('[data-action="review-save"]'));
   await sleep(20);
   assert.match($('#review-form').textContent, /Choose an overall call/);
-  assert.ok($('#review-form input[name="levels"][value="student"]').checked, 'ticks are kept');
+  assert.ok($('#review-form input[name="levels"][value="icp"]').checked, 'ticks are kept');
   tick('verdict', 'keep');
   const otherLevels = $('#review-other-levels');
   otherLevels.value = 'ICP: add a second patient';
@@ -583,9 +585,9 @@ test('page: a scenario is reviewed, its levels set, and "Save and next" opens th
   await sleep(40);
   const review = sheetEdits['scenario-review|netball-ankle|eve'];
   if (SCENARIO_EDITING_ENABLED)
-    assert.deepEqual(sheetEdits['scenario|netball-ankle'].fields.levels.to, ['student']);
+    assert.deepEqual(sheetEdits['scenario|netball-ankle'].fields.levels.to, suits);
   else assert.equal(sheetEdits['scenario|netball-ankle'], undefined, 'levels kept in the review');
-  assert.deepEqual(review.levels, ['student']);
+  assert.deepEqual(review.levels, suits);
   assert.equal(review.verdict, 'keep');
   assert.deepEqual(review.scores, { realism: 3 });
   assert.equal(review.otherLevels, 'ICP: add a second patient');

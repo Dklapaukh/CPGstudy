@@ -77,7 +77,7 @@ comments: list and queue (L to S, R4, R8) in `list-and-settings.md`; PDF and upd
 V, Y, R13) in `content-updates.md`; medicines quiz (E, Z1 to Z22, GM-A) in `medicines-quiz.md`;
 guideline quiz (Z12 to Z16, PG-) in `guideline-quiz.md`; MT- in `medicine-test.md`; MV-, SC-G in
 `manager.md`; ED-, SC-D in `editor.md`; ST- in `streak-and-stats.md`; SC- in `scenarios.md`;
-SC-K, SC-N to SC-T in `scenario-variations.md`; C2, C4, C5 in `backend.md`.
+SC-K, SC-N to SC-U in `scenario-variations.md`; C2, C4, C5 in `backend.md`.
 
 Decisions across the whole app:
 
@@ -117,30 +117,8 @@ Decisions across the whole app:
    Option C: Supabase (Postgres with sign-in and row-level security): real per-person accounts.
    Most secure, biggest rewrite; free projects pause after a week without use.
 
-4. **Name of scenario level 2** (diagnostic uncertainty, X or Y; SC-O, asked 26 Nov 2026).
-   Option A: "Undifferentiated presentation": the story fits more than one condition and the
-   learner narrows it; a clinical term that pairs with "Common presentation" (Claude's pick).
-   Option B: "Look-alikes": two conditions that present the same way; plain language.
-   Option C: "Differential diagnosis": familiar, but names a task more than a kind of scenario.
-   Option D: "Uncertain diagnosis": says what it is, but could unsettle a learner.
-5. **Is the scenario review finished?** All 40 scenarios have one review (the owner's, 24 to 26
-   Nov 2026); the aim was 3 editors each (SC-J). Option A: one is enough; switch scenario
-   editing back on (8.4 task 0) and start the rewrites. Option B: wait for two more editors.
-6. **The fixed competencies to rate every run** (SC-R): agree the draft set in
-   `docs/scenario-variations.md` or change it.
-
 ### 8.4 Open tasks (owner, by hand)
 
-0. **Scenario editing is paused until the scenario review is finished** (owner, 25 Nov 2026,
-   SC-M in `docs/editor.md`). One flag, `SCENARIO_EDITING_ENABLED = false` in
-   `src/constants.js`, hides every way to change a scenario on the editor page (tap-to-edit,
-   leave out, undo, delete, keep or drop, + New scenario, approving a submitted job) and the
-   page refuses any save of a `scenario|<id>` edit; the levels ticked in a review are kept in the
-   review only. Reviews, comments, rejecting jobs and the learners' app are unchanged. The
-   backend still accepts scenario edits; the block is in the page.
-   **To re-enable:** set the flag to `true` in `src/constants.js`, add a `CHANGELOG.md` line,
-   run `npm run check` (the editing tests run again, the "paused" ones skip) and push to `main`.
-   Levels ticked in reviews meanwhile are in `content/scenario-reviews.yaml` to apply by hand.
 1. **Switch on Add a scenario and scenario trends:** redeploy the backend
    (`docs/backend.md`, "Redeploying the backend"; allow the Drive permission at `setup`). Until
    then the form and the daily copy fail ("Is it redeployed?") and the manager page shows no

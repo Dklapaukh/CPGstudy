@@ -109,6 +109,12 @@ test('a value changed in the file after its edit is listed for review, kept or d
   assert.deepEqual(scenarioPathsToReview(written, edit), []);
   assert.deepEqual(scenarioPathsToReview(changed, edit), ['story']);
   assert.deepEqual(scenarioPathsToReview(undefined, edit), ['story'], 'a removed scenario');
+  const caughtUp = { ...written, story: 'Edited story.' };
+  assert.deepEqual(
+    scenarioPathsToReview(caughtUp, edit),
+    [],
+    'the file now says what the edit says',
+  );
   const kept = keepScenarioPath(changed, edit, 'story');
   assert.deepEqual(scenarioPathsToReview(changed, kept), []);
   assert.equal(applyScenarioEdit(changed, kept).story, 'Edited story.');

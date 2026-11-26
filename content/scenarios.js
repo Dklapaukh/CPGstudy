@@ -8,6 +8,7 @@
  *   load       'single', 'delegation' or 'several': the team and scene load (SCENARIO_LOADS);
  *              'several' exactly when there is more than one patient
  *   title, suburb (Wellington, Porirua, Kāpiti or Hutt Valley), story
+ *   levels     the levels it suits (SCENARIO_LEVELS), from the editors' reviews; optional
  *   rural      true for a rural scenario or one with a long transport (the Rural theme); optional
  *   intention  what the scenario practises and what to watch for
  *   outcomes   the intended outcomes, short and observable; the debrief rates each one
@@ -21,6 +22,7 @@ export const scenarios = [
     id: 'netball-ankle',
     complexity: 1,
     load: 'single',
+    levels: ['student', 'grad', 'supervised'],
     title: 'Netball ankle',
     suburb: 'Hataitai',
     story: "A 34-year-old woman rolled her ankle at netball and can't put weight on it.",
@@ -55,6 +57,7 @@ export const scenarios = [
     id: 'not-himself',
     complexity: 1,
     load: 'single',
+    levels: ['supervised', 'paramedic'],
     title: 'Just not himself',
     suburb: 'Paraparaumu',
     story: 'A 72-year-old man\'s daughter called because he\'s been "off" for two days.',
@@ -90,6 +93,7 @@ export const scenarios = [
     id: 'chest-pain-lawns',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad'],
     title: 'Chest pain mowing the lawns',
     suburb: 'Cannons Creek',
     story:
@@ -124,6 +128,7 @@ export const scenarios = [
     id: 'long-lie',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad', 'supervised', 'paramedic'],
     title: 'Long lie',
     suburb: 'Waterloo, Lower Hutt',
     story:
@@ -159,6 +164,7 @@ export const scenarios = [
     id: 'right-abdo-pain',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad', 'supervised'],
     title: 'Right-sided abdominal pain',
     suburb: 'Johnsonville',
     story:
@@ -194,6 +200,7 @@ export const scenarios = [
     id: 'copd-or-sepsis',
     complexity: 3,
     load: 'single',
+    levels: ['grad'],
     title: 'COPD or sepsis?',
     suburb: 'Ōtaki',
     story:
@@ -230,6 +237,7 @@ export const scenarios = [
     id: 'head-strike-warfarin',
     complexity: 3,
     load: 'single',
+    levels: ['student'],
     title: 'Head strike on warfarin',
     suburb: 'Waikanae',
     story:
@@ -265,6 +273,7 @@ export const scenarios = [
     id: 'cafe-anaphylaxis',
     complexity: 2,
     load: 'delegation',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Café anaphylaxis',
     suburb: 'Te Aro',
     story:
@@ -300,6 +309,7 @@ export const scenarios = [
     id: 'gym-collapse',
     complexity: 2,
     load: 'delegation',
+    levels: ['supervised', 'paramedic'],
     title: 'Collapse at the gym',
     suburb: 'Trentham, Upper Hutt',
     story:
@@ -336,6 +346,7 @@ export const scenarios = [
     id: 'transmission-gully-crash',
     complexity: 3,
     load: 'several',
+    levels: ['paramedic', 'icp'],
     title: 'Transmission Gully crash',
     suburb: 'Pāuatahanui',
     story:
@@ -406,6 +417,7 @@ export const scenarios = [
     id: 'trampoline-wrist',
     complexity: 1,
     load: 'single',
+    levels: ['student', 'grad', 'supervised'],
     title: 'Off the trampoline',
     suburb: 'Tawa',
     story:
@@ -441,6 +453,7 @@ export const scenarios = [
     id: 'bus-stop-dizzy',
     complexity: 1,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Dizzy at the bus stop',
     suburb: 'Lower Hutt',
     story:
@@ -476,6 +489,7 @@ export const scenarios = [
     id: 'refuses-transport',
     complexity: 1,
     load: 'single',
+    levels: ['student', 'grad', 'supervised', 'paramedic', 'icp'],
     title: "Doesn't want to go",
     suburb: 'Karori',
     story:
@@ -512,6 +526,7 @@ export const scenarios = [
     id: 'hot-toddler',
     complexity: 1,
     load: 'single',
+    levels: ['paramedic'],
     title: 'Hot toddler',
     suburb: 'Ranui',
     story:
@@ -547,6 +562,7 @@ export const scenarios = [
     id: 'wheezy-at-school',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad', 'supervised', 'paramedic', 'icp'],
     title: 'Wheezy at school',
     suburb: 'Naenae',
     story:
@@ -582,6 +598,7 @@ export const scenarios = [
     id: 'croup-2am',
     complexity: 2,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Croup at 2 am',
     suburb: 'Titahi Bay',
     story:
@@ -617,6 +634,7 @@ export const scenarios = [
     id: 'hypo-building-site',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad'],
     title: 'Hypo on the building site',
     suburb: 'Petone',
     story:
@@ -652,6 +670,7 @@ export const scenarios = [
     id: 'seizure-coastlands',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad'],
     title: 'Seizure at Coastlands',
     suburb: 'Paraparaumu',
     story:
@@ -687,6 +706,7 @@ export const scenarios = [
     id: 'stroke-breakfast',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad'],
     title: 'Stroke at breakfast',
     suburb: 'Stokes Valley',
     story:
@@ -722,6 +742,7 @@ export const scenarios = [
     id: 'svt-lambton-quay',
     complexity: 2,
     load: 'single',
+    levels: ['student', 'grad', 'supervised'],
     title: 'Racing heart at work',
     suburb: 'Wellington Central',
     story:
@@ -757,6 +778,7 @@ export const scenarios = [
     id: 'bleeding-nine-weeks',
     complexity: 2,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Bleeding at nine weeks',
     suburb: 'Wainuiomata',
     story:
@@ -792,6 +814,7 @@ export const scenarios = [
     id: 'phone-call-newtown',
     complexity: 2,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'The phone call',
     suburb: 'Newtown',
     story:
@@ -828,6 +851,7 @@ export const scenarios = [
     id: 'back-gone-lifting',
     complexity: 2,
     load: 'single',
+    levels: ['grad', 'supervised'],
     title: 'Back gone lifting',
     suburb: 'Upper Hutt',
     story:
@@ -863,6 +887,7 @@ export const scenarios = [
     id: 'mums-pills',
     complexity: 3,
     load: 'single',
+    levels: ['supervised', 'paramedic'],
     title: "Her mum's pills",
     suburb: 'Porirua East',
     story:
@@ -899,6 +924,7 @@ export const scenarios = [
     id: 'after-the-party',
     complexity: 3,
     load: 'single',
+    levels: ['supervised', 'paramedic'],
     title: 'After the party',
     suburb: 'Mount Cook',
     story:
@@ -935,6 +961,7 @@ export const scenarios = [
     id: 'baby-not-feeding',
     complexity: 3,
     load: 'single',
+    levels: ['supervised', 'paramedic'],
     title: 'Baby not feeding',
     suburb: 'Waitangirua',
     story:
@@ -971,6 +998,7 @@ export const scenarios = [
     id: 'headache-36-weeks',
     complexity: 3,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Headache at 36 weeks',
     suburb: 'Kilbirnie',
     story:
@@ -1006,6 +1034,7 @@ export const scenarios = [
     id: 'otaki-forks-tramper',
     complexity: 3,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Tramper at Ōtaki Forks',
     suburb: 'Ōtaki Forks',
     rural: true,
@@ -1043,6 +1072,7 @@ export const scenarios = [
     id: 'remutaka-motorbike',
     complexity: 3,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Remutaka Hill motorbike',
     suburb: 'Kaitoke',
     rural: true,
@@ -1079,6 +1109,7 @@ export const scenarios = [
     id: 'in-the-cells',
     complexity: 3,
     load: 'single',
+    levels: ['supervised', 'paramedic', 'icp'],
     title: 'In the cells',
     suburb: 'Lower Hutt',
     story:
@@ -1114,6 +1145,7 @@ export const scenarios = [
     id: 'rash-in-the-hostel',
     complexity: 3,
     load: 'single',
+    levels: ['grad', 'supervised', 'paramedic'],
     title: 'Rash in the hostel',
     suburb: 'Kelburn',
     story:
@@ -1150,6 +1182,7 @@ export const scenarios = [
     id: 'birth-in-the-bathroom',
     complexity: 3,
     load: 'delegation',
+    levels: ['grad', 'supervised', 'paramedic', 'icp'],
     title: 'Birth in the bathroom',
     suburb: 'Pukerua Bay',
     story:
@@ -1220,6 +1253,7 @@ export const scenarios = [
     id: 'home-birth-haemorrhage',
     complexity: 3,
     load: 'delegation',
+    levels: ['supervised', 'paramedic', 'icp'],
     title: 'Home birth haemorrhage',
     suburb: 'Te Horo',
     rural: true,
@@ -1257,6 +1291,7 @@ export const scenarios = [
     id: 'cant-talk-asthma',
     complexity: 3,
     load: 'delegation',
+    levels: ['supervised', 'paramedic', 'icp'],
     title: "Can't talk",
     suburb: 'Ascot Park',
     story:
@@ -1292,6 +1327,7 @@ export const scenarios = [
     id: 'stemi-arrest-tawa',
     complexity: 3,
     load: 'delegation',
+    levels: ['supervised', 'paramedic', 'icp'],
     title: 'STEMI that arrests',
     suburb: 'Tawa',
     story:
@@ -1327,6 +1363,7 @@ export const scenarios = [
     id: 'generator-garage',
     complexity: 2,
     load: 'several',
+    levels: ['supervised', 'paramedic', 'icp'],
     title: 'Generator in the garage',
     suburb: 'Wainuiomata',
     story:
@@ -1415,6 +1452,7 @@ export const scenarios = [
     id: 'bus-v-pedestrians',
     complexity: 3,
     load: 'several',
+    levels: ['paramedic', 'icp'],
     title: 'Bus versus pedestrians',
     suburb: 'Te Aro',
     story:
@@ -1485,6 +1523,7 @@ export const scenarios = [
     id: 'rest-home-gastro',
     complexity: 2,
     load: 'several',
+    levels: ['paramedic'],
     title: 'Rest-home gastro',
     suburb: 'Naenae',
     story:
@@ -1555,6 +1594,7 @@ export const scenarios = [
     id: 'expressway-crash',
     complexity: 3,
     load: 'several',
+    levels: ['icp'],
     title: 'Expressway crash',
     suburb: 'Peka Peka',
     rural: true,

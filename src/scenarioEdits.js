@@ -137,12 +137,17 @@ function tidyEdit(off, fields, added) {
 
 /**
  * The paths whose value in content/scenarios.js changed after they were edited, for review.
- * A scenario that is gone has every path to review.
+ * A scenario that is gone has every path to review. A file value that now says what the edit
+ * says needs no review (the reviewed levels were copied into the file, 26 Nov 2026).
  */
 export function scenarioPathsToReview(scenario, edit) {
   const paths = Object.keys(edit?.fields || {});
   if (!scenario) return paths;
-  return paths.filter((path) => !sameValue(scenarioValue(scenario, path), edit.fields[path].was));
+  return paths.filter((path) => {
+    const written = scenarioValue(scenario, path);
+    const field = edit.fields[path];
+    return !sameValue(written, field.was) && !sameValue(written, field.to);
+  });
 }
 
 /** The edit with one path's new written value accepted under it: the edit stays. */

@@ -12,11 +12,11 @@ prompts for changing it; it never shows a learner something no editor has checke
 
 ## Scenario levels (replaces Straightforward / Common / Complex)
 
-| Level | What it trains                                                    | Name                                                                 |
-| ----- | ----------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1     | Structured assessment; problem representation and illness scripts | Common presentation                                                  |
-| 2     | Diagnostic uncertainty: X **or** Y (look-alikes)                  | name to choose (plan 8.3); suggested "Undifferentiated presentation" |
-| 3     | Diagnostic complexity: X **and** Y                                | Complex or atypical                                                  |
+| Level | What it trains                                                    | Name                          |
+| ----- | ----------------------------------------------------------------- | ----------------------------- |
+| 1     | Structured assessment; problem representation and illness scripts | Common presentation           |
+| 2     | Diagnostic uncertainty: X **or** Y (look-alikes)                  | Undifferentiated presentation |
+| 3     | Diagnostic complexity: X **and** Y                                | Complex or atypical           |
 
 Level 3 climbs a ladder of how the two problems relate (after Piette and Kerr's concordant and
 discordant conditions):
@@ -79,9 +79,9 @@ expert view (ShadowBox, Klein and Hintze). Written first for the scenarios run m
 
 The debrief rates a fixed set of competencies in every run, in place of each scenario's own
 outcomes, so scores compare across scenarios and can suggest the next level (aviation EBT
-assesses competencies across scenarios, not single events). Draft set, to agree: structured
-assessment; problem representation; differentials; management to the CPG; escalation and
-consultation; handover and communication. A scenario's intention still names what it
+assesses competencies across scenarios, not single events). The set (agreed 26 Nov 2026):
+structured assessment; problem representation; differentials; management to the CPG;
+escalation and consultation; handover and communication. A scenario's intention still names what it
 emphasises. The O-SCORE ratings (SC-F) stay as the scale.
 
 ## Running high-severity scenarios (SC-S)
@@ -137,3 +137,9 @@ multi-patient scenario such as `generator-garage`); these get a "Do first" note.
 - SC-R (owner, 26 Nov 2026): a fixed set of competencies rated every run.
 - SC-S (owner, 26 Nov 2026): pause-and-correct offered in the debrief guide, mentor's choice.
 - SC-T (owner, 26 Nov 2026): guided progression, not locked.
+- SC-U (owner, 26 Nov 2026): level 2 is named **Undifferentiated presentation** (the story fits
+  more than one condition and the learner narrows it; pairs with "Common presentation").
+  Rejected: "Look-alikes", "Differential diagnosis", "Uncertain diagnosis". One review per
+  scenario (the owner's) is enough: the review is finished and scenario editing is back on
+  (SC-M). The competency set in SC-R is agreed as drafted. The levels ticked in each review were
+  copied into `content/scenarios.js`.
