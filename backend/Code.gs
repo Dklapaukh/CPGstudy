@@ -6,8 +6,11 @@
  * once, and again after pasting a version that adds tabs (it never changes existing rows).
  * Needs the V8 runtime (Project Settings, "Enable Chrome V8 runtime").
  * The status codes and entry fields (s, n, t) match src/constants.js in the app.
- * Submitted scenario photos are saved in a Drive folder (SUBMISSION_FOLDER_NAME), so the first
- * run after this version asks the owner to allow Drive access.
+ * Each sent job gets its own subfolder of a Drive folder (SUBMISSION_FOLDER_NAME) holding its
+ * photos, its data (job.json as sent, approved.json once approved) and a Google Doc to read it
+ * by, so the Sheet keeps only pointers and no box is limited by a cell's 50,000 characters. The
+ * first run of the version that added the Doc (27 Nov 2026) asks the owner to allow Google Docs
+ * access as well as Drive.
  */
 
 const WORDS =
@@ -26,7 +29,7 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with competency ratings (26 Nov 2026)';
+const BACKEND_VERSION = 'version with job folders in Drive (27 Nov 2026)';
 
 // The tracker with this label (any case) opens for first-time visitors (action "demo").
 const DEMO_LABEL = 'demo';
@@ -50,7 +53,9 @@ const MAX_NAME_LENGTH = 60;
 // deletes its photos. Approved jobs are read by the daily copy ("approved-scenarios") and so
 // published, photos too. The limits match src/constants.js (SUBMISSION_LIMITS).
 const SUBMIT_MIN_FORM_MS = 20000;
-const MAX_SUBMISSION_LENGTH = 30000;
+// A job is kept in Drive, not a cell; this only stops a huge paste or a bot. The app's own box
+// limits come to under 100,000 characters for four full patients.
+const MAX_SUBMISSION_LENGTH = 150000;
 const MAX_SUBMISSION_IMAGES = 4;
 const MAX_IMAGE_BASE64_LENGTH = 2000000; // about 1.5 MB of JPEG
 const MAX_CAPTION_LENGTH = 120;
@@ -59,6 +64,23 @@ const SUBMISSIONS_MAX_PER_HOUR = 30;
 const SUBMISSION_COUNT_KEY = 'submissions-';
 const SUBMISSION_FOLDER_NAME = 'CPG scenario submissions';
 const SUBMISSION_FOLDER_PROPERTY = 'submissionFolderId';
+// The files in each job's own folder, and how long a job read from Drive is cached.
+const JOB_DATA_FILE = 'job.json';
+const APPROVED_DATA_FILE = 'approved.json';
+const DRIVE_CACHE_KEY = 'drive-';
+const DRIVE_CACHE_S = 6 * ONE_HOUR_S; // the longest CacheService keeps anything
+const JOB_DOC_PREFIX = 'Job: ';
+// The vitals in the order the app shows them (src/constants.js, SCENARIO_VITALS).
+const VITAL_NAMES = [
+  ['gcs', 'GCS'],
+  ['rr', 'RR'],
+  ['spo2', 'SpO2'],
+  ['hr', 'HR'],
+  ['bp', 'BP'],
+  ['temp', 'Temp'],
+  ['bgl', 'BGL'],
+  ['pain', 'Pain'],
+];
 const SUBMISSION_STATUS = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected' };
 const SUBMISSION_DECISIONS = { approve: 'Approved', reject: 'Rejected' };
 const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
@@ -136,6 +158,10 @@ const HEADERS = {
 // An edited question's id (src/guidelineQuizPlay.js, src/quizCards.js) and the longest edit kept.
 const EDIT_ID_PATTERN = /^[\w.|-]{1,120}$/;
 const MAX_EDIT_LENGTH = 20000;
+// An approved anonymised job ("job|<id>") is kept in its Drive folder, so it may be longer; the
+// Edits row holds only a pointer to it.
+const JOB_EDIT_PREFIX = 'job|';
+const MAX_JOB_EDIT_LENGTH = MAX_SUBMISSION_LENGTH;
 
 /**
  * Run this from the editor: once at the start, and again after pasting a version that adds tabs.
@@ -372,10 +398,14 @@ function submitScenario_(request) {
     String(submission.name || '')
       .trim()
       .slice(0, MAX_NAME_LENGTH) || 'Anonymous';
+  const folder = makeJobFolder_(id, title);
   const photos = images.map(function (image, index) {
-    return saveSubmissionPhoto_(id, index, image);
+    return saveSubmissionPhoto_(folder, id, index, image);
   });
-  const row = [id, new Date().toISOString(), sender, title, text, JSON.stringify(photos)];
+  const pointer = { folder: folder.getId(), drive: writeFolderFile_(folder, JOB_DATA_FILE, text) };
+  pointer.doc = writeJobDoc_(folder, '', submission, []);
+  const row = [id, new Date().toISOString(), sender, title, JSON.stringify(pointer)];
+  row.push(JSON.stringify(photos));
   getSheet_(SHEET.SUBMISSIONS).appendRow(row.concat([SUBMISSION_STATUS.PENDING, '', '']));
   cache.put(countKey, String(count + 1), ONE_HOUR_S);
   emailSubmission_(sender, title, photos.length);
@@ -397,7 +427,7 @@ function readSubmissions_(status, withPhotoData) {
         id: String(cell_(rows[i], SUBMISSION_COLUMN.ID)),
         sent: String(cell_(rows[i], SUBMISSION_COLUMN.SENT)),
         sender: String(cell_(rows[i], SUBMISSION_COLUMN.SENDER)),
-        job: JSON.parse(cell_(rows[i], SUBMISSION_COLUMN.JOB)),
+        job: jobOfCell_(cell_(rows[i], SUBMISSION_COLUMN.JOB)),
         photos: photos.map(function (photo) {
           const shown = { caption: photo.caption };
           if (withPhotoData) shown.data = photoData_(photo.file);
@@ -427,8 +457,147 @@ function findSubmission_(id) {
   return {
     row: row,
     status: cell_(values, SUBMISSION_COLUMN.STATUS),
+    title: String(cell_(values, SUBMISSION_COLUMN.TITLE) || 'Untitled'),
     photos: JSON.parse(cell_(values, SUBMISSION_COLUMN.PHOTOS) || '[]'),
+    pointer: pointerOfCell_(cell_(values, SUBMISSION_COLUMN.JOB)),
   };
+}
+
+/**
+ * Where a job is kept: { folder, drive (its data file), doc } for a job sent from 27 Nov 2026,
+ * whose cell holds only this pointer; null for an older job kept whole in the cell.
+ */
+function pointerOfCell_(text) {
+  return pointerOf_(safeJson_(text));
+}
+
+/** The value when it is a pointer to a job in Drive ({ folder, drive, doc }), else null. */
+function pointerOf_(value) {
+  return value && typeof value.drive === 'string' && typeof value.folder === 'string'
+    ? value
+    : null;
+}
+
+/** The job a Submissions cell holds, read from Drive when the cell is a pointer. */
+function jobOfCell_(text) {
+  const pointer = pointerOfCell_(text);
+  return pointer ? readDriveJson_(pointer.drive) : JSON.parse(text);
+}
+
+/** A Drive file's JSON, cached for a while, since the editor page reads every job at once. */
+function readDriveJson_(fileId) {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get(DRIVE_CACHE_KEY + fileId);
+  if (cached) return JSON.parse(cached);
+  const text = DriveApp.getFileById(fileId).getBlob().getDataAsString();
+  try {
+    cache.put(DRIVE_CACHE_KEY + fileId, text, DRIVE_CACHE_S);
+  } catch {
+    // Over CacheService's 100 KB a value: read from Drive each time instead.
+  }
+  return JSON.parse(text);
+}
+
+/** A job's own subfolder of the submissions folder: "2026-11-27 Fall at home (job-abc)". */
+function makeJobFolder_(id, title) {
+  const name = new Date().toISOString().slice(0, 10) + ' ' + title + ' (' + id + ')';
+  return submissionFolder_().createFolder(name);
+}
+
+/** Writes JSON text to the folder's file of this name, replacing it; returns its Drive id. */
+function writeFolderFile_(folder, name, text) {
+  const found = folder.getFilesByName(name);
+  if (found.hasNext()) {
+    const file = found.next();
+    file.setContent(text);
+    CacheService.getScriptCache().remove(DRIVE_CACHE_KEY + file.getId());
+    return file.getId();
+  }
+  return folder.createFile(name, text, 'application/json').getId();
+}
+
+/**
+ * Writes the job's Google Doc in its folder, laid out like the form, making it when `docId` is
+ * ''. `job` is as sent or as approved (a scenario); `lessons` are an approved job's. Returns the
+ * Doc's id. The data file is what counts, so a failed Doc is only logged.
+ */
+function writeJobDoc_(folder, docId, job, lessons) {
+  try {
+    let doc;
+    if (docId) {
+      doc = DocumentApp.openById(docId);
+      doc.getBody().clear();
+    } else {
+      doc = DocumentApp.create(JOB_DOC_PREFIX + String(job.title || 'Untitled'));
+      DriveApp.getFileById(doc.getId()).moveTo(folder);
+    }
+    const body = doc.getBody();
+    jobDocLines_(job, lessons).forEach(function (line) {
+      const paragraph = body.appendParagraph(line[1]);
+      if (line[0]) paragraph.setHeading(DocumentApp.ParagraphHeading[line[0]]);
+    });
+    doc.saveAndClose();
+    return doc.getId();
+  } catch (err) {
+    console.error(err);
+    return docId || '';
+  }
+}
+
+/** The Doc's paragraphs as [heading kind or '', text], in the form's order; empty boxes left out. */
+function jobDocLines_(job, lessons) {
+  const lines = [['TITLE', String(job.title || 'Untitled')]];
+  const add = function (label, text) {
+    if (!String(text || '').trim() || text === 'Not given') return;
+    lines.push(['HEADING2', label], ['', String(text)]);
+  };
+  if (job.suburb) lines.push(['', String(job.suburb)]);
+  add('Dispatch notes', job.dispatch);
+  // An approved job's story already starts with its dispatch notes.
+  add(job.dispatch === undefined ? 'Dispatch notes and history' : 'History', job.story);
+  const patients = Array.isArray(job.patients) ? job.patients : [];
+  patients.forEach(function (patient, index) {
+    const label = patient.label ? ': ' + patient.label : '';
+    lines.push(['HEADING1', patients.length > 1 ? 'Patient ' + (index + 1) + label : 'Patient']);
+    add('Medical history', patient.history);
+    add('Medications', patient.medications);
+    add('Allergies', patient.allergies);
+    add('Social history', patient.social);
+    vitalSetsOf_(patient).forEach(function (set, setIndex) {
+      add('Vitals ' + (setIndex + 1) + (set.note ? ': ' + set.note : ''), vitalsText_(set.vitals));
+    });
+    add('Assessment', patient.assessment);
+    add('Treatment and response', patient.treatment);
+    add('Follow up', patient.followUp);
+  });
+  add('Guidelines used', (job.guidelines || []).map(guidelineNumber_).join(', '));
+  add('Learning points', job.intention);
+  add('Lessons learnt', (lessons || []).join('\n'));
+  return lines;
+}
+
+/** A patient's vitals sets: as sent (vitalSets), or as approved (vitals, then laterVitals). */
+function vitalSetsOf_(patient) {
+  if (Array.isArray(patient.vitalSets)) return patient.vitalSets;
+  const first = { note: patient.vitalsNote || '', vitals: patient.vitals || {} };
+  return [first].concat(Array.isArray(patient.laterVitals) ? patient.laterVitals : []);
+}
+
+/** "GCS 15, HR 48, BP 88/54": the vitals that were measured. */
+function vitalsText_(vitals) {
+  return VITAL_NAMES.filter(function (pair) {
+    const value = String((vitals || {})[pair[0]] || '').trim();
+    return value && value !== '–';
+  })
+    .map(function (pair) {
+      return pair[1] + ' ' + String(vitals[pair[0]]).trim();
+    })
+    .join(', ');
+}
+
+/** A guideline's CPG number from its id: "cpg-3-2" is "3.2". */
+function guidelineNumber_(id) {
+  return String(id).replace(/^cpg-/, '').replace(/-/g, '.');
 }
 
 /** One photo of a submission as base64, for the editor page; '' when there is none. */
@@ -451,7 +620,9 @@ function decideSubmission_(editorName, request) {
   const status = SUBMISSION_DECISIONS[request.decision];
   const submission = findSubmission_(request.id);
   if (!status || !submission || submission.status !== SUBMISSION_STATUS.PENDING) return false;
-  if (status === SUBMISSION_STATUS.REJECTED) {
+  if (status === SUBMISSION_STATUS.REJECTED && submission.pointer) {
+    DriveApp.getFolderById(submission.pointer.folder).setTrashed(true); // its photos, data and Doc
+  } else if (status === SUBMISSION_STATUS.REJECTED) {
     submission.photos.forEach(function (photo) {
       DriveApp.getFileById(photo.file).setTrashed(true);
     });
@@ -474,11 +645,11 @@ function isGoodImage_(image) {
   );
 }
 
-/** Saves one photo in the submissions folder; returns { file (its Drive id), caption }. */
-function saveSubmissionPhoto_(id, index, image) {
+/** Saves one photo in the job's folder; returns { file (its Drive id), caption }. */
+function saveSubmissionPhoto_(folder, id, index, image) {
   const name = id + '-' + (index + 1) + '.jpg';
   const blob = Utilities.newBlob(Utilities.base64Decode(image.data), 'image/jpeg', name);
-  const file = submissionFolder_().createFile(blob);
+  const file = folder.createFile(blob);
   const caption = String(image.caption || '').trim();
   file.setDescription(caption);
   return { file: file.getId(), caption: caption };
@@ -532,13 +703,19 @@ function findTrackerByLabel_(label) {
   return null;
 }
 
-/** Every edit in the Edits tab as { question id: edit }. Rows that are not JSON are skipped. */
+/**
+ * Every edit in the Edits tab as { question id: edit }, an approved job's read from its Drive
+ * folder. Rows that are not JSON, or whose Drive file is gone, are skipped.
+ */
 function readEdits_() {
   const rows = getSheet_(SHEET.EDITS).getDataRange().getValues();
   const edits = {};
   for (let i = 1; i < rows.length; i++) {
     try {
-      edits[String(cell_(rows[i], EDIT_COLUMN.ID))] = JSON.parse(cell_(rows[i], EDIT_COLUMN.EDIT));
+      const edit = JSON.parse(cell_(rows[i], EDIT_COLUMN.EDIT));
+      const pointer = edit && pointerOf_(edit.job);
+      if (pointer) edit.job = readDriveJson_(pointer.drive);
+      edits[String(cell_(rows[i], EDIT_COLUMN.ID))] = edit;
     } catch {
       console.error('Edits row ' + (i + 1) + ' is not JSON'); // left for the owner to fix
     }
@@ -552,19 +729,65 @@ function readEdits_() {
  */
 function saveEdit_(editorName, id, edit) {
   const questionId = String(id || '');
-  const text = edit === null ? '' : JSON.stringify(edit);
+  const fullText = edit === null ? '' : JSON.stringify(edit);
   const isObject = edit === null || (typeof edit === 'object' && !Array.isArray(edit));
-  if (!EDIT_ID_PATTERN.test(questionId) || !isObject || text.length > MAX_EDIT_LENGTH) return false;
+  const isJob =
+    questionId.indexOf(JOB_EDIT_PREFIX) === 0 &&
+    isObject &&
+    edit !== null &&
+    Boolean(edit.job) &&
+    typeof edit.job === 'object';
+  const maxLength = isJob ? MAX_JOB_EDIT_LENGTH : MAX_EDIT_LENGTH;
+  if (!EDIT_ID_PATTERN.test(questionId) || !isObject || fullText.length > maxLength) return false;
   const sheet = getSheet_(SHEET.EDITS);
   const found = sheet.getRange('A:A').createTextFinder(questionId).matchEntireCell(true).findNext();
   if (edit === null) {
     if (found) sheet.deleteRow(found.getRow());
     return true;
   }
+  const oldText = found ? sheet.getRange(found.getRow(), EDIT_COLUMN.EDIT).getValues()[0][0] : '';
+  const kept = isJob
+    ? jobEditToKeep_(questionId.slice(JOB_EDIT_PREFIX.length), edit, oldText)
+    : edit;
+  const text = JSON.stringify(kept);
+  if (text.length > MAX_EDIT_LENGTH) return false;
   const row = [questionId, text, editorName, new Date().toISOString()];
   if (found) sheet.getRange(found.getRow(), 1, 1, row.length).setValues([row]);
   else sheet.appendRow(row);
   return true;
+}
+
+/**
+ * An approved job's edit as the Edits row keeps it: the job itself goes to approved.json in the
+ * job's Drive folder (its Doc rewritten to match), and the row keeps { folder, drive, doc } in
+ * its place. The folder is the one the job was sent with, or, for a job sent before folders
+ * (27 Nov 2026), one made the first time it is saved. `oldText` is the row's edit before.
+ */
+function jobEditToKeep_(jobId, edit, oldText) {
+  const old = pointerOf_((safeJson_(oldText) || {}).job);
+  const submission = old ? null : findSubmission_(jobId);
+  const sent = submission && submission.pointer;
+  const folder =
+    old || sent
+      ? DriveApp.getFolderById((old || sent).folder)
+      : makeJobFolder_(jobId, String(edit.job.title || 'Untitled').slice(0, MAX_TITLE_LENGTH));
+  const drive = writeFolderFile_(folder, APPROVED_DATA_FILE, JSON.stringify(edit.job));
+  const doc = writeJobDoc_(folder, (old || sent || {}).doc || '', edit.job, edit.lessons);
+  const kept = {};
+  Object.keys(edit).forEach(function (key) {
+    kept[key] = edit[key];
+  });
+  kept.job = { folder: folder.getId(), drive: drive, doc: doc };
+  return kept;
+}
+
+/** Parsed JSON, or null when the text is not JSON. */
+function safeJson_(text) {
+  try {
+    return JSON.parse(text || 'null');
+  } catch {
+    return null;
+  }
 }
 
 /** Lower-case, trimmed text, so passcodes are not case sensitive. */

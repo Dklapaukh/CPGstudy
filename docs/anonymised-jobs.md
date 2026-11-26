@@ -78,3 +78,11 @@ organisation, an unlisted video).
   set them, so jobs can later become scenarios); History splits into Dispatch notes and History,
   plus Assessment; Teaching becomes Learning points; Send for checking becomes Send. A job with
   no outcomes gets "Not given", left out of Lessons learnt.
+- AJ-K (owner, 27 Nov 2026): each job is kept in its own Drive subfolder of "CPG scenario
+  submissions", named "date title (job id)", with its photos, job.json (as sent), approved.json
+  (once approved) and a Google Doc laid out like the form, rewritten on approval and each later
+  change. The Submissions cell and the job's Edits row hold only { folder, drive, doc }, so no
+  box is limited by a cell's 50,000 characters; the backend caps a job at 150,000 against huge
+  pastes. A rejected job's folder is deleted. A job sent before folders keeps its cell and gets
+  a folder when first approved. Each patient has its own Assessment (10,000) and Follow up.
+  Deploying needs the owner to allow Google Docs access once.

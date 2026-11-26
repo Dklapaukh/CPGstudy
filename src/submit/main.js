@@ -14,7 +14,6 @@ import { guidelines } from '../guidelines.js';
 import {
   JOB_FIELDS,
   PATIENT_FIELDS,
-  FOLLOW_UP_FIELD,
   INTENTION_FIELD,
   NAME_FIELD,
   emptyPatient,
@@ -27,7 +26,7 @@ import {
   scaledSize,
   base64OfDataUrl,
 } from '../scenarioSubmission.js';
-import { renderSubmitPage, guidelineSuggestionsHtml } from './view.js';
+import { renderSubmitPage, guidelineSuggestionsHtml, counterText } from './view.js';
 
 // A second, lower quality is tried when a photo is still too big for the backend.
 const FALLBACK_JPEG_QUALITY = 0.6;
@@ -86,7 +85,9 @@ function bpValue(name) {
 function readPatient(patient, index) {
   const read = { label: boxValue(`patient-${index}-label`) };
   PATIENT_FIELDS.forEach((field) => (read[field.key] = boxValue(`patient-${index}-${field.key}`)));
-  read.treatment = boxValue(`patient-${index}-treatment`);
+  ['assessment', 'treatment', 'followUp'].forEach(
+    (key) => (read[key] = boxValue(`patient-${index}-${key}`)),
+  );
   read.vitalSets = patient.vitalSets.map((set, setIndex) => {
     const prefix = `vitals-${index}-${setIndex}`;
     const vitals = Object.fromEntries(
@@ -105,7 +106,7 @@ function readPatient(patient, index) {
 function readForm() {
   if (state.sentId) return;
   const { job } = state;
-  [...JOB_FIELDS, FOLLOW_UP_FIELD, INTENTION_FIELD, NAME_FIELD].forEach(
+  [...JOB_FIELDS, INTENTION_FIELD, NAME_FIELD].forEach(
     (field) => (job[field.key] = boxValue(field.key)),
   );
   job.patients = job.patients.map(readPatient);
@@ -279,6 +280,15 @@ app.addEventListener('change', (event) => {
   if (event.target.dataset.action !== 'add-photos') return;
   readForm();
   addPhotos(event.target.files);
+});
+
+// Typing in a long box shows how many characters are left once few remain.
+app.addEventListener('input', (event) => {
+  const counter = document.getElementById(`${event.target.id}-counter`);
+  if (!counter) return;
+  const text = counterText(Number(counter.dataset.max), event.target.value.length);
+  counter.textContent = text;
+  counter.hidden = !text;
 });
 
 // Typing in the guideline search redraws only its recommendations, so the box keeps focus.

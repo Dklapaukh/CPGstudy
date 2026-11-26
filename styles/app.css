@@ -3145,7 +3145,7 @@ ul.sort-piece__text {
 }
 .scenario-story {
   margin: 0.5rem 0 0;
-  white-space: pre-line; /* a sent job's dispatch notes, history and assessment are paragraphs */
+  white-space: pre-line; /* a sent job's dispatch notes and history are paragraphs */
 }
 .scenario-fact {
   margin: 0 0 0.6rem;
@@ -3386,4 +3386,9 @@ ul.sort-piece__text {
 .scenario-queue-button--main {
   background: var(--colour-green);
   color: #fff;
+}
+
+/* A sent job's long texts (assessment, treatment, follow up) keep the sender's line breaks. */
+.scenario-long-text {
+  white-space: pre-line;
 }

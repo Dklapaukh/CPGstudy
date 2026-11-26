@@ -24,6 +24,7 @@ export default [
           'CacheService',
           'ContentService',
           'DriveApp',
+          'DocumentApp',
           'LockService',
           'MailApp',
           'PropertiesService',

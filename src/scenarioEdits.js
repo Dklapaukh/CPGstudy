@@ -16,7 +16,8 @@
  *     not in content/scenarios.js, so its values are changed in `added` itself, with no review.
  *   { kind: 'scenario', deleted: true }  one an editor deleted for good; it has no undo.
  * A new scenario may also have what a submitted job adds (Add a scenario, approved on the editor
- * page): per patient `vitalsNote`, `laterVitals` ([{ note, vitals }]) and `treatment`, and
+ * page): per patient `vitalsNote`, `laterVitals` ([{ note, vitals }]), `assessment`, `treatment`
+ * and `followUp`, and
  * `photos` ([{ src, caption }], published by the daily copy into content/scenario-photos).
  * Depends on constants.js and scenarioVariations.js.
  */
@@ -34,8 +35,17 @@ export const SCENARIO_TEXT_FIELDS = ['title', 'suburb', 'story', 'intention'];
 export const PATIENT_TEXT_FIELDS = ['label', 'history', 'medications', 'allergies', 'social'];
 // The longest text one box keeps, so one edit stays well inside the Sheet's limit.
 export const MAX_SCENARIO_TEXT = 2000;
-// The story is longer: a sent job joins its dispatch notes, history, assessment and follow up there.
-export const MAX_SCENARIO_STORY = 4000;
+// The story is longer: a sent job joins its dispatch notes and history there.
+export const MAX_SCENARIO_STORY = 4100;
+// A sent job's assessment, one per patient, is the longest box of all.
+export const MAX_ASSESSMENT_TEXT = 10000;
+// A patient's optional long texts from a sent job, with the most characters each keeps.
+const PATIENT_EXTRA_TEXTS = [
+  ['assessment', MAX_ASSESSMENT_TEXT],
+  ['treatment', MAX_SCENARIO_TEXT],
+  ['followUp', MAX_SCENARIO_TEXT],
+];
+const extraTextKeys = PATIENT_EXTRA_TEXTS.map(([key]) => key);
 /** The longest text the box at `path` keeps. */
 const maxTextOf = (path) => (path === 'story' ? MAX_SCENARIO_STORY : MAX_SCENARIO_TEXT);
 // Intended outcomes: one per line in the box, at most this many, each at most this long.
@@ -206,7 +216,7 @@ export const emptyPatient = () => ({
   vitalsNote: '',
   vitals: emptyVitals(),
   laterVitals: [],
-  treatment: '',
+  ...Object.fromEntries(extraTextKeys.map((key) => [key, ''])),
 });
 
 /** Eight empty vital boxes. */
@@ -249,7 +259,7 @@ export function scenarioDraftOf(scenario, numberOfId) {
         note: set.note || '',
         vitals: vitalsText(set.vitals),
       })),
-      treatment: patient.treatment || '',
+      ...Object.fromEntries(extraTextKeys.map((key) => [key, patient[key] || ''])),
     })),
     photos: (scenario.photos || []).map((photo) => ({ ...photo })),
   };
@@ -347,9 +357,13 @@ function readDraftExtras(draft) {
   for (const [index, patient] of draft.patients.entries()) {
     const prefix = `patients.${index}`;
     const note = readOptional(draft, `${prefix}.vitalsNote`, MAX_NOTE_TEXT);
-    const treatment = readOptional(draft, `${prefix}.treatment`, MAX_SCENARIO_TEXT);
     if (note.error) return note;
-    if (treatment.error) return treatment;
+    const texts = {};
+    for (const [key, max] of PATIENT_EXTRA_TEXTS) {
+      const read = readOptional(draft, `${prefix}.${key}`, max);
+      if (read.error) return read;
+      if (read.value) texts[key] = read.value;
+    }
     const laterVitals = [];
     for (const [setIndex, set] of (patient.laterVitals || []).entries()) {
       const setPath = `${prefix}.laterVitals.${setIndex}`;
@@ -367,7 +381,7 @@ function readDraftExtras(draft) {
     patients.push({
       ...(note.value ? { vitalsNote: note.value } : {}),
       ...(laterVitals.length ? { laterVitals } : {}),
-      ...(treatment.value ? { treatment: treatment.value } : {}),
+      ...texts,
     });
   }
   const photos = [];
@@ -406,7 +420,9 @@ function cleanPatient(patient) {
     ...(extras.vitalsNote ? { vitalsNote: extras.vitalsNote } : {}),
     vitals: Object.fromEntries(vitalKeys.map((key) => [key, patient.vitals[key]])),
     ...(extras.laterVitals.length ? { laterVitals: extras.laterVitals } : {}),
-    ...(extras.treatment ? { treatment: extras.treatment } : {}),
+    ...Object.fromEntries(
+      extraTextKeys.filter((key) => extras[key]).map((key) => [key, extras[key]]),
+    ),
   };
 }
 
@@ -415,13 +431,13 @@ const isOptionalText = (value, max) =>
   value === undefined || value === '' || (typeof value === 'string' && value.length <= max);
 
 /**
- * A patient's extras from a submitted job, cleaned: { vitalsNote, laterVitals, treatment }, or
- * null when one is malformed.
+ * A patient's extras from a submitted job, cleaned: { vitalsNote, laterVitals, assessment,
+ * treatment, followUp }, or null when one is malformed.
  */
 function cleanPatientExtras(patient, vitalKeys) {
-  const { vitalsNote, treatment, laterVitals = [] } = patient;
+  const { vitalsNote, laterVitals = [] } = patient;
   if (!isOptionalText(vitalsNote, MAX_NOTE_TEXT)) return null;
-  if (!isOptionalText(treatment, MAX_SCENARIO_TEXT)) return null;
+  if (!PATIENT_EXTRA_TEXTS.every(([key, max]) => isOptionalText(patient[key], max))) return null;
   if (!Array.isArray(laterVitals) || laterVitals.length > MAX_LATER_VITALS) return null;
   const sets = laterVitals.map((set) =>
     set &&
@@ -435,7 +451,8 @@ function cleanPatientExtras(patient, vitalKeys) {
       : null,
   );
   if (!sets.every(Boolean)) return null;
-  return { vitalsNote: vitalsNote || '', laterVitals: sets, treatment: treatment || '' };
+  const texts = Object.fromEntries(extraTextKeys.map((key) => [key, patient[key] || '']));
+  return { vitalsNote: vitalsNote || '', laterVitals: sets, ...texts };
 }
 
 /** A new scenario's photos, cleaned: [] when there are none, null when one is malformed. */

@@ -20,18 +20,64 @@ let sleeps = 0;
 const emails = [];
 const cacheValues = {};
 const properties = {};
-const driveFolders = [];
-const driveFiles = [];
+const driveFolders = []; // { id, name, parent, trashed }
+const driveFiles = []; // { id, folder, name, blob or content, description, trashed }
+const docs = {}; // Google Docs by id: { name, paragraphs: [{ text, heading }] }
 
-/** A stand-in for a Drive folder: files made in it are kept in driveFiles. */
+/** A stand-in for a Drive file, as DriveApp.getFileById and a folder's files give it. */
+function fakeFile(file) {
+  return {
+    getId: () => file.id,
+    setDescription: (text) => (file.description = text),
+    setContent: (text) => (file.content = text),
+    setTrashed: (trashed) => (file.trashed = trashed),
+    moveTo: (folder) => (file.folder = folder.getId()),
+    getBlob: () => ({
+      getBytes: () => file.blob.bytes,
+      getDataAsString: () => file.content,
+    }),
+  };
+}
+
+/** A stand-in for a Drive folder: files and folders made in it are kept above. */
 function fakeFolder(id) {
   return {
     getId: () => id,
-    createFile: (blob) => {
-      const file = { id: `file-${driveFiles.length + 1}`, folder: id, blob };
-      driveFiles.push(file);
-      return { setDescription: (text) => (file.description = text), getId: () => file.id };
+    createFolder: (name) => {
+      const folder = { id: `folder-${driveFolders.length + 1}`, name, parent: id };
+      driveFolders.push(folder);
+      return fakeFolder(folder.id);
     },
+    // A photo is made from a blob; a data file from its name, text and type.
+    createFile: (blobOrName, content) => {
+      const file = { id: `file-${driveFiles.length + 1}`, folder: id };
+      if (typeof blobOrName === 'string') Object.assign(file, { name: blobOrName, content });
+      else file.blob = blobOrName;
+      driveFiles.push(file);
+      return fakeFile(file);
+    },
+    getFilesByName: (name) => {
+      const found = driveFiles.filter((file) => file.folder === id && file.name === name);
+      return { hasNext: () => found.length > 0, next: () => fakeFile(found.shift()) };
+    },
+    setTrashed: (trashed) => (driveFolders.find((folder) => folder.id === id).trashed = trashed),
+  };
+}
+
+/** A stand-in for a Google Doc: its paragraphs, each with a heading kind or none. */
+function fakeDoc(id) {
+  const doc = docs[id];
+  return {
+    getId: () => id,
+    getBody: () => ({
+      clear: () => (doc.paragraphs = []),
+      appendParagraph: (text) => {
+        const paragraph = { text, heading: '' };
+        doc.paragraphs.push(paragraph);
+        return { setHeading: (heading) => (paragraph.heading = heading) };
+      },
+    }),
+    saveAndClose() {},
   };
 }
 
@@ -104,20 +150,28 @@ const environment = {
     }),
   },
   DriveApp: {
-    createFolder: (name) => fakeFolder(`folder-${driveFolders.push(name)}`),
-    getFolderById: (id) => fakeFolder(id),
-    getFileById: (id) => {
-      const file = driveFiles.find((each) => each.id === id);
-      return {
-        getBlob: () => ({ getBytes: () => file.blob.bytes }),
-        setTrashed: (trashed) => (file.trashed = trashed),
-      };
+    createFolder: (name) => {
+      driveFolders.push({ id: `folder-${driveFolders.length + 1}`, name, parent: 'root' });
+      return fakeFolder(driveFolders.at(-1).id);
     },
+    getFolderById: (id) => fakeFolder(id),
+    getFileById: (id) => fakeFile(driveFiles.find((each) => each.id === id)),
+  },
+  DocumentApp: {
+    create: (name) => {
+      const id = `doc-${Object.keys(docs).length + 1}`;
+      docs[id] = { name, paragraphs: [] };
+      driveFiles.push({ id, folder: 'root', name });
+      return fakeDoc(id);
+    },
+    openById: (id) => fakeDoc(id),
+    ParagraphHeading: { TITLE: 'TITLE', HEADING1: 'HEADING1', HEADING2: 'HEADING2' },
   },
   CacheService: {
     getScriptCache: () => ({
       get: (key) => cacheValues[key] ?? null,
       put: (key, value) => (cacheValues[key] = value),
+      remove: (key) => delete cacheValues[key],
     }),
   },
   MailApp: { sendEmail: (to, subject, body) => emails.push({ to, subject, body }) },
@@ -131,7 +185,7 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with competency ratings \(26 Nov 2026\)/);
+  assert.match(doGet().text, /running, version with job folders in Drive \(27 Nov 2026\)/);
 });
 
 test('open: a tracker, and a wrong or old mentor passcode that is delayed after the lock', () => {
@@ -412,7 +466,22 @@ test('signup: no account is made when the email cannot be sent', () => {
 
 test('scenario-submit: no sign-in; bot checks, bad jobs and the hourly cap are refused', () => {
   Object.keys(cacheValues).forEach((key) => delete cacheValues[key]);
-  const job = { title: 'Fall', story: 'An 80-year-old fell.', name: 'Ana', patients: [] };
+  const patient = {
+    label: '',
+    history: 'Hypertension',
+    vitalSets: [{ note: 'On arrival', vitals: { gcs: '14', hr: '48', bp: '88/54', rr: '' } }],
+    assessment: 'Inferior STEMI',
+    followUp: 'Stented',
+  };
+  const job = {
+    title: 'Fall',
+    dispatch: '80F fall',
+    story: 'An 80-year-old fell.',
+    name: 'Ana',
+    guidelines: ['cpg-3-2'],
+    intention: 'Look for the cause of a fall',
+    patients: [patient],
+  };
   const photo = { data: Buffer.from('jpeg bytes').toString('base64'), caption: '12-lead' };
   const submit = (body) =>
     post({ action: 'scenario-submit', website: '', formMs: 30000, submission: job, ...body });
@@ -423,30 +492,80 @@ test('scenario-submit: no sign-in; bot checks, bad jobs and the hourly cap are r
   assert.equal(submit({ submission: { ...job, story: ' ' } }).error, 'bad-submission');
   assert.equal(submit({ submission: [job] }).error, 'bad-submission');
   assert.equal(
-    submit({ submission: { ...job, story: 'x'.repeat(30001) } }).error,
+    submit({ submission: { ...job, story: 'x'.repeat(150001) } }).error,
     'bad-submission',
   );
   assert.equal(submit({ images: Array(5).fill(photo) }).error, 'bad-submission');
   assert.equal(submit({ images: [{ data: 'not base64!' }] }).error, 'bad-submission');
   assert.equal(tabs.Submissions.length, 1, 'nothing kept for a refused job');
+  assert.equal(driveFolders.length, 0, 'no folder for a refused job');
 
-  const reply = submit({ images: [photo, { ...photo, caption: '' }] });
+  // A long job, past what one Sheet cell holds, is kept whole in Drive.
+  const long = { ...job, patients: [{ ...patient, assessment: 'x'.repeat(60000) }] };
+  const reply = submit({ submission: long, images: [photo, { ...photo, caption: '' }] });
   assert.equal(reply.ok, true);
   const row = tabs.Submissions[1];
   assert.equal(row[0], reply.id);
   assert.deepEqual([row[2], row[3], row[6]], ['Ana', 'Fall', 'Pending']);
-  assert.deepEqual(JSON.parse(row[4]), job);
+  const pointer = JSON.parse(row[4]);
+  assert.ok(row[4].length < 200, 'the cell keeps only a pointer');
+
+  const [root, jobFolder] = driveFolders;
+  assert.equal(root.name, 'CPG scenario submissions');
+  assert.equal(jobFolder.parent, root.id, 'each job has its own subfolder');
+  assert.match(jobFolder.name, new RegExp(`^\\d{4}-\\d{2}-\\d{2} Fall \\(${reply.id}\\)$`));
+  assert.equal(pointer.folder, jobFolder.id);
+  const inFolder = driveFiles.filter((file) => file.folder === jobFolder.id);
+  assert.deepEqual(
+    inFolder.map((file) => file.name || file.blob.name),
+    [`${reply.id}-1.jpg`, `${reply.id}-2.jpg`, 'job.json', 'Job: Fall'],
+    'photos, data and Doc together',
+  );
+  assert.deepEqual(JSON.parse(inFolder[2].content), long);
+  assert.equal(driveFiles[0].blob.bytes.toString(), 'jpeg bytes');
   assert.deepEqual(
     JSON.parse(row[5]).map((each) => each.caption),
     ['12-lead', ''],
   );
-  assert.equal(driveFiles.length, 2);
-  assert.equal(driveFiles[0].blob.bytes.toString(), 'jpeg bytes');
+
+  const doc = docs[pointer.doc].paragraphs;
+  const text = doc.map((paragraph) => paragraph.text);
+  assert.deepEqual(doc[0], { text: 'Fall', heading: 'TITLE' });
+  for (const [label, value] of [
+    ['Dispatch notes', '80F fall'],
+    ['History', 'An 80-year-old fell.'],
+    ['Medical history', 'Hypertension'],
+    ['Vitals 1: On arrival', 'GCS 14, HR 48, BP 88/54'],
+    ['Follow up', 'Stented'],
+    ['Guidelines used', '3.2'],
+    ['Learning points', 'Look for the cause of a fall'],
+  ]) {
+    assert.equal(text[text.indexOf(label) + 1], value, label);
+  }
+  assert.equal(text[text.indexOf('Assessment') + 1].length, 60000);
+
   assert.equal(emails.length, emailsBefore + 1);
   assert.match(emails.at(-1).subject, /new scenario job, Fall/);
   assert.equal(submit({ submission: { ...job, name: '' }, images: [photo] }).ok, true);
   assert.equal(tabs.Submissions[2][2], 'Anonymous');
-  assert.equal(driveFolders.length, 1, 'the folder is made once and then reused');
+  assert.equal(
+    driveFolders.filter((folder) => folder.parent === 'root').length,
+    1,
+    'the main folder is made once and then reused',
+  );
+
+  // A Doc that can't be made (Docs not yet allowed) doesn't stop the job being kept.
+  const create = environment.DocumentApp.create;
+  environment.DocumentApp.create = () => {
+    throw new Error('not authorised');
+  };
+  try {
+    const kept = submit({ submission: { ...job, title: 'No doc' } });
+    assert.equal(kept.ok, true);
+    assert.equal(JSON.parse(tabs.Submissions.at(-1)[4]).doc, '');
+  } finally {
+    environment.DocumentApp.create = create;
+  }
 
   Object.keys(cacheValues).forEach((key) => (cacheValues[key] = '30'));
   assert.equal(submit({}).error, 'busy');
@@ -454,7 +573,7 @@ test('scenario-submit: no sign-in; bot checks, bad jobs and the hourly cap are r
 });
 
 test('submissions: editors see pending jobs and photos, approve or reject; approved are public', () => {
-  const [first, second] = tabs.Submissions.slice(1).map((row) => row[0]);
+  const [first, second, third] = tabs.Submissions.slice(1).map((row) => row[0]);
   const editor = (body) => post({ code: 'editor-1', ...body });
   assert.equal(
     post({ action: 'submission-photo', code: 'tracker-1', id: first }).error,
@@ -466,8 +585,10 @@ test('submissions: editors see pending jobs and photos, approve or reject; appro
     [
       [first, 'Ana', 'Fall'],
       [second, 'Anonymous', 'Fall'],
+      [third, 'Ana', 'No doc'],
     ],
   );
+  assert.equal(opened.submissions[0].job.patients[0].assessment.length, 60000, 'read from Drive');
   assert.equal('data' in opened.submissions[0].photos[0], false, 'photos are fetched one by one');
   const shown = editor({ action: 'submission-photo', id: first, index: 0 });
   assert.equal(Buffer.from(shown.data, 'base64').toString(), 'jpeg bytes');
@@ -477,7 +598,7 @@ test('submissions: editors see pending jobs and photos, approve or reject; appro
   const approved = editor({ action: 'submission-decide', id: first, decision: 'approve' });
   assert.deepEqual(
     approved.submissions.map((each) => each.id),
-    [second],
+    [second, third],
   );
   assert.deepEqual(tabs.Submissions[1].slice(6, 8), ['Approved', 'Eve']);
   assert.equal(
@@ -493,7 +614,95 @@ test('submissions: editors see pending jobs and photos, approve or reject; appro
     [first],
   );
   assert.equal(Buffer.from(published[0].photos[0].data, 'base64').toString(), 'jpeg bytes');
-  assert.equal(driveFiles[0].trashed, undefined);
-  assert.equal(driveFiles[1].trashed, undefined);
-  assert.equal(driveFiles[2].trashed, true, 'a rejected job’s photos are deleted');
+  const folderOf = (id) => JSON.parse(tabs.Submissions.find((row) => row[0] === id)[4]).folder;
+  const trashed = (id) => driveFolders.find((folder) => folder.id === folderOf(id)).trashed;
+  assert.equal(trashed(first), undefined);
+  assert.equal(trashed(second), true, 'a rejected job’s folder (photos, data, Doc) is deleted');
+});
+
+test('approved jobs: kept in their Drive folder, the Edits row only points there', () => {
+  const [first] = tabs.Submissions.slice(1).map((row) => row[0]);
+  const editor = (body) => post({ code: 'editor-1', ...body });
+  const sent = JSON.parse(tabs.Submissions[1][4]);
+  const scenario = {
+    id: first,
+    title: 'Fall at home',
+    suburb: 'Porirua',
+    story: 'Dispatch: 80F fall\n\nAn 80-year-old fell.',
+    intention: 'Look for the cause',
+    guidelines: ['cpg-3-2'],
+    patients: [
+      {
+        history: 'Hypertension',
+        vitals: { gcs: '14', hr: '48', bp: '88/54' },
+        laterVitals: [{ note: 'After fluids', vitals: { hr: '64' } }],
+        assessment: 'y'.repeat(30000),
+      },
+    ],
+  };
+  const edit = {
+    kind: 'anonymised-job',
+    approved: '2026-11-27',
+    lessons: ['Look for the cause'],
+    job: scenario,
+  };
+  assert.equal(editor({ action: 'edit-save', id: `job|${first}`, edit }).ok, true);
+  const row = tabs.Edits.find((cells) => cells[0] === `job|${first}`);
+  const kept = JSON.parse(row[1]);
+  assert.deepEqual(Object.keys(kept.job).sort(), ['doc', 'drive', 'folder']);
+  assert.equal(kept.job.folder, sent.folder, 'the folder it was sent with');
+  assert.equal(kept.job.doc, sent.doc, 'the same Doc, rewritten');
+  assert.deepEqual(kept.lessons, ['Look for the cause']);
+  const approvedFile = driveFiles.find((file) => file.id === kept.job.drive);
+  assert.equal(approvedFile.name, 'approved.json');
+  assert.equal(approvedFile.folder, sent.folder);
+  const text = docs[sent.doc].paragraphs.map((paragraph) => paragraph.text);
+  assert.equal(text[0], 'Fall at home');
+  assert.equal(text[text.indexOf('Dispatch notes and history') + 1], scenario.story);
+  assert.equal(text[text.indexOf('Vitals 2: After fluids') + 1], 'HR 64');
+  assert.equal(text[text.indexOf('Lessons learnt') + 1], 'Look for the cause');
+
+  // The editor page and the daily copy get the whole job back.
+  const read = editor({ action: 'editor-open' }).edits[`job|${first}`];
+  assert.deepEqual(read.job, scenario);
+
+  // A later change rewrites approved.json in place (not a new file or folder).
+  const files = driveFiles.length;
+  const folders = driveFolders.length;
+  const changed = { ...edit, lessons: ['New lesson'], job: { ...scenario, title: 'Changed' } };
+  assert.equal(editor({ action: 'edit-save', id: `job|${first}`, edit: changed }).ok, true);
+  assert.equal(driveFiles.length, files);
+  assert.equal(driveFolders.length, folders);
+  assert.equal(editor({ action: 'editor-open' }).edits[`job|${first}`].job.title, 'Changed');
+  assert.equal(docs[sent.doc].paragraphs[0].text, 'Changed');
+
+  // Other edits keep the old cell limit; a job edit may be longer.
+  const big = { kind: 'scenario', note: 'x'.repeat(20001) };
+  assert.equal(
+    editor({ action: 'edit-save', id: 'scenario|long-lie', edit: big }).error,
+    'bad-edit',
+  );
+  const tooBig = { ...edit, job: { ...scenario, story: 'x'.repeat(150001) } };
+  assert.equal(editor({ action: 'edit-save', id: `job|${first}`, edit: tooBig }).error, 'bad-edit');
+});
+
+test('approved jobs: one sent before job folders gets a folder when first saved', () => {
+  const id = 'job-old1-abcd';
+  const old = { title: 'Old job', story: 'Kept in the cell.', patients: [] };
+  tabs.Submissions.push([id, 'x', 'Ana', 'Old job', JSON.stringify(old), '[]', 'Pending', '', '']);
+  const editor = (body) => post({ code: 'editor-1', ...body });
+  const opened = editor({ action: 'editor-open' });
+  assert.deepEqual(opened.submissions.find((each) => each.id === id).job, old);
+  const edit = { kind: 'anonymised-job', approved: '2026-11-27', lessons: [], job: { ...old, id } };
+  assert.equal(editor({ action: 'edit-save', id: `job|${id}`, edit }).ok, true);
+  const kept = JSON.parse(tabs.Edits.find((cells) => cells[0] === `job|${id}`)[1]);
+  const folder = driveFolders.find((each) => each.id === kept.job.folder);
+  assert.match(folder.name, /Old job \(job-old1-abcd\)$/);
+  assert.equal(editor({ action: 'editor-open' }).edits[`job|${id}`].job.story, 'Kept in the cell.');
+  editor({ action: 'edit-save', id: `job|${id}`, edit });
+  assert.equal(
+    driveFolders.filter((each) => each.name.endsWith('(job-old1-abcd)')).length,
+    1,
+    'saving again reuses it',
+  );
 });

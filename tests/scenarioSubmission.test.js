@@ -19,7 +19,12 @@ import {
 import { guidelines } from '../src/guidelines.js';
 import { photosToPublish } from '../scripts/sync-edits.js';
 import { scenarioEdits } from '../content/scenario-edits.js';
-import { scenarioDraftOf, readNewScenario, cleanAddedScenario } from '../src/scenarioEdits.js';
+import {
+  scenarioDraftOf,
+  readNewScenario,
+  cleanAddedScenario,
+  MAX_SCENARIO_STORY,
+} from '../src/scenarioEdits.js';
 
 const realId = guidelines[0].id;
 const isRealId = (id) => guidelines.some((guideline) => guideline.id === id);
@@ -57,7 +62,7 @@ test('tidySubmission: trims, cuts to length and keeps only known keys and values
     isRealId,
   );
   assert.equal(job.title, 'Chest pain');
-  assert.equal(job.story.length, 1800);
+  assert.equal(job.story.length, 2000);
   assert.equal(job.complexity, 0);
   assert.equal(job.load, 'single');
   assert.equal('rural' in job, false);
@@ -104,22 +109,50 @@ test('missingFields: title, history, a guideline and the learning points; editor
   assert.deepEqual(missingFields(tidySubmission(withoutEditorFields)), []);
 });
 
-test('scenarioFromSubmission: dispatch notes, history, assessment and follow up make the story; no outcomes get a placeholder', () => {
+test('scenarioFromSubmission: dispatch notes and history make the story; each patient keeps an assessment and follow up', () => {
+  const patient = { ...emptyPatient(), assessment: 'Inferior STEMI', followUp: 'Stented' };
   const scenario = scenarioFromSubmission(
-    fullJob({
-      dispatch: 'Chest pain, 58M',
-      assessment: 'Inferior STEMI',
-      followUp: 'Stented in the cath lab',
-      outcomes: [],
-    }),
+    fullJob({ dispatch: 'Chest pain, 58M', patients: [patient], outcomes: [] }),
     'job-3',
   );
-  assert.equal(
-    scenario.story,
-    'Dispatch: Chest pain, 58M\n\nA 58-year-old man with chest pain.\n\nAssessment: Inferior STEMI\n\nFollow up: Stented in the cath lab',
-  );
+  assert.equal(scenario.story, 'Dispatch: Chest pain, 58M\n\nA 58-year-old man with chest pain.');
+  assert.equal(scenario.patients[0].assessment, 'Inferior STEMI');
+  assert.equal(scenario.patients[0].followUp, 'Stented');
   assert.deepEqual(scenario.outcomes, ['Not given']);
   assert.equal(scenarioFromSubmission(fullJob(), 'job-4').story, fullJob().story);
+  assert.equal(scenarioFromSubmission(fullJob(), 'job-4').patients[0].assessment, undefined);
+});
+
+test('tidySubmission: an older job’s single assessment and follow up go to the first patient', () => {
+  const job = tidySubmission(fullJob({ assessment: 'Sepsis', followUp: 'ICU' }));
+  assert.equal(job.patients[0].assessment, 'Sepsis');
+  assert.equal(job.patients[0].followUp, 'ICU');
+  assert.equal(job.assessment, undefined);
+});
+
+test('box limits: assessment 10,000, the other long boxes 2,000', () => {
+  const long = 'x'.repeat(20000);
+  const patient = {
+    ...emptyPatient(),
+    history: long,
+    assessment: long,
+    followUp: long,
+    treatment: long,
+  };
+  const job = tidySubmission(
+    fullJob({ dispatch: long, story: long, intention: long, patients: [patient] }),
+  );
+  assert.equal(job.patients[0].assessment.length, 10000);
+  for (const text of [
+    job.dispatch,
+    job.story,
+    job.intention,
+    job.patients[0].history,
+    job.patients[0].followUp,
+    job.patients[0].treatment,
+  ]) {
+    assert.equal(text.length, 2000);
+  }
 });
 
 test('guidelineMatches: numbers starting with the search first, then every word in the name', () => {
@@ -292,13 +325,27 @@ test('base64OfDataUrl: the part after the comma', () => {
   assert.equal(base64OfDataUrl('data:image/jpeg;base64,QUJD'), 'QUJD');
 });
 
-test('the story parts at their longest fit a scenario story', () => {
+test('a job at every limit is a whole scenario an editor can approve', () => {
   const long = (max) => 'x'.repeat(max);
+  const patient = {
+    ...emptyPatient(),
+    history: long(2000),
+    medications: long(2000),
+    social: long(2000),
+    assessment: long(10000),
+    treatment: long(2000),
+    followUp: long(2000),
+  };
   const job = fullJob({
-    dispatch: long(5000),
-    story: long(5000),
-    assessment: long(5000),
-    followUp: long(5000),
+    dispatch: long(2000),
+    story: long(2000),
+    intention: long(2000),
+    patients: [patient],
   });
-  assert.ok(scenarioFromSubmission(job, 'job-5').story.length <= 4000);
+  const scenario = scenarioFromSubmission(job, 'job-5');
+  assert.ok(scenario.story.length <= MAX_SCENARIO_STORY);
+  assert.ok(
+    cleanAddedScenario(scenario, 'job-5', () => true),
+    'kept whole',
+  );
 });

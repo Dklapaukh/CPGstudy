@@ -11,8 +11,10 @@ import {
   JOB_FIELDS,
   PATIENT_FIELDS,
   TREATMENT_FIELD,
+  ASSESSMENT_FIELD,
   FOLLOW_UP_FIELD,
   INTENTION_FIELD,
+  COUNTER_FROM,
   NAME_FIELD,
   guidelineChoiceText,
   guidelineMatches,
@@ -41,14 +43,42 @@ function boxHtml(field, name, value, isLabelHidden = false) {
           value="${escapeHtml(value)}"${hint}>`;
   const needed = field.required ? ' <span class="submit-required">(needed)</span>' : '';
   const labelClass = isLabelHidden ? 'visually-hidden' : 'submit-label';
-  return `<label class="${labelClass}" for="${id}">${escapeHtml(field.label)}${needed}</label>${box}`;
+  return `<label class="${labelClass}" for="${id}">${escapeHtml(field.label)}${needed}</label>${box}
+    ${field.max > COUNTER_FROM ? counterHtml(id, field.max, String(value ?? '').length) : ''}`;
 }
 
-/** The opening: title, suburb, dispatch notes, history and assessment. */
+/** "120 characters left", for a box with `length` of its `max` typed; '' while plenty remain. */
+export function counterText(max, length) {
+  const left = max - length;
+  if (left > COUNTER_FROM) return '';
+  return `${left.toLocaleString('en-NZ')} character${left === 1 ? '' : 's'} left`;
+}
+
+/** The counter under a long box: hidden until COUNTER_FROM characters remain. */
+function counterHtml(id, max, length) {
+  const text = counterText(max, length);
+  return `<p class="submit-counter" id="${id}-counter" data-max="${max}" aria-live="polite"${
+    text ? '' : ' hidden'
+  }>${text}</p>`;
+}
+
+/** Copy of a field with another label (a patient's Assessment, Follow up patient 2). */
+const relabelled = (field, label) => ({ ...field, label });
+
+/**
+ * The opening: title, suburb, dispatch notes, history, then the first patient's assessment
+ * ("Assessment patient 1" when there are several).
+ */
 function jobHtml(job) {
   const boxes = JOB_FIELDS.map((field) => boxHtml(field, field.key, job[field.key])).join('');
+  const label = job.patients.length > 1 ? 'Assessment patient 1' : ASSESSMENT_FIELD.label;
+  const assessment = boxHtml(
+    relabelled(ASSESSMENT_FIELD, label),
+    'patient-0-assessment',
+    job.patients[0].assessment,
+  );
   return `<section class="submit-card" aria-labelledby="submit-job-title">
-    <h2 class="submit-card__title" id="submit-job-title">The job</h2>${boxes}</section>`;
+    <h2 class="submit-card__title" id="submit-job-title">The job</h2>${boxes}${assessment}</section>`;
 }
 
 // The phone keypad each vital opens: whole numbers, or numbers with a decimal point.
@@ -124,9 +154,13 @@ function patientHtml(patient, index, count) {
       ? `<button class="button button--secondary" type="button" data-action="add-vitals"
           data-patient="${index}">Add another set of vitals</button>`
       : '';
+  // The first patient's assessment is in the job card; later patients have theirs here.
+  const assessment = index
+    ? boxHtml(ASSESSMENT_FIELD, `patient-${index}-assessment`, patient.assessment)
+    : '';
   return `<section class="submit-card" aria-label="${title}">
     <div class="submit-card__head"><h2 class="submit-card__title">${title}</h2>${remove}</div>
-    ${label}${background}${sets}${addSet}
+    ${label}${background}${sets}${addSet}${assessment}
     ${boxHtml(TREATMENT_FIELD, `patient-${index}-treatment`, patient.treatment)}</section>`;
 }
 
@@ -209,11 +243,21 @@ function photosHtml(photos, isReading) {
     ${photos.map(photoHtml).join('')}${add}</section>`;
 }
 
-/** Follow up: one box under its card title. */
+/** Follow up: one box per patient ("Follow up patient 2"), the label hidden for one patient. */
 function followUpHtml(job) {
+  const several = job.patients.length > 1;
+  const boxes = job.patients
+    .map((patient, index) =>
+      boxHtml(
+        relabelled(FOLLOW_UP_FIELD, several ? `Follow up patient ${index + 1}` : 'Follow up'),
+        `patient-${index}-followUp`,
+        patient.followUp,
+        !several,
+      ),
+    )
+    .join('');
   return `<section class="submit-card" aria-labelledby="submit-follow-up-title">
-    <h2 class="submit-card__title" id="submit-follow-up-title">Follow up</h2>
-    ${boxHtml(FOLLOW_UP_FIELD, FOLLOW_UP_FIELD.key, job.followUp, true)}</section>`;
+    <h2 class="submit-card__title" id="submit-follow-up-title">Follow up</h2>${boxes}</section>`;
 }
 
 /** The learning points: one box under its card title. */

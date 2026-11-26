@@ -180,3 +180,11 @@
 .submit-suggestion b {
   color: var(--colour-accent-text);
 }
+
+/* Characters left in a long box, shown once few remain. */
+.submit-counter {
+  color: var(--colour-muted);
+  font-size: 0.85rem;
+  margin: 0.2rem 0 0.6rem;
+  text-align: right;
+}

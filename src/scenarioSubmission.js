@@ -6,12 +6,11 @@
  * Depends on constants.js and scenarioEdits.js. Tested in tests/scenarioSubmission.test.js.
  */
 import { SCENARIO_VITALS, SCENARIO_COMPLEXITY, SUBMISSION_LIMITS } from './constants.js';
-import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from './scenarioEdits.js';
+import { MAX_OUTCOMES, MAX_OUTCOME_TEXT, MAX_ASSESSMENT_TEXT } from './scenarioEdits.js';
 
 // The opening boxes, in the order shown. `max` is the most characters kept; `lines` > 1 is a
 // text area. The suburb is optional: it can be changed or made up to protect the patient.
-// Dispatch notes, history, assessment and follow up are joined into the scenario's story, so
-// their limits (and the paragraph labels) add up to under its 4000 characters.
+// Dispatch notes and history are joined into the scenario's story.
 export const JOB_FIELDS = [
   {
     key: 'title',
@@ -22,34 +21,31 @@ export const JOB_FIELDS = [
     required: true,
   },
   { key: 'suburb', label: 'Suburb (optional)', max: 60, lines: 1 },
-  {
-    key: 'dispatch',
-    label: 'Dispatch notes',
-    max: 300,
-    lines: 4,
-  },
+  { key: 'dispatch', label: 'Dispatch notes', max: 2000, lines: 4 },
   {
     key: 'story',
     label: 'History',
     hint: 'Age and sex are fine; no names, NHI, addresses or dates.',
-    max: 1800,
+    max: 2000,
     lines: 5,
     required: true,
   },
-  {
-    key: 'assessment',
-    label: 'Assessment',
-    hint: 'Your findings and working diagnosis',
-    max: 800,
-    lines: 5,
-  },
 ];
-// After the guidelines: what happened to the patient later, when the sender knows.
+// Each patient's assessment: the first patient's sits under the history, the others' in their
+// own cards. The longest box (MAX_ASSESSMENT_TEXT).
+export const ASSESSMENT_FIELD = {
+  key: 'assessment',
+  label: 'Assessment',
+  hint: 'Your findings and working diagnosis',
+  max: MAX_ASSESSMENT_TEXT,
+  lines: 5,
+};
+// Each patient's follow up, all in one card after the guidelines: what happened later, if known.
 export const FOLLOW_UP_FIELD = {
   key: 'followUp',
   label: 'Follow up',
   hint: 'If available/known',
-  max: 300,
+  max: 2000,
   lines: 3,
 };
 // The learning points at the end of the form; an approved job's Lessons learnt start from them.
@@ -57,10 +53,12 @@ export const FOLLOW_UP_FIELD = {
 export const INTENTION_FIELD = {
   key: 'intention',
   label: 'Learning points',
-  max: 1000,
+  max: 2000,
   lines: 4,
   required: true,
 };
+// A box shows how many characters are left once this few remain (only boxes longer than this).
+export const COUNTER_FROM = 500;
 export const NAME_FIELD = {
   key: 'name',
   label: 'Your name (optional)',
@@ -70,10 +68,10 @@ export const NAME_FIELD = {
 };
 // One patient's boxes, as in content/scenarios.js, plus what was done after the vitals.
 export const PATIENT_FIELDS = [
-  { key: 'history', label: 'Medical history', max: 500, lines: 2 },
-  { key: 'medications', label: 'Medications', max: 500, lines: 1 },
+  { key: 'history', label: 'Medical history', max: 2000, lines: 2 },
+  { key: 'medications', label: 'Medications', max: 2000, lines: 1 },
   { key: 'allergies', label: 'Allergies', max: 200, lines: 1 },
-  { key: 'social', label: 'Social history', max: 500, lines: 1 },
+  { key: 'social', label: 'Social history', max: 2000, lines: 1 },
 ];
 export const TREATMENT_FIELD = {
   key: 'treatment',
@@ -119,7 +117,14 @@ export function emptyVitalSet() {
 /** A patient with every box empty and one set of vitals. */
 export function emptyPatient() {
   const patient = Object.fromEntries(PATIENT_FIELDS.map((field) => [field.key, '']));
-  return { label: '', ...patient, vitalSets: [emptyVitalSet()], treatment: '' };
+  return {
+    label: '',
+    ...patient,
+    vitalSets: [emptyVitalSet()],
+    assessment: '',
+    treatment: '',
+    followUp: '',
+  };
 }
 
 /** The text trimmed, with runs of spaces and tabs made one space, cut to `max` characters. */
@@ -151,7 +156,9 @@ function tidyPatient(patient = {}) {
       PATIENT_FIELDS.map((field) => [field.key, tidy(patient[field.key], field.max)]),
     ),
     vitalSets: (sets.length ? sets : [{}]).map(tidyVitalSet),
+    assessment: tidy(patient.assessment, ASSESSMENT_FIELD.max),
     treatment: tidy(patient.treatment, TREATMENT_FIELD.max),
+    followUp: tidy(patient.followUp, FOLLOW_UP_FIELD.max),
   };
 }
 
@@ -162,13 +169,22 @@ function tidyPatient(patient = {}) {
  * tidied. Unknown keys are dropped.
  */
 export function tidySubmission(raw = {}, isGuidelineId = () => true) {
-  const text = [...JOB_FIELDS, FOLLOW_UP_FIELD, INTENTION_FIELD, NAME_FIELD];
+  const text = [...JOB_FIELDS, INTENTION_FIELD, NAME_FIELD];
   const job = Object.fromEntries(text.map((field) => [field.key, tidy(raw[field.key], field.max)]));
   const complexity = Number(raw.complexity);
   job.complexity = SCENARIO_COMPLEXITY[complexity] ? complexity : 0;
   job.load = raw.load === 'delegation' ? 'delegation' : 'single';
   const patients = listOf(raw.patients, SUBMISSION_LIMITS.PATIENTS);
   job.patients = (patients.length ? patients : [{}]).map(tidyPatient);
+  // A job sent before 27 Nov 2026 has one assessment and follow up for the whole job.
+  ['assessment', 'followUp'].forEach((key) => {
+    if (raw[key] && !job.patients[0][key]) {
+      job.patients[0][key] = tidy(
+        raw[key],
+        key === 'assessment' ? ASSESSMENT_FIELD.max : FOLLOW_UP_FIELD.max,
+      );
+    }
+  });
   const ids = listOf(raw.guidelines, SUBMISSION_LIMITS.GUIDELINES).map(String);
   job.guidelines = [...new Set(ids)].filter(isGuidelineId);
   job.outcomes = listOf(raw.outcomes, MAX_OUTCOMES)
@@ -189,14 +205,11 @@ export function missingFields(job) {
 
 /** Every text box of the job as [label, text], patients numbered when there are several. */
 function labelledTexts(job) {
-  const texts = [...JOB_FIELDS, FOLLOW_UP_FIELD, INTENTION_FIELD].map((field) => [
-    field.label,
-    job[field.key],
-  ]);
+  const texts = [...JOB_FIELDS, INTENTION_FIELD].map((field) => [field.label, job[field.key]]);
   job.patients.forEach((patient, index) => {
     const prefix = job.patients.length > 1 ? `Patient ${index + 1}, ` : '';
     texts.push([`${prefix}Label`, patient.label]);
-    [...PATIENT_FIELDS, TREATMENT_FIELD].forEach((field) =>
+    [...PATIENT_FIELDS, ASSESSMENT_FIELD, TREATMENT_FIELD, FOLLOW_UP_FIELD].forEach((field) =>
       texts.push([prefix + field.label, patient[field.key]]),
     );
     patient.vitalSets.forEach((set) => texts.push([`${prefix}Vitals note`, set.note]));
@@ -275,7 +288,9 @@ function scenarioPatient(patient, index, count) {
     ...(later.length
       ? { laterVitals: later.map((set) => ({ note: set.note, vitals: filled(set.vitals) })) }
       : {}),
+    ...(patient.assessment ? { assessment: patient.assessment } : {}),
     ...(patient.treatment ? { treatment: patient.treatment } : {}),
+    ...(patient.followUp ? { followUp: patient.followUp } : {}),
   };
 }
 
@@ -286,16 +301,9 @@ function scenarioPatient(patient, index, count) {
 export const photoName = (jobId, index) =>
   `${String(jobId).replace(/[^a-z0-9-]/g, '')}-${index + 1}.jpg`;
 
-/** The scenario's story: dispatch notes, history, assessment and follow up, each a paragraph. */
+/** The scenario's story: the dispatch notes, then the history, each a paragraph. */
 const storyOf = (job) =>
-  [
-    job.dispatch && `Dispatch: ${job.dispatch}`,
-    job.story,
-    job.assessment && `Assessment: ${job.assessment}`,
-    job.followUp && `Follow up: ${job.followUp}`,
-  ]
-    .filter(Boolean)
-    .join('\n\n');
+  [job.dispatch && `Dispatch: ${job.dispatch}`, job.story].filter(Boolean).join('\n\n');
 
 /**
  * A job as a scenario (the fields of content/scenarios.js), with `photos` ([{ src, caption }],

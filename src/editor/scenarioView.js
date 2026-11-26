@@ -57,7 +57,9 @@ const FIELD_NAMES = {
   allergies: 'Allergies',
   social: 'Social history',
   vitalsNote: 'Note on the first vitals',
+  assessment: 'Assessment',
   treatment: 'Treatment and response',
+  followUp: 'Follow up',
   note: 'Note',
   caption: 'Caption',
 };
@@ -78,6 +80,7 @@ const HINTS = {
 };
 const LONG_FIELDS = [
   'story',
+  'assessment',
   'intention',
   'outcomes',
   'giveIfAsked',
@@ -385,7 +388,9 @@ const DRAFT_HINTS = {
   label: 'Needed when there are several patients, for example "Driver".',
   vitalsNote: 'Optional, for example "On arrival".',
   note: 'Optional, for example "5 min after GTN".',
+  assessment: 'Optional: findings and working diagnosis, from a sent job.',
   treatment: 'Optional: what was done and how they responded. Shown folded, for the mentor.',
+  followUp: 'Optional: what happened to the patient later, from a sent job.',
   caption: 'Optional, for example "12-lead on arrival".',
 };
 
@@ -438,7 +443,8 @@ function draftLaterVitalsHtml(draft, index, setIndex) {
 
 /**
  * One patient of the form: label, background, the first vitals with their note, any later
- * vitals (each with a note such as "After GTN"), then the treatment and response.
+ * vitals (each with a note such as "After GTN"), then the assessment, treatment and response,
+ * and follow up.
  */
 function draftPatientHtml(draft, index) {
   const prefix = `patients.${index}`;
@@ -460,7 +466,7 @@ function draftPatientHtml(draft, index) {
     <div class="editor-vitals">${draftVitalsHtml(draft, `${prefix}.vitals`)}</div>
     ${noteHtml('Write – for a vital that isn’t measured.')}${later}
     <div class="editor-buttons">${addVitals}</div>
-    ${draftBoxHtml(draft, `${prefix}.treatment`)}
+    ${['assessment', 'treatment', 'followUp'].map((field) => draftBoxHtml(draft, `${prefix}.${field}`)).join('')}
     ${remove ? `<div class="editor-buttons">${remove}</div>` : ''}</fieldset>`;
 }
 

@@ -126,25 +126,38 @@ function patientLabelHtml(patient, prefix, editing) {
 /** A note above a set of vitals ("On arrival", "After GTN"), when there is one. */
 const vitalsNoteHtml = (text) => (text ? `<p class="scenario-label">${escapeHtml(text)}</p>` : '');
 
+/** A labelled long text from a sent job (treatment, follow up); '' when it is empty. */
+const longTextHtml = (label, text) =>
+  text
+    ? `<p class="scenario-label">${escapeHtml(label)}</p>
+      <p class="scenario-fact scenario-long-text">${escapeHtml(text)}</p>`
+    : '';
+
+/** A sent job's assessment of this patient, folded; '' when there is none. */
+function assessmentHtml(patient, editing) {
+  if (!patient.assessment) return '';
+  const text = `<p class="scenario-fact scenario-long-text">${escapeHtml(patient.assessment)}</p>`;
+  return foldHtml('Assessment', text, Boolean(editing));
+}
+
 /**
  * What happened after the first vitals, from a submitted job: later vitals, each with its note,
- * then the treatment and response. Folded in the app, so the mentor reveals it when it fits.
- * Nothing when the patient has neither.
+ * then the treatment and response, then the follow up. Folded in the app, so the mentor reveals
+ * it when it fits. Nothing when the patient has none of them.
  */
 function nextHtml(patient, index, editing) {
   const later = (patient.laterVitals || [])
     .map((set) => `${vitalsNoteHtml(set.note)}${vitalsTableHtml(set.vitals, '')}`)
     .join('');
-  const treatment = patient.treatment
-    ? `<p class="scenario-label">Treatment and response</p>
-      <p class="scenario-fact">${escapeHtml(patient.treatment)}</p>`
-    : '';
-  if (!later && !treatment) return '';
+  const texts =
+    longTextHtml('Treatment and response', patient.treatment) +
+    longTextHtml('Follow up', patient.followUp);
+  if (!later && !texts) return '';
   const comment = commentSlot(editing, `patients.${index}.next`);
   // A job is a real call, not a scenario run by a mentor.
   return foldHtml(
     editing?.isJob ? 'What happened next' : 'What happened next (for the mentor)',
-    later + treatment + comment,
+    later + texts + comment,
     Boolean(editing),
   );
 }
@@ -165,7 +178,7 @@ function photosHtml(scenario, editing) {
   return foldHtml(`ECGs and photos (${photos.length})`, figures + comment, Boolean(editing));
 }
 
-/** The vitals and background of one patient, then what happened next when it is known. */
+/** The vitals and background of one patient, its assessment, then what happened next when known. */
 function patientHtml(patient, index, editing) {
   const prefix = `patients.${index}`;
   const background =
@@ -179,7 +192,7 @@ function patientHtml(patient, index, editing) {
     commentSlot(editing, `${prefix}.vitals`);
   return `${patientLabelHtml(patient, prefix, editing)}
     ${foldHtml('Vitals', vitals, true)}
-    ${foldHtml('Patient background', background + commentSlot(editing, `${prefix}.background`), true)}${nextHtml(patient, index, editing)}`;
+    ${foldHtml('Patient background', background + commentSlot(editing, `${prefix}.background`), true)}${assessmentHtml(patient, editing)}${nextHtml(patient, index, editing)}`;
 }
 
 /** One guideline row: a link in the app, plain text for an editor (the list is one box). */
