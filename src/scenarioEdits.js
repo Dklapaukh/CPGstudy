@@ -442,6 +442,18 @@ function cleanFacts(facts) {
   return isTextList(facts, MAX_GIVE_IF_ASKED, MAX_OUTCOME_TEXT, true) ? [...facts] : null;
 }
 
+/** Whether a new scenario has every text, tag, outcome, real guideline and whole patient. */
+const isWholeScenario = (scenario, patients, isGuidelineId) =>
+  SCENARIO_TEXT_FIELDS.every((field) => isText(scenario[field])) &&
+  Boolean(SCENARIO_COMPLEXITY[scenario.complexity]) &&
+  Boolean(SCENARIO_LOADS[scenario.load]) &&
+  isTextList(scenario.outcomes, MAX_OUTCOMES, MAX_OUTCOME_TEXT) &&
+  isTextList(scenario.guidelines, Infinity, MAX_SCENARIO_TEXT) &&
+  scenario.guidelines.every(isGuidelineId) &&
+  patients.length > 0 &&
+  patients.length <= MAX_PATIENTS &&
+  patients.every(Boolean);
+
 /**
  * A new scenario with only the keys the app reads, in one order, under `id`; or null when it is
  * not whole (the same rules as tests/scenarios.test.js). `isGuidelineId` says a guideline is real.
@@ -450,18 +462,11 @@ function cleanFacts(facts) {
 export function cleanAddedScenario(scenario, id, isGuidelineId) {
   if (!scenario || typeof scenario !== 'object' || !Array.isArray(scenario.patients)) return null;
   const patients = scenario.patients.map(cleanPatient);
-  const isWhole =
-    SCENARIO_TEXT_FIELDS.every((field) => isText(scenario[field])) &&
-    Boolean(SCENARIO_COMPLEXITY[scenario.complexity]) &&
-    Boolean(SCENARIO_LOADS[scenario.load]) &&
-    isTextList(scenario.outcomes, MAX_OUTCOMES, MAX_OUTCOME_TEXT) &&
-    isTextList(scenario.guidelines, Infinity, MAX_SCENARIO_TEXT) &&
-    scenario.guidelines.every(isGuidelineId) &&
-    patients.length > 0 &&
-    patients.length <= MAX_PATIENTS &&
-    patients.every(Boolean);
+  const isWhole = isWholeScenario(scenario, patients, isGuidelineId);
   const photos = cleanPhotos(scenario.photos);
-  if (!isWhole || !photos) return null;
+  const facts = cleanFacts(scenario.giveIfAsked);
+  if (!isWhole || !photos || !facts) return null;
+  const levels = tidyLevels(scenario.levels);
   const clean = {
     id,
     complexity: scenario.complexity,
@@ -471,12 +476,9 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
     guidelines: [...scenario.guidelines],
     patients,
     ...(photos.length ? { photos } : {}),
+    ...(levels ? { levels } : {}),
+    ...(facts.length ? { giveIfAsked: facts } : {}),
   };
-  const levels = tidyLevels(scenario.levels);
-  if (levels) clean.levels = levels;
-  const facts = cleanFacts(scenario.giveIfAsked);
-  if (!facts) return null;
-  if (facts.length) clean.giveIfAsked = facts;
   return patientsProblem(clean) ? null : clean;
 }
 
