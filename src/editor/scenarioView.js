@@ -6,11 +6,13 @@
  * returns text; main.js puts it on the page and handles the clicks. Text is escaped.
  * Each part (story, vitals, background, intention, debrief points, guidelines) has a Comment
  * button that opens a box with that part's questions (scenarioComments.js).
- * Depends on logic.js, constants.js, guidelines.js, scenarioEdits.js, scenarioComments.js,
+ * The Benchmark sets section (SC-L) lists each learner level's set, to change as a list of ids.
+ * Depends on logic.js, constants.js, guidelines.js, scenarioEdits.js, scenarioSets.js,
+ * scenarioComments.js,
  * scenarioReviews.js, staffPage.js and views/scenarioMarkup.js.
  */
 import { escapeHtml } from '../logic.js';
-import { warningHtml, noteHtml, actionButtonHtml } from '../staffPage.js';
+import { warningHtml, noteHtml, actionButtonHtml, dataIdAttr } from '../staffPage.js';
 import { guidelineById } from '../guidelines.js';
 import {
   DEFAULT_HEADER_COLOUR,
@@ -30,7 +32,8 @@ import { reviewCardHtml } from './reviewView.js';
 import { partName, questionsOf, partKind, MAX_COMMENT } from '../scenarioComments.js';
 import { REVIEWS_GOAL } from '../scenarioReviews.js';
 import { variationsText } from '../scenarioVariations.js';
-import { DEBRIEF_RATINGS } from '../constants.js';
+import { DEBRIEF_RATINGS, SCENARIO_LEVELS } from '../constants.js';
+import { MAX_SET_SIZE } from '../scenarioSets.js';
 
 export const SCENARIO_EDITOR_HASH_PREFIX = '#s-';
 // Not under #s-, so no scenario id can clash with it.
@@ -126,6 +129,58 @@ export function scenarioSectionHtml(rows, isOpen) {
   return `<details class="section-group" data-section="Scenarios"${isOpen ? ' open' : ''}>
     <summary><span class="section-name">Scenarios</span>
     <span class="section-count">${rows.length}</span></summary>${newLink}${items}</details>`;
+}
+
+const SET_HINT = `One scenario id per line, in the order to run them; the id is the end of the
+  scenario's address here (#s-long-lie is long-lie). At most ${MAX_SET_SIZE}.`;
+
+/** The box for changing one level's set: its ids, one per line, with the hint and any error. */
+function setBoxHtml(level, text, error) {
+  return `<div class="editor-inline">
+    <label class="editor-label" for="set-text">${escapeHtml(SCENARIO_LEVELS[level].name)} set</label>
+    <textarea class="text-input editor-box" id="set-text" rows="6">${escapeHtml(text)}</textarea>
+    ${noteHtml(escapeHtml(SET_HINT))}${warningHtml(error)}
+    <div class="editor-buttons">${actionButtonHtml('set-save', 'Save', dataIdAttr(level), 'button')}
+      ${actionButtonHtml('close', 'Cancel')}</div></div>`;
+}
+
+/** One level's set: its scenarios in order, notes on its mix, and its buttons or open box. */
+function setHtml(set, open) {
+  const items = set.scenarios
+    .map(
+      (
+        row,
+      ) => `<li><a href="${SCENARIO_EDITOR_HASH_PREFIX}${escapeHtml(row.id)}">${escapeHtml(row.title)}</a>
+      <small>${escapeHtml(SCENARIO_COMPLEXITY[row.complexity]?.short || '')}</small></li>`,
+    )
+    .join('');
+  const notes = set.warnings.map((warning) => noteHtml(escapeHtml(warning))).join('');
+  const buttons = SCENARIO_EDITING_ENABLED
+    ? `<div class="editor-buttons">${actionButtonHtml('set-open', 'Change', dataIdAttr(set.level))}${
+        set.isEdited
+          ? actionButtonHtml('set-reset', 'Back to the draft', dataIdAttr(set.level))
+          : ''
+      }</div>`
+    : '';
+  const body = open.level === set.level ? setBoxHtml(set.level, open.text, open.error) : buttons;
+  return `<div class="editor-set"><h3>${escapeHtml(SCENARIO_LEVELS[set.level].name)}${
+    set.isEdited ? ' <span class="editor-badge">edited</span>' : ''
+  }</h3><ol>${items}</ol>${notes}${body}</div>`;
+}
+
+/**
+ * The Benchmark sets section (SC-L): `sets` as [{ level, scenarios, warnings, isEdited }], and
+ * `open` the set being changed: { level, text, error } (level '' for none).
+ */
+export function setsSectionHtml(sets, open, isOpen) {
+  const intro = noteHtml(
+    'For each learner level, the scenarios that place a learner there and move them on to it, in order. Learners pick one with the Benchmark set dropdown on the Scenarios list.',
+  );
+  return `<details class="section-group" data-section="Benchmark sets"${isOpen ? ' open' : ''}>
+    <summary><span class="section-name">Benchmark sets</span>
+    <span class="section-count">${sets.length}</span></summary>${intro}${sets
+      .map((set) => setHtml(set, open))
+      .join('')}</details>`;
 }
 
 /** The box for changing one value in place, with its hint and any error. */

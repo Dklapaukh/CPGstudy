@@ -4,8 +4,8 @@ Status: decided 26 Nov 2026 (SC-N to SC-U below) after the owner's review of all
 (`content/scenario-reviews.yaml`) and a look at how other fields train decision-making with
 scenarios. It replaces the rule-based generator planned in SC-K. Built so far: the three levels
 (shown as "Presentation", stored as `complexity`), the openings and "give if asked" facts, the
-variation cards and the competency ratings (steps 1 to 5 below). Not yet built: level
-suggestions and the benchmark and "move on" sets (SC-T, SC-L). Decision points were dropped.
+variation cards, the competency ratings and the benchmark and "move on" sets (steps 1 to 6
+below). Not built: level suggestions (SC-T). Decision points were dropped.
 
 ## What a scenario is for
 
@@ -116,8 +116,21 @@ the grade (owner, 26 Nov 2026):
 | Paramedic            | 1      | 2                | 2       |
 | ICP                  |        | 1                | 4       |
 
-They show as a filter on the Scenarios list, and editors change them on the editor page. Not
-built yet.
+Built 26 Nov 2026 (`content/scenario-sets.js`, `src/scenarioSets.js`): a **Benchmark set**
+dropdown on the Scenarios list shows one level's set in order, and a Benchmark sets section on
+the editor page changes them ([Editor page](editor.md)). The owner approved Claude's draft:
+
+| Learner level        | Set, in order                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| Student              | netball-ankle, chest-pain-lawns, wheezy-at-school, hypo-building-site, stroke-breakfast          |
+| Graduate paramedic   | cafe-anaphylaxis, croup-2am, seizure-coastlands, right-abdo-pain, copd-or-sepsis                 |
+| Supervised paramedic | gym-collapse, generator-garage, not-himself, bus-stop-dizzy, bleeding-nine-weeks                 |
+| Paramedic            | stemi-arrest-tawa, hot-toddler, rash-in-the-hostel, mums-pills, remutaka-motorbike               |
+| ICP                  | in-the-cells, transmission-gully-crash, birth-in-the-bathroom, expressway-crash, after-the-party |
+
+Each uses only scenarios ticked for its level, and no scenario is in two sets, so moving up
+brings new ones. Only 3 Complex scenarios were ticked for ICP, so `after-the-party` gained ICP.
+Two of ICP's are crashes, so that set leans to trauma until more Complex scenarios exist.
 
 ## Lessons from the review for writing content
 
@@ -145,7 +158,7 @@ built yet.
    for editors to review and change on the editor page).
 4. ~~Show cards on the scenario screen ("Ways to vary it", folded, for the mentor)~~ (done).
 5. ~~Competency ratings in the debrief (SC-R)~~ (done 26 Nov 2026).
-6. Benchmark and "move on" sets, 5 per learner level (SC-L, table above).
+6. ~~Benchmark and "move on" sets, 5 per learner level (SC-L, table above)~~ (done 26 Nov 2026).
 7. ~~Decision points~~ (dropped 26 Nov 2026).
 
 ## Decisions
@@ -171,6 +184,12 @@ built yet.
   (rejected: a Settings field; not saving it).
 - SC-L (owner, 26 Nov 2026): 5 scenarios per learner level, presentation levels as in the table
   above; Claude drafts, editors change them.
+- SC-L built (owner, 26 Nov 2026): editors change the sets in their own Benchmark sets
+  section, one ordered list per level (rejected: an "In the benchmark set for" field on each
+  scenario); a separate Benchmark set dropdown on the list (rejected: the choices inside the
+  Suits dropdown; a pill on the scenario screen too); ICP's fourth Complex is `after-the-party`,
+  ICP ticked (rejected: `rest-home-gastro`; 3 Complex with `cant-talk-asthma`). More scenarios
+  on the review's themes wait until staff can add jobs as scenarios in their own section.
 - SC-U (owner, 26 Nov 2026): level 2 is named **Undifferentiated presentation** (the story fits
   more than one condition and the learner narrows it; pairs with "Common presentation").
   Rejected: "Look-alikes", "Differential diagnosis", "Uncertain diagnosis". One review per

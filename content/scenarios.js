@@ -1429,7 +1429,7 @@ export const scenarios = [
     id: 'after-the-party',
     complexity: 3,
     load: 'single',
-    levels: ['supervised', 'paramedic'],
+    levels: ['supervised', 'paramedic', 'icp'],
     title: 'After the party',
     suburb: 'Mount Cook',
     story:

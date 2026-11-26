@@ -10,9 +10,10 @@
  * A guideline opened from here gets a "Back to scenario" link (state.scenarioReturn).
  * The list ends with a link to the Add a scenario form (submit.html).
  * Scenarios come from content/scenarios.js with the editors' changes, new scenarios (approved
- * submitted jobs among them) and deletions (content/scenario-edits.js).
- * Depends on state.js, logic.js, guidelines.js, constants.js, scenarioEdits.js, scenarioLogic.js,
- * scenarioRunState.js, scenarioMarkup.js and templates.js.
+ * submitted jobs among them) and deletions (content/scenario-edits.js). A Benchmark set dropdown
+ * shows one learner level's set (SC-L, content/scenario-sets.js with content/scenario-set-edits.js).
+ * Depends on state.js, logic.js, guidelines.js, constants.js, scenarioEdits.js, scenarioSets.js,
+ * scenarioLogic.js, scenarioRunState.js, scenarioMarkup.js and templates.js.
  */
 import { state } from '../state.js';
 import { escapeHtml, formatUpdatedDate } from '../logic.js';
@@ -20,6 +21,9 @@ import { guidelineById } from '../guidelines.js';
 import { scenarios } from '../../content/scenarios.js';
 import { scenarioEdits } from '../../content/scenario-edits.js';
 import { liveScenarios } from '../scenarioEdits.js';
+import { scenarioSets } from '../../content/scenario-sets.js';
+import { scenarioSetEdits } from '../../content/scenario-set-edits.js';
+import { liveSets, SCENARIO_SETS_EDIT_ID } from '../scenarioSets.js';
 import {
   filterScenarios,
   themesInUse,
@@ -52,6 +56,12 @@ import { quizIconHtml } from './templates.js';
 
 const app = document.getElementById('app');
 const shownScenarios = liveScenarios(scenarios, scenarioEdits);
+// The benchmark and "move on" sets (SC-L), by learner level, with the editors' changes.
+const shownSets = liveSets(
+  scenarioSets,
+  scenarioSetEdits[SCENARIO_SETS_EDIT_ID],
+  shownScenarios.map((scenario) => scenario.id),
+);
 const sectionOf = (guidelineId) => guidelineById(guidelineId)?.sec;
 
 /** The scenario with this id, or undefined. */
@@ -99,9 +109,25 @@ function levelChoiceHtml(chosen) {
     <select id="scenario-level-choice">${options}</select></label>`;
 }
 
-/** The complexity and scene-load chips (one row each), and the level and theme dropdowns. */
+/** The benchmark set dropdown (SC-L): one option per learner level whose set has scenarios. */
+function setChoiceHtml(chosen) {
+  const options = ['<option value="">All scenarios</option>']
+    .concat(
+      Object.keys(SCENARIO_LEVELS)
+        .filter((key) => shownSets[key].length)
+        .map(
+          (key) =>
+            `<option value="${key}"${chosen === key ? ' selected' : ''}>${escapeHtml(SCENARIO_LEVELS[key].name)} set</option>`,
+        ),
+    )
+    .join('');
+  return `<label class="quiz-setting scenario-theme-setting">Benchmark set
+    <select id="scenario-set-choice">${options}</select></label>`;
+}
+
+/** The complexity and scene-load chips (one row each), and the level, set and theme dropdowns. */
 function filtersHtml() {
-  const { complexity, load, level, theme } = state.scenarioFilter;
+  const { complexity, load, level, set, theme } = state.scenarioFilter;
   const options = ['<option value="">All themes</option>']
     .concat(
       themesInUse(shownScenarios, sectionOf).map(
@@ -112,7 +138,7 @@ function filtersHtml() {
     .join('');
   return `${chipRowHtml('Presentation', 'scenario-complexity', SCENARIO_COMPLEXITY, complexity, 'Any presentation')}
     ${chipRowHtml('Scene', 'scenario-load', SCENARIO_LOADS, load, 'Any scene load')}
-    ${levelChoiceHtml(level)}    <label class="quiz-setting scenario-theme-setting">Theme
+    ${levelChoiceHtml(level)}${setChoiceHtml(set)}    <label class="quiz-setting scenario-theme-setting">Theme
     <select id="scenario-theme-choice">${options}</select></label>`;
 }
 
@@ -155,10 +181,10 @@ function progressHtml() {
 
 /** Draws the list of scenarios that match the filters, one card per complexity. */
 export function renderScenarioList() {
-  const shown = filterScenarios(shownScenarios, state.scenarioFilter, sectionOf);
+  const shown = filterScenarios(shownScenarios, state.scenarioFilter, sectionOf, shownSets);
   const groups = shown.length
     ? scenarioGroupsHtml(shown, rowHtml)
-    : '<p class="empty-message">No scenario matches. Try another scenario level, scene, learner level or theme.</p>';
+    : '<p class="empty-message">No scenario matches. Try another scenario level, scene, learner level, benchmark set or theme.</p>';
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding scenario-screen"><h1 class="quiz-title">Scenarios</h1>
     <p class="scenario-intro">Openings for a mentor to run. Start with common presentations

@@ -229,3 +229,21 @@
   width: 100%;
   margin-bottom: 0.5rem;
 }
+/* One learner level's benchmark set (SC-L) in the Benchmark sets section. */
+.editor-set {
+  border-top: 1px solid var(--colour-line);
+  margin: 0 0.9rem;
+  padding: 0.6rem 0;
+}
+.editor-set h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.3rem;
+}
+.editor-set ol {
+  margin: 0 0 0.4rem;
+  padding-left: 1.4rem;
+}
+.editor-set small {
+  color: var(--colour-muted);
+  margin-left: 0.4rem;
+}

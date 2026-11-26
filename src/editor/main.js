@@ -8,12 +8,16 @@
  * Under each scenario a Review card grades it and sets the levels it suits (scenarioReviews.js);
  * "Save and next" opens the next one this editor hasn't reviewed. Each part of a scenario has a
  * Comment button for in-line comments, saved under the editor's name (scenarioComments.js).
+ * A Benchmark sets section lists each learner level's set (SC-L, scenarioSets.js); a set is
+ * changed as a list of scenario ids, saved under its own edit id beside the scenario edits.
  * Jobs sent with the Add a scenario form wait in their own section; one (#j-<id>) is shown as the
  * scenario it would make, to approve (published the next morning) or reject.
  * One state object, one way to draw: every change calls render().
- * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, scenarioReviews.js,
+ * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, scenarioSets.js,
+ * scenarioReviews.js,
  * guidelines.js,
- * content/card-edits.js, content/scenarios.js, content/scenario-edits.js and the other files of
+ * content/card-edits.js, content/scenarios.js, content/scenario-edits.js, content/scenario-sets.js
+ * and the other files of
  * this folder.
  */
 import { askBackend, refusalMessage, tabPasscode } from '../staffPage.js';
@@ -66,6 +70,14 @@ import {
   readSuggestedGuidelines,
   partKind,
 } from '../scenarioComments.js';
+import {
+  SCENARIO_SETS_EDIT_ID,
+  liveSets,
+  setsEditWith,
+  readSetBox,
+  setWarnings,
+} from '../scenarioSets.js';
+import { scenarioSets } from '../../content/scenario-sets.js';
 import { REVIEW_FORM_ID, reviewProgressHtml } from './reviewView.js';
 import { guidelines, guidelineById } from '../guidelines.js';
 import { cardEdits } from '../../content/card-edits.js';
@@ -97,6 +109,7 @@ import {
   SCENARIO_EDITOR_HASH_PREFIX,
   NEW_SCENARIO_HASH,
   scenarioSectionHtml,
+  setsSectionHtml,
   scenarioEditorHtml,
   goneScenarioHtml,
   deletedScenarioHtml,
@@ -142,6 +155,7 @@ const state = {
   commentText: '', // what that box holds, kept for any redraw
   commentGuidelines: '', // the guidelines box of the guidelines part, as CPG numbers
   commentError: '', // why the comment couldn't be saved
+  openSet: { level: '', text: '', error: '' }, // the benchmark set being changed (SC-L)
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -155,7 +169,7 @@ const SCENARIO_EDITING_PAUSED_MESSAGE =
  * approving a submitted job, which saves a new one. Reviews and comments have other ids.
  */
 const changesScenario = (body) =>
-  (body.action === 'edit-save' && isScenarioEdit(body.id)) ||
+  (body.action === 'edit-save' && (isScenarioEdit(body.id) || body.id === SCENARIO_SETS_EDIT_ID)) ||
   (body.action === 'submission-decide' && body.decision === 'approve');
 
 /** Sends a request; on success keeps the edits it returns. Returns true when it worked. */
@@ -224,10 +238,14 @@ const isScenarioEdit = (id) => Boolean(scenarioIdOfEdit(id));
 const isPublished = (id) =>
   JSON.stringify((isScenarioEdit(id) ? scenarioEdits : cardEdits)[id]) ===
   JSON.stringify(state.edits[id]);
-/** The ids of the quiz question edits: not scenario edits, reviews or comments. */
+/** The ids of the quiz question edits: not scenario edits, the sets, reviews or comments. */
 const questionEditIds = () =>
   Object.keys(state.edits).filter(
-    (id) => !isScenarioEdit(id) && !isReviewEditId(id) && !isCommentEditId(id),
+    (id) =>
+      !isScenarioEdit(id) &&
+      id !== SCENARIO_SETS_EDIT_ID &&
+      !isReviewEditId(id) &&
+      !isCommentEditId(id),
   );
 
 /** One question as the screens show it: built, as learners see it, its edit and its state. */
@@ -377,6 +395,56 @@ function scenarioRows() {
       isReviewed: Boolean(state.edits[reviewEditId(view.live.id, state.name)]),
       reviewerCount: reviewersOf(view.live.id, state.edits).length,
     }));
+}
+
+/* ---------- Benchmark sets (SC-L) ---------- */
+
+const closedSet = () => ({ level: '', text: '', error: '' });
+
+/** Every level's set as learners will see it, as scenario ids, with the editors' change. */
+function setsNow() {
+  const ids = scenarioRows().map((row) => row.id);
+  return liveSets(scenarioSets, state.edits[SCENARIO_SETS_EDIT_ID], ids);
+}
+
+/** The sets for the section: each level's scenarios in order, notes on its mix, if edited. */
+function setRows() {
+  const byId = Object.fromEntries(scenarioRows().map((row) => [row.id, row]));
+  const changed = state.edits[SCENARIO_SETS_EDIT_ID]?.sets || {};
+  return Object.entries(setsNow()).map(([level, ids]) => {
+    const setScenarios = ids.map((id) => byId[id]);
+    return {
+      level,
+      scenarios: setScenarios,
+      warnings: setWarnings(level, setScenarios),
+      isEdited: Object.hasOwn(changed, level),
+    };
+  });
+}
+
+/** Saves the open set's box, or shows why its text can't be kept. */
+function saveSetBox() {
+  const { level } = state.openSet;
+  const text = document.getElementById('set-text').value;
+  const read = readSetBox(
+    text,
+    scenarioRows().map((row) => row.id),
+  );
+  if (read.error) {
+    state.openSet = { level, text, error: read.error };
+    render();
+    return;
+  }
+  const edit = setsEditWith(state.edits[SCENARIO_SETS_EDIT_ID], level, read.value);
+  saveSetsEdit(edit);
+}
+
+/** Saves the sets edit (null takes it out) and closes the box when it worked. */
+async function saveSetsEdit(edit) {
+  if (await request({ action: 'edit-save', id: SCENARIO_SETS_EDIT_ID, edit })) {
+    state.openSet = closedSet();
+  }
+  render();
 }
 
 /** The scenario in the address ("#s-long-lie"), or '' on any other screen. */
@@ -843,7 +911,13 @@ function renderHome(viewer) {
     scenarioRows(),
     Boolean(state.openSections.Scenarios),
   );
-  const sections = submissionSectionHtml(state.submissions) + reviewProgress() + scenarioSection;
+  const setsSection = setsSectionHtml(
+    setRows(),
+    state.openSet,
+    Boolean(state.openSections['Benchmark sets']),
+  );
+  const sections =
+    submissionSectionHtml(state.submissions) + reviewProgress() + scenarioSection + setsSection;
   app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, sections);
 }
 
@@ -927,6 +1001,7 @@ const ACTIONS = {
     document.getElementById(`q-${id}`)?.scrollIntoView();
   },
   close: () => {
+    state.openSet = closedSet();
     state.openId = '';
     state.openBox = null;
     state.openPath = '';
@@ -934,6 +1009,14 @@ const ACTIONS = {
     render();
   },
   'scenario-box-save': saveScenarioBox,
+  'set-open': (level) => {
+    state.openSet = { level, text: setsNow()[level].join('\n'), error: '' };
+    render();
+    document.getElementById('set-text')?.focus();
+  },
+  'set-save': saveSetBox,
+  'set-reset': (level) =>
+    saveSetsEdit(setsEditWith(state.edits[SCENARIO_SETS_EDIT_ID], level, null)),
   'review-save': () => saveReview(false),
   'review-save-next': () => saveReview(true),
   'comment-save': saveComment,
@@ -1005,8 +1088,19 @@ app.addEventListener('keydown', (event) => {
   else if (event.key === 'Enter' && target.dataset.action === 'edit-box') {
     event.preventDefault();
     openBox(target);
-  } else if (target.id === 'box-text' && event.key === 'Escape') ACTIONS.close();
-  else if (target.id === 'box-text' && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+  } else if (['box-text', 'set-text'].includes(target.id) && event.key === 'Escape') {
+    ACTIONS.close();
+  } else if (
+    target.id === 'set-text' &&
+    event.key === 'Enter' &&
+    (event.ctrlKey || event.metaKey)
+  ) {
+    saveSetBox();
+  } else if (
+    target.id === 'box-text' &&
+    event.key === 'Enter' &&
+    (event.ctrlKey || event.metaKey)
+  ) {
     if (state.openPath) saveScenarioBox();
     else ACTIONS['box-save'](state.openBox.id);
   }
@@ -1052,6 +1146,7 @@ app.addEventListener(
 );
 window.addEventListener('hashchange', () => {
   state.isDeleting = false;
+  state.openSet = closedSet();
   state.reviewForm = null;
   state.reviewError = '';
   state.reviewSavedId = '';

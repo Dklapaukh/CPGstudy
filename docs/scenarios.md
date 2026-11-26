@@ -13,7 +13,9 @@ Each scenario has two tags (decision 19 Nov 2026, SC-E), which replaced the old 
 A scenario may also have the **levels it suits** (decision 24 Nov 2026): any of Student,
 Graduate paramedic, Supervised paramedic, Paramedic and Intensive care paramedic
 (`SCENARIO_LEVELS`, the optional `levels` field). They show as a "Suits …" pill, and once any
-scenario has levels a **Suits** dropdown filters the list. Editors set them while reviewing.
+scenario has levels a **Suits** dropdown filters the list. Editors set them while reviewing. A
+**Benchmark set** dropdown shows one learner level's 5 scenarios in order (SC-L,
+`content/scenario-sets.js` with the editors' changes; see [Scenario design](scenario-variations.md)).
 
 Two rows of chips (All plus the three of each) and a theme dropdown filter the list. The themes
 are Paediatrics, Obstetrics, Mental health, Respiratory, Cardiac, Trauma, Toxicology, Elderly and

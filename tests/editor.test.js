@@ -558,6 +558,32 @@ test(
   },
 );
 
+test(
+  'page: a benchmark set is changed as a list of ids, with notes, and goes back to the draft',
+  EDITING_ONLY,
+  async () => {
+    dom.window.location.hash = '';
+    await sleep(20);
+    const section = () => $('[data-section="Benchmark sets"]');
+    assert.equal(section().querySelectorAll('.editor-set').length, 5);
+    assert.ok(section().querySelector('a[href="#s-netball-ankle"]'), 'the student set is listed');
+    click(section().querySelector('[data-action="set-open"][data-id="student"]'));
+    assert.match($('#set-text').value, /^netball-ankle\nchest-pain-lawns/);
+    $('#set-text').value = 'croup-2am\nno-such';
+    click($('[data-action="set-save"]'));
+    assert.match($('.editor-inline').textContent, /No scenario has the id “no-such”/);
+    $('#set-text').value = 'croup-2am, in-the-cells';
+    click($('[data-action="set-save"]'));
+    await sleep(20);
+    assert.deepEqual(sheetEdits['scenario-sets'].sets.student, ['croup-2am', 'in-the-cells']);
+    assert.match(section().textContent, /Aims for 5 Common; this set has 1 Common, 1 Undiff/);
+    assert.match(section().textContent, /Not ticked for Student: Croup at 2 am, In the cells/);
+    click(section().querySelector('[data-action="set-reset"][data-id="student"]'));
+    await sleep(20);
+    assert.equal(sheetEdits['scenario-sets'], undefined);
+  },
+);
+
 test('page: a scenario is reviewed, its levels set, and "Save and next" opens the next one', async () => {
   dom.window.location.hash = '';
   await sleep(20);

@@ -1,7 +1,7 @@
 # Daily copy of the editors' changes to quiz questions and scenarios (editor.html) into the app.
 # Runs scripts/sync-edits.js, which reads the Sheet's Edits tab through the backend and writes
-# content/card-edits.yaml, content/card-edits.js, the two content/scenario-edits files,
-# content/scenario-reviews.yaml (editors' grades of scenarios), and
+# content/card-edits.yaml, content/card-edits.js, the two content/scenario-edits files, the two
+# content/scenario-set-edits files (benchmark sets), content/scenario-reviews.yaml (editors' grades of scenarios), and
 # the photos new scenarios use from approved submitted jobs (content/scenario-photos). When they changed, it runs `npm run check`
 # and pushes them straight to main, so the edits are live a few minutes later. Edits were
 # already checked by an editor on the editor page, so no pull request is opened.
@@ -27,7 +27,8 @@ jobs:
         run: |
           node scripts/sync-edits.js
           npx prettier --write content/card-edits.yaml content/card-edits.js \
-            content/scenario-edits.yaml content/scenario-edits.js content/scenario-reviews.yaml
+            content/scenario-edits.yaml content/scenario-edits.js content/scenario-reviews.yaml \
+            content/scenario-set-edits.yaml content/scenario-set-edits.js
       - name: Publish them if they changed
         run: |
           if git diff --quiet && [ -z "$(git status --porcelain content/scenario-photos)" ]; then
@@ -38,6 +39,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add content/card-edits.yaml content/card-edits.js content/scenario-edits.yaml \
-            content/scenario-edits.js content/scenario-reviews.yaml content/scenario-photos
+            content/scenario-edits.js content/scenario-reviews.yaml content/scenario-set-edits.yaml \
+            content/scenario-set-edits.js content/scenario-photos
           git commit -m "Quiz question and scenario edits, reviews and approved jobs from the editor page"
           git push origin HEAD:main

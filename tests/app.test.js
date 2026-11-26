@@ -850,6 +850,15 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   $('#scenario-theme-choice').value = '';
   $('#scenario-theme-choice').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   assert.equal($$('.scenario-row').length, allRows, 'All shows every scenario again');
+  const setChoice = $('#scenario-set-choice');
+  assert.equal(setChoice.options.length, 6, 'All scenarios and one set per learner level');
+  setChoice.value = 'paramedic';
+  setChoice.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.equal($$('.scenario-row').length, 5, 'the Paramedic benchmark set has five');
+  assert.equal($$('.scenario-row b')[0].textContent, 'STEMI that arrests');
+  $('#scenario-set-choice').value = '';
+  $('#scenario-set-choice').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.equal($$('.scenario-row').length, allRows);
   dom.window.location.hash = '#scenario-long-lie';
   await sleep(30);
   assert.equal($('.scenario-title').textContent, 'Long lie');

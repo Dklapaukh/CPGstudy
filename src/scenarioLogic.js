@@ -45,10 +45,11 @@ export const levelsInUse = (scenarios) =>
 
 /**
  * The scenarios matching the chosen complexity (0 = any), scene load ('' = any), level the
- * scenario suits ('' = any) and theme ('' = any).
+ * scenario suits ('' = any), benchmark set ('' = any; `sets` as liveSets gives them, and the
+ * set's order is kept) and theme ('' = any).
  */
-export function filterScenarios(scenarios, filter, sectionOf) {
-  return scenarios.filter(
+export function filterScenarios(scenarios, filter, sectionOf, sets = {}) {
+  const matching = scenarios.filter(
     (scenario) =>
       (!filter.complexity || scenario.complexity === filter.complexity) &&
       (!filter.load || scenario.load === filter.load) &&
@@ -56,6 +57,9 @@ export function filterScenarios(scenarios, filter, sectionOf) {
         (Array.isArray(scenario.levels) && scenario.levels.includes(filter.level))) &&
       (!filter.theme || scenarioThemes(scenario, sectionOf).includes(filter.theme)),
   );
+  if (!filter.set) return matching;
+  const order = sets[filter.set] || [];
+  return order.map((id) => matching.find((scenario) => scenario.id === id)).filter(Boolean);
 }
 
 /**

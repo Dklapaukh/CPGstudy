@@ -68,7 +68,7 @@ Publishing (push to `main`) and the `content/guidelines.js` rule are in `CLAUDE.
 | 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
 | 21   | Scenario levels, openings, variation cards and competency ratings, `docs/scenario-variations.md` | Built 26 Nov 2026 (SC-N to SC-P, SC-R, SC-U); SC-Q dropped |
-| 22   | Level benchmark and "move on" sets, 5 scenarios per learner level (SC-L) | Decided 26 Nov 2026; to build |
+| 22   | Level benchmark and "move on" sets, 5 scenarios per learner level (SC-L) | Built 26 Nov 2026 |
 
 ### 8.2 Decisions
 
@@ -184,7 +184,7 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Where things stand
 
-**Now (26 Nov 2026).** Features 1 to 21 are built and on `main`. The owner's scenario review
+**Now (26 Nov 2026).** Features 1 to 22 are built and on `main`. The owner's scenario review
 (one review each, `content/scenario-reviews.yaml`) is finished and scenario editing is back on
 (SC-U). From it (feature 21, `docs/scenario-variations.md`): the 7 Small-changes scenarios and
 every in-line comment are fixed; every scenario has a call-notes-then-history opening and "give
@@ -200,12 +200,14 @@ manager page has a Competencies table. Decision points (SC-Q) were dropped. The 
 redeploy for Add a scenario, scenario trends and the Competencies table is still to do (8.4
 task 1; the running version should then read "version with competency ratings (26 Nov 2026)").
 
+The benchmark and "move on" sets (feature 22, SC-L) are built: a Benchmark set dropdown on
+the Scenarios list and a Benchmark sets section on the editor page; `after-the-party` gained
+ICP so ICP has 4 Complex.
+
 **Next** (steps in `docs/scenario-variations.md`).
 
-1. Benchmark and "move on" sets (SC-L, feature 22): 5 scenarios per learner level, presentation
-   levels matched to the grade (table in `docs/scenario-variations.md`); Claude drafts them, a
-   filter on the Scenarios list, editors change them on the editor page. No automatic
-   next-level suggestion for now (SC-T).
+1. After this phase: staff add jobs they went to as scenarios in their own section, then more
+   scenarios on the review's themes (owner, 26 Nov 2026), notably Complex ones for ICP.
 2. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
    note in `bus-v-pedestrians`' intention; the bank of overdoses by medicine class.
 

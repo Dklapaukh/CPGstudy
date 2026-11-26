@@ -2,12 +2,14 @@
  * Copies the editors' changes from the Sheet's Edits tab into the app: content/card-edits.yaml
  * (the readable record, one entry per edited question) and content/card-edits.js (what the app
  * loads), and the scenario edits (changed, new and deleted scenarios) into
- * content/scenario-edits.yaml and content/scenario-edits.js, and the editors' reviews of scenarios
+ * content/scenario-edits.yaml and content/scenario-edits.js, the benchmark sets edit into
+ * content/scenario-set-edits.yaml and .js (src/scenarioSets.js), and the editors' reviews of scenarios
  * into content/scenario-reviews.yaml (read before writing new scenarios). It also copies the photos of approved submitted jobs that new scenarios use
  * into content/scenario-photos. Run every morning by .github/workflows/edits-sync.yml, or by hand with
  * `node scripts/sync-edits.js`. Prints how many edits need an editor's review after a guideline
  * update (the editor page lists them).
- * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/scenarioReviews.js,
+ * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/scenarioSets.js,
+ * src/scenarioReviews.js,
  * src/guidelines.js,
  * src/editor/questions.js, content/scenarios.js and the yaml package.
  */
@@ -24,6 +26,7 @@ import {
   cleanAddedScenario,
   scenarioEditDeleted,
 } from '../src/scenarioEdits.js';
+import { SCENARIO_SETS_EDIT_ID, cleanSetsEdit } from '../src/scenarioSets.js';
 import { isReviewEditId, cleanReview, reviewReport } from '../src/scenarioReviews.js';
 import { allComments, partName } from '../src/scenarioComments.js';
 import { guidelineById } from '../src/guidelines.js';
@@ -110,7 +113,23 @@ const FILES = {
     exported: 'scenarioEdits',
     header: `Editors' changes to scenarios, by edit id (src/scenarioEdits.js). Written by\n${WRITTEN_BY}`,
   },
+  sets: {
+    name: 'scenario-set-edits',
+    exported: 'scenarioSetEdits',
+    header: `Editors' changes to the benchmark sets, by edit id (src/scenarioSets.js). Written by\n${WRITTEN_BY}`,
+  },
 };
+
+/**
+ * The benchmark sets edit (SC-L) by its id, keeping only scenarios the app has (in the file or
+ * added by editors, in `scenarioEditsById`); {} when there is none.
+ */
+export function cleanSetEdits(edits, scenarioEditsById) {
+  const added = Object.values(scenarioEditsById).map((edit) => edit.added?.id);
+  const ids = new Set([...scenarios.map((scenario) => scenario.id), ...added]);
+  const clean = cleanSetsEdit(edits[SCENARIO_SETS_EDIT_ID], (id) => ids.has(id));
+  return clean ? { [SCENARIO_SETS_EDIT_ID]: clean } : {};
+}
 
 /** The reviews among the edits, each checked, oldest first; bad ones are dropped. */
 export function cleanReviews(edits) {
@@ -195,17 +214,24 @@ function writePhotos(files) {
   files.forEach((file) => writeFileSync(folder + file.name, Buffer.from(file.data, 'base64')));
 }
 
-/** Fetches the edits, writes both files and lists the edits that need review. */
+/** Writes the question, scenario and benchmark set edits; returns the first two, cleaned. */
+function writeAllEdits(sheetEdits) {
+  const edits = cleanEdits(sheetEdits);
+  const scenarioEditsById = cleanScenarioEdits(sheetEdits);
+  writeEdits(FILES.cards, edits);
+  writeEdits(FILES.scenarios, scenarioEditsById);
+  writeEdits(FILES.sets, cleanSetEdits(sheetEdits, scenarioEditsById));
+  return { edits, scenarioEditsById };
+}
+
+/** Fetches the edits, writes their files and lists the edits that need review. */
 async function main() {
   const reply = await sendRequest({ action: 'edits' });
   if (!reply.ok) {
     console.error(`The backend refused: ${reply.error}. Is backend/Code.gs redeployed?`);
     process.exit(1);
   }
-  const edits = cleanEdits(reply.edits || {});
-  const scenarioEditsById = cleanScenarioEdits(reply.edits || {});
-  writeEdits(FILES.cards, edits);
-  writeEdits(FILES.scenarios, scenarioEditsById);
+  const { edits, scenarioEditsById } = writeAllEdits(reply.edits || {});
   const reviews = cleanReviews(reply.edits || {});
   const comments = allComments(reply.edits || {}, isGuidelineId);
   writeReviews(reviews, comments, scenarioEditsById);

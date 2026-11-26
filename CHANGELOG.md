@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-26: **Benchmark sets** (Scenarios list and editor page, SC-L). 5 scenarios per learner
+  level in a Benchmark set dropdown; editors change them in their own section. ICP on after-the-party.
 - 2026-11-26: **Competency ratings** (debrief, manager page, backend; SC-R). Six competencies rated every
   run, the learner's level saved; outcomes shown as "What this scenario emphasises". Redeploy.
 - 2026-11-26: **Ways to vary it** (scenario screen and editor page, SC-N). 109 variation cards,

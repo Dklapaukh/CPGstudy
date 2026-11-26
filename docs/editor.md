@@ -41,6 +41,13 @@ saved under the editor's name, aiming for 3 editors per scenario; the first scre
 many you have reviewed and opens the next. See
 [Scenarios](scenarios.md), "Reviewing scenarios".
 
+**Benchmark sets (SC-L).** A Benchmark sets section on the first screen lists each learner
+level's set in order, with a note when its presentation mix differs from the table in
+[Scenario design](scenario-variations.md) or a scenario is not ticked for that level. "Change"
+opens a box of scenario ids, one per line, in order (at most 8); "Back to the draft" returns a
+level to `content/scenario-sets.js`. The change is saved under the edit id `scenario-sets`
+(`src/scenarioSets.js`) and reaches the app the next morning in `content/scenario-set-edits.js`.
+
 **New and deleted scenarios.** "+ New scenario" at the top of the Scenarios section opens one
 form (`#new-scenario`): title, suburb, story, intention, presentation, scene load, intended
 outcomes (one per line), guidelines (CPG numbers) and one or more patients (up to 4), each with

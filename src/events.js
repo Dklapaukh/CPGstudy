@@ -556,6 +556,7 @@ function handleChange(event) {
   if (event.target.id === 'medicine-test-choice') state.medicineTestChoice = event.target.value;
   if (event.target.id === 'scenario-theme-choice') setScenarioFilter('theme', event.target.value);
   if (event.target.id === 'scenario-level-choice') setScenarioFilter('level', event.target.value);
+  if (event.target.id === 'scenario-set-choice') setScenarioFilter('set', event.target.value);
   if (event.target.id === 'sort-first-choice') {
     const count = state.sortQuiz ? state.sortQuiz.ids.length : state.sortQuizCount;
     changeSortQuiz(() => startSortQuiz(count, event.target.value), true)();
