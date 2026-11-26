@@ -63,15 +63,21 @@ export const scenarios = [
     levels: ['supervised', 'paramedic'],
     title: 'Just not himself',
     suburb: 'Paraparaumu',
-    story: 'A 72-year-old man\'s daughter called because he\'s been "off" for two days.',
+    story:
+      'A 72-year-old man is "not himself"; his daughter is calling. She says he has been off for two days, quieter than usual and sleeping more.',
+    giveIfAsked: [
+      'He has been getting up to pass urine several times a night this week, and it stings.',
+      'He was muddled last night and his daughter found him in the garden at 2 am.',
+      'He has been eating and drinking less, and had a shivering spell last night.',
+    ],
     intention:
-      'Take a structured history when there is no clear complaint. See whether they dig in or give up when nothing stands out; the prostate history and low fever point to a urinary infection.',
+      'Take a structured history when there is no clear complaint. See whether they dig in or give up when nothing stands out: the urinary symptoms only come out with a structured history, and with the low fever and his prostate history they point to a urinary infection. Give the facts below freely at lower levels; at Paramedic, only when asked precisely.',
     outcomes: [
       'Takes a structured history although there is no clear complaint',
       'Does a full set of vitals and a head-to-toe check',
-      'Links the prostate history and low fever to a possible urinary infection',
+      'Finds the urinary symptoms and links them to a possible urinary infection, keeping other causes in mind',
     ],
-    guidelines: ['cpg-1-17', 'cpg-12-9', 'cpg-1-6'],
+    guidelines: ['cpg-1-17', 'cpg-6-7', 'cpg-12-9', 'cpg-1-6'],
     patients: [
       {
         history: 'Type 2 diabetes, hypertension, enlarged prostate',
@@ -135,20 +141,25 @@ export const scenarios = [
     title: 'Long lie',
     suburb: 'Waterloo, Lower Hutt',
     story:
-      'An 84-year-old woman was found on the floor this morning after falling overnight. Her left hip is sore and the leg is shortened.',
+      'An 84-year-old woman has been found on the floor with a sore hip; her neighbour is calling. She fell overnight and the neighbour found her this morning when her curtains stayed shut.',
+    giveIfAsked: [
+      'Her left leg is shortened and turned out.',
+      'She got up to the toilet in the night, felt dizzy and fell; she has been on the floor about eight hours.',
+      'She has had nothing to drink since.',
+    ],
     intention:
-      'Assess a fall in an older person. Ask why she fell, and check for pressure areas and hypothermia. The codeine allergy tests the analgesia choice.',
+      'Assess a fall in an older person. Ask why she fell, and check for pressure areas and hypothermia. The fentanyl allergy tests the analgesia choice.',
     outcomes: [
       'Asks why she fell and looks for a medical cause',
       'Checks for pressure areas, hypothermia and injuries from the long lie',
-      'Chooses pain relief that suits her codeine allergy',
+      'Chooses pain relief that suits her fentanyl allergy',
     ],
     guidelines: ['cpg-13-3', 'cpg-4-11', 'cpg-1-18', 'cpg-12-9'],
     patients: [
       {
         history: 'Osteoporosis, hypertension, hypothyroidism',
         medications: 'Alendronate (weekly), amlodipine, levothyroxine',
-        allergies: 'Codeine (vomiting)',
+        allergies: 'Fentanyl (rash and itch)',
         social: 'Lives alone. Independent with a walker. No medical alarm.',
         vitals: {
           gcs: '15',
@@ -171,12 +182,17 @@ export const scenarios = [
     title: 'Right-sided abdominal pain',
     suburb: 'Johnsonville',
     story:
-      'A 26-year-old man has had abdominal pain since last night. It started around the belly button and has moved to the right lower abdomen.',
+      'A 26-year-old man has had abdominal pain since last night; his flatmate is calling. It has been getting worse and he has vomited once.',
+    giveIfAsked: [
+      'It started around his belly button and has moved to the right lower abdomen.',
+      'It hurts more when he walks or coughs.',
+      'No urinary symptoms and no testicular pain.',
+    ],
     intention:
-      'Assess abdominal pain. Look for a systematic abdominal exam and a sensible analgesia choice.',
+      'Assess abdominal pain and talk through the differentials. Look for a systematic abdominal exam, the serious causes of right-sided pain considered, and a sensible analgesia choice.',
     outcomes: [
       'Does a systematic abdominal examination',
-      'Considers the serious causes of right-sided pain',
+      'Talks through the differentials for right-sided pain and the serious causes',
       'Chooses sensible pain relief and gives it by the guideline',
     ],
     guidelines: ['cpg-13-2', 'cpg-1-18'],
@@ -241,15 +257,20 @@ export const scenarios = [
     complexity: 3,
     load: 'single',
     levels: ['student'],
-    title: 'Head strike on warfarin',
+    title: 'Fall in the garden',
     suburb: 'Waikanae',
     story:
-      "A 79-year-old man tripped in the garden and hit his head. He's on warfarin. He was briefly confused and says he's fine now.",
+      'A 79-year-old man has fallen in the garden and hit his head; his wife is calling. She says he was confused for a minute or two but now says he is fine and does not want to go anywhere.',
+    giveIfAsked: [
+      'He did not trip: he stood up from weeding, felt light-headed, and the next thing he knew he was on the ground.',
+      'His wife says he has asked her the same question twice since the fall.',
+      'He takes his warfarin every night and has not missed a dose.',
+    ],
     intention:
-      'Recognise risk hidden behind a minor injury. Does anyone suggest leaving him at home? Ask whether he really tripped.',
+      'Recognise risk hidden behind a common, minor-looking fall. Watch whether they find out why he fell (he blacked out on standing, he did not trip), weigh a head strike on warfarin, and transport him rather than leave him at home.',
     outcomes: [
+      'Finds out why he fell and looks for a medical cause (postural blood pressure, ECG)',
       'Recognises the bleeding risk of a head strike on warfarin',
-      'Asks whether he really tripped and looks for a medical cause',
       'Transports him rather than leaving him at home',
     ],
     guidelines: ['cpg-4-9', 'cpg-13-3', 'cpg-12-9'],
@@ -280,12 +301,13 @@ export const scenarios = [
     title: 'Café anaphylaxis',
     suburb: 'Te Aro',
     story:
-      'A 19-year-old woman ate a dish with peanuts in it and now has hives, wheeze and feels faint.',
+      'A 19-year-old woman is having an allergic reaction at a café; her friend is calling. She ate a dish with peanuts in it and now has hives and feels faint.',
+    giveIfAsked: ['She is wheezy and says her throat feels tight.'],
     intention:
-      'Lead a crew through several urgent interventions at once. The point is who does what (adrenaline, airway, IV access, fluids, a second adrenaline dose), not the medicine itself.',
+      'Lead a crew through several urgent interventions at once. The point is who does what (adrenaline, positioning, IV access, fluids, a second adrenaline dose), not the medicine itself.',
     outcomes: [
       'Gives intramuscular adrenaline without delay',
-      'Gives each crew member a clear task (airway, IV access, fluids)',
+      'Gives each crew member a clear task (positioning, IV access, fluids)',
       'Reassesses and gives a second adrenaline dose when needed',
     ],
     guidelines: ['cpg-12-12', 'cpg-1-8'],
@@ -353,15 +375,19 @@ export const scenarios = [
     title: 'Transmission Gully crash',
     suburb: 'Pāuatahanui',
     story:
-      "Two cars have collided on State Highway 1 in Transmission Gully. You're a single crew and the first to arrive.",
+      'Two cars have collided on State Highway 1 in Transmission Gully, three patients reported. You are a single crew and the first to arrive.',
+    giveIfAsked: [
+      'The passenger hit her head on the side window and keeps asking what happened.',
+      'Fire is 10 minutes away; the next ambulance is 15 minutes away.',
+    ],
     intention:
-      "Triage, call for resources and manage the scene as the first crew there. Watch the first report, the triage order and when they ask for a helicopter. The passenger is the driver's mother and on an anticoagulant.",
+      'Triage, call for resources and manage the scene as the first crew there. Watch the first report, the triage order and how early they ask for more road crews. The passenger is the driver’s mother and on an anticoagulant.',
     outcomes: [
       'Sends a clear first report and asks for resources early',
       'Triages all three patients in a sensible order',
-      'Weighs the passenger’s anticoagulant and the helicopter decision',
+      'Weighs the passenger’s anticoagulant and head strike in her triage and destination',
     ],
-    guidelines: ['cpg-1-11', 'cpg-4-2', 'cpg-4-23', 'cpg-1-12'],
+    guidelines: ['cpg-1-11', 'cpg-4-2', 'cpg-4-23'],
     patients: [
       {
         label: 'Driver, 45-year-old man, seatbelt chest pain',
@@ -587,7 +613,7 @@ export const scenarios = [
         vitals: {
           gcs: '15',
           rr: '30',
-          spo2: '93%',
+          spo2: '97%',
           hr: '124',
           bp: '118/72',
           temp: '36.8',
@@ -641,19 +667,24 @@ export const scenarios = [
     title: 'Hypo on the building site',
     suburb: 'Petone',
     story:
-      'A 39-year-old builder is sweaty and confused. His workmates say he skipped lunch and has type 1 diabetes.',
+      'A 39-year-old builder is sweaty and confused on a building site; his foreman is calling. His workmates say he was fine this morning but has been acting strangely for the last 20 minutes.',
+    giveIfAsked: [
+      'He has type 1 diabetes; his workmates know if asked, and he wears a medical alert bracelet.',
+      'He skipped lunch to finish a concrete pour and has been working hard in the sun.',
+      'He took his usual insulin this morning.',
+    ],
     intention:
-      "Treat hypoglycaemia and decide whether he can safely stay. Watch for the cause, a repeat glucose, food after treatment and the conditions for leaving him in someone's care.",
+      'Find and treat hypoglycaemia, then decide whether he can safely stay. Watch for a glucose check early, the cause, a repeat glucose, food after treatment and the conditions for leaving him in someone’s care.',
     outcomes: [
-      'Treats the low glucose and repeats the glucose check',
+      'Checks the glucose early, treats the low glucose and repeats the check',
       'Looks for the cause and makes sure he eats',
       'Applies the conditions for leaving him in someone’s care',
     ],
     guidelines: ['cpg-5-3', 'cpg-1-6'],
     patients: [
       {
-        history: 'Type 1 diabetes since age 12',
-        medications: 'Insulin glargine at night, insulin aspart with meals',
+        history: 'Type 1 diabetes',
+        medications: 'Insulin',
         allergies: 'None known',
         social: 'Lives with his partner. Drives a work ute. Had a big night on Saturday.',
         vitals: {
@@ -710,29 +741,33 @@ export const scenarios = [
     complexity: 2,
     load: 'single',
     levels: ['student', 'grad'],
-    title: 'Stroke at breakfast',
+    title: 'Dropped cup at breakfast',
     suburb: 'Stokes Valley',
     story:
-      'A 67-year-old man dropped his cup at breakfast and his wife noticed his face drooping. It started 35 minutes ago.',
+      'A 67-year-old man is "not right" at breakfast; his wife is calling. She says he suddenly dropped his cup and his speech sounds odd.',
+    giveIfAsked: [
+      'The right side of his face droops and his right arm drifts down.',
+      'It started 35 minutes ago; he was well when he got up.',
+    ],
     intention:
-      'Recognise a stroke, establish the time of onset and decide on the stroke clot retrieval pathway. Watch for a quick scene time and a clear radio notification to hospital.',
+      'Recognise a stroke, establish the time of onset and transport to the nearest stroke centre (Hutt Hospital) without delay. Watch for a quick scene time and a clear radio notification to hospital.',
     outcomes: [
       'Recognises the stroke and establishes the time of onset',
-      'Applies the clot retrieval pathway',
+      'Transports to the nearest stroke centre by the guideline',
       'Keeps the scene time short and gives a clear radio notification',
     ],
-    guidelines: ['cpg-12-6', 'cpg-12-8', 'cpg-1-23'],
+    guidelines: ['cpg-12-6', 'cpg-1-23'],
     patients: [
       {
         history: 'Atrial fibrillation, high cholesterol',
-        medications: "Apixaban (his wife thinks he missed last night's dose), atorvastatin",
+        medications: 'Apixaban, atorvastatin',
         allergies: 'None known',
         social: 'Retired electrician. Lives with his wife. Ex-smoker.',
         vitals: {
           gcs: '14',
           rr: '16',
           spo2: '96%',
-          hr: '96 irregular',
+          hr: '96 irreg',
           bp: '178/96',
           temp: '36.6',
           bgl: '7.1',
@@ -751,8 +786,9 @@ export const scenarios = [
     story:
       'A 28-year-old office worker has had a pounding heart for 30 minutes. A colleague called 111.',
     intention:
-      'Identify SVT on the monitor and manage it by the guideline. Watch for a 12-lead before and after treatment, vagal manoeuvres done well and the signs that would make it unstable.',
+      'Identify SVT on the monitor and manage it by the guideline, after a structured assessment so they don’t lock onto the obvious diagnosis (premature closure). Watch for a 12-lead before and after treatment, vagal manoeuvres done well and the signs that would make it unstable.',
     outcomes: [
+      'Does a structured assessment before settling on SVT',
       'Identifies SVT and records a 12-lead before and after treatment',
       'Performs vagal manoeuvres well',
       'Knows the signs that would make it unstable',
@@ -858,7 +894,7 @@ export const scenarios = [
     title: 'Back gone lifting',
     suburb: 'Upper Hutt',
     story:
-      'A 52-year-old man felt his lower back "go" while lifting a bag of concrete. He is lying on the garage floor.',
+      'A 52-year-old man has severe lower back pain at home; his wife is calling. He felt his back "go" lifting a bag of concrete, walked inside and is now on the couch, unable to move for the pain.',
     intention:
       'Assess non-traumatic back pain, give good pain relief and search for the red flags. Watch whether they ask about bladder and bowel control, numbness in the saddle area and leg weakness.',
     outcomes: [
@@ -894,12 +930,17 @@ export const scenarios = [
     title: "Her mum's pills",
     suburb: 'Porirua East',
     story:
-      "A 17-year-old girl's mum found her drowsy in her bedroom with empty blister packs of her mum's medicines. The girl won't say how many she took.",
+      'A 17-year-old girl is drowsy after a possible overdose; her mum is calling. Her mum found her in her bedroom with empty blister packs of her own medicines.',
+    giveIfAsked: [
+      'Her mum counts the packs: up to 20 amitriptyline 25 mg and 16 paracetamol 500 mg are missing.',
+      'She took them about two hours ago, after an argument.',
+      'She won’t say how many she took. Asked gently and away from her mum, she says she wanted to die.',
+    ],
     intention:
-      'Manage a mixed overdose of medicines in a young person who may not consent. Watch for working out what and how much was taken and when, an ECG, thinking about her safety at home, and capacity for a 17-year-old.',
+      'Manage a mixed overdose of medicines in a young person who may not consent. Watch for working out what and how much was taken and when, an ECG for the amitriptyline, thinking about her safety at home, and capacity for a 17-year-old.',
     outcomes: [
       'Works out what was taken, how much and when',
-      'Records an ECG',
+      'Records an ECG and looks for a widened QRS',
       'Considers her safety at home and her capacity at 17',
     ],
     guidelines: ['cpg-5-5', 'cpg-10-3', 'cpg-1-20', 'cpg-1-24'],
@@ -931,12 +972,18 @@ export const scenarios = [
     title: 'After the party',
     suburb: 'Mount Cook',
     story:
-      'Flatmates called because a 20-year-old man is hot, sweaty and agitated after a party. They say he "took something".',
+      'A 20-year-old man is hot and agitated after a party; his flatmates are calling. They say he has been dancing for hours and "took something".',
+    giveIfAsked: [
+      'His flatmates think he took MDMA; one saw him take a second pill about an hour ago.',
+      'A friend found a small bottle of clear liquid in his jacket; nobody knows what it is (possible GHB).',
+      'He has had nothing to drink but alcohol for hours.',
+    ],
     intention:
-      'Manage recreational drug toxicity with hyperthermia and agitation. Watch for scene safety, cooling, sedation decisions and recognising when this is becoming life-threatening.',
+      'Manage recreational drug toxicity with hyperthermia and agitation. Watch for scene safety, active cooling, sedation chosen step by step with its cautions (he has been drinking and may have taken a second drug), and recognising when this is becoming life-threatening.',
     outcomes: [
-      'Keeps the scene safe',
-      'Starts cooling and makes sound sedation decisions',
+      'Keeps the scene safe and asks for ICP backup if the risk to safety becomes severe',
+      'Starts active cooling',
+      'Chooses sedation step by step and weighs its cautions (alcohol, a possible second drug)',
       'Recognises when it is becoming life-threatening',
     ],
     guidelines: ['cpg-5-6', 'cpg-11-3', 'cpg-5-1'],
@@ -945,8 +992,7 @@ export const scenarios = [
         history: 'Nil known',
         medications: 'Nil',
         allergies: 'Unknown',
-        social:
-          'Student. Flatmates think he took MDMA and maybe something else. Has been dancing for hours.',
+        social: 'Student. At a party at the flat since early evening; has been drinking.',
         vitals: {
           gcs: '14',
           rr: '28',
@@ -1005,11 +1051,12 @@ export const scenarios = [
     title: 'Headache at 36 weeks',
     suburb: 'Kilbirnie',
     story:
-      'A 29-year-old woman who is 36 weeks pregnant has a severe headache and blurred vision. Partway through the job, she has a seizure.',
+      'A 29-year-old woman who is 36 weeks pregnant has a severe headache; her partner is calling. It started this morning and now her vision is blurred.',
     intention:
-      'Recognise pre-eclampsia, then manage an eclamptic seizure. Watch for checking the blood pressure early, positioning for pregnancy, the treatment of the seizure and early notice to the hospital.',
+      'Recognise pre-eclampsia, then manage an eclamptic seizure: partway through the job, once the blood pressure is known, she has a seizure. Watch for checking the blood pressure early, asking early for an ICP or clinical advice for magnesium, positioning for pregnancy, the treatment of the seizure and early notice to the hospital.',
     outcomes: [
       'Checks the blood pressure early and recognises pre-eclampsia',
+      'Asks early for an ICP or clinical advice for magnesium',
       'Positions her correctly for pregnancy',
       'Treats the eclamptic seizure and warns the hospital early',
     ],
@@ -1038,26 +1085,30 @@ export const scenarios = [
     complexity: 3,
     load: 'single',
     levels: ['grad', 'supervised', 'paramedic'],
-    title: 'Tramper at Ōtaki Forks',
-    suburb: 'Ōtaki Forks',
+    title: 'Tramper on Colonial Knob',
+    suburb: 'Colonial Knob',
     rural: true,
     story:
-      "A 61-year-old tramper slipped on the track about an hour's walk in. It is late afternoon, raining and 9°C. His friend walked out to get signal.",
+      'A 61-year-old man has hurt his leg on the Colonial Knob track; his friend is calling. He slipped about 40 minutes’ walk up the track; it is late afternoon, raining and 9°C, and his friend walked down to get signal.',
+    giveIfAsked: [
+      'His lower leg is deformed above the ankle and he can’t stand on it.',
+      'He has been lying on the wet track for about an hour and is shivering.',
+    ],
     intention:
-      'Manage a lower leg fracture far from the road, with hypothermia setting in. Watch for planning the extraction early, asking for a helicopter or more crew, keeping him warm and pain relief for a long carry.',
+      'Manage a lower leg fracture far from the road, with hypothermia setting in. Watch for planning the carry-out early (more crew, equipment and a meeting point), keeping him warm and pain relief that will last a long carry.',
     outcomes: [
-      'Plans the extraction early and asks for a helicopter or more crew',
-      'Keeps him warm',
+      'Plans the carry-out early and asks for more crew and equipment',
+      'Keeps him warm and off the cold ground',
       'Gives pain relief that will last a long carry',
     ],
-    guidelines: ['cpg-4-11', 'cpg-11-4', 'cpg-1-12', 'cpg-1-18'],
+    guidelines: ['cpg-4-11', 'cpg-11-4', 'cpg-1-18'],
     patients: [
       {
         history: 'Hypertension, hip replacement two years ago',
         medications: 'Losartan',
         allergies: 'None known',
         social:
-          'Retired. Lives with his wife in Waikanae. Tramps every weekend. Wearing wet cotton.',
+          'Retired. Lives with his wife in Porirua. Walks the track most weekends. Wearing wet cotton.',
         vitals: {
           gcs: '15',
           rr: '20',
@@ -1152,7 +1203,11 @@ export const scenarios = [
     title: 'Rash in the hostel',
     suburb: 'Kelburn',
     story:
-      'A 19-year-old student felt unwell overnight. Her friend found her vomiting and noticed a few purple spots on her legs.',
+      'A 19-year-old woman is vomiting and unwell in a university hall; her friend is calling. She felt unwell overnight and her friend found her vomiting this morning.',
+    giveIfAsked: [
+      'There are a few purple spots on her legs that don’t fade when pressed.',
+      'She has a headache and her legs ache.',
+    ],
     intention:
       'Recognise meningococcal septicaemia early and treat it fast. Watch for infection precautions, the antibiotic given without delay, fluids for shock and warning the hospital.',
     outcomes: [

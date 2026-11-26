@@ -864,6 +864,10 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
     /^Common presentation Single patient( Suits .+)?$/,
   );
   assert.equal($$('.scenario-outcomes li').length, 3, 'the intended outcomes are in the intention');
+  const facts = $('.scenario-give-if-asked').closest('details');
+  assert.ok(!facts.open, 'the give-if-asked facts are folded for the mentor');
+  assert.match(facts.textContent, /Student: give freely/);
+  assert.equal($$('.scenario-give-if-asked li').length, 3);
   click($('[data-action="scenario-finish"]'));
   assert.equal($$('.scenario-guide li').length, 4, 'the PEARLS guide has four steps');
   assert.equal($$('.scenario-outcome').length, 3, 'one rating row per outcome');

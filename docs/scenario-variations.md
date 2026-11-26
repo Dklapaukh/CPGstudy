@@ -114,7 +114,8 @@ multi-patient scenario such as `generator-garage`); these get a "Do first" note.
 
 ## Suggested steps
 
-1. Rewrite the 7 scenarios marked Small changes and fix the in-line comments (content only).
+1. ~~Rewrite the 7 scenarios marked Small changes and fix the in-line comments~~ (done 26 Nov
+   2026, with new openings for those and the other commented scenarios).
 2. New openings and "give if asked" notes for all scenarios; re-tag levels 1 to 3.
 3. Variation cards drafted from the review notes; editors review them.
 4. Show cards on the scenario screen ("Ways to vary it", folded, for the mentor).
