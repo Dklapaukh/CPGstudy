@@ -9,7 +9,12 @@ import { scenarios as writtenScenarios } from '../content/scenarios.js';
 import { scenarioEdits } from '../content/scenario-edits.js';
 import { guidelineData } from '../content/guidelines.js';
 import { SCENARIO_COMPLEXITY, SCENARIO_LOADS, SCENARIO_VITALS } from '../src/constants.js';
-import { MAX_OUTCOMES, MAX_OUTCOME_TEXT, liveScenarios } from '../src/scenarioEdits.js';
+import {
+  MAX_OUTCOMES,
+  MAX_OUTCOME_TEXT,
+  MAX_GIVE_IF_ASKED,
+  liveScenarios,
+} from '../src/scenarioEdits.js';
 
 const scenarios = liveScenarios(writtenScenarios, scenarioEdits);
 
@@ -41,6 +46,11 @@ test('every scenario has its text, complexity, scene load, outcomes and real gui
     assert.ok(scenario.outcomes.length > 0 && scenario.outcomes.length <= MAX_OUTCOMES);
     scenario.outcomes.forEach((outcome) =>
       assert.ok(outcome && outcome.length <= MAX_OUTCOME_TEXT, `${scenario.id} outcome`),
+    );
+    const facts = scenario.giveIfAsked ?? [];
+    assert.ok(Array.isArray(facts) && facts.length <= MAX_GIVE_IF_ASKED, `${scenario.id} facts`);
+    facts.forEach((fact) =>
+      assert.ok(fact && fact.length <= MAX_OUTCOME_TEXT, `${scenario.id} give if asked`),
     );
     assert.ok(scenario.guidelines.length > 0);
     scenario.guidelines.forEach((id) => assert.ok(guidelineIds.has(id), `${scenario.id} ${id}`));

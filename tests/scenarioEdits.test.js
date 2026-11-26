@@ -155,6 +155,13 @@ test('boxes: complexity 1 to 3, a known load, outcomes one per line, CPG numbers
   assert.ok(readScenarioBox('story', '   ', idOf).error);
   assert.deepEqual(readScenarioBox('patients.0.label', '', idOf), { value: '' });
   assert.deepEqual(readScenarioBox('title', ' Trimmed ', idOf), { value: 'Trimmed' });
+  // "Give if asked" facts: one per line like outcomes, but a scenario may have none.
+  assert.deepEqual(readScenarioBox('giveIfAsked', '- Missed lunch\n\nType 1', idOf), {
+    value: ['Missed lunch', 'Type 1'],
+  });
+  assert.deepEqual(readScenarioBox('giveIfAsked', '  ', idOf), { value: [] });
+  assert.ok(readScenarioBox('giveIfAsked', 'a\nb\nc\nd\ne\nf\ng\nh\ni', idOf).error);
+  assert.ok(isEditablePath(written, 'giveIfAsked'));
 });
 
 /* ---------- New and deleted scenarios ---------- */
@@ -260,6 +267,13 @@ test('a saved new scenario is checked again: unknown keys go, a broken one is re
     null,
   );
   assert.equal(cleanAddedScenario({ ...scenario, outcomes: [] }, 'x', isGuidelineId), null);
+  const facts = { ...scenario, giveIfAsked: ['Missed lunch'] };
+  assert.deepEqual(cleanAddedScenario(facts, scenario.id, isGuidelineId).giveIfAsked, [
+    'Missed lunch',
+  ]);
+  assert.equal(cleanAddedScenario({ ...scenario, giveIfAsked: '' }, 'x', isGuidelineId), null);
+  const none = cleanAddedScenario({ ...scenario, giveIfAsked: [] }, scenario.id, isGuidelineId);
+  assert.ok(!('giveIfAsked' in none), 'an empty list is left out');
   assert.equal(cleanAddedScenario({ ...scenario, patients: [{}] }, 'x', isGuidelineId), null);
   assert.equal(cleanAddedScenario('not a scenario', 'x', isGuidelineId), null);
 });

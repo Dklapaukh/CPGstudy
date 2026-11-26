@@ -213,6 +213,10 @@ export const SCENARIO_LEVELS = {
   paramedic: { name: 'Paramedic', short: 'Paramedic' },
   icp: { name: 'Intensive care paramedic', short: 'ICP' },
 };
+// Above a scenario's "give if asked" facts: how freely to give them by level (SC-P; expertise
+// reversal effect, Kalyuga): the less experienced the learner, the more freely.
+export const GIVE_IF_ASKED_GUIDE =
+  'Facts the learner finds out by asking. Student: give freely. Grad and Supervised: give when asked. Paramedic and ICP: give only when asked precisely.';
 // The vitals row, in this order.
 export const SCENARIO_VITALS = [
   ['gcs', 'GCS'],

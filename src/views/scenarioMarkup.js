@@ -18,6 +18,7 @@ import {
   SCENARIO_LOADS,
   SCENARIO_LEVELS,
   SCENARIO_VITALS,
+  GIVE_IF_ASKED_GUIDE,
 } from '../constants.js';
 import { tidyLevels } from '../scenarioEdits.js';
 
@@ -202,6 +203,26 @@ function guidelinesHtml(scenario, editing) {
 }
 
 /**
+ * The facts the learner finds out by asking (SC-P), under the story, for the mentor: folded in
+ * the app, open for an editor. Nothing in the app when the scenario has none.
+ */
+function giveIfAskedHtml(scenario, editing) {
+  const facts = scenario.giveIfAsked || [];
+  if (!facts.length && (!editing || editing.readOnly)) return '';
+  const list = facts.length
+    ? facts.map((fact) => `<li>${escapeHtml(fact)}</li>`).join('')
+    : '<li><i>None yet</i></li>';
+  const body =
+    openForm(editing, 'giveIfAsked') ||
+    `<ul class="scenario-fact scenario-give-if-asked"${boxAttrs(editing, 'giveIfAsked')}>${list}</ul>`;
+  return foldHtml(
+    'Give if asked (for the mentor)',
+    `<p class="scenario-intro">${escapeHtml(GIVE_IF_ASKED_GUIDE)}</p>${body}${commentSlot(editing, 'giveIfAsked')}`,
+    Boolean(editing),
+  );
+}
+
+/**
  * The scenario as learners see it: the story card, each patient (with what happened next and
  * the photos, for a submitted job), the intention and intended
  * outcomes (folded in the app, open for an editor) and the guidelines.
@@ -225,6 +246,7 @@ export function scenarioBodyHtml(scenario, editing) {
   return `<section class="scenario-card">${scenarioTagsHtml(scenario, editing)}
       ${text('title', 'h1', 'scenario-title')}${text('suburb', 'p', 'scenario-label')}
       ${text('story', 'p', 'scenario-story')}${commentSlot(editing, 'story')}</section>
+    ${giveIfAskedHtml(scenario, editing)}
     ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
     ${photosHtml(scenario, editing)}
     ${foldHtml(intentionTitle, intention, Boolean(editing))}

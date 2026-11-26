@@ -6,7 +6,8 @@
  * An edit is saved in the Sheet's Edits tab under SCENARIO_EDIT_PREFIX + scenario id, beside the
  * quiz question edits, so it needs no backend change. Its shape:
  *   { kind: 'scenario', off?: true, fields: { <path>: { was, to } } }
- * A path names one value: 'title', 'complexity', 'load', 'levels', 'outcomes', 'guidelines',
+ * A path names one value: 'title', 'complexity', 'load', 'levels', 'outcomes', 'giveIfAsked',
+ * 'guidelines',
  * 'patients.0.history',
  * 'patients.1.vitals.hr'. `to` is what learners see; `was` is the value in content/scenarios.js
  * when the edit was made, so a later change to that file is noticed and shown for review.
@@ -35,6 +36,8 @@ export const MAX_SCENARIO_TEXT = 2000;
 // Intended outcomes: one per line in the box, at most this many, each at most this long.
 export const MAX_OUTCOMES = 6;
 export const MAX_OUTCOME_TEXT = 200;
+// "Give if asked" facts for the mentor (SC-P): one per line, optional, at most this many.
+export const MAX_GIVE_IF_ASKED = 8;
 // The most patients a new scenario has, so its edit stays inside the backend's 20000 characters.
 export const MAX_PATIENTS = 4;
 // A new scenario's id is made from its title, cut to this length.
@@ -48,7 +51,7 @@ const MAX_NOTE_TEXT = 80;
 const MAX_CAPTION_TEXT = 120;
 const PHOTO_SRC_PATTERN = /^content\/scenario-photos\/[a-z0-9-]+\.jpg$/;
 // The scenario-wide values an editor may change, besides the text fields.
-const OTHER_FIELDS = ['complexity', 'load', 'levels', 'outcomes', 'guidelines'];
+const OTHER_FIELDS = ['complexity', 'load', 'levels', 'outcomes', 'giveIfAsked', 'guidelines'];
 
 const sameValue = (first, second) => JSON.stringify(first) === JSON.stringify(second);
 
@@ -367,9 +370,10 @@ function readDraftExtras(draft) {
 const isText = (value, maxLength = MAX_SCENARIO_TEXT) =>
   typeof value === 'string' && value.trim() !== '' && value.length <= maxLength;
 // A list of 1 to maxCount such texts.
-const isTextList = (list, maxCount, maxLength) =>
+/** Whether a list holds 1 to maxCount texts (0 too when `mayBeEmpty`), each within maxLength. */
+const isTextList = (list, maxCount, maxLength, mayBeEmpty = false) =>
   Array.isArray(list) &&
-  list.length > 0 &&
+  (mayBeEmpty || list.length > 0) &&
   list.length <= maxCount &&
   list.every((item) => isText(item, maxLength));
 
@@ -432,6 +436,12 @@ function cleanPhotos(photos = []) {
   return clean.every(Boolean) ? clean : null;
 }
 
+/** A new scenario's "give if asked" facts copied ([] when it has none), or null when broken. */
+function cleanFacts(facts) {
+  if (facts === undefined) return [];
+  return isTextList(facts, MAX_GIVE_IF_ASKED, MAX_OUTCOME_TEXT, true) ? [...facts] : null;
+}
+
 /**
  * A new scenario with only the keys the app reads, in one order, under `id`; or null when it is
  * not whole (the same rules as tests/scenarios.test.js). `isGuidelineId` says a guideline is real.
@@ -464,6 +474,9 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
   };
   const levels = tidyLevels(scenario.levels);
   if (levels) clean.levels = levels;
+  const facts = cleanFacts(scenario.giveIfAsked);
+  if (!facts) return null;
+  if (facts.length) clean.giveIfAsked = facts;
   return patientsProblem(clean) ? null : clean;
 }
 
@@ -494,6 +507,7 @@ export function readScenarioBox(path, text, guidelineIdOfNumber) {
   if (path === 'load') return readLoad(trimmed);
   if (path === 'levels') return readLevels(trimmed);
   if (path === 'outcomes') return readOutcomes(trimmed);
+  if (path === 'giveIfAsked') return readGiveIfAsked(trimmed);
   if (path === 'guidelines') return readGuidelineNumbers(trimmed, guidelineIdOfNumber);
   if (trimmed.length > MAX_SCENARIO_TEXT) return { error: 'That is too long to keep.' };
   if (!trimmed && !path.endsWith('.label')) return { error: 'This can’t be empty.' };
@@ -543,12 +557,26 @@ function readLevels(text) {
   return { value: tidyLevels(typed.map(keyOf)) || [] };
 }
 
-/** Intended outcomes, one per line; blank lines are skipped. */
-function readOutcomes(text) {
-  const outcomes = text
+/** Lines of a list box, without blank lines or a leading bullet. */
+const listLines = (text) =>
+  text
     .split('\n')
     .map((line) => line.replace(/^[-•*]\s*/, '').trim())
     .filter(Boolean);
+
+/** "Give if asked" facts, one per line; empty is allowed (the scenario has none). */
+function readGiveIfAsked(text) {
+  const facts = listLines(text);
+  if (facts.length > MAX_GIVE_IF_ASKED) return { error: `Keep it to ${MAX_GIVE_IF_ASKED} facts.` };
+  if (facts.some((fact) => fact.length > MAX_OUTCOME_TEXT)) {
+    return { error: `Keep each fact under ${MAX_OUTCOME_TEXT} characters.` };
+  }
+  return { value: facts };
+}
+
+/** Intended outcomes, one per line; blank lines are skipped. */
+function readOutcomes(text) {
+  const outcomes = listLines(text);
   if (!outcomes.length) return { error: 'List at least one outcome.' };
   if (outcomes.length > MAX_OUTCOMES) return { error: `Keep it to ${MAX_OUTCOMES} outcomes.` };
   if (outcomes.some((outcome) => outcome.length > MAX_OUTCOME_TEXT)) {

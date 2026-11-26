@@ -48,6 +48,13 @@ export const COMMENT_PARTS = {
     name: 'What happened next',
     questions: ['Does the response fit the treatment given?'],
   },
+  giveIfAsked: {
+    name: 'Give if asked',
+    questions: [
+      'Would any of it give the answer away if it were in the story?',
+      'Is anything the learner should find out missing?',
+    ],
+  },
   photos: { name: 'ECGs and photos', questions: ['Do the ECGs and photos fit the story?'] },
   intention: {
     name: 'Intention',
@@ -67,7 +74,7 @@ export const COMMENT_PARTS = {
   },
 };
 const PART_PATTERN =
-  /^(story|photos|intention|outcomes|guidelines|patients\.\d\.(vitals|background|next))$/;
+  /^(story|giveIfAsked|photos|intention|outcomes|guidelines|patients\.\d\.(vitals|background|next))$/;
 
 /** The kind of a part: 'vitals' for 'patients.1.vitals', or the part itself. */
 export const partKind = (part) => String(part).split('.').at(-1);

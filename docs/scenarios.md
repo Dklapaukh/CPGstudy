@@ -20,7 +20,10 @@ Rural. A theme comes from the sections or guideline numbers of a scenario's guid
 anything has been run, a progress table at the top gives, for each complexity and scene load,
 how many have been run and their average latest score.
 
-A scenario (`#scenario-<id>`) shows its tags, title, suburb and story, vitals in one row, the
+A scenario (`#scenario-<id>`) shows its tags, title, suburb and story, then, when it has any,
+**Give if asked (for the mentor)** (folded; SC-P): the facts the learner should find out by
+asking, such as what would give the answer away, under one line on how freely to give them by
+level (`GIVE_IF_ASKED_GUIDE`; `giveIfAsked`, at most 8). Then vitals in one row, the
 patient background, the intention with its intended outcomes (folded) and its guidelines. A
 guideline opened from it has "Back to scenario".
 
@@ -62,7 +65,7 @@ button to the next one. Under each scenario a **Review this scenario** card has:
 - a short **Summary** (decision 24 Nov 2026, SC-J): "What does it teach best?", "Anything
   unsafe or wrong?" (`REVIEW_QUESTIONS`), each up to 200 characters.
 
-**In-line comments.** Each part of the scenario on the editor page (story, each patient's
+**In-line comments.** Each part of the scenario on the editor page (story, give if asked, each patient's
 vitals, background and what happened next, the photos, the intention, the debrief points and
 the guidelines) ends with a **💬 Comment** button. It opens a box showing that part's questions
 (`COMMENT_PARTS` in `src/scenarioComments.js`, such as "Do the vitals fit the story, the age and

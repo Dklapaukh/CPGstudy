@@ -2,7 +2,8 @@
  * Scenarios (Quiz > Scenarios): the list (#scenarios), grouped by complexity and filtered by
  * complexity and scene-load chips and a theme dropdown, with a progress fold; and one scenario
  * (#scenario-<id>). A scenario is only an opening for a mentor to run: story, suburb, vitals,
- * patient background, the intention and intended outcomes (folded) and its guidelines.
+ * "give if asked" facts and patient background, the intention and intended outcomes (folded)
+ * and its guidelines.
  * Finish scenario opens the debrief: a PEARLS guide, a rating of each intended outcome, the
  * guidelines the learner struggled with (they go to Guidelines to learn) and three short notes;
  * the run and its score are saved (scenarioRunState.js).

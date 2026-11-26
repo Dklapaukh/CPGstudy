@@ -7,7 +7,10 @@
  *   complexity 1 to 3, how clinically hard it is (SCENARIO_COMPLEXITY in src/constants.js)
  *   load       'single', 'delegation' or 'several': the team and scene load (SCENARIO_LOADS);
  *              'several' exactly when there is more than one patient
- *   title, suburb (Wellington, Porirua, Kāpiti or Hutt Valley), story
+ *   title, suburb (Wellington, Porirua, Kāpiti or Hutt Valley), story (SC-P: sentence 1 the call
+ *              notes, sentence 2 the history the mentor can give or let the learner find out)
+ *   giveIfAsked facts the learner finds out by asking, such as what would give the answer away;
+ *              mentor only, optional (SC-P)
  *   levels     the levels it suits (SCENARIO_LEVELS), from the editors' reviews; optional
  *   rural      true for a rural scenario or one with a long transport (the Rural theme); optional
  *   intention  what the scenario practises and what to watch for

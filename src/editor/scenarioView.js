@@ -44,6 +44,7 @@ const FIELD_NAMES = {
   load: 'Scene load',
   levels: 'Suits these levels',
   outcomes: 'Intended outcomes',
+  giveIfAsked: 'Give if asked',
   guidelines: 'Guidelines',
   label: 'Patient label',
   history: 'Medical history',
@@ -60,11 +61,21 @@ const HINTS = {
   complexity: '1 Straightforward, 2 Common presentation, 3 Complex or atypical.',
   load: 'single, delegation or several (several only when there is more than one patient).',
   outcomes: 'One per line, short and observable. The debrief rates each one.',
+  giveIfAsked:
+    'One fact per line that the learner finds out by asking, such as what would give the answer away. Empty for none.',
   levels: 'Any of student, grad, supervised, paramedic, icp, separated by commas. Empty for none.',
   guidelines: 'CPG numbers in the order shown, separated by commas, for example 1.17, 4.11.',
   label: 'Shown above the patient. Needed when there are several patients.',
 };
-const LONG_FIELDS = ['story', 'intention', 'outcomes', 'social', 'history', 'medications'];
+const LONG_FIELDS = [
+  'story',
+  'intention',
+  'outcomes',
+  'giveIfAsked',
+  'social',
+  'history',
+  'medications',
+];
 
 /** What a path is called on the page: "Story", "Patient 2: HR". */
 export function pathName(scenario, path) {
@@ -84,7 +95,7 @@ export function boxTextOf(value, path) {
   if (path === 'guidelines') {
     return (value || []).map((id) => guidelineById(id)?.n || id).join(', ');
   }
-  if (path === 'outcomes') return (value || []).join('\n');
+  if (path === 'outcomes' || path === 'giveIfAsked') return (value || []).join('\n');
   if (path === 'levels') return (value || []).join(', ');
   return value === undefined || value === null ? '' : String(value);
 }

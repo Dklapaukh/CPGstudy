@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-26: **"Give if asked" facts** (scenario screen and editor page, SC-P). An optional,
+  folded mentor list under the story for what the learner should find out by asking.
 - 2026-11-26: **Scenario editing back on** (editor page, SC-U). Level 2 named Undifferentiated
   presentation; the levels ticked in reviews are now in `content/scenarios.js`.
 - 2026-11-26: **Scenario design decided** (no app change; SC-N to SC-T). Three levels, new openings,
