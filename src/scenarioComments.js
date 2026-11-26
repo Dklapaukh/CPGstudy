@@ -55,6 +55,13 @@ export const COMMENT_PARTS = {
       'Is anything the learner should find out missing?',
     ],
   },
+  variations: {
+    name: 'Ways to vary it',
+    questions: [
+      'Is each change safe and right for the levels it names?',
+      'Does it change one thing (the diagnosis, a second problem, severity, escalation or scene)?',
+    ],
+  },
   photos: { name: 'ECGs and photos', questions: ['Do the ECGs and photos fit the story?'] },
   intention: {
     name: 'Intention',
@@ -74,7 +81,7 @@ export const COMMENT_PARTS = {
   },
 };
 const PART_PATTERN =
-  /^(story|giveIfAsked|photos|intention|outcomes|guidelines|patients\.\d\.(vitals|background|next))$/;
+  /^(story|giveIfAsked|photos|intention|outcomes|variations|guidelines|patients\.\d\.(vitals|background|next))$/;
 
 /** The kind of a part: 'vitals' for 'patients.1.vitals', or the part itself. */
 export const partKind = (part) => String(part).split('.').at(-1);

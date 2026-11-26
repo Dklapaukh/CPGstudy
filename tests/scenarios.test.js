@@ -15,6 +15,7 @@ import {
   MAX_GIVE_IF_ASKED,
   liveScenarios,
 } from '../src/scenarioEdits.js';
+import { isVariation, MAX_VARIATIONS } from '../src/scenarioVariations.js';
 
 const scenarios = liveScenarios(writtenScenarios, scenarioEdits);
 
@@ -52,6 +53,9 @@ test('every scenario has its text, complexity, scene load, outcomes and real gui
     facts.forEach((fact) =>
       assert.ok(fact && fact.length <= MAX_OUTCOME_TEXT, `${scenario.id} give if asked`),
     );
+    const cards = scenario.variations ?? [];
+    assert.ok(cards.length <= MAX_VARIATIONS, `${scenario.id} cards`);
+    cards.forEach((card) => assert.ok(isVariation(card), `${scenario.id} card ${card.text}`));
     assert.ok(scenario.guidelines.length > 0);
     scenario.guidelines.forEach((id) => assert.ok(guidelineIds.has(id), `${scenario.id} ${id}`));
   });

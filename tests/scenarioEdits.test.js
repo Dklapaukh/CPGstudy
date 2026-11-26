@@ -161,7 +161,11 @@ test('boxes: complexity 1 to 3, a known load, outcomes one per line, CPG numbers
   });
   assert.deepEqual(readScenarioBox('giveIfAsked', '  ', idOf), { value: [] });
   assert.ok(readScenarioBox('giveIfAsked', 'a\nb\nc\nd\ne\nf\ng\nh\ni', idOf).error);
-  assert.ok(isEditablePath(written, 'giveIfAsked'));
+  assert.ok(isEditablePath(written, 'giveIfAsked') && isEditablePath(written, 'variations'));
+  assert.deepEqual(readScenarioBox('variations', 'Severity (ICP): Shocked.', idOf), {
+    value: [{ lever: 'severity', levels: ['icp'], text: 'Shocked.' }],
+  });
+  assert.ok(readScenarioBox('variations', 'Severity: no levels', idOf).error);
 });
 
 /* ---------- New and deleted scenarios ---------- */
@@ -274,6 +278,15 @@ test('a saved new scenario is checked again: unknown keys go, a broken one is re
   assert.equal(cleanAddedScenario({ ...scenario, giveIfAsked: '' }, 'x', isGuidelineId), null);
   const none = cleanAddedScenario({ ...scenario, giveIfAsked: [] }, scenario.id, isGuidelineId);
   assert.ok(!('giveIfAsked' in none), 'an empty list is left out');
+  const card = { lever: 'severity', levels: ['icp'], text: 'Shocked.' };
+  const carded = cleanAddedScenario(
+    { ...scenario, variations: [card] },
+    scenario.id,
+    isGuidelineId,
+  );
+  assert.deepEqual(carded.variations, [card]);
+  const broken = { ...scenario, variations: [{ ...card, lever: 'luck' }] };
+  assert.equal(cleanAddedScenario(broken, 'x', isGuidelineId), null);
   assert.equal(cleanAddedScenario({ ...scenario, patients: [{}] }, 'x', isGuidelineId), null);
   assert.equal(cleanAddedScenario('not a scenario', 'x', isGuidelineId), null);
 });

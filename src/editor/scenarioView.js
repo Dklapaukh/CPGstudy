@@ -29,6 +29,7 @@ import { scenarioBodyHtml, scenarioTagsText, levelsText } from '../views/scenari
 import { reviewCardHtml } from './reviewView.js';
 import { partName, questionsOf, partKind, MAX_COMMENT } from '../scenarioComments.js';
 import { REVIEWS_GOAL } from '../scenarioReviews.js';
+import { variationsText } from '../scenarioVariations.js';
 import { DEBRIEF_RATINGS } from '../constants.js';
 
 export const SCENARIO_EDITOR_HASH_PREFIX = '#s-';
@@ -45,6 +46,7 @@ const FIELD_NAMES = {
   levels: 'Suits these levels',
   outcomes: 'Intended outcomes',
   giveIfAsked: 'Give if asked',
+  variations: 'Ways to vary it',
   guidelines: 'Guidelines',
   label: 'Patient label',
   history: 'Medical history',
@@ -62,6 +64,8 @@ const HINTS = {
     '1 Common presentation, 2 Undifferentiated presentation (X or Y), 3 Complex or atypical (X and Y).',
   load: 'single, delegation or several (several only when there is more than one patient).',
   outcomes: 'One per line, short and observable. The debrief rates each one.',
+  variations:
+    'One card per line: lever (levels): what changes. Levers: Uncertainty, Complexity (add a rung: unrelated, complementary, overlapping or contradictory), Severity, Deterioration, Escalation, Scene load. For example: Complexity, overlapping (Paramedic, ICP): She also has heart failure.',
   giveIfAsked:
     'One fact per line that the learner finds out by asking, such as what would give the answer away. Empty for none.',
   levels: 'Any of student, grad, supervised, paramedic, icp, separated by commas. Empty for none.',
@@ -73,6 +77,7 @@ const LONG_FIELDS = [
   'intention',
   'outcomes',
   'giveIfAsked',
+  'variations',
   'social',
   'history',
   'medications',
@@ -97,6 +102,7 @@ export function boxTextOf(value, path) {
     return (value || []).map((id) => guidelineById(id)?.n || id).join(', ');
   }
   if (path === 'outcomes' || path === 'giveIfAsked') return (value || []).join('\n');
+  if (path === 'variations') return variationsText(value);
   if (path === 'levels') return (value || []).join(', ');
   return value === undefined || value === null ? '' : String(value);
 }

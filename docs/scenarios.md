@@ -26,7 +26,11 @@ A scenario (`#scenario-<id>`) shows its tags, title, suburb and story, then, whe
 **Give if asked (for the mentor)** (folded; SC-P): the facts the learner should find out by
 asking, such as what would give the answer away, under one line on how freely to give them by
 level (`GIVE_IF_ASKED_GUIDE`; `giveIfAsked`, at most 8). Then vitals in one row, the
-patient background, the intention with its intended outcomes (folded) and its guidelines. A
+patient background, the intention with its intended outcomes (folded), **Ways to vary it**
+(folded; SC-N): the variation cards, each a lever (`SCENARIO_LEVERS`; a Complexity card also has
+its rung, `COMPLEXITY_RUNGS`), the levels it suits and one or two lines for the mentor
+(`variations`, at most 6, `src/scenarioVariations.js`), and its guidelines. On the editor page
+the cards are one box, one card per line: "Complexity, overlapping (Paramedic, ICP): …". A
 guideline opened from it has "Back to scenario".
 
 **Finish scenario** opens the debrief on the learner's phone (SC-F), for the mentor to fill in

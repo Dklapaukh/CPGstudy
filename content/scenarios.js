@@ -41,6 +41,18 @@ export const scenarios = [
       'Examines the joints above and below and checks circulation, sensation and movement',
       'Gives a clear, structured handover',
     ],
+    variations: [
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'The ankle is dislocated and the foot is pale: it needs reduction. Call an ICP and go through the procedural dissociation checklist. ICP phase 1: do the reduction safely.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic'],
+        text: 'She went light-headed just before she fell: add a medical cause of the fall to find and treat.',
+      },
+    ],
     guidelines: ['cpg-1-17', 'cpg-4-11', 'cpg-1-9'],
     patients: [
       {
@@ -82,6 +94,18 @@ export const scenarios = [
       'Does a full set of vitals and a head-to-toe check',
       'Finds the urinary symptoms and links them to a possible urinary infection, keeping other causes in mind',
     ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['student', 'grad'],
+        text: 'Make it clearer for a newer learner: a fever of 38.9, rigors and burning when he passes urine.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'He is septic: BP 88/50, HR 118 and mottled knees.',
+      },
+    ],
     guidelines: ['cpg-1-17', 'cpg-6-7', 'cpg-12-9', 'cpg-1-6'],
     patients: [
       {
@@ -121,6 +145,23 @@ export const scenarios = [
       'Gets a 12-lead ECG early and interprets it',
       'Takes a focused chest pain history, including risk factors',
       'Treats and gives pain relief by the guideline',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'It is a PE: the pain is sharp on breathing in, he flew back from Perth last week and his left calf is swollen.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'It is a pericardial effusion: breathless, a viral illness last week and soft heart sounds. Keep the differential broad for a common complaint.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['icp'],
+        text: 'ICP phase 2: he becomes shocked (BP 78/50) and needs a vasopressor.',
+      },
     ],
     guidelines: ['cpg-3-2', 'cpg-3-3', 'cpg-1-18'],
     patients: [
@@ -163,6 +204,18 @@ export const scenarios = [
       'Checks for pressure areas, hypothermia and injuries from the long lie',
       'Chooses pain relief that suits her fentanyl allergy',
     ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'She has been down 24 hours: temperature 34.8, dark urine and a pressure area on her hip.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'She fell because of something new: an irregular pulse or a weak hand to find and explain.',
+      },
+    ],
     guidelines: ['cpg-13-3', 'cpg-4-11', 'cpg-1-18', 'cpg-12-9'],
     patients: [
       {
@@ -204,6 +257,23 @@ export const scenarios = [
       'Talks through the differentials for right-sided pain and the serious causes',
       'Chooses sensible pain relief and gives it by the guideline',
     ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'Make the patient a 28-year-old woman: ectopic pregnancy and ovarian torsion join the differentials.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'Make him 72: a leaking aneurysm, bowel obstruction or diverticulitis join the differentials.',
+      },
+      {
+        lever: 'severity',
+        levels: ['grad', 'supervised'],
+        text: 'His abdomen is rigid and his temperature 39.2: peritonitis, so look for sepsis.',
+      },
+    ],
     guidelines: ['cpg-13-2', 'cpg-1-18'],
     patients: [
       {
@@ -244,6 +314,29 @@ export const scenarios = [
       'Titrates oxygen to the right target for COPD',
       'Considers sepsis alongside an exacerbation',
       'Plans for the long trip to hospital',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'Lower the fever to 37.8 so sepsis is less clear.',
+      },
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'Her work of breathing stays high or rises despite oxygen, so CPAP is considered. Keep the BP normal so CPAP can be given.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'As above, with a low BP (88/50).',
+      },
+      {
+        lever: 'complexity',
+        rung: 'overlapping',
+        levels: ['paramedic', 'icp'],
+        text: 'She also has heart failure (crackles, swollen ankles): COPD, a chest infection and heart failure meet at the CPAP decision.',
+      },
     ],
     guidelines: ['cpg-2-2', 'cpg-6-2', 'cpg-1-16'],
     patients: [
@@ -287,6 +380,19 @@ export const scenarios = [
       'Recognises the bleeding risk of a head strike on warfarin',
       'Transports him rather than leaving him at home',
     ],
+    variations: [
+      {
+        lever: 'deterioration',
+        levels: ['grad', 'supervised'],
+        text: 'Over 20 minutes his GCS falls to 12 and he vomits: a bleed on warfarin.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'unrelated',
+        levels: ['supervised', 'paramedic'],
+        text: 'He also has a painful, shortened leg (a hip fracture) that pulls attention from his head and the cause of the fall.',
+      },
+    ],
     guidelines: ['cpg-4-9', 'cpg-13-3', 'cpg-12-9'],
     patients: [
       {
@@ -323,6 +429,24 @@ export const scenarios = [
       'Gives intramuscular adrenaline without delay',
       'Gives each crew member a clear task (positioning, IV access, fluids)',
       'Reassesses and gives a second adrenaline dose when needed',
+      'Considers additional treatments once adrenaline is working, by the guideline',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'No hives: only wheeze, vomiting and cramping after the meal, so anaphylaxis is less obvious.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'She is no better 5 to 10 minutes after one IM dose: request ICP backup.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'ICP phase 1: no better after two IM doses, so IV adrenaline (an infusion is preferred).',
+      },
     ],
     guidelines: ['cpg-12-12', 'cpg-1-8'],
     patients: [
@@ -364,6 +488,18 @@ export const scenarios = [
       'Organises compression changes and keeps pauses short',
       'Follows the arrest guideline for rhythm checks, shocks and medicines',
     ],
+    variations: [
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'VF continues after three shocks: follow the guideline for refractory VF.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'Circulation returns after the second shock: run the post-arrest checks.',
+      },
+    ],
     guidelines: ['cpg-3-14', 'cpg-1-8'],
     patients: [
       {
@@ -404,6 +540,18 @@ export const scenarios = [
       'Sends a clear first report and asks for resources early',
       'Triages all three patients in a sensible order',
       'Weighs the passenger’s anticoagulant and head strike in her triage and destination',
+    ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['supervised', 'paramedic'],
+        text: 'You are double-crewed instead of single: give each a role (this was hard even for a Paramedic alone).',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['icp'],
+        text: 'The passenger’s GCS falls to 9: a bleed on her anticoagulant.',
+      },
     ],
     guidelines: ['cpg-1-11', 'cpg-4-2', 'cpg-4-23'],
     patients: [
@@ -480,6 +628,19 @@ export const scenarios = [
       'Uses the paediatric ranges for the vitals',
       'Checks for other injuries beyond the obvious wrist',
     ],
+    variations: [
+      {
+        lever: 'complexity',
+        rung: 'unrelated',
+        levels: ['supervised', 'paramedic'],
+        text: 'He also landed on his elbow: a fracture above the elbow with a cool, pale hand.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'The hand is pale and pulseless: discuss calling an ICP to realign the limb.',
+      },
+    ],
     guidelines: ['cpg-7-1', 'cpg-4-11', 'cpg-1-18', 'cpg-1-17'],
     patients: [
       {
@@ -515,11 +676,28 @@ export const scenarios = [
       'She finds it hard to walk straight (only if they ask her to stand or walk).',
     ],
     intention:
-      'Keep to the structure when nothing obvious stands out. Watch whether they separate vertigo from light-headedness and look for the features that point to a stroke rather than an inner-ear cause.',
+      'Keep to the structure when nothing obvious stands out. The learner should think through the body systems that could be involved (neurological, cardiac, inner ear), then the specific conditions. Watch whether they separate vertigo from light-headedness and look for the features that point to a stroke rather than an inner-ear cause.',
     outcomes: [
       'Keeps to the full assessment structure',
       'Separates vertigo from light-headedness',
       'Looks for features of a stroke rather than an inner-ear cause',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['grad', 'supervised'],
+        text: 'Make it clearly inner ear: worse on turning her head, no headache, she walks normally. Can they say why it is not a stroke?',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic'],
+        text: 'She has palpitations and nearly fainted: light-headedness from an arrhythmia, not vertigo.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['icp'],
+        text: 'ICP phase 1: on the way her GCS falls to 9: a cerebellar haemorrhage needing airway management.',
+      },
     ],
     guidelines: ['cpg-13-9', 'cpg-1-17', 'cpg-1-6'],
     patients: [
@@ -561,6 +739,24 @@ export const scenarios = [
       'Assesses capacity and informed consent',
       'Does a full falls assessment',
       'Explains the risks clearly and leaves a safety-net plan',
+    ],
+    variations: [
+      {
+        lever: 'complexity',
+        rung: 'overlapping',
+        levels: ['paramedic', 'icp'],
+        text: 'She has had two glasses of wine, which bears on her capacity.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'Bruises of different ages on her arms and a nervous family member: think of elder abuse.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'She stays home: make the referral and safety net, and explain what made her fall and what would make the next fall less likely.',
+      },
     ],
     guidelines: ['cpg-1-4', 'cpg-1-5', 'cpg-1-6', 'cpg-13-3'],
     patients: [
@@ -604,6 +800,23 @@ export const scenarios = [
       'Makes a clear treatment and referral decision',
       'Explains what to watch for if she stays home',
     ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['student', 'grad', 'supervised'],
+        text: 'Make her sick enough to transport (HR 180, RR 44, cool hands, no wet nappy today) and focus on how assessing a child differs.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'The spots on her tummy don’t fade when pressed.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'She is well enough to stay home but has an ear infection: when to consult about antibiotics, given the age limit.',
+      },
+    ],
     guidelines: ['cpg-6-10', 'cpg-7-1', 'cpg-1-17', 'cpg-1-6'],
     patients: [
       {
@@ -643,6 +856,33 @@ export const scenarios = [
       'Grades the severity of the asthma',
       'Gives the right dose for her age and weight',
       'Reassesses after each nebuliser and decides on transport',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['grad', 'supervised'],
+        text: 'Add a brittle history: two ICU admissions and a course of prednisone last month.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['grad', 'supervised'],
+        text: 'She doesn’t improve after the first nebuliser.',
+      },
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'She is tiring and can only say words: does she need IM adrenaline first, or with the first nebuliser?',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'She ate a muesli bar with nuts at morning tea: is it anaphylaxis?',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'Make the patient 68 with heart failure and COPD: is it asthma at all?',
+      },
     ],
     guidelines: ['cpg-2-1', 'cpg-7-2', 'cpg-1-16'],
     patients: [
@@ -685,6 +925,23 @@ export const scenarios = [
       'Keeps the child calm and with his mum',
       'Considers other causes of stridor',
     ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['grad', 'supervised'],
+        text: 'Stridor at rest and he is tiring: severe croup.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'He is drooling, can’t swallow and looks toxic with a fever of 39.5: talk through epiglottitis and bacterial tracheitis.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'Set it in Kāpiti with a toxic child: bacterial tracheitis, so consult about antibiotics for the long trip.',
+      },
+    ],
     guidelines: ['cpg-2-7', 'cpg-2-6', 'cpg-7-1'],
     patients: [
       {
@@ -725,6 +982,24 @@ export const scenarios = [
       'Checks the glucose early, treats the low glucose and repeats the check',
       'Looks for the cause and makes sure he eats',
       'Applies the conditions for leaving him in someone’s care',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'The call is for a seizure: he is fitting on the site and his glucose is 1.6.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'Make him 68 with heart and kidney disease: the confusion could be a stroke, sepsis or a hypo.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'overlapping',
+        levels: ['paramedic', 'icp'],
+        text: 'He took extra insulin on purpose after bad news: his glucose falls again after treatment and he may not consent to stay.',
+      },
     ],
     guidelines: ['cpg-5-3', 'cpg-1-6'],
     patients: [
@@ -767,6 +1042,24 @@ export const scenarios = [
       'Asks whether this seizure was different from his usual ones',
       'Assesses his capacity before taking the friend’s word',
     ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'A second seizure starts while you are there and doesn’t stop.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'unrelated',
+        levels: ['supervised', 'paramedic'],
+        text: 'He also has a cut over his eye that keeps bleeding.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic'],
+        text: 'It was his first seizure, and he took something at a party last night.',
+      },
+    ],
     guidelines: ['cpg-5-8', 'cpg-1-6', 'cpg-1-4'],
     patients: [
       {
@@ -806,6 +1099,23 @@ export const scenarios = [
       'Recognises the stroke and establishes the time of onset',
       'Transports to the nearest stroke centre by the guideline',
       'Keeps the scene time short and gives a clear radio notification',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'His glucose is 2.4: a hypo that looks like a stroke.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'He woke with the signs (a wake-up stroke): work out when he was last known well.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'He lives in Ōtaki, about equidistant from Palmerston North and Wellington: the destination by the guideline.',
+      },
     ],
     guidelines: ['cpg-12-6', 'cpg-1-23'],
     patients: [
@@ -849,6 +1159,23 @@ export const scenarios = [
       'Performs vagal manoeuvres well',
       'Knows the signs that would make it unstable',
     ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'Make her 66 with heart disease and a wider QRS: SVT with aberrancy or VT?',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'A less clear ECG: talk through AVRT and AVNRT, or flutter with 2:1 block at 150.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'Her BP falls to 82/50 and she has chest pain: unstable, so cardioversion.',
+      },
+    ],
     guidelines: ['cpg-3-9', 'cpg-3-7', 'cpg-3-11'],
     patients: [
       {
@@ -889,6 +1216,18 @@ export const scenarios = [
       'Looks for shock and considers an ectopic pregnancy',
       'Takes a sensitive approach and gives pain relief',
       'Explains clearly where she is going and why',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'She becomes shocked (HR 128, BP 84/50): a ruptured ectopic pregnancy.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'The history is a false flag: the pain is a urinary infection, or the bleeding is from the bowel.',
+      },
     ],
     guidelines: ['cpg-8-5', 'cpg-8-3', 'cpg-12-13'],
     patients: [
@@ -931,6 +1270,24 @@ export const scenarios = [
       'Builds rapport and asks directly about suicide',
       'Assesses risk and capacity and makes a plan that keeps him safe',
     ],
+    variations: [
+      {
+        lever: 'complexity',
+        rung: 'overlapping',
+        levels: ['paramedic', 'icp'],
+        text: 'He is very drunk, which bears on his capacity and his risk.',
+      },
+      {
+        lever: 'scene',
+        levels: ['supervised', 'paramedic'],
+        text: 'He becomes angry and threatens the crew before police arrive.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'He refuses to come: treatment without consent and working with police.',
+      },
+    ],
     guidelines: ['cpg-10-6', 'cpg-10-2', 'cpg-1-4', 'cpg-1-24'],
     patients: [
       {
@@ -972,6 +1329,23 @@ export const scenarios = [
       'Gives good pain relief',
       'Makes a safe transport or referral decision',
     ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'He has new numbness between his legs and hasn’t passed urine since: cauda equina syndrome.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'Make him 70 with a sudden tearing pain and a weak femoral pulse: a leaking aortic aneurysm.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['grad', 'supervised'],
+        text: 'His pain eases with treatment: can he stay home, and what referral and safety net does he need?',
+      },
+    ],
     guidelines: ['cpg-13-7', 'cpg-1-18', 'cpg-1-6'],
     patients: [
       {
@@ -1012,6 +1386,23 @@ export const scenarios = [
       'Works out what was taken, how much and when',
       'Records an ECG and looks for a widened QRS',
       'Considers her safety at home and her capacity at 17',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'Her QRS widens and she has a seizure: cyclic antidepressant toxicity.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'Swap the medicines for another class (an antipsychotic, a beta blocker, a sedative) with its signs.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['supervised', 'paramedic'],
+        text: 'She refuses to go and her mum can’t make her: her capacity at 17 and treatment without consent.',
+      },
     ],
     guidelines: ['cpg-5-5', 'cpg-10-3', 'cpg-1-20', 'cpg-1-24'],
     patients: [
@@ -1056,6 +1447,24 @@ export const scenarios = [
       'Chooses sedation step by step and weighs its cautions (alcohol, a possible second drug)',
       'Recognises when it is becoming life-threatening',
     ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['supervised', 'paramedic'],
+        text: 'He becomes combative and threatens the crew: police, and a higher risk to safety.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'contradictory',
+        levels: ['paramedic', 'icp'],
+        text: 'He took GHB as well: sedation now risks his airway, while the agitation and heat need it.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'His temperature rises to 41.5 and he has a seizure.',
+      },
+    ],
     guidelines: ['cpg-5-6', 'cpg-11-3', 'cpg-5-1'],
     patients: [
       {
@@ -1096,6 +1505,23 @@ export const scenarios = [
       'Counts the breathing properly and asks about feeding and wet nappies',
       'Names the risk factors that lower the threshold to transport',
       'Involves nana in the decision',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['grad', 'supervised'],
+        text: 'Make her clearly sick enough to go: RR 70, SpO₂ 88% and grunting.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'She looks well enough to stay and nana wants to keep her home: a Paramedic decision with a clear safety net.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'She has an apnoea while you watch.',
+      },
     ],
     guidelines: ['cpg-2-9', 'cpg-7-1', 'cpg-7-2', 'cpg-1-16'],
     patients: [
@@ -1139,6 +1565,23 @@ export const scenarios = [
       'Positions her correctly for pregnancy',
       'Treats the eclamptic seizure and warns the hospital early',
     ],
+    variations: [
+      {
+        lever: 'escalation',
+        levels: ['grad', 'supervised'],
+        text: 'No ICP is free for 30 minutes: what to do meanwhile, and who to call for clinical advice.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'She gave birth three days ago: a seizure up to six weeks after the birth is treated as eclampsia.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'ICP phase 1: give magnesium and midazolam together for the seizure.',
+      },
+    ],
     guidelines: ['cpg-8-4', 'cpg-8-3', 'cpg-8-8'],
     patients: [
       {
@@ -1179,6 +1622,23 @@ export const scenarios = [
       'Plans the carry-out early and asks for more crew and equipment',
       'Keeps him warm and off the cold ground',
       'Gives pain relief that will last a long carry',
+    ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['supervised', 'paramedic'],
+        text: 'Move it to Mākara Peak: a mountain biker with the same injury on a downhill track.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'He is drowsy and has stopped shivering: handle him gently.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'It is getting dark and the carry will take two hours: what more do you ask for?',
+      },
     ],
     guidelines: ['cpg-4-11', 'cpg-11-4', 'cpg-1-18'],
     patients: [
@@ -1223,6 +1683,24 @@ export const scenarios = [
       'Applies traction and splinting and controls bleeding',
       'Makes a sound transport and helicopter decision',
     ],
+    variations: [
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'Discuss when to consult about ketamine for the femur, and its risks.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'unrelated',
+        levels: ['supervised', 'paramedic'],
+        text: 'More injuries or more history: a chest injury with falling SpO₂, or make him 70 on an anticoagulant.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'ICP phase 1: ketamine for analgesia and a traction splint.',
+      },
+    ],
     guidelines: ['cpg-4-23', 'cpg-4-11', 'cpg-4-2', 'cpg-1-12'],
     patients: [
       {
@@ -1264,6 +1742,23 @@ export const scenarios = [
       'Looks for medical causes of the behaviour',
       'Sedates by the guideline, monitors afterwards and applies the law on treatment without consent',
     ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'His temperature is 39.6 and his neck is stiff: is the behaviour from an infection?',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'After sedation he goes suddenly quiet: check airway and breathing at once.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'ICP phase 1: ketamine is needed; manage his airway and monitoring afterwards.',
+      },
+    ],
     guidelines: ['cpg-5-1', 'cpg-10-2', 'cpg-1-24'],
     patients: [
       {
@@ -1303,6 +1798,23 @@ export const scenarios = [
       'Uses infection precautions',
       'Gives the antibiotic without delay',
       'Gives fluids for shock and warns the hospital',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['grad', 'supervised'],
+        text: 'No spots at first: only vomiting and a fever, so it looks like gastro.',
+      },
+      {
+        lever: 'scene',
+        levels: ['supervised', 'paramedic'],
+        text: 'Worried students crowd the corridor asking if they will catch it.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'She stays shocked despite fluids (BP 74/40) and needs a vasopressor.',
+      },
     ],
     guidelines: ['cpg-6-3', 'cpg-6-2', 'cpg-6-9'],
     patients: [
@@ -1345,6 +1857,24 @@ export const scenarios = [
       'Gives the partner and crewmate clear roles',
       'Runs newborn resuscitation by the guideline',
     ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['supervised', 'paramedic'],
+        text: 'The baby is breech.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'Shoulder dystocia: the head is born but the body doesn’t follow.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'unrelated',
+        levels: ['paramedic', 'icp'],
+        text: 'The mother bleeds heavily while the baby needs resuscitation: two patients at once.',
+      },
+    ],
     guidelines: ['cpg-8-6', 'cpg-8-7', 'cpg-7-3', 'cpg-1-8'],
     patients: [
       {
@@ -1383,6 +1913,18 @@ export const scenarios = [
       'Gives rescue breaths and doses by weight',
       'Gives roles to the crew and the neighbour',
       'Looks after the distraught parents',
+    ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['paramedic', 'icp'],
+        text: 'The parents arrive screaming and the neighbour freezes: give everyone a role.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'Circulation returns after six minutes: post-arrest care for a child.',
+      },
     ],
     guidelines: ['cpg-11-1', 'cpg-3-14', 'cpg-7-2', 'cpg-1-8'],
     patients: [
@@ -1424,6 +1966,18 @@ export const scenarios = [
       'Agrees clear roles with the midwife',
       'Gives fundal massage and medicines for the bleeding',
       'Makes the helicopter decision and uses the transport checklist',
+    ],
+    variations: [
+      {
+        lever: 'escalation',
+        levels: ['supervised', 'paramedic'],
+        text: 'The midwife has been called away to another birth: you lead alone until she can be reached.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'She stays shocked despite oxytocin and fundal massage.',
+      },
     ],
     guidelines: ['cpg-8-2', 'cpg-8-8', 'cpg-1-12', 'cpg-1-8'],
     patients: [
@@ -1467,6 +2021,23 @@ export const scenarios = [
       'Calls for more help and delegates tasks to the crew',
       'Prepares for her to stop breathing',
     ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['supervised', 'paramedic'],
+        text: 'Her three children are frightened and her partner is panicking: delegate them.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'She stops breathing: assisted ventilation in severe asthma.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'ICP phase 1: an adrenaline infusion and magnesium.',
+      },
+    ],
     guidelines: ['cpg-2-1', 'cpg-2-5', 'cpg-1-16', 'cpg-1-8'],
     patients: [
       {
@@ -1504,6 +2075,19 @@ export const scenarios = [
       'Gives clear roles in a small space during the arrest',
       'Completes the post-arrest checks',
     ],
+    variations: [
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'Talk through the reperfusion pathway and destination for where he is.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'contradictory',
+        levels: ['paramedic', 'icp'],
+        text: 'He fell when the pain started and has a bleeding scalp wound: treatment for the STEMI may worsen the bleeding.',
+      },
+    ],
     guidelines: ['cpg-3-3', 'cpg-3-16', 'cpg-3-14', 'cpg-3-15', 'cpg-1-8'],
     patients: [
       {
@@ -1539,11 +2123,23 @@ export const scenarios = [
       'The son was asleep in the room next to the garage.',
     ],
     intention:
-      'Recognise carbon monoxide poisoning in a family and triage it. Watch for scene safety first, oxygen for everyone, the pregnant mum and the child, and asking for more ambulances.',
+      'Recognise carbon monoxide poisoning in a family and triage it. Watch for scene safety first, oxygen for everyone, the pregnant mum and the child, and asking for more ambulances. Ask the learner to keep a note of each patient separately.',
     outcomes: [
       'Puts scene safety first and recognises carbon monoxide poisoning',
       'Gives oxygen to everyone and prioritises the pregnant mum and the child',
       'Asks for more ambulances early',
+    ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['grad', 'supervised'],
+        text: 'Only the mum and the son: a smaller first scenario with several patients.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'The son’s GCS falls to 9.',
+      },
     ],
     guidelines: ['cpg-5-4', 'cpg-1-11', 'cpg-7-1', 'cpg-8-3'],
     patients: [
@@ -1632,11 +2228,23 @@ export const scenarios = [
       'Police have two officers there; the crowd is getting rowdy.',
     ],
     intention:
-      'Take charge of a scene with several patients: triage, call for resources and give a clear handover. Watch for the first report, the triage order, management of the head injury and a safe crowd.',
+      'Do first: a scenario with several patients, such as Generator in the garage. Take charge of a scene with several patients: triage, call for resources and give a clear handover. Watch for the first report, the triage order, management of the head injury and a safe crowd.',
     outcomes: [
       'Sends a clear first report and calls for resources',
       'Triages in a sensible order and manages the head injury',
       'Keeps the crowd safe and gives a clear handover',
+    ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['grad', 'supervised'],
+        text: 'After a scenario with several patients, and with the mentor helping: only two patients.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['icp'],
+        text: 'ICP phase 2: the unconscious man’s pupils become unequal: airway and destination.',
+      },
     ],
     guidelines: ['cpg-1-11', 'cpg-4-2', 'cpg-4-10', 'cpg-1-9'],
     patients: [
@@ -1714,6 +2322,23 @@ export const scenarios = [
       'Prioritises by frailty and fluid loss and checks advance care plans',
       'Makes sound referral decisions for those who stay',
     ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['supervised'],
+        text: 'Only two residents: the drowsy woman and the man with Parkinson’s.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'One resident’s vomiting is a bowel obstruction: a swollen abdomen and no wind passed.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic', 'icp'],
+        text: 'The drowsy woman’s advance care plan says no transfer: comfort care where she is.',
+      },
+    ],
     guidelines: ['cpg-12-13', 'cpg-6-9', 'cpg-12-9', 'cpg-1-6'],
     patients: [
       {
@@ -1789,6 +2414,18 @@ export const scenarios = [
       'Triages both patients and asks early for a helicopter and more crews',
       'Assesses the pregnant trauma patient correctly',
       'Assesses the child in the car seat',
+    ],
+    variations: [
+      {
+        lever: 'scene',
+        levels: ['paramedic'],
+        text: 'A second crew arrives in 10 minutes instead of 20.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'The driver becomes shocked (BP 82/50): bleeding inside or from the placenta.',
+      },
     ],
     guidelines: ['cpg-4-2', 'cpg-8-3', 'cpg-7-1', 'cpg-1-12', 'cpg-1-11'],
     patients: [

@@ -38,6 +38,7 @@
     "src/scenarioComments.js",
     "src/scenarioEdits.js",
     "src/scenarioReviews.js",
+    "src/scenarioVariations.js",
     "src/scenarioLogic.js",
     "src/scenarioRunState.js",
     "src/scenarioSubmission.js",

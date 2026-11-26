@@ -7,7 +7,7 @@
  * quiz question edits, so it needs no backend change. Its shape:
  *   { kind: 'scenario', off?: true, fields: { <path>: { was, to } } }
  * A path names one value: 'title', 'complexity', 'load', 'levels', 'outcomes', 'giveIfAsked',
- * 'guidelines',
+ * 'variations', 'guidelines',
  * 'patients.0.history',
  * 'patients.1.vitals.hr'. `to` is what learners see; `was` is the value in content/scenarios.js
  * when the edit was made, so a later change to that file is noticed and shown for review.
@@ -18,7 +18,7 @@
  * A new scenario may also have what a submitted job adds (Add a scenario, approved on the editor
  * page): per patient `vitalsNote`, `laterVitals` ([{ note, vitals }]) and `treatment`, and
  * `photos` ([{ src, caption }], published by the daily copy into content/scenario-photos).
- * Depends on constants.js.
+ * Depends on constants.js and scenarioVariations.js.
  */
 import {
   SCENARIO_COMPLEXITY,
@@ -26,6 +26,7 @@ import {
   SCENARIO_LEVELS,
   SCENARIO_VITALS,
 } from './constants.js';
+import { isVariation, readVariations, MAX_VARIATIONS } from './scenarioVariations.js';
 
 export const SCENARIO_EDIT_PREFIX = 'scenario|';
 export const SCENARIO_EDIT_KIND = 'scenario';
@@ -51,7 +52,15 @@ const MAX_NOTE_TEXT = 80;
 const MAX_CAPTION_TEXT = 120;
 const PHOTO_SRC_PATTERN = /^content\/scenario-photos\/[a-z0-9-]+\.jpg$/;
 // The scenario-wide values an editor may change, besides the text fields.
-const OTHER_FIELDS = ['complexity', 'load', 'levels', 'outcomes', 'giveIfAsked', 'guidelines'];
+const OTHER_FIELDS = [
+  'complexity',
+  'load',
+  'levels',
+  'outcomes',
+  'giveIfAsked',
+  'variations',
+  'guidelines',
+];
 
 const sameValue = (first, second) => JSON.stringify(first) === JSON.stringify(second);
 
@@ -442,6 +451,14 @@ function cleanFacts(facts) {
   return isTextList(facts, MAX_GIVE_IF_ASKED, MAX_OUTCOME_TEXT, true) ? [...facts] : null;
 }
 
+/** A new scenario's variation cards copied ([] when it has none), or null when one is broken. */
+function cleanCards(cards) {
+  if (cards === undefined) return [];
+  const isWhole =
+    Array.isArray(cards) && cards.length <= MAX_VARIATIONS && cards.every(isVariation);
+  return isWhole ? cards.map((card) => ({ ...card, levels: [...card.levels] })) : null;
+}
+
 /** Whether a new scenario has every text, tag, outcome, real guideline and whole patient. */
 const isWholeScenario = (scenario, patients, isGuidelineId) =>
   SCENARIO_TEXT_FIELDS.every((field) => isText(scenario[field])) &&
@@ -465,7 +482,8 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
   const isWhole = isWholeScenario(scenario, patients, isGuidelineId);
   const photos = cleanPhotos(scenario.photos);
   const facts = cleanFacts(scenario.giveIfAsked);
-  if (!isWhole || !photos || !facts) return null;
+  const cards = cleanCards(scenario.variations);
+  if (!isWhole || !photos || !facts || !cards) return null;
   const levels = tidyLevels(scenario.levels);
   const clean = {
     id,
@@ -478,6 +496,7 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
     ...(photos.length ? { photos } : {}),
     ...(levels ? { levels } : {}),
     ...(facts.length ? { giveIfAsked: facts } : {}),
+    ...(cards.length ? { variations: cards } : {}),
   };
   return patientsProblem(clean) ? null : clean;
 }
@@ -510,6 +529,7 @@ export function readScenarioBox(path, text, guidelineIdOfNumber) {
   if (path === 'levels') return readLevels(trimmed);
   if (path === 'outcomes') return readOutcomes(trimmed);
   if (path === 'giveIfAsked') return readGiveIfAsked(trimmed);
+  if (path === 'variations') return readVariations(trimmed);
   if (path === 'guidelines') return readGuidelineNumbers(trimmed, guidelineIdOfNumber);
   if (trimmed.length > MAX_SCENARIO_TEXT) return { error: 'That is too long to keep.' };
   if (!trimmed && !path.endsWith('.label')) return { error: 'This can’t be empty.' };

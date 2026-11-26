@@ -8,7 +8,7 @@
  * comment button and box of a part (scenarioComments.js) to put at the end of that part.
  * Without it the markup is the app's. With `readOnly: true` (a
  * submitted job waiting for approval) it is the editor's layout with nothing to tap.
- * Depends on logic.js, guidelines.js, constants.js and scenarioEdits.js.
+ * Depends on logic.js, guidelines.js, constants.js, scenarioEdits.js and scenarioVariations.js.
  */
 import { escapeHtml } from '../logic.js';
 import { guidelineById } from '../guidelines.js';
@@ -21,6 +21,7 @@ import {
   GIVE_IF_ASKED_GUIDE,
 } from '../constants.js';
 import { tidyLevels } from '../scenarioEdits.js';
+import { variationHeading, variationLevelsText } from '../scenarioVariations.js';
 
 const boxAttrs = (editing, path) => (editing ? editing.attrs(path) : '');
 const openForm = (editing, path) => (editing ? editing.formFor(path) : '');
@@ -223,6 +224,31 @@ function giveIfAskedHtml(scenario, editing) {
 }
 
 /**
+ * The variation cards (SC-N): one way each to change the scenario for a learner, with the
+ * levels it suits. Folded in the app, open for an editor; nothing in the app when there are none.
+ */
+function variationsHtml(scenario, editing) {
+  const cards = scenario.variations || [];
+  if (!cards.length && (!editing || editing.readOnly)) return '';
+  const items = cards.length
+    ? cards
+        .map(
+          (card) => `<li><b>${escapeHtml(variationHeading(card))}</b>
+            <small>· ${escapeHtml(variationLevelsText(card))}</small><br>${escapeHtml(card.text)}</li>`,
+        )
+        .join('')
+    : '<li><i>None yet</i></li>';
+  const body =
+    openForm(editing, 'variations') ||
+    `<ul class="scenario-fact scenario-variations"${boxAttrs(editing, 'variations')}>${items}</ul>`;
+  return foldHtml(
+    `Ways to vary it (${cards.length})`,
+    `<p class="scenario-intro">Pick one card, or none, to match your learner. Change severity or the level, not both at once.</p>${body}${commentSlot(editing, 'variations')}`,
+    Boolean(editing),
+  );
+}
+
+/**
  * The scenario as learners see it: the story card, each patient (with what happened next and
  * the photos, for a submitted job), the intention and intended
  * outcomes (folded in the app, open for an editor) and the guidelines.
@@ -250,5 +276,6 @@ export function scenarioBodyHtml(scenario, editing) {
     ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
     ${photosHtml(scenario, editing)}
     ${foldHtml(intentionTitle, intention, Boolean(editing))}
+    ${variationsHtml(scenario, editing)}
     ${guidelinesHtml(scenario, editing)}`;
 }

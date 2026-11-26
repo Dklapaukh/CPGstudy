@@ -3,8 +3,8 @@
 Status: decided 26 Nov 2026 (SC-N to SC-U below) after the owner's review of all 40 scenarios
 (`content/scenario-reviews.yaml`) and a look at how other fields train decision-making with
 scenarios. It replaces the rule-based generator planned in SC-K. Built so far: the three levels
-(shown as "Presentation", stored as `complexity`), the openings and "give if asked" facts (steps
-1 and 2 below). Not yet built: variation cards, competency ratings, decision points.
+(shown as "Presentation", stored as `complexity`), the openings and "give if asked" facts, and
+the variation cards (steps 1 to 4 below). Not yet built: competency ratings, decision points.
 
 ## What a scenario is for
 
@@ -120,8 +120,9 @@ multi-patient scenario such as `generator-garage`); these get a "Do first" note.
    2026, with new openings for those and the other commented scenarios).
 2. ~~New openings and "give if asked" notes for all scenarios; re-tag levels 1 to 3~~ (done 26
    Nov 2026; Claude's tags, for editors to check: 23 at level 1, 9 at 2, 8 at 3).
-3. Variation cards drafted from the review notes; editors review them.
-4. Show cards on the scenario screen ("Ways to vary it", folded, for the mentor).
+3. ~~Variation cards drafted from the review notes~~ (done 26 Nov 2026: 109 cards on all 40,
+   for editors to review and change on the editor page).
+4. ~~Show cards on the scenario screen ("Ways to vary it", folded, for the mentor)~~ (done).
 5. Competency ratings in the debrief (SC-R), then level suggestions (SC-T, with SC-L).
 6. Decision points, starting with the most-run scenarios.
 

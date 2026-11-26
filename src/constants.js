@@ -215,6 +215,22 @@ export const SCENARIO_LEVELS = {
   paramedic: { name: 'Paramedic', short: 'Paramedic' },
   icp: { name: 'Intensive care paramedic', short: 'ICP' },
 };
+// Variation cards (SC-N, src/scenarioVariations.js): what a card changes (its lever), and for a
+// Complexity card how the two problems relate (after Piette and Kerr; Boyd 2005).
+export const SCENARIO_LEVERS = {
+  uncertainty: { name: 'Uncertainty' },
+  complexity: { name: 'Complexity' },
+  severity: { name: 'Severity' },
+  deterioration: { name: 'Deterioration' },
+  escalation: { name: 'Escalation' },
+  scene: { name: 'Scene load' },
+};
+export const COMPLEXITY_RUNGS = {
+  unrelated: { name: 'Unrelated' },
+  complementary: { name: 'Complementary' },
+  overlapping: { name: 'Overlapping' },
+  contradictory: { name: 'Contradictory' },
+};
 // Above a scenario's "give if asked" facts: how freely to give them by level (SC-P; expertise
 // reversal effect, Kalyuga): the less experienced the learner, the more freely.
 export const GIVE_IF_ASKED_GUIDE =

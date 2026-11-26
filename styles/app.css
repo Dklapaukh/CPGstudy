@@ -3290,7 +3290,8 @@ ul.sort-piece__text {
   padding-top: 0.7rem;
 }
 .scenario-outcomes,
-.scenario-give-if-asked {
+.scenario-give-if-asked,
+.scenario-variations {
   margin: 0.2rem 0 0;
   padding-left: 1.2rem;
 }

@@ -868,6 +868,10 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   assert.ok(!facts.open, 'the give-if-asked facts are folded for the mentor');
   assert.match(facts.textContent, /Student: give freely/);
   assert.equal($$('.scenario-give-if-asked li').length, 3);
+  const cards = $('.scenario-variations').closest('details');
+  assert.ok(!cards.open, 'the variation cards are folded for the mentor');
+  assert.match(cards.querySelector('summary').textContent, /Ways to vary it \(2\)/);
+  assert.match($('.scenario-variations li').textContent, /Severity\s*· Supervised, Paramedic/);
   click($('[data-action="scenario-finish"]'));
   assert.equal($$('.scenario-guide li').length, 4, 'the PEARLS guide has four steps');
   assert.equal($$('.scenario-outcome').length, 3, 'one rating row per outcome');
