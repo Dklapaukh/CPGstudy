@@ -10,8 +10,8 @@ import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from './scenarioEdits.js';
 
 // The opening boxes, in the order shown. `max` is the most characters kept; `lines` > 1 is a
 // text area. The suburb is optional: it can be changed or made up to protect the patient.
-// Dispatch notes, history and assessment are joined into the scenario's story, so their limits
-// add up to under its 2000 characters.
+// Dispatch notes, history, assessment and follow up are joined into the scenario's story, so
+// their limits (and the paragraph labels) add up to under its 2000 characters.
 export const JOB_FIELDS = [
   {
     key: 'title',
@@ -25,15 +25,14 @@ export const JOB_FIELDS = [
   {
     key: 'dispatch',
     label: 'Dispatch notes',
-    hint: 'What you were told on the way',
-    max: 400,
+    max: 300,
     lines: 4,
   },
   {
     key: 'story',
     label: 'History',
-    hint: 'What you found on arrival. Age and sex are fine; no names.',
-    max: 1000,
+    hint: 'Age and sex are fine; no names, NHI, addresses or dates.',
+    max: 900,
     lines: 5,
     required: true,
   },
@@ -41,10 +40,18 @@ export const JOB_FIELDS = [
     key: 'assessment',
     label: 'Assessment',
     hint: 'Your findings and working diagnosis',
-    max: 500,
+    max: 400,
     lines: 5,
   },
 ];
+// After the guidelines: what happened to the patient later, when the sender knows.
+export const FOLLOW_UP_FIELD = {
+  key: 'followUp',
+  label: 'Follow up',
+  hint: 'If available/known',
+  max: 300,
+  lines: 3,
+};
 // The learning points at the end of the form; an approved job's Lessons learnt start from them.
 // The presentation, scene load and intended outcomes are left for editors to set.
 export const INTENTION_FIELD = {
@@ -155,7 +162,7 @@ function tidyPatient(patient = {}) {
  * tidied. Unknown keys are dropped.
  */
 export function tidySubmission(raw = {}, isGuidelineId = () => true) {
-  const text = [...JOB_FIELDS, INTENTION_FIELD, NAME_FIELD];
+  const text = [...JOB_FIELDS, FOLLOW_UP_FIELD, INTENTION_FIELD, NAME_FIELD];
   const job = Object.fromEntries(text.map((field) => [field.key, tidy(raw[field.key], field.max)]));
   const complexity = Number(raw.complexity);
   job.complexity = SCENARIO_COMPLEXITY[complexity] ? complexity : 0;
@@ -182,7 +189,10 @@ export function missingFields(job) {
 
 /** Every text box of the job as [label, text], patients numbered when there are several. */
 function labelledTexts(job) {
-  const texts = [...JOB_FIELDS, INTENTION_FIELD].map((field) => [field.label, job[field.key]]);
+  const texts = [...JOB_FIELDS, FOLLOW_UP_FIELD, INTENTION_FIELD].map((field) => [
+    field.label,
+    job[field.key],
+  ]);
   job.patients.forEach((patient, index) => {
     const prefix = job.patients.length > 1 ? `Patient ${index + 1}, ` : '';
     texts.push([`${prefix}Label`, patient.label]);
@@ -276,12 +286,13 @@ function scenarioPatient(patient, index, count) {
 export const photoName = (jobId, index) =>
   `${String(jobId).replace(/[^a-z0-9-]/g, '')}-${index + 1}.jpg`;
 
-/** The scenario's story: the dispatch notes, the history and the assessment, each a paragraph. */
+/** The scenario's story: dispatch notes, history, assessment and follow up, each a paragraph. */
 const storyOf = (job) =>
   [
     job.dispatch && `Dispatch: ${job.dispatch}`,
     job.story,
     job.assessment && `Assessment: ${job.assessment}`,
+    job.followUp && `Follow up: ${job.followUp}`,
   ]
     .filter(Boolean)
     .join('\n\n');

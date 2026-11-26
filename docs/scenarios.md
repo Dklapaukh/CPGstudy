@@ -112,11 +112,12 @@ The scenario design (three levels, openings, variation cards, competency ratings
 Staff send jobs they went to with `submit.html`, linked at the top of
 [Anonymised jobs](anonymised-jobs.md), where approved jobs go (not to Scenarios; AJ-A). Anyone
 can fill it in **without signing in**. In order: short title, suburb (optional,
-as it can be changed or made up), Dispatch notes, History and Assessment (joined into the job's
-story as paragraphs); each patient's background, any number of vitals sets (each with a note
-such as "On arrival" or "After GTN"; the vitals open the phone's number pad, BP as two boxes)
-and Treatment and response; Guidelines used; up to 4 photos (ECGs, rhythm strips, the
-monitor); then Learning points, which start the job's Lessons learnt. Presentation, scene load
+as it can be changed or made up), Dispatch notes, History and Assessment; each patient's
+background, any number of vitals sets (each with a note such as "On arrival" or "After GTN";
+the vitals open the phone's number pad, BP as two boxes, BP sys and BP dia) and Treatment and
+response; Guidelines used; Follow up (if known); up to 4 photos (ECGs, rhythm strips, the
+monitor); then Learning points, which start the job's Lessons learnt. Dispatch notes, History,
+Assessment and Follow up are joined into the job's story as paragraphs. Presentation, scene load
 and intended outcomes are not asked: editors set them (AJ-J).
 
 - **Guidelines** can only be added from the app's list: typing in the box searches by number

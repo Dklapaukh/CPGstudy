@@ -38,11 +38,11 @@
   min-height: 44px;
 }
 
-/* Vitals: four to a row, label above each short box. */
+/* Vitals: three to a row (nine with BP as two), label above each short box. */
 .submit-vitals {
   display: grid;
   gap: 0 0.5rem;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 .submit-vital span {
   color: var(--colour-muted);
@@ -157,20 +157,6 @@
   color: var(--colour-wrong);
   font-size: 0.85rem;
   margin: -0.4rem 0 0.8rem;
-}
-
-/* BP: two number boxes side by side with a slash, taking two vitals' width. */
-.submit-vital--bp {
-  grid-column: span 2;
-}
-.submit-vital__bp {
-  align-items: center;
-  display: flex;
-  gap: 0.3rem;
-}
-.submit-vital__bp .text-input {
-  flex: 1;
-  min-width: 0;
 }
 
 /* The guidelines a search recommends: one full-width button each. */

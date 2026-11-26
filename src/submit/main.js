@@ -14,6 +14,7 @@ import { guidelines } from '../guidelines.js';
 import {
   JOB_FIELDS,
   PATIENT_FIELDS,
+  FOLLOW_UP_FIELD,
   INTENTION_FIELD,
   NAME_FIELD,
   emptyPatient,
@@ -91,7 +92,7 @@ function readPatient(patient, index) {
     const vitals = Object.fromEntries(
       SCENARIO_VITALS.map(([key]) => [key, boxValue(`${prefix}-${key}`)]),
     );
-    vitals.bp = bpValue(`${prefix}-bp`);
+    vitals.bp = bpValue(`${prefix}-bp`); // typed as two boxes, kept as "120/80"
     return { note: boxValue(`${prefix}-note`), vitals };
   });
   return read;
@@ -104,7 +105,7 @@ function readPatient(patient, index) {
 function readForm() {
   if (state.sentId) return;
   const { job } = state;
-  [...JOB_FIELDS, INTENTION_FIELD, NAME_FIELD].forEach(
+  [...JOB_FIELDS, FOLLOW_UP_FIELD, INTENTION_FIELD, NAME_FIELD].forEach(
     (field) => (job[field.key] = boxValue(field.key)),
   );
   job.patients = job.patients.map(readPatient);

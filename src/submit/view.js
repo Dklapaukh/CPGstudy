@@ -11,6 +11,7 @@ import {
   JOB_FIELDS,
   PATIENT_FIELDS,
   TREATMENT_FIELD,
+  FOLLOW_UP_FIELD,
   INTENTION_FIELD,
   NAME_FIELD,
   guidelineChoiceText,
@@ -54,21 +55,22 @@ function jobHtml(job) {
 const DECIMAL_VITALS = ['temp', 'bgl'];
 const keypadOf = (key) => (DECIMAL_VITALS.includes(key) ? 'decimal' : 'numeric');
 
-/** One number box of a vital; `keypad` is the phone pad it opens, `ariaLabel` its name if unlabelled. */
-const numberBoxHtml = (id, name, value, keypad, ariaLabel = '') =>
-  `<input class="text-input" id="${id}" name="${name}" type="text" inputmode="${keypad}"
-    maxlength="20" value="${escapeHtml(value)}"${ariaLabel ? ` aria-label="${ariaLabel}"` : ''}>`;
+/** One vital: its label above a number box; `keypad` is the phone pad it opens. */
+const vitalHtml = (id, name, label, value, keypad) =>
+  `<label class="submit-vital" for="${id}"><span>${escapeHtml(label)}</span>
+    <input class="text-input" id="${id}" name="${name}" type="text" inputmode="${keypad}"
+      maxlength="20" value="${escapeHtml(value)}"></label>`;
 
-/** BP as two number boxes, systolic and diastolic, since the number pad has no "/". */
+/** BP as two vitals, systolic and diastolic, since the number pad has no "/". */
 function bpHtml(id, name, value) {
   const [systolic = '', diastolic = ''] = String(value).split('/');
-  const box = (part, text, ariaLabel) =>
-    numberBoxHtml(`${id}-${part}`, `${name}-${part}`, text.trim(), 'numeric', ariaLabel);
-  return `<span class="submit-vital__bp">${box('sys', systolic, 'BP systolic')}
-    <b aria-hidden="true">/</b>${box('dia', diastolic, 'BP diastolic')}</span>`;
+  return (
+    vitalHtml(`${id}-sys`, `${name}-sys`, 'BP sys', systolic.trim(), 'numeric') +
+    vitalHtml(`${id}-dia`, `${name}-dia`, 'BP dia', diastolic.trim(), 'numeric')
+  );
 }
 
-/** One set of vitals: its note, then the eight vitals in a grid. Later sets can be removed. */
+/** One set of vitals: its note, then the vitals in a grid (BP as two). Later sets can be removed. */
 function vitalSetHtml(set, patientIndex, setIndex) {
   const prefix = `vitals-${patientIndex}-${setIndex}`;
   const remove = setIndex
@@ -82,12 +84,10 @@ function vitalSetHtml(set, patientIndex, setIndex) {
   const vitals = SCENARIO_VITALS.map(([key, label]) => {
     const id = `submit-${prefix}-${key}`;
     const name = `${prefix}-${key}`;
-    if (key === 'bp') {
-      return `<div class="submit-vital submit-vital--bp" role="group" aria-label="BP">
-        <span aria-hidden="true">${escapeHtml(label)}</span>${bpHtml(id, name, set.vitals[key])}</div>`;
-    }
-    return `<label class="submit-vital" for="${id}"><span>${escapeHtml(label)}</span>
-      ${numberBoxHtml(id, name, set.vitals[key], keypadOf(key))}</label>`;
+    const value = set.vitals[key];
+    return key === 'bp'
+      ? bpHtml(id, name, value)
+      : vitalHtml(id, name, label, value, keypadOf(key));
   }).join('');
   const hint = setIndex ? 'e.g. 5 min after GTN 400 mcg' : 'e.g. On arrival';
   return `<div class="submit-vital-set">
@@ -209,6 +209,13 @@ function photosHtml(photos, isReading) {
     ${photos.map(photoHtml).join('')}${add}</section>`;
 }
 
+/** Follow up: one box under its card title. */
+function followUpHtml(job) {
+  return `<section class="submit-card" aria-labelledby="submit-follow-up-title">
+    <h2 class="submit-card__title" id="submit-follow-up-title">Follow up</h2>
+    ${boxHtml(FOLLOW_UP_FIELD, FOLLOW_UP_FIELD.key, job.followUp, true)}</section>`;
+}
+
 /** The learning points: one box under its card title. */
 function learningHtml(job) {
   return `<section class="submit-card" aria-labelledby="submit-learning-title">
@@ -252,7 +259,7 @@ function formHtml(state) {
       use it as an idea for a scenario. An editor checks it before it’s added to Anonymised jobs. No sign-in is needed.
       <b>Leave out anything that could identify the patient:</b> names, NHI, addresses, dates
       of birth and the date of the job. Age and sex are fine.</p>
-    ${jobHtml(job)}${patients}${addPatient}${guidelinesHtml(state)}
+    ${jobHtml(job)}${patients}${addPatient}${guidelinesHtml(state)}${followUpHtml(job)}
     ${photosHtml(state.photos, state.isReading)}${learningHtml(job)}${sendHtml(state)}`;
 }
 

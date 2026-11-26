@@ -57,7 +57,7 @@ test('tidySubmission: trims, cuts to length and keeps only known keys and values
     isRealId,
   );
   assert.equal(job.title, 'Chest pain');
-  assert.equal(job.story.length, 1000);
+  assert.equal(job.story.length, 900);
   assert.equal(job.complexity, 0);
   assert.equal(job.load, 'single');
   assert.equal('rural' in job, false);
@@ -104,14 +104,19 @@ test('missingFields: title, history, a guideline and the learning points; editor
   assert.deepEqual(missingFields(tidySubmission(withoutEditorFields)), []);
 });
 
-test('scenarioFromSubmission: dispatch notes, history and assessment make the story; no outcomes get a placeholder', () => {
+test('scenarioFromSubmission: dispatch notes, history, assessment and follow up make the story; no outcomes get a placeholder', () => {
   const scenario = scenarioFromSubmission(
-    fullJob({ dispatch: 'Chest pain, 58M', assessment: 'Inferior STEMI', outcomes: [] }),
+    fullJob({
+      dispatch: 'Chest pain, 58M',
+      assessment: 'Inferior STEMI',
+      followUp: 'Stented in the cath lab',
+      outcomes: [],
+    }),
     'job-3',
   );
   assert.equal(
     scenario.story,
-    'Dispatch: Chest pain, 58M\n\nA 58-year-old man with chest pain.\n\nAssessment: Inferior STEMI',
+    'Dispatch: Chest pain, 58M\n\nA 58-year-old man with chest pain.\n\nAssessment: Inferior STEMI\n\nFollow up: Stented in the cath lab',
   );
   assert.deepEqual(scenario.outcomes, ['Not given']);
   assert.equal(scenarioFromSubmission(fullJob(), 'job-4').story, fullJob().story);
@@ -285,4 +290,15 @@ test('scaledSize: fits the longest side and never makes a photo bigger', () => {
 
 test('base64OfDataUrl: the part after the comma', () => {
   assert.equal(base64OfDataUrl('data:image/jpeg;base64,QUJD'), 'QUJD');
+});
+
+test('the story parts at their longest fit a scenario story', () => {
+  const long = (max) => 'x'.repeat(max);
+  const job = fullJob({
+    dispatch: long(2000),
+    story: long(2000),
+    assessment: long(2000),
+    followUp: long(2000),
+  });
+  assert.ok(scenarioFromSubmission(job, 'job-5').story.length <= 2000);
 });
