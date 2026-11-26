@@ -30,7 +30,8 @@ all edits" removes the edit. A scenario edit is saved in the same `Edits` tab un
 later changes that value, the scenario is listed under "Needs review" (not when the file now
 says what the edit says). **Editing switch (SC-M):** while `SCENARIO_EDITING_ENABLED` in
 `src/constants.js` is `false`, scenarios are shown read-only with their Review card and
-comments; none of the changes in this and the next paragraph, nor approving a job, can be made.
+comments; none of the changes in this and the next paragraph can be made (approving a job
+still can, as it adds no scenario).
 It is `true` again since 26 Nov 2026.
 
 **Reviewing scenarios.** On the editor page every part of a scenario is shown open, the
@@ -62,6 +63,10 @@ instead). The daily copy keeps a new scenario only when it is whole (the same ru
 `tests/scenarios.test.js`, which also checks the published ones). To remove a deleted scenario's
 text from the repo too, delete it from `content/scenarios.js` by hand; its edit then does
 nothing.
+
+**Submitted and approved jobs.** Jobs sent with the Add a job form wait under "Submitted jobs
+to check"; approving one adds it to Anonymised jobs, and an Anonymised jobs section changes
+its Lessons learnt and links. See [Anonymised jobs](anonymised-jobs.md).
 
 **When edits go live.** Saving writes the edit to the Sheet's `Edits` tab at once (one row per
 question; the page marks it "Not in the app yet"). Every morning `edits-sync.yml` runs

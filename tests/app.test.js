@@ -126,7 +126,7 @@ test('the Quiz tab opens the choice of quizzes', async () => {
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, false);
   assert.equal($('#quiz-tab').getAttribute('aria-expanded'), 'true');
-  assert.equal($$('#quiz-choice .quiz-button').length, 5);
+  assert.equal($$('#quiz-choice .quiz-button').length, 6);
   click($('#quiz-tab'));
   assert.equal($('#quiz-choice').hidden, true);
 });
@@ -816,6 +816,19 @@ test('Switch tracker has a back link to the open tracker, which stays saved unti
   click($('[data-action="switch-tracker"]'));
   assert.match($('[data-action="back-to-tracker"]').textContent, /Back to Kim/);
   await signIn(TRACKER); // back to Sam's tracker for the tests that follow
+});
+
+test('Anonymised jobs open from the Quiz choice, with the Add a job link at the top', async () => {
+  dom.window.location.hash = '';
+  await sleep(30);
+  assert.ok($('#quiz-choice a[href="#jobs"]'), 'Anonymised jobs is in the Quiz choice');
+  dom.window.location.hash = '#jobs';
+  await sleep(30);
+  assert.equal($('.quiz-title').textContent, 'Anonymised jobs');
+  assert.equal($('.jobs-screen .scenario-submit-link').getAttribute('href'), 'submit.html');
+  assert.ok($('.empty-message'), 'no jobs are published yet');
+  dom.window.location.hash = '';
+  await sleep(30);
 });
 
 test('Scenarios open from the Quiz choice; a guideline opened from one links back to it', async () => {

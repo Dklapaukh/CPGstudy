@@ -1,5 +1,5 @@
 /*
- * Add a scenario page (submit.html), markup only: the form and the thank-you box. Every value
+ * Add a job page (submit.html), markup only: the form and the thank-you box. Every value
  * comes from the page's state, so drawing again never loses what was typed.
  * The hidden "website" box is a bot trap: people never see it, form-filling bots fill it in.
  * Depends on logic.js, constants.js, scenarioSubmission.js, scenarioEdits.js, guidelines.js,
@@ -265,8 +265,8 @@ function formHtml(state) {
       ? `<button class="button button--secondary" type="button" data-action="add-patient">
           Add another patient</button>`
       : '';
-  return `<p class="subtitle">Send a job you went to, and it can become a scenario for others to
-      practise. An editor checks it before it’s added. No sign-in is needed.
+  return `<p class="subtitle">Send a job you went to, so others can learn from it and mentors can
+      use it as an idea for a scenario. An editor checks it before it’s added to Anonymised jobs. No sign-in is needed.
       <b>Leave out anything that could identify the patient:</b> names, NHI, addresses, dates
       of birth and the date of the job. Age and sex are fine.</p>
     ${jobHtml(job)}${patients}${addPatient}${guidelinesHtml(state)}
@@ -276,16 +276,16 @@ function formHtml(state) {
 /** The thank-you box after a job is sent. */
 function sentHtml() {
   return `<div class="success-box"><b>Thanks, the job was sent</b>
-    <p class="subtitle">An editor will check it. Once approved, it’s added to Scenarios.</p>
+    <p class="subtitle">An editor will check it. Once approved, it’s added to Anonymised jobs.</p>
     <button class="button" type="button" data-action="start-again">Send another job</button>
-    <a class="button button--secondary submit-link-button" href="index.html#scenarios">
-      Back to Scenarios</a></div>`;
+    <a class="button button--secondary submit-link-button" href="index.html#jobs">
+      Back to Anonymised jobs</a></div>`;
 }
 
 /** Draws the page into `app`. */
 export function renderSubmitPage(app, state) {
-  app.innerHTML = `<a class="back-link" href="index.html#scenarios">‹ Scenarios</a>
-    ${coverHtml({ subtitleHtml: 'Add a scenario' })}
+  app.innerHTML = `<a class="back-link" href="index.html#jobs">‹ Anonymised jobs</a>
+    ${coverHtml({ subtitleHtml: 'Add a job' })}
     <form class="page-padding submit-form" novalidate>
     ${state.sentId ? sentHtml() : formHtml(state)}</form>`;
 }

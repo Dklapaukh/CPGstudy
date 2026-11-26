@@ -284,7 +284,7 @@ export const SCENARIO_VITALS = [
   ['pain', 'Pain'],
 ];
 // Add a scenario (submit.html): anyone can send an anonymised job, with no sign-in; editors
-// approve it on the editor page before the daily copy adds it to the app. The backend checks
+// approve it on the editor page before the daily copy adds it to Anonymised jobs. The backend checks
 // the same limits (backend/Code.gs). Photos are made smaller on the phone, which also drops
 // their location data. A form sent sooner than SUBMIT_MIN_FORM_MS after opening is a bot's.
 export const SUBMIT_PAGE = 'submit.html';
@@ -301,6 +301,10 @@ export const SUBMISSION_LIMITS = {
 };
 // Where the daily copy puts approved jobs' photos, as the app addresses them.
 export const SCENARIO_PHOTO_FOLDER = 'content/scenario-photos';
+// Anonymised jobs (Quiz > Anonymised jobs, docs/anonymised-jobs.md): approved jobs as a library
+// of interesting jobs and lessons learnt. The list is #jobs and one job is #job-<job id>.
+export const JOBS_HASH = 'jobs';
+export const JOB_HASH_PREFIX = 'job-';
 // Scenario editing on the editor page. Paused 25 Nov 2026 while editors reviewed the scenarios
 // and switched back on 26 Nov 2026 when the owner called the review finished (plan 8.3, SC-M).
 // While false the page shows no way to change a scenario (tap-to-edit, leave out, undo, delete,

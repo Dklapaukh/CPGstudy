@@ -28,13 +28,15 @@ const QUIZ_ICON_PATHS = {
     '<path d="m9 14 2 2 4-4"/>',
   // A heartbeat line: Scenarios.
   pulse: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  // A folder: Anonymised jobs.
+  folder: '<path d="M3 6a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   // Four squares: Pick the guideline (sorting pieces).
   grid:
     '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>' +
     '<rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
 };
 
-/** One Quiz choice icon by name (capsule, book, clipboard or grid), hidden from screen readers. */
+/** One Quiz choice icon by name (capsule, book, clipboard, pulse, folder or grid), hidden from screen readers. */
 export const quizIconHtml = (name) =>
   `<svg class="quiz-button__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none"
   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${QUIZ_ICON_PATHS[name]}</svg>`;

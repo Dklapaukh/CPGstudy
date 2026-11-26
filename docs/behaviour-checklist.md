@@ -54,7 +54,9 @@ unless marked "by hand".
   celebration and lights the rat; later ones do not; Settings > Data shows the streak, study
   days and stats (`tests/streak.test.js` for the sums).
 - Editor page (`tests/editor.test.js`): sign in, tap a text to edit it, Edit all, leave out,
-  undo; scenarios edited in place, new and deleted; a benchmark set changed and reset; submitted jobs approved or rejected; Needs
+  undo; scenarios edited in place, new and deleted; a benchmark set changed and reset; submitted jobs approved into Anonymised jobs or rejected, a job's lessons and links changed and the job removed; Needs
   review after a guidelines change.
-- Add a scenario (`tests/scenarioSubmission.test.js`): guidelines only from the list; the
+- Anonymised jobs (`tests/anonymisedJobs.test.js`, `tests/app.test.js`): lessons from the job,
+  https-only links, the daily copy and its photos, newest first, the theme filter.
+- Add a job (`tests/scenarioSubmission.test.js`): guidelines only from the list; the
   identifier warning; bot checks; photos shrunk. Sending to the real backend: by hand.

@@ -69,6 +69,7 @@ Publishing (push to `main`) and the `content/guidelines.js` rule are in `CLAUDE.
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
 | 21   | Scenario levels, openings, variation cards and competency ratings, `docs/scenario-variations.md` | Built 26 Nov 2026 (SC-N to SC-P, SC-R, SC-U); SC-Q dropped |
 | 22   | Level benchmark and "move on" sets, 5 scenarios per learner level (SC-L) | Built 26 Nov 2026 |
+| 23   | Anonymised jobs: approved staff jobs, lessons learnt and recording links, `docs/anonymised-jobs.md` | Built 26 Nov 2026 (AJ-A to AJ-I) |
 
 ### 8.2 Decisions
 
@@ -77,7 +78,7 @@ comments: list and queue (L to S, R4, R8) in `list-and-settings.md`; PDF and upd
 V, Y, R13) in `content-updates.md`; medicines quiz (E, Z1 to Z22, GM-A) in `medicines-quiz.md`;
 guideline quiz (Z12 to Z16, PG-) in `guideline-quiz.md`; MT- in `medicine-test.md`; MV-, SC-G in
 `manager.md`; ED-, SC-D in `editor.md`; ST- in `streak-and-stats.md`; SC- in `scenarios.md`;
-SC-K, SC-N to SC-U in `scenario-variations.md`; C2, C4, C5 in `backend.md`.
+SC-K, SC-N to SC-U in `scenario-variations.md`; AJ- in `anonymised-jobs.md`; C2, C4, C5 in `backend.md`.
 
 Decisions across the whole app:
 
@@ -119,7 +120,7 @@ Decisions across the whole app:
 
 ### 8.4 Open tasks (owner, by hand)
 
-1. **Switch on Add a scenario, scenario trends and the Competencies table:** redeploy the backend
+1. **Switch on Add a job (and so Anonymised jobs), scenario trends and the Competencies table:** redeploy the backend
    (`docs/backend.md`, "Redeploying the backend"; allow the Drive permission at `setup`). Until
    then the form and the daily copy fail ("Is it redeployed?") and the manager page shows no
    scenario trends.
@@ -184,7 +185,7 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Where things stand
 
-**Now (26 Nov 2026).** Features 1 to 22 are built and on `main`. The owner's scenario review
+**Now (26 Nov 2026).** Features 1 to 23 are built and on `main`. The owner's scenario review
 (one review each, `content/scenario-reviews.yaml`) is finished and scenario editing is back on
 (SC-U). From it (feature 21, `docs/scenario-variations.md`): the 7 Small-changes scenarios and
 every in-line comment are fixed; every scenario has a call-notes-then-history opening and "give
@@ -197,17 +198,22 @@ outcome names its additional treatments instead; `remutaka-motorbike` gained a h
 injury as a "give if asked" fact; Colonial Knob replaced Ōtaki Forks with no helicopter. The
 debrief now rates the six competencies every run (SC-R) and saves the learner's level; the
 manager page has a Competencies table. Decision points (SC-Q) were dropped. The backend
-redeploy for Add a scenario, scenario trends and the Competencies table is still to do (8.4
+redeploy for Add a job, scenario trends and the Competencies table is still to do (8.4
 task 1; the running version should then read "version with competency ratings (26 Nov 2026)").
 
 The benchmark and "move on" sets (feature 22, SC-L) are built: a Benchmark set dropdown on
 the Scenarios list and a Benchmark sets section on the editor page; `after-the-party` gained
 ICP so ICP has 4 Complex.
 
-**Next** (steps in `docs/scenario-variations.md`).
+**Anonymised jobs** (feature 23, `docs/anonymised-jobs.md`) is built: a sixth Quiz button
+listing approved staff jobs, newest first with a theme dropdown, each with Lessons learnt and
+recording links; editors approve jobs into it (not into Scenarios) and change lessons and links
+on the editor page. The Add a job link moved there. It fills once the backend is redeployed.
 
-1. After this phase: staff add jobs they went to as scenarios in their own section, then more
-   scenarios on the review's themes (owner, 26 Nov 2026), notably Complex ones for ICP.
+**Next.**
+
+1. More scenarios on the review's themes (owner, 26 Nov 2026), notably Complex ones for ICP;
+   approved jobs can be ideas for them.
 2. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
    note in `bus-v-pedestrians`' intention; the bank of overdoses by medicine class.
 

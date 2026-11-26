@@ -188,8 +188,7 @@ Two of ICP's are crashes, so that set leans to trauma until more Complex scenari
   section, one ordered list per level (rejected: an "In the benchmark set for" field on each
   scenario); a separate Benchmark set dropdown on the list (rejected: the choices inside the
   Suits dropdown; a pill on the scenario screen too); ICP's fourth Complex is `after-the-party`,
-  ICP ticked (rejected: `rest-home-gastro`; 3 Complex with `cant-talk-asthma`). More scenarios
-  on the review's themes wait until staff can add jobs as scenarios in their own section.
+  ICP ticked (rejected: `rest-home-gastro`; 3 Complex with `cant-talk-asthma`).
 - SC-U (owner, 26 Nov 2026): level 2 is named **Undifferentiated presentation** (the story fits
   more than one condition and the learner narrows it; pairs with "Common presentation").
   Rejected: "Look-alikes", "Differential diagnosis", "Uncertain diagnosis". One review per

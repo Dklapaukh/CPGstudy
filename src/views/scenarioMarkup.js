@@ -8,6 +8,7 @@
  * comment button and box of a part (scenarioComments.js) to put at the end of that part.
  * Without it the markup is the app's. With `readOnly: true` (a
  * submitted job waiting for approval) it is the editor's layout with nothing to tap.
+ * jobBodyHtml draws an approved anonymised job (Quiz > Anonymised jobs) with the same parts.
  * Depends on logic.js, guidelines.js, constants.js, scenarioEdits.js and scenarioVariations.js.
  */
 import { escapeHtml } from '../logic.js';
@@ -278,4 +279,44 @@ export function scenarioBodyHtml(scenario, editing) {
     ${foldHtml(intentionTitle, intention, Boolean(editing))}
     ${variationsHtml(scenario, editing)}
     ${guidelinesHtml(scenario, editing)}`;
+}
+
+// Every fold open and nothing to tap: an anonymised job is read whole, not revealed in stages.
+const JOB_LAYOUT = { attrs: () => '', formFor: () => '', readOnly: true };
+
+/** A lesson list, or a note when there are none. */
+const lessonsHtml = (lessons) =>
+  lessons.length
+    ? `<ul class="scenario-fact scenario-outcomes">${lessons
+        .map((lesson) => `<li>${escapeHtml(lesson)}</li>`)
+        .join('')}</ul>`
+    : '<p class="scenario-intro">No lessons written yet.</p>';
+
+/** The recordings and links, each opening in a new tab; nothing when there are none. */
+function linksHtml(links) {
+  if (!links.length) return '';
+  const rows = links
+    .map(
+      (link) => `<a class="scenario-guideline" href="${escapeHtml(link.url)}" target="_blank"
+        rel="noopener noreferrer"><span>${escapeHtml(link.title)}</span><span aria-hidden="true">↗</span></a>`,
+    )
+    .join('');
+  return foldHtml(`Recordings and links (${links.length})`, rows, true);
+}
+
+/**
+ * An approved anonymised job (AJ-C): the job as sent (story, each patient with what happened
+ * next, the photos, the guidelines), then Lessons learnt, then Recordings and links. `dateText`
+ * is when it was approved, in words. On the editor page (`isEditorPage`) guidelines are plain text.
+ */
+export function jobBodyHtml(job, dateText, isEditorPage = false) {
+  return `<section class="scenario-card">${scenarioTagsHtml(job)}
+      <h1 class="scenario-title">${escapeHtml(job.title)}</h1>
+      <p class="scenario-label">${escapeHtml(job.suburb)} · Added ${escapeHtml(dateText)}</p>
+      <p class="scenario-story">${escapeHtml(job.story)}</p></section>
+    ${job.patients.map((patient, index) => patientHtml(patient, index, JOB_LAYOUT)).join('')}
+    ${photosHtml(job, JOB_LAYOUT)}
+    ${guidelinesHtml(job, isEditorPage ? JOB_LAYOUT : undefined)}
+    ${foldHtml('Lessons learnt', lessonsHtml(job.lessons), true)}
+    ${linksHtml(job.links)}`;
 }

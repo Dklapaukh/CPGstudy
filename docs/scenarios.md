@@ -107,15 +107,16 @@ rewriting.
 
 The scenario design (three levels, openings, variation cards, competency ratings) is in [Scenario design and variations](scenario-variations.md).
 
-## Add a scenario (staff jobs)
+## Add a job (the form)
 
-The end of the Scenarios list links to `submit.html`, a form anyone can fill in **without
-signing in** to send an anonymised job they went to. In order: short title, suburb (optional,
+Staff send jobs they went to with `submit.html`, linked at the top of
+[Anonymised jobs](anonymised-jobs.md), where approved jobs go (not to Scenarios; AJ-A). Anyone
+can fill it in **without signing in**. In order: short title, suburb (optional,
 as it can be changed or made up), History, presentation and scene load (Single patient or
 Delegation; Several patients when more than one patient is added); each patient's background,
 any number of vitals sets (each with a note such as "On arrival" or "After GTN") and Treatment
 and response; the guidelines; up to 4 photos (ECGs, rhythm strips, the monitor); then What
-could it teach and the debrief points, which become the scenario's intended outcomes.
+could it teach and the debrief points, which start the job's Lessons learnt.
 
 - **Guidelines** can only be added from the app's list (number, title or the dropdown), so
   every one links to a real guideline.
@@ -126,24 +127,12 @@ could it teach and the debrief points, which become the scenario's intended outc
 - **Bots:** a hidden box, a form open at least 20 seconds and at most 30 jobs an hour.
 
 The backend (`scenario-submit`) saves the photos in a private Drive folder, "CPG scenario
-submissions", adds a **Pending** row to the `Submissions` tab and emails the owner. Editors see
-pending jobs at the top of the editor page ("Submitted jobs to check"). One job (`#j-<id>`) is
-shown as the scenario it would make, with the photos and any identifier warnings, and three
-buttons:
+submissions", adds a **Pending** row to the `Submissions` tab and emails the owner. Checking
+and approving are in [Anonymised jobs](anonymised-jobs.md).
 
-- **Edit and approve** (`#approve-<id>`) opens the new scenario form filled in from the job:
-  every box can be changed, later vitals added or removed and photos taken out or recaptioned.
-  "Save and approve" saves it as a new scenario (`scenario|<id>` with `added`) and marks the job
-  Approved.
-- **Approve as it is** does the same without the form (or says which box needs fixing).
-- **Reject** asks once more, then marks it Rejected and deletes its photos.
-
-A new scenario may hold what a job adds: per patient a note on the first vitals, later vitals
-with notes and the treatment and response, and photos (`src/scenarioEdits.js`). The new
-scenario form has these boxes too, all optional. The daily copy (`scripts/sync-edits.js`)
-publishes new scenarios as before and fetches approved jobs' photos (`approved-scenarios`),
-writing to `content/scenario-photos/` only the photos a new scenario shows, so a photo taken out
-before approving is never published. In the app, later vitals and treatment are in a folded
+A new scenario written on the editor page may still hold what a job has (per patient a note on
+the first vitals, later vitals and the treatment and response, and photos;
+`src/scenarioEdits.js`), all optional; in the app later vitals and treatment are in a folded
 "What happened next (for the mentor)" and photos in a folded "ECGs and photos".
 
 ## Decisions

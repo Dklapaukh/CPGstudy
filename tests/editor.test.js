@@ -287,6 +287,7 @@ const sheetEdits = {};
 const $ = (selector) => doc.querySelector(selector);
 const $$ = (selector) => [...doc.querySelectorAll(selector)];
 const click = (element) => element.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+let pendingJobs = []; // jobs sent with the Add a job form, as the backend lists them
 let isOffline = false; // when true, every request fails as if there were no signal
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -311,7 +312,11 @@ before(() => {
         if (body.edit === null) delete sheetEdits[body.id];
         else sheetEdits[body.id] = body.edit;
       }
-      return { json: async () => ({ ok: true, name: 'Eve', edits: { ...sheetEdits } }) };
+      if (body.action === 'submission-decide') {
+        pendingJobs = pendingJobs.filter((job) => job.id !== body.id);
+      }
+      const reply = { ok: true, name: 'Eve', edits: { ...sheetEdits }, submissions: pendingJobs };
+      return { json: async () => reply };
     },
   };
   Object.entries(globals).forEach(([key, value]) => {
@@ -716,4 +721,80 @@ test('paused: any scenario save that still reaches the page is refused', PAUSED_
   await sleep(20);
   assert.equal(sheetEdits['scenario|long-lie'], undefined);
   assert.match($('.warning-message').textContent, /Scenario editing is paused/);
+});
+
+test('page: a sent job is approved into Anonymised jobs, its lessons and links changed, then removed', async () => {
+  const id = 'job-mabc123-x1y2';
+  const patient = {
+    label: '',
+    history: 'Hypertension',
+    medications: '',
+    allergies: '',
+    social: '',
+    vitalSets: [{ note: '', vitals: { hr: '110' } }],
+    treatment: '',
+  };
+  pendingJobs = [
+    {
+      id,
+      sent: '2026-11-25T01:00:00Z',
+      sender: 'Ana',
+      photos: [],
+      job: {
+        title: 'Chest pain at the gym',
+        story: 'A 58-year-old man with chest pain.',
+        complexity: 1,
+        intention: 'Spot a STEMI',
+        guidelines: ['cpg-14-4'],
+        outcomes: ['Does a 12-lead early'],
+        patients: [patient],
+      },
+    },
+  ];
+  dom.window.location.hash = '';
+  click($('[data-action="refresh"]'));
+  await sleep(20);
+  assert.match($('main').textContent, /Submitted jobs to check/);
+  const scenariosBefore = Object.keys(sheetEdits).filter((key) =>
+    key.startsWith('scenario|'),
+  ).length;
+  dom.window.location.hash = `#j-${id}`;
+  await sleep(20);
+  assert.match($('main').textContent, /added to\s+Anonymised jobs/);
+  click($(`[data-action="submission-approve"][data-id="${id}"]`));
+  await sleep(40);
+  const saved = sheetEdits[`job|${id}`];
+  assert.equal(saved.kind, 'anonymised-job');
+  assert.deepEqual(saved.lessons, ['Spot a STEMI', 'Does a 12-lead early']);
+  const scenarioCount = () =>
+    Object.keys(sheetEdits).filter((key) => key.startsWith('scenario|')).length;
+  assert.equal(scenarioCount(), scenariosBefore, 'approving adds no scenario');
+  assert.equal(dom.window.location.hash, `#aj-${id}`);
+  await sleep(20);
+  assert.deepEqual(pendingJobs, []);
+  assert.match($('main').textContent, /Lessons learnt.*Spot a STEMI/s);
+
+  $('#job-links').value = 'Bad | javascript:alert(1)';
+  click($('[data-action="job-save"]'));
+  await sleep(20);
+  assert.match($('.warning-message').textContent, /https/);
+  $('#job-lessons').value = 'Think PE too';
+  $('#job-links').value = 'Teaching session | https://example.org/v';
+  click($('[data-action="job-save"]'));
+  await sleep(20);
+  assert.deepEqual(sheetEdits[`job|${id}`].lessons, ['Think PE too']);
+  assert.deepEqual(sheetEdits[`job|${id}`].links, [
+    { title: 'Teaching session', url: 'https://example.org/v' },
+  ]);
+  assert.ok($('a[href="https://example.org/v"]'), 'the link is shown');
+
+  dom.window.location.hash = '';
+  await sleep(20);
+  assert.match($('[data-section="Anonymised jobs"]').textContent, /Chest pain at the gym/);
+  dom.window.location.hash = `#aj-${id}`;
+  await sleep(20);
+  click($('[data-action="job-remove"]'));
+  click($('[data-action="job-remove-yes"]'));
+  await sleep(20);
+  assert.equal(sheetEdits[`job|${id}`], undefined);
 });

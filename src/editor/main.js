@@ -10,12 +10,14 @@
  * Comment button for in-line comments, saved under the editor's name (scenarioComments.js).
  * A Benchmark sets section lists each learner level's set (SC-L, scenarioSets.js); a set is
  * changed as a list of scenario ids, saved under its own edit id beside the scenario edits.
- * Jobs sent with the Add a scenario form wait in their own section; one (#j-<id>) is shown as the
- * scenario it would make, to approve (published the next morning) or reject.
+ * Jobs sent with the Add a job form wait in their own section; one (#j-<id>) is shown as it was
+ * sent, to approve or reject. Approving adds it to Anonymised jobs (anonymisedJobs.js), saved
+ * under job|<id> and published the next morning; one approved job (#aj-<id>) has its Lessons
+ * learnt and Recordings and links changed there, or is removed.
  * One state object, one way to draw: every change calls render().
  * Depends on staffPage.js, theme.js, questionEdits.js, scenarioEdits.js, scenarioSets.js,
- * scenarioReviews.js,
- * guidelines.js,
+ * scenarioReviews.js, anonymisedJobs.js,
+ * guidelines.js, content/anonymised-jobs.js,
  * content/card-edits.js, content/scenarios.js, content/scenario-edits.js, content/scenario-sets.js
  * and the other files of
  * this folder.
@@ -78,6 +80,23 @@ import {
   setWarnings,
 } from '../scenarioSets.js';
 import { scenarioSets } from '../../content/scenario-sets.js';
+import { anonymisedJobs } from '../../content/anonymised-jobs.js';
+import {
+  jobEditId,
+  jobIdOfEdit,
+  newJobEntry,
+  jobEntryWith,
+  liveJobs,
+  readLessonsBox,
+  readLinksBox,
+  linksBoxText,
+} from '../anonymisedJobs.js';
+import {
+  APPROVED_JOB_HASH_PREFIX,
+  jobsSectionHtml,
+  approvedJobHtml,
+  goneJobHtml,
+} from './jobsView.js';
 import { REVIEW_FORM_ID, reviewProgressHtml } from './reviewView.js';
 import { guidelines, guidelineById } from '../guidelines.js';
 import { cardEdits } from '../../content/card-edits.js';
@@ -156,6 +175,8 @@ const state = {
   commentGuidelines: '', // the guidelines box of the guidelines part, as CPG numbers
   commentError: '', // why the comment couldn't be saved
   openSet: { level: '', text: '', error: '' }, // the benchmark set being changed (SC-L)
+  jobForm: null, // the open approved job's boxes as typed: { id, lessons, links, error }
+  confirmingRemoveJob: false, // the open approved job's "Yes, remove it" is showing
 };
 
 /* ---------- Talking to the backend ---------- */
@@ -165,12 +186,11 @@ const SCENARIO_EDITING_PAUSED_MESSAGE =
   'Scenario editing is paused until the scenario review is finished. Reviews and comments still save.';
 
 /**
- * True when a request would change a scenario: saving a scenario edit (scenario|<id>) or
- * approving a submitted job, which saves a new one. Reviews and comments have other ids.
+ * True when a request would change a scenario: saving a scenario edit (scenario|<id>) or the
+ * benchmark sets. Reviews, comments and anonymised jobs have other ids.
  */
 const changesScenario = (body) =>
-  (body.action === 'edit-save' && (isScenarioEdit(body.id) || body.id === SCENARIO_SETS_EDIT_ID)) ||
-  (body.action === 'submission-decide' && body.decision === 'approve');
+  body.action === 'edit-save' && (isScenarioEdit(body.id) || body.id === SCENARIO_SETS_EDIT_ID);
 
 /** Sends a request; on success keeps the edits it returns. Returns true when it worked. */
 async function request(body) {
@@ -234,10 +254,14 @@ async function saveEdit(id, edit) {
 
 const guidelineIdOf = (questionId) => questionId.split('|')[0];
 const isScenarioEdit = (id) => Boolean(scenarioIdOfEdit(id));
+// The published file that carries an edit of this id.
+const publishedFileOf = (id) => {
+  if (jobIdOfEdit(id)) return anonymisedJobs;
+  return isScenarioEdit(id) ? scenarioEdits : cardEdits;
+};
 // True when the daily copy already carries this edit unchanged (nothing left to publish).
 const isPublished = (id) =>
-  JSON.stringify((isScenarioEdit(id) ? scenarioEdits : cardEdits)[id]) ===
-  JSON.stringify(state.edits[id]);
+  JSON.stringify(publishedFileOf(id)[id]) === JSON.stringify(state.edits[id]);
 /** The ids of the quiz question edits: not scenario edits, the sets, reviews or comments. */
 const questionEditIds = () =>
   Object.keys(state.edits).filter(
@@ -640,24 +664,33 @@ async function saveDraft() {
     return;
   }
   const jobId = state.approvingJob;
-  if (await saveNewScenario(read.value, jobId)) {
+  const saved = jobId
+    ? await saveApprovedJob(read.value, jobId)
+    : await saveNewScenario(read.value);
+  if (saved) {
     state.draft = emptyScenarioDraft();
     state.draftError = null;
     state.approvingJob = '';
-    location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(read.value.id)}`;
+    location.hash = jobId
+      ? `${APPROVED_JOB_HASH_PREFIX}${encodeURIComponent(jobId)}`
+      : `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(read.value.id)}`;
   }
 }
 
-/**
- * Saves a whole new scenario as its edit and, when it came from a submitted job, approves the
- * job. The scenario is saved first, so a job is never approved without its scenario.
- */
-async function saveNewScenario(scenario, jobId) {
+/** Saves a whole new scenario as its edit. */
+function saveNewScenario(scenario) {
   const id = scenarioEditId(scenario.id);
-  if (!(await request({ action: 'edit-save', id, edit: { kind: 'scenario', added: scenario } }))) {
-    return false;
-  }
-  return !jobId || request({ action: 'submission-decide', id: jobId, decision: 'approve' });
+  return request({ action: 'edit-save', id, edit: { kind: 'scenario', added: scenario } });
+}
+
+/**
+ * Saves a submitted job, as the form read it, to Anonymised jobs under its own id (AJ-A), then
+ * approves it. The entry is saved first, so a job is never approved without it.
+ */
+async function saveApprovedJob(scenario, jobId) {
+  const edit = newJobEntry({ ...scenario, id: jobId }, new Date());
+  if (!(await request({ action: 'edit-save', id: jobEditId(jobId), edit }))) return false;
+  return request({ action: 'submission-decide', id: jobId, decision: 'approve' });
 }
 
 /** Adds later vitals to a patient of the form, or removes a set; other boxes keep their text. */
@@ -756,7 +789,7 @@ function scenarioOfJob(submission) {
 
 const numberOfGuideline = (id) => guidelineById(id)?.n || id;
 
-/** Approves a job as it is: it becomes a new scenario, or the message says what to fix. */
+/** Approves a job as it is into Anonymised jobs, or the message says what to fix. */
 async function approveAsItIs(jobId) {
   const submission = state.submissions.find((each) => each.id === jobId);
   const draft = scenarioDraftOf(scenarioOfJob(submission), numberOfGuideline);
@@ -766,8 +799,8 @@ async function approveAsItIs(jobId) {
     render();
     return;
   }
-  if (await saveNewScenario(read.value, jobId)) {
-    location.hash = `${SCENARIO_EDITOR_HASH_PREFIX}${encodeURIComponent(read.value.id)}`;
+  if (await saveApprovedJob(read.value, jobId)) {
+    location.hash = `${APPROVED_JOB_HASH_PREFIX}${encodeURIComponent(jobId)}`;
   }
 }
 
@@ -782,6 +815,94 @@ const draftWithPreviews = (draft) => ({
   ...draft,
   photos: (draft.photos || []).map((photo) => ({ ...photo, preview: state.photoBySrc[photo.src] })),
 });
+
+/* ---------- Anonymised jobs (approved) ---------- */
+
+/** The approved jobs, newest first, each marked with whether the app has it as saved. */
+const approvedJobRows = () =>
+  liveJobs(state.edits).map((job) => ({ ...job, isPublished: isPublished(jobEditId(job.id)) }));
+
+/** The approved job in the address ("#aj-job-abc"), or '' on any other screen. */
+function currentApprovedJobId() {
+  if (!location.hash.startsWith(APPROVED_JOB_HASH_PREFIX)) return '';
+  return decodeURIComponent(location.hash.slice(APPROVED_JOB_HASH_PREFIX.length));
+}
+
+/** "26 Nov 2026" from "2026-11-26". */
+const dayText = (key) =>
+  new Date(`${key}T00:00:00`).toLocaleDateString('en-NZ', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+/**
+ * An approved job's screen data (see approvedJobHtml), or null when there is no such job. Its
+ * photos show the copy fetched this session until the daily copy has published them.
+ */
+function approvedJobViewFor(id) {
+  const job = approvedJobRows().find((each) => each.id === id);
+  if (!job) return null;
+  if (state.jobForm?.id !== id) {
+    state.jobForm = {
+      id,
+      lessons: job.lessons.join('\n'),
+      links: linksBoxText(job.links),
+      error: '',
+    };
+    state.confirmingRemoveJob = false;
+  }
+  const photos = (job.photos || []).map((photo) => ({
+    ...photo,
+    src: state.photoBySrc[photo.src] || photo.src,
+  }));
+  return {
+    job: { ...job, photos },
+    dateText: dayText(job.approved),
+    lessonsText: state.jobForm.lessons,
+    linksText: state.jobForm.links,
+    error: state.jobForm.error,
+    isConfirmingRemove: state.confirmingRemoveJob,
+    isPublished: job.isPublished,
+  };
+}
+
+/** Saves the open job's Lessons learnt and Recordings and links, or shows what to fix. */
+async function saveJobCard() {
+  const id = currentApprovedJobId();
+  const lessonsText = document.getElementById('job-lessons').value;
+  const linksText = document.getElementById('job-links').value;
+  state.jobForm = { id, lessons: lessonsText, links: linksText, error: '' };
+  const lessons = readLessonsBox(lessonsText);
+  const links = readLinksBox(linksText);
+  state.jobForm.error = lessons.error || links.error || '';
+  if (state.jobForm.error) {
+    render();
+    return;
+  }
+  const edit = jobEntryWith(state.edits[jobEditId(id)], lessons.value, links.value);
+  // Drawn again from what was saved, so the boxes show the tidied text.
+  if (await request({ action: 'edit-save', id: jobEditId(id), edit })) state.jobForm = null;
+  render();
+}
+
+/** Removes the open job from the app for good, then back to the first screen. */
+async function removeJob() {
+  state.confirmingRemoveJob = false;
+  const id = jobEditId(currentApprovedJobId());
+  if (await request({ action: 'edit-save', id, edit: null })) location.hash = '#';
+}
+
+/** Draws an approved job's screen if the address names one; true when it drew. */
+function renderApprovedJob(viewer) {
+  const id = currentApprovedJobId();
+  if (!id) return false;
+  const view = approvedJobViewFor(id);
+  app.innerHTML = view
+    ? approvedJobHtml(viewer, view, SIGNED_IN_BUTTONS)
+    : goneJobHtml(viewer, SIGNED_IN_BUTTONS);
+  return true;
+}
 
 /** The guideline list, filtered by the search box (number or title). */
 function guidelineRows() {
@@ -840,10 +961,6 @@ function renderSubmission(viewer) {
 function renderApproval(viewer) {
   const approveId = currentApproveId();
   if (!approveId) return false;
-  if (!SCENARIO_EDITING_ENABLED) {
-    app.innerHTML = editingPausedHtml(viewer, SIGNED_IN_BUTTONS);
-    return true;
-  }
   const submission = state.submissions.find((each) => each.id === approveId);
   if (!submission) {
     app.innerHTML = goneSubmissionHtml(viewer, SIGNED_IN_BUTTONS);
@@ -916,14 +1033,23 @@ function renderHome(viewer) {
     state.openSet,
     Boolean(state.openSections['Benchmark sets']),
   );
+  const jobsSection = jobsSectionHtml(
+    approvedJobRows(),
+    Boolean(state.openSections['Anonymised jobs']),
+  );
   const sections =
-    submissionSectionHtml(state.submissions) + reviewProgress() + scenarioSection + setsSection;
+    submissionSectionHtml(state.submissions) +
+    jobsSection +
+    reviewProgress() +
+    scenarioSection +
+    setsSection;
   app.innerHTML = homeHtml(viewer, reviewItems(), guidelineRows(), state, sections);
 }
 
 // The screens an address can ask for, tried in this order; the first that matches draws.
 const ADDRESS_SCREENS = [
   renderSubmission,
+  renderApprovedJob,
   renderApproval,
   renderNewScenario,
   renderScenario,
@@ -1032,6 +1158,16 @@ const ACTIONS = {
     state.confirmingReject = '';
     render();
   },
+  'job-save': saveJobCard,
+  'job-remove': () => {
+    state.confirmingRemoveJob = true;
+    render();
+  },
+  'job-remove-no': () => {
+    state.confirmingRemoveJob = false;
+    render();
+  },
+  'job-remove-yes': removeJob,
   'scenario-off': () => changeScenarioEdit((view) => scenarioEditOff(view.edit, !view.edit?.off)),
   'scenario-undo': () => changeScenarioEdit(() => null),
   'scenario-delete': () => {
@@ -1146,6 +1282,7 @@ app.addEventListener(
 );
 window.addEventListener('hashchange', () => {
   state.isDeleting = false;
+  state.confirmingRemoveJob = false;
   state.openSet = closedSet();
   state.reviewForm = null;
   state.reviewError = '';

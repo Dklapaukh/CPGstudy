@@ -347,12 +347,12 @@ export function scenarioEditorHtml(viewer, view, signedInButtons) {
 const PAUSED_NOTE =
   'The scenario as learners see it, edits included. Scenario editing is paused until the scenario review is finished: review it and comment on each part below.';
 
-/** The screen shown for the new scenario form and Edit and approve while editing is paused. */
+/** The screen shown for the new scenario form while editing is paused. */
 export function editingPausedHtml(viewer, signedInButtons) {
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}<h1>Scenario editing is paused</h1>
-    ${noteHtml('New scenarios and approving submitted jobs wait until the scenario review is finished. Jobs can still be checked and rejected.')}</main>`;
+    ${noteHtml('New scenarios wait until the scenario review is finished. Submitted jobs can still be approved to Anonymised jobs.')}</main>`;
 }
 
 /** The delete button, or after one tap the question that makes sure. */
@@ -493,15 +493,16 @@ export function newScenarioHtml(viewer, draft, error, signedInButtons, job = nul
       : '';
   const heading = job ? 'Edit and approve a submitted job' : 'New scenario';
   const intro = job
-    ? `Change anything before approving: the job becomes a new scenario. Check nothing in the
-      text or photos could identify the patient. Boxes marked optional can be left empty.`
+    ? `Change anything before approving: the job is added to Anonymised jobs, not Scenarios. Its
+      intention and intended outcomes become its Lessons learnt. Check nothing in the text or
+      photos could identify the patient. Boxes marked optional can be left empty.`
     : 'Every box is needed except those marked optional.';
   const save = job ? 'Save and approve' : 'Save the scenario';
   const cancel = job ? `#j-${escapeHtml(job.id)}` : '#';
   return `<div class="editor-back-bar"><a class="back-link" href="${cancel}">‹ Back</a>
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}<h1>${heading}</h1>
-    ${noteHtml(`${intro} Saved scenarios reach the app the next morning; after saving, tap any value to change it.`)}
+    ${noteHtml(`${intro} ${job ? 'It reaches the app the next morning.' : 'Saved scenarios reach the app the next morning; after saving, tap any value to change it.'}`)}
     ${['title', 'suburb', 'story', 'intention'].map((path) => draftBoxHtml(draft, path)).join('')}
     ${draftSelectHtml(draft, 'complexity', SCENARIO_COMPLEXITY)}
     ${draftSelectHtml(draft, 'load', SCENARIO_LOADS)}${noteHtml(escapeHtml(HINTS.load))}

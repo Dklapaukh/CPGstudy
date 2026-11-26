@@ -22,7 +22,8 @@ How each part works, one file each in `docs/`:
 - [Medicines quiz](docs/medicines-quiz.md)
 - [Guideline quiz](docs/guideline-quiz.md): includes Pick the guideline
 - [Medicine test](docs/medicine-test.md)
-- [Scenarios](docs/scenarios.md): includes the debrief, reviewing scenarios and the Add a scenario form
+- [Scenarios](docs/scenarios.md): includes the debrief, reviewing scenarios and the Add a job form
+- [Anonymised jobs](docs/anonymised-jobs.md): approved staff jobs, lessons learnt and recording links
 - [Scenario design and variations](docs/scenario-variations.md): levels, openings and variation cards; a design, not built
 - [Streak and Data tab](docs/streak-and-stats.md)
 - [Content updates](docs/content-updates.md): publishing new guidelines, the daily PDF check, rebuilding from the PDF
@@ -57,7 +58,9 @@ How each part works, one file each in `docs/`:
 | `manager.html`, `styles/manager.css`, `src/manager/`                           | The manager view: `main.js` (sign in, drawing), `stats.js` (pure sums), `view.js`, `chart.js`.    |
 | `editor.html`, `styles/editor.css`, `src/editor/`                              | The editor page: `main.js` (sign in, saving), `questions.js` (every question), `view.js`.         |
 | `src/staffPage.js`                                                             | What the manager and editor pages share: tab passcode, backend requests, warnings.                |
-| `submit.html`, `styles/submit.css`, `src/submit/`, `src/scenarioSubmission.js` | Add a scenario form: `main.js` (photos, sending), `view.js`; checks and tidying (pure).           |
+| `submit.html`, `styles/submit.css`, `src/submit/`, `src/scenarioSubmission.js` | Add a job form: `main.js` (photos, sending), `view.js`; checks and tidying (pure).                |
+| `src/anonymisedJobs.js`, `src/views/jobsView.js`, `src/editor/jobsView.js`     | Anonymised jobs: pure logic, the app's list and job, the editor's section and card.               |
+| `content/anonymised-jobs.yaml`, `content/anonymised-jobs.js`                   | Approved jobs: readable record and what the app loads. Written by `sync-edits.js`.                |
 | `src/questionEdits.js`                                                         | Editors' changes to quiz questions, pure logic: applying them, finding ones to review.            |
 | `content/card-edits.yaml`, `content/card-edits.js`                             | Published edits: readable record and what the app loads. Written by `sync-edits.js`.              |
 | `scripts/sync-edits.js`                                                        | Copies the Sheet's Edits tab into the two files above (daily, `edits-sync.yml`).                  |

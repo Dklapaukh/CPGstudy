@@ -8,9 +8,7 @@
  * emphasises (its outcomes), a rating of each of the six competencies (SC-R), the guidelines the learner struggled with (they go to Guidelines to learn) and three short notes;
  * the run and its score are saved (scenarioRunState.js).
  * A guideline opened from here gets a "Back to scenario" link (state.scenarioReturn).
- * The list ends with a link to the Add a scenario form (submit.html).
- * Scenarios come from content/scenarios.js with the editors' changes, new scenarios (approved
- * submitted jobs among them) and deletions (content/scenario-edits.js). A Benchmark set dropdown
+ * Scenarios come from content/scenarios.js with the editors' changes, new scenarios and deletions (content/scenario-edits.js). A Benchmark set dropdown
  * shows one learner level's set (SC-L, content/scenario-sets.js with content/scenario-set-edits.js).
  * Depends on state.js, logic.js, guidelines.js, constants.js, scenarioEdits.js, scenarioSets.js,
  * scenarioLogic.js, scenarioRunState.js, scenarioMarkup.js and templates.js.
@@ -43,7 +41,6 @@ import {
   RATED_ON,
   DEBRIEF_TEXTS,
   MAX_DEBRIEF_NOTE,
-  SUBMIT_PAGE,
 } from '../constants.js';
 import {
   scenarioBodyHtml,
@@ -190,9 +187,7 @@ export function renderScenarioList() {
     <p class="scenario-intro">Openings for a mentor to run. Start with common presentations
     and a single patient, then move to undifferentiated or complex ones, or more scene load, once
     the basics are solid.</p>
-    ${filtersHtml()}${progressHtml()}${groups}
-    <a class="scenario-queue-button scenario-submit-link" href="${SUBMIT_PAGE}">Add a job you went
-    to as a scenario</a></div>`;
+    ${filtersHtml()}${progressHtml()}${groups}</div>`;
 }
 
 /**

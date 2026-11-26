@@ -1,22 +1,22 @@
 /*
- * Editor page: markup for jobs sent with the Add a scenario form (submit.html) and waiting for
+ * Editor page: markup for jobs sent with the Add a job form (submit.html) and waiting for
  * approval. The list is one folding section on the first screen; one job (#j-<id>) is drawn as
- * the scenario learners would see, by the app's own markup, with Edit and approve, Approve as
- * it is, and Reject.
+ * learners would see it, by the app's own markup, with Edit and approve, Approve as it is, and
+ * Reject. Approving adds it to Anonymised jobs, not to Scenarios (AJ-A).
  * Each function takes prepared data and returns text; main.js handles the clicks.
  * Depends on logic.js, constants.js, staffPage.js and views/scenarioMarkup.js.
  */
 import { escapeHtml } from '../logic.js';
 import { warningHtml, noteHtml, actionButtonHtml, dataIdAttr } from '../staffPage.js';
-import { DEFAULT_HEADER_COLOUR, SCENARIO_EDITING_ENABLED } from '../constants.js';
+import { DEFAULT_HEADER_COLOUR } from '../constants.js';
 import { scenarioBodyHtml, scenarioTagsText } from '../views/scenarioMarkup.js';
 
 export const SUBMISSION_HASH_PREFIX = '#j-';
 // The Edit and approve form for a job (the new scenario form, filled in from it).
 export const APPROVE_HASH_PREFIX = '#approve-';
 
-// Draws the scenario as an editor sees one (folds open, guidelines as text, not links), with
-// nothing to tap: a job is approved or rejected as it is, and edited once it is in the app.
+// Draws the job as an editor sees a scenario (folds open, guidelines as text, not links), with
+// nothing to tap: a job is changed in the Edit and approve form.
 const READ_ONLY = { attrs: () => '', formFor: () => '', readOnly: true };
 // A button for one job, by its id.
 const jobButton = (action, label, id, style) =>
@@ -65,21 +65,15 @@ function decisionHtml(id, isConfirmingReject) {
       <div class="editor-buttons">${jobButton('submission-reject-confirm', 'Yes, reject it', id, 'button')}
       ${jobButton('submission-reject-cancel', 'Cancel', id)}</div>`;
   }
-  // Approving saves a new scenario, so only Reject is offered while scenario editing is paused.
-  const approve = SCENARIO_EDITING_ENABLED
-    ? `${jobButton('submission-edit', 'Edit and approve', id, 'button')}
-    ${jobButton('submission-approve', 'Approve as it is', id)}`
-    : '';
-  return `<div class="editor-buttons">${approve}
+  return `<div class="editor-buttons">${jobButton('submission-edit', 'Edit and approve', id, 'button')}
+    ${jobButton('submission-approve', 'Approve as it is', id)}
     ${jobButton('submission-reject', 'Reject', id)}</div>`;
 }
 
-const APPROVE_NOTE = `Check that nothing in the text or photos could identify the patient, and that it reads
-  well as a scenario. Edit and approve lets you change anything first, or take a photo out.
-  An approved job becomes a new scenario; it reaches the app the next morning.`;
-// While SCENARIO_EDITING_ENABLED is false a job can be checked and rejected, not approved.
-const PAUSED_NOTE = `Check that nothing in the text or photos could identify the patient. Approving
-  jobs is paused until the scenario review is finished; a job can still be rejected.`;
+const APPROVE_NOTE = `Check that nothing in the text or photos could identify the patient. Edit and
+  approve lets you change anything first, or take a photo out. An approved job is added to
+  Anonymised jobs the next morning; what it could teach and its debrief points become its
+  Lessons learnt, which you can change afterwards, with links to any recordings.`;
 
 /**
  * One submitted job's screen. `view` is { submission, scenario (as learners would see it),
@@ -95,7 +89,7 @@ export function submissionHtml(viewer, view, signedInButtons) {
       <div class="guideline-meta">Submitted job · ${escapeHtml(scenarioTagsText(scenario))}<br>
         Sent by ${escapeHtml(submission.sender)} on ${escapeHtml(sentDate(submission.sent))}</div></div>
     <main class="page-padding">${warningHtml(viewer.message)}
-    ${noteHtml(SCENARIO_EDITING_ENABLED ? APPROVE_NOTE : PAUSED_NOTE)}
+    ${noteHtml(APPROVE_NOTE)}
     ${warningsHtml(view.warnings)}${photosNote}
     <div class="editor-preview scenario-screen">${scenarioBodyHtml(scenario, READ_ONLY)}</div>
     ${decisionHtml(submission.id, view.isConfirmingReject)}</main>`;
