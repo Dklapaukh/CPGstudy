@@ -73,8 +73,8 @@ export function renderJobList() {
     : emptyHtml();
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding scenario-screen jobs-screen"><h1 class="quiz-title">Anonymised jobs</h1>
-    <p class="scenario-intro">Interesting jobs staff went to, anonymised and checked by an
-    editor, with the lessons learnt. Use them as ideas for scenarios.</p>
+    <p class="scenario-intro">Interesting jobs staff went to, anonymised.<br>
+    Can be used as ideas for scenarios.</p>
     <a class="scenario-queue-button scenario-submit-link" href="${SUBMIT_PAGE}">Add a job you went
     to</a>${themeChoiceHtml(state.jobTheme)}${rows}</div>`;
 }
