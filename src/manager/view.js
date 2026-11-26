@@ -294,7 +294,7 @@ function personScenariosHtml({ totals, groups, rows, struggled, total }) {
         'Scenarios run',
         [
           'Scenario',
-          'Complexity',
+          'Presentation',
           'Scene load',
           'Runs',
           'First',

@@ -43,7 +43,7 @@ unless marked "by hand".
 - Medicine test: the practice level can be changed on its screen; tick questions toggle and
   Check; choice questions mark at once; the end shows the score and the best, and the picker
   shows "best n%".
-- Scenarios: in the Quiz choice; complexity and scene load chips and the theme dropdown filter
+- Scenarios: in the Quiz choice; presentation and scene load chips and the theme dropdown filter
   the list; a scenario shows its vitals, tags and guidelines; a guideline opened from it has
   "Back to scenario", forgotten once another guideline is opened; Finish shows the PEARLS guide
   and one rating row per outcome; Save the run gives the score, adds ticked guidelines to

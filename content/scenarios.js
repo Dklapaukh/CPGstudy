@@ -28,7 +28,12 @@ export const scenarios = [
     levels: ['student', 'grad', 'supervised'],
     title: 'Netball ankle',
     suburb: 'Hataitai',
-    story: "A 34-year-old woman rolled her ankle at netball and can't put weight on it.",
+    story:
+      'A 34-year-old woman has hurt her ankle at netball; her coach is calling. She rolled it going for the ball and can’t put weight on it.',
+    giveIfAsked: [
+      'It is swollen over the outside of the ankle and tender at the back of the bone.',
+      'She felt a pop, and has never hurt it before.',
+    ],
     intention:
       'Run a full primary and secondary survey and handover on a stable patient. Insist on the whole structure even though the problem is obvious.',
     outcomes: [
@@ -58,7 +63,7 @@ export const scenarios = [
   },
   {
     id: 'not-himself',
-    complexity: 1,
+    complexity: 2,
     load: 'single',
     levels: ['supervised', 'paramedic'],
     title: 'Just not himself',
@@ -100,13 +105,17 @@ export const scenarios = [
   },
   {
     id: 'chest-pain-lawns',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad'],
     title: 'Chest pain mowing the lawns',
     suburb: 'Cannons Creek',
     story:
-      'A 58-year-old man has had central chest pressure for 40 minutes, which started while he was mowing the lawns.',
+      'A 58-year-old man has chest pain; his wife is calling. It came on while he was mowing the lawns about 40 minutes ago and hasn’t gone away.',
+    giveIfAsked: [
+      'It is a central pressure that spreads to his left arm, and he feels sick and sweaty.',
+      'He has had twinges walking up hills for a few weeks, which went with rest.',
+    ],
     intention: 'Practise assessing chest pain. Watch whether they get a 12-lead early.',
     outcomes: [
       'Gets a 12-lead ECG early and interprets it',
@@ -135,7 +144,7 @@ export const scenarios = [
   },
   {
     id: 'long-lie',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad', 'supervised', 'paramedic'],
     title: 'Long lie',
@@ -217,13 +226,18 @@ export const scenarios = [
   },
   {
     id: 'copd-or-sepsis',
-    complexity: 3,
+    complexity: 2,
     load: 'single',
     levels: ['grad'],
     title: 'COPD or sepsis?',
     suburb: 'Ōtaki',
     story:
-      'A 67-year-old woman with known COPD has been more short of breath for three days and is now feverish.',
+      'A 67-year-old woman with COPD is more short of breath; her husband is calling. She has been getting worse for three days and today she is hot and shivery.',
+    giveIfAsked: [
+      'Her sputum has turned green and there is more of it.',
+      'She is more muddled than usual, and has hardly passed urine today.',
+      'Her usual oxygen saturation is 88 to 92% (her respiratory nurse’s plan is on the fridge).',
+    ],
     intention:
       'Work through differentials and titrate oxygen. Watch the oxygen target and whether they think of sepsis. Ask what the long trip to hospital changes.',
     outcomes: [
@@ -254,7 +268,7 @@ export const scenarios = [
   },
   {
     id: 'head-strike-warfarin',
-    complexity: 3,
+    complexity: 2,
     load: 'single',
     levels: ['student'],
     title: 'Fall in the garden',
@@ -295,7 +309,7 @@ export const scenarios = [
   },
   {
     id: 'cafe-anaphylaxis',
-    complexity: 2,
+    complexity: 1,
     load: 'delegation',
     levels: ['grad', 'supervised', 'paramedic'],
     title: 'Café anaphylaxis',
@@ -332,13 +346,17 @@ export const scenarios = [
   },
   {
     id: 'gym-collapse',
-    complexity: 2,
+    complexity: 1,
     load: 'delegation',
     levels: ['supervised', 'paramedic'],
     title: 'Collapse at the gym',
     suburb: 'Trentham, Upper Hutt',
     story:
-      "A 55-year-old man collapsed on the treadmill. Staff are doing CPR and have applied the gym's AED.",
+      'A 55-year-old man has collapsed at a gym; staff are calling. They are doing CPR and have put the gym’s AED on him.',
+    giveIfAsked: [
+      'He collapsed on the treadmill without warning, about six minutes before you arrive.',
+      'The AED has given one shock.',
+    ],
     intention:
       'Run a cardiac arrest as team leader. Make them hand off compressions and keep oversight of the whole team. Bring in his partner whenever you want more pressure.',
     outcomes: [
@@ -450,7 +468,11 @@ export const scenarios = [
     title: 'Off the trampoline',
     suburb: 'Tawa',
     story:
-      'A 6-year-old boy fell off the backyard trampoline onto his outstretched hand. His mum says his wrist "looks funny".',
+      'A 6-year-old boy has hurt his wrist; his mum is calling. He fell off the backyard trampoline onto his outstretched hand, and she says the wrist "looks funny".',
+    giveIfAsked: [
+      'He bumped his head on the frame on the way down, but didn’t knock himself out.',
+      'His elbow is sore too when it is moved.',
+    ],
     intention:
       'Run the full structure on a child: talk to the child as well as the parent, get child-sized vitals and use the paediatric ranges. Watch whether the obvious wrist stops them checking for other injuries.',
     outcomes: [
@@ -480,13 +502,18 @@ export const scenarios = [
   },
   {
     id: 'bus-stop-dizzy',
-    complexity: 1,
+    complexity: 2,
     load: 'single',
     levels: ['grad', 'supervised', 'paramedic'],
     title: 'Dizzy at the bus stop',
     suburb: 'Lower Hutt',
     story:
-      'A 45-year-old woman is sitting on the footpath at a bus stop on High Street. She says the world is spinning and she has vomited once.',
+      'A 45-year-old woman is dizzy at a bus stop on High Street; a passer-by is calling. She says the world is spinning and she has vomited once.',
+    giveIfAsked: [
+      'It came on suddenly while she was standing still, and it hasn’t eased since.',
+      'She has a headache at the back of her head that she says is not like her migraines.',
+      'She finds it hard to walk straight (only if they ask her to stand or walk).',
+    ],
     intention:
       'Keep to the structure when nothing obvious stands out. Watch whether they separate vertigo from light-headedness and look for the features that point to a stroke rather than an inner-ear cause.',
     outcomes: [
@@ -522,7 +549,12 @@ export const scenarios = [
     title: "Doesn't want to go",
     suburb: 'Karori',
     story:
-      'An 81-year-old woman slipped on her kitchen floor. Her neighbour helped her up and called 111. She is adamant she is not going to hospital.',
+      'An 81-year-old woman has had a fall at home; her neighbour is calling. She slipped on the kitchen floor, the neighbour helped her up, and she is adamant she is not going to hospital.',
+    giveIfAsked: [
+      'She slipped on water by the sink; she didn’t feel faint or dizzy first.',
+      'Her right wrist is a little sore but she can move it fully.',
+      'She lives alone and her daughter is in Auckland.',
+    ],
     intention:
       'Practise assessing capacity, informed consent and a safe decision to leave someone at home. Watch for a full falls assessment, a clear explanation of the risks and a sensible safety-net plan.',
     outcomes: [
@@ -553,13 +585,18 @@ export const scenarios = [
   },
   {
     id: 'hot-toddler',
-    complexity: 1,
+    complexity: 2,
     load: 'single',
     levels: ['paramedic'],
     title: 'Hot toddler',
     suburb: 'Ranui',
     story:
-      'An 18-month-old girl has had a fever since yesterday. Her dad is worried because she is "floppy" and not drinking much.',
+      'An 18-month-old girl has a fever; her dad is calling. She has been hot since yesterday, and today he says she is "floppy" and not drinking much.',
+    giveIfAsked: [
+      'She has had two wet nappies since last night.',
+      'She has a few spots on her tummy that fade when pressed.',
+      'Her brother at daycare had a cold last week.',
+    ],
     intention:
       'Assess a febrile young child in a structured way and make a treatment and referral decision. Watch for hydration, a look for a rash and how they explain what to watch for if she stays home.',
     outcomes: [
@@ -589,13 +626,17 @@ export const scenarios = [
   },
   {
     id: 'wheezy-at-school',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad', 'supervised', 'paramedic', 'icp'],
     title: 'Wheezy at school',
     suburb: 'Naenae',
     story:
-      'A 15-year-old girl became short of breath during PE. The school nurse has given her four puffs of her inhaler and called you.',
+      'A 15-year-old girl is short of breath at school; the school nurse is calling. She became wheezy during PE, and the nurse has given her four puffs of her inhaler.',
+    giveIfAsked: [
+      'She can speak in short sentences.',
+      'She often forgets her preventer inhaler, and her uncle smokes in the house.',
+    ],
     intention:
       'Grade the severity of asthma and treat by the guideline, with the dose for her age and weight. Watch whether they reassess after each nebuliser and decide on transport.',
     outcomes: [
@@ -625,13 +666,18 @@ export const scenarios = [
   },
   {
     id: 'croup-2am',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['grad', 'supervised', 'paramedic'],
     title: 'Croup at 2 am',
     suburb: 'Titahi Bay',
     story:
-      'A 3-year-old boy woke at 2 am with a barking cough and noisy breathing. His mum has him on her knee in the bathroom with the shower running.',
+      'A 3-year-old boy has noisy breathing at 2 am; his mum is calling. He woke with a barking cough, and she has him on her knee in the bathroom with the shower running.',
+    giveIfAsked: [
+      'He has had a runny nose for two days.',
+      'He had croup once before, last year.',
+      'He is not drooling and can swallow, and he hasn’t choked on anything.',
+    ],
     intention:
       'Recognise croup, grade it and treat it while keeping the child calm. Watch that they leave him with his mum, avoid upsetting him, and separate croup from other causes of stridor.',
     outcomes: [
@@ -661,7 +707,7 @@ export const scenarios = [
   },
   {
     id: 'hypo-building-site',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad'],
     title: 'Hypo on the building site',
@@ -702,13 +748,18 @@ export const scenarios = [
   },
   {
     id: 'seizure-coastlands',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad'],
     title: 'Seizure at Coastlands',
     suburb: 'Paraparaumu',
     story:
-      'A 24-year-old man had a seizure in the food court. It has stopped, and his friend says "he\'s fine, he has these all the time".',
+      'A 24-year-old man has had a seizure at Coastlands; security is calling. It has stopped, and his friend says "he’s fine, he has these all the time".',
+    giveIfAsked: [
+      'He ran out of his sodium valproate a week ago.',
+      'This one lasted longer than usual, about five minutes.',
+      'He bit his tongue and hit his head on a chair as he fell.',
+    ],
     intention:
       "Manage the post-ictal patient and decide on transport. Watch whether they check for injuries and for a change to his usual seizures, and whether they assess his capacity before taking the friend's word.",
     outcomes: [
@@ -738,7 +789,7 @@ export const scenarios = [
   },
   {
     id: 'stroke-breakfast',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad'],
     title: 'Dropped cup at breakfast',
@@ -778,13 +829,18 @@ export const scenarios = [
   },
   {
     id: 'svt-lambton-quay',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['student', 'grad', 'supervised'],
     title: 'Racing heart at work',
     suburb: 'Wellington Central',
     story:
-      'A 28-year-old office worker has had a pounding heart for 30 minutes. A colleague called 111.',
+      'A 28-year-old woman has a racing heart at work on Lambton Quay; a colleague is calling. It started suddenly 30 minutes ago while she was sitting at her desk.',
+    giveIfAsked: [
+      'She has had two similar episodes that stopped on their own.',
+      'She has had three coffees today.',
+      'No chest pain and she hasn’t fainted.',
+    ],
     intention:
       'Identify SVT on the monitor and manage it by the guideline, after a structured assessment so they don’t lock onto the obvious diagnosis (premature closure). Watch for a 12-lead before and after treatment, vagal manoeuvres done well and the signs that would make it unstable.',
     outcomes: [
@@ -821,7 +877,12 @@ export const scenarios = [
     title: 'Bleeding at nine weeks',
     suburb: 'Wainuiomata',
     story:
-      'A 31-year-old woman who is nine weeks pregnant has bleeding and lower abdominal cramping that started this morning.',
+      'A 31-year-old woman who is nine weeks pregnant has vaginal bleeding; she is calling herself. It started this morning with cramping low in her abdomen.',
+    giveIfAsked: [
+      'The pain is worse on the left and she felt faint when she stood up.',
+      'She has a pain at the tip of her shoulder.',
+      'She hasn’t had a scan in this pregnancy yet.',
+    ],
     intention:
       'Assess bleeding in early pregnancy, look for shock and think of ectopic pregnancy. Watch for a sensitive approach, pain relief and a clear explanation of where she is going.',
     outcomes: [
@@ -851,13 +912,18 @@ export const scenarios = [
   },
   {
     id: 'phone-call-newtown',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['grad', 'supervised', 'paramedic'],
     title: 'The phone call',
     suburb: 'Newtown',
     story:
-      'A 22-year-old man rang a friend and said he was going to end his life. The friend called 111. Police are on their way.',
+      'A 22-year-old man may harm himself; a friend is calling. He rang the friend and said he was going to end his life. Police are on their way.',
+    giveIfAsked: [
+      'He has been drinking, and he stopped his sertraline a month ago.',
+      'He broke up with his partner last week.',
+      'Asked directly, he says he has a plan and has thought about how and where.',
+    ],
     intention:
       'Assess someone with thoughts of suicide: build rapport, ask directly and assess risk and capacity. Watch for scene safety, a calm conversation and a plan that keeps him safe.',
     outcomes: [
@@ -888,13 +954,17 @@ export const scenarios = [
   },
   {
     id: 'back-gone-lifting',
-    complexity: 2,
+    complexity: 1,
     load: 'single',
     levels: ['grad', 'supervised'],
     title: 'Back gone lifting',
     suburb: 'Upper Hutt',
     story:
       'A 52-year-old man has severe lower back pain at home; his wife is calling. He felt his back "go" lifting a bag of concrete, walked inside and is now on the couch, unable to move for the pain.',
+    giveIfAsked: [
+      'He has no numbness between his legs and has passed urine normally.',
+      'The pain goes into his right buttock but not below the knee.',
+    ],
     intention:
       'Assess non-traumatic back pain, give good pain relief and search for the red flags. Watch whether they ask about bladder and bowel control, numbness in the saddle area and leg weakness.',
     outcomes: [
@@ -1008,13 +1078,18 @@ export const scenarios = [
   },
   {
     id: 'baby-not-feeding',
-    complexity: 3,
+    complexity: 1,
     load: 'single',
     levels: ['supervised', 'paramedic'],
     title: 'Baby not feeding',
     suburb: 'Waitangirua',
     story:
-      'A 4-month-old baby has had a cough for three days and is now taking half her usual feeds. Her nana is looking after her.',
+      'A 4-month-old baby is coughing and not feeding well; her nana is calling. She has had a cough for three days and is now taking half her usual feeds.',
+    giveIfAsked: [
+      'She has had two wet nappies today.',
+      'She was born at 35 weeks and spent five days in the neonatal unit.',
+      'Nana noticed she stopped breathing for a few seconds while asleep this morning.',
+    ],
     intention:
       'Assess bronchiolitis and decide whether a borderline baby needs to go. Watch for counting breathing properly, feeding and wet nappies, the risk factors that lower the threshold, and how they involve nana.',
     outcomes: [
@@ -1045,13 +1120,17 @@ export const scenarios = [
   },
   {
     id: 'headache-36-weeks',
-    complexity: 3,
+    complexity: 1,
     load: 'single',
     levels: ['grad', 'supervised', 'paramedic'],
     title: 'Headache at 36 weeks',
     suburb: 'Kilbirnie',
     story:
       'A 29-year-old woman who is 36 weeks pregnant has a severe headache; her partner is calling. It started this morning and now her vision is blurred.',
+    giveIfAsked: [
+      'Her midwife noted high blood pressure last week.',
+      'She has pain under her ribs on the right, and her face and hands have swollen in the last few days.',
+    ],
     intention:
       'Recognise pre-eclampsia, then manage an eclamptic seizure: partway through the job, once the blood pressure is known, she has a seizure. Watch for checking the blood pressure early, asking early for an ICP or clinical advice for magnesium, positioning for pregnancy, the treatment of the seizure and early notice to the hospital.',
     outcomes: [
@@ -1131,7 +1210,12 @@ export const scenarios = [
     suburb: 'Kaitoke',
     rural: true,
     story:
-      'A 44-year-old motorcyclist came off on a bend on the Remutaka Hill Road. His thigh is deformed and he is lying on the roadside.',
+      'A 44-year-old motorcyclist has come off on the Remutaka Hill Road; another rider is calling. He came off on a bend and is lying on the roadside, and his thigh looks wrong.',
+    giveIfAsked: [
+      'He hit the barrier with his left side.',
+      'His left chest hurts when he breathes in (found only on a full survey).',
+      'His helmet is scuffed, but he remembers the crash.',
+    ],
     intention:
       'Manage a femur fracture with bleeding and a long transport. Watch for a full trauma survey despite the distracting injury, traction and splinting, bleeding control, and the transport and helicopter decision.',
     outcomes: [
@@ -1161,13 +1245,18 @@ export const scenarios = [
   },
   {
     id: 'in-the-cells',
-    complexity: 3,
+    complexity: 2,
     load: 'single',
     levels: ['supervised', 'paramedic', 'icp'],
     title: 'In the cells',
     suburb: 'Lower Hutt',
     story:
-      'Police have asked you to see a 33-year-old man in the cells at the Hutt Valley police station. He is shouting, sweating and fighting the officers.',
+      'A 33-year-old man in police custody needs assessment; police at the Hutt Valley station are calling. He is in the cells, shouting, sweating and fighting the officers.',
+    giveIfAsked: [
+      'He was arrested an hour ago after a disturbance in a shop.',
+      'Police found a pipe on him, and he has schizophrenia.',
+      'He hasn’t eaten or drunk anything since he arrived.',
+    ],
     intention:
       'Manage acute behavioural disturbance safely with police. Watch for scene safety, looking for medical causes, sedation by the guideline, monitoring afterwards and the law on treatment without consent.',
     outcomes: [
@@ -1197,7 +1286,7 @@ export const scenarios = [
   },
   {
     id: 'rash-in-the-hostel',
-    complexity: 3,
+    complexity: 2,
     load: 'single',
     levels: ['grad', 'supervised', 'paramedic'],
     title: 'Rash in the hostel',
@@ -1244,9 +1333,13 @@ export const scenarios = [
     title: 'Birth in the bathroom',
     suburb: 'Pukerua Bay',
     story:
-      'A 27-year-old woman in her second labour is on the bathroom floor, pushing. Her partner is on the phone to the midwife, who is 40 minutes away.',
+      'A 27-year-old woman is in labour and pushing; her partner is calling. It is her second baby, at 39 weeks, and the midwife is 40 minutes away.',
+    giveIfAsked: [
+      'Her first labour was three hours.',
+      'Her waters broke 20 minutes ago and were clear.',
+    ],
     intention:
-      'Manage an imminent birth, then a baby who is slow to breathe. Watch how they use the partner and their crewmate, prepare for the newborn before the birth and run newborn resuscitation.',
+      'Manage an imminent birth, then a baby who is slow to breathe. Watch how they use the partner and their crewmate, prepare for the newborn before the birth and run newborn resuscitation. A variation: discuss a birth complication (shoulder dystocia, cord prolapse, a breech).',
     outcomes: [
       'Prepares for the newborn before the birth',
       'Gives the partner and crewmate clear roles',
@@ -1274,12 +1367,16 @@ export const scenarios = [
   },
   {
     id: 'toddler-in-the-pool',
-    complexity: 3,
+    complexity: 1,
     load: 'delegation',
     title: 'Toddler in the pool',
     suburb: 'Paraparaumu Beach',
     story:
-      'A 2-year-old boy was found face down in a backyard pool. A neighbour is doing CPR when you arrive.',
+      'A 2-year-old boy has been found in a pool; his uncle is calling. He was found face down in the backyard pool at a family barbecue, and a neighbour is doing CPR.',
+    giveIfAsked: [
+      'Nobody knows how long he was in the water; he was last seen about 10 minutes before.',
+      'He weighs about 12 kg.',
+    ],
     intention:
       'Run a paediatric cardiac arrest from drowning. Watch for rescue breaths, doses by weight, roles given to the crew and the neighbour, and looking after the distraught parents.',
     outcomes: [
@@ -1309,14 +1406,18 @@ export const scenarios = [
   },
   {
     id: 'home-birth-haemorrhage',
-    complexity: 3,
+    complexity: 1,
     load: 'delegation',
     levels: ['supervised', 'paramedic', 'icp'],
     title: 'Home birth haemorrhage',
     suburb: 'Te Horo',
     rural: true,
     story:
-      "A 34-year-old woman gave birth at home 20 minutes ago. Her midwife says she is bleeding heavily and the placenta hasn't come.",
+      'A 34-year-old woman is bleeding heavily after a home birth; her midwife is calling. She gave birth 20 minutes ago and the placenta hasn’t come.',
+    giveIfAsked: [
+      'She bled heavily after her last birth.',
+      'The midwife has given oxytocin IM and estimates she has lost a litre.',
+    ],
     intention:
       'Manage a postpartum haemorrhage far from hospital alongside the midwife. Watch for clear roles with the midwife, fundal massage and medicines, the helicopter decision and the transport checklist.',
     outcomes: [
@@ -1347,13 +1448,18 @@ export const scenarios = [
   },
   {
     id: 'cant-talk-asthma',
-    complexity: 3,
+    complexity: 1,
     load: 'delegation',
     levels: ['supervised', 'paramedic', 'icp'],
     title: "Can't talk",
     suburb: 'Ascot Park',
     story:
-      "A 36-year-old woman's partner called because she can't breathe. She is sitting upright, can only say single words and is getting tired.",
+      'A 36-year-old woman can’t breathe; her partner is calling. She has asthma and has been unwell with a cold.',
+    giveIfAsked: [
+      'She is sitting upright, can only say single words and is getting tired.',
+      'She was admitted to ICU with asthma five years ago.',
+      'She has used her reliever about 20 times in the last two hours.',
+    ],
     intention:
       'Manage life-threatening asthma that is close to arrest. Watch for early adrenaline, getting more help, preparing for her to stop breathing and delegating tasks to the crew.',
     outcomes: [
@@ -1383,15 +1489,16 @@ export const scenarios = [
   },
   {
     id: 'stemi-arrest-tawa',
-    complexity: 3,
+    complexity: 1,
     load: 'delegation',
     levels: ['supervised', 'paramedic', 'icp'],
     title: 'STEMI that arrests',
     suburb: 'Tawa',
     story:
-      'A 62-year-old man has crushing chest pain. His 12-lead shows an inferior STEMI. During loading he goes into VF.',
+      'A 62-year-old man has chest pain at home in Tawa; his wife is calling. It came on an hour ago, crushing and central, while he was watching TV.',
+    giveIfAsked: ['He is pale and sweaty and has vomited.', 'His 12-lead shows an inferior STEMI.'],
     intention:
-      'Manage a STEMI, then a cardiac arrest in the back of the ambulance and care after return of circulation. Watch for roles inside a small space, the reperfusion pathway and the post-arrest checks.',
+      'Manage a STEMI, then a cardiac arrest in the back of the ambulance and care after return of circulation: bring in VF during loading. Watch for roles inside a small space, the reperfusion pathway and the post-arrest checks.',
     outcomes: [
       'Recognises the STEMI and follows the reperfusion pathway',
       'Gives clear roles in a small space during the arrest',
@@ -1419,13 +1526,18 @@ export const scenarios = [
   },
   {
     id: 'generator-garage',
-    complexity: 2,
+    complexity: 1,
     load: 'several',
     levels: ['supervised', 'paramedic', 'icp'],
     title: 'Generator in the garage',
     suburb: 'Wainuiomata',
     story:
-      'During a power cut a family ran a petrol generator in their garage. The mum called because everyone has a headache and her son vomited.',
+      'A family all have headaches during a power cut; the mum is calling. Everyone has a headache and her son has vomited.',
+    giveIfAsked: [
+      'They are running a petrol generator in the garage, moved in out of the rain.',
+      'The mum is 28 weeks pregnant.',
+      'The son was asleep in the room next to the garage.',
+    ],
     intention:
       'Recognise carbon monoxide poisoning in a family and triage it. Watch for scene safety first, oxygen for everyone, the pregnant mum and the child, and asking for more ambulances.',
     outcomes: [
@@ -1508,13 +1620,17 @@ export const scenarios = [
   },
   {
     id: 'bus-v-pedestrians',
-    complexity: 3,
+    complexity: 1,
     load: 'several',
     levels: ['paramedic', 'icp'],
     title: 'Bus versus pedestrians',
     suburb: 'Te Aro',
     story:
-      'A bus mounted the kerb on Courtenay Place at 11 pm on a Friday. Three people are hurt and a crowd has gathered.',
+      'A bus has mounted the kerb on Courtenay Place at 11 pm on a Friday, three people hurt; police are calling. A crowd has gathered.',
+    giveIfAsked: [
+      'The unconscious man was hit by the bus’s mirror and thrown onto the road.',
+      'Police have two officers there; the crowd is getting rowdy.',
+    ],
     intention:
       'Take charge of a scene with several patients: triage, call for resources and give a clear handover. Watch for the first report, the triage order, management of the head injury and a safe crowd.',
     outcomes: [
@@ -1579,13 +1695,18 @@ export const scenarios = [
   },
   {
     id: 'rest-home-gastro',
-    complexity: 2,
+    complexity: 3,
     load: 'several',
     levels: ['paramedic'],
     title: 'Rest-home gastro',
     suburb: 'Naenae',
     story:
-      'A rest home has a vomiting bug. The nurse has asked you to see three residents who are getting worse.',
+      'Three residents at a rest home are getting worse with a vomiting bug; the nurse is calling. Several residents have had it this week.',
+    giveIfAsked: [
+      'The man with Parkinson’s has missed two doses of his medicine because of vomiting.',
+      'He is on gliclazide and has eaten nothing today.',
+      'The 88-year-old woman has an advance care plan: no CPR, comfort-focused care.',
+    ],
     intention:
       'Prioritise several elderly patients with fluid loss and decide who goes. Watch for infection precautions, the frailty of older patients, advance care plans and referral decisions for those who stay.',
     outcomes: [
@@ -1657,7 +1778,11 @@ export const scenarios = [
     suburb: 'Peka Peka',
     rural: true,
     story:
-      'A car has gone off the Kāpiti Expressway into a ditch at Peka Peka. Inside are a pregnant driver and a child in a car seat. You are the only crew for 20 minutes.',
+      'A car has gone off the Kāpiti Expressway into a ditch at Peka Peka; a passing driver is calling. Inside are a pregnant driver and a child in a car seat, and you are the only crew for 20 minutes.',
+    giveIfAsked: [
+      'The driver is 32 weeks pregnant and her seatbelt crossed her bump.',
+      'She hasn’t felt the baby move since the crash.',
+    ],
     intention:
       'Manage two very different patients far from a trauma centre. Watch for triage, assessing a pregnant trauma patient, the child in the car seat, and when to ask for a helicopter and more crews.',
     outcomes: [

@@ -377,7 +377,7 @@ test('page: a person page has every part, and the date range redraws the charts'
   assert.match($('main').textContent, /Flashcards learnt\s*2 of \d+/);
   assert.equal(doc.querySelectorAll('.chart__bar').length, 1);
   assert.equal(doc.querySelectorAll('.chart__dot').length, 2, 'a quiz dot and a scenario dot');
-  assert.match($('main').textContent, /Netball ankle\s*Simple\s*Single\s*2\s*33%\s*100%\s*\+67/);
+  assert.match($('main').textContent, /Netball ankle\s*Common\s*Single\s*2\s*33%\s*100%\s*\+67/);
   assert.equal($('main').textContent.includes('secret'), false);
   $('#range-to').value = dateInputValue(now - 30 * DAY);
   $('#range-to').dispatchEvent(new dom.window.Event('change', { bubbles: true }));

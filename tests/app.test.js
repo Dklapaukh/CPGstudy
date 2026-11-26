@@ -826,7 +826,7 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   await sleep(30);
   const allRows = $$('.scenario-row').length;
   assert.ok(allRows >= 40);
-  assert.equal($('.scenario-group-title').textContent, 'Straightforward');
+  assert.equal($('.scenario-group-title').textContent, 'Common presentation');
   assert.ok(!$('.scenario-progress'), 'no progress until something is run');
   click($('[data-action="scenario-complexity"][data-value="3"]'));
   click($('[data-action="scenario-load"][data-value="delegation"]'));
@@ -894,7 +894,7 @@ test('Scenarios open from the Quiz choice; a guideline opened from one links bac
   const progress = $$('.scenario-progress tr').map((row) =>
     [...row.children].map((cell) => cell.textContent.trim()).join(' | '),
   );
-  assert.ok(progress.includes('Common presentation | 1 of 16 | 67%'), progress.join(' / '));
+  assert.ok(progress.includes('Common presentation | 1 of 23 | 67%'), progress.join(' / '));
   dom.window.location.hash = '#scenario-long-lie';
   await sleep(30);
   dom.window.location.hash = '#cpg-13-3';

@@ -95,7 +95,7 @@ test('missingFields: title, history, complexity, a guideline, the teaching point
   assert.deepEqual(missingFields(tidySubmission({})), [
     'a short title',
     'the history',
-    'the complexity',
+    'the presentation',
     'at least one guideline',
     'what it could teach',
     'at least one debrief point',

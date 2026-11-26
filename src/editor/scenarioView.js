@@ -40,7 +40,7 @@ const FIELD_NAMES = {
   suburb: 'Suburb',
   story: 'Story',
   intention: 'Scenario intention',
-  complexity: 'Complexity',
+  complexity: 'Presentation',
   load: 'Scene load',
   levels: 'Suits these levels',
   outcomes: 'Intended outcomes',
@@ -58,7 +58,8 @@ const FIELD_NAMES = {
 };
 const VITAL_NAMES = Object.fromEntries(SCENARIO_VITALS);
 const HINTS = {
-  complexity: '1 Straightforward, 2 Common presentation, 3 Complex or atypical.',
+  complexity:
+    '1 Common presentation, 2 Undifferentiated presentation (X or Y), 3 Complex or atypical (X and Y).',
   load: 'single, delegation or several (several only when there is more than one patient).',
   outcomes: 'One per line, short and observable. The debrief rates each one.',
   giveIfAsked:

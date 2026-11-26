@@ -165,7 +165,7 @@ export function missingFields(job) {
   return [
     !job.title && 'a short title',
     !job.story && 'the history',
-    !job.complexity && 'the complexity',
+    !job.complexity && 'the presentation',
     !job.guidelines.length && 'at least one guideline',
     !job.intention && 'what it could teach',
     !job.outcomes.length && 'at least one debrief point',
@@ -258,7 +258,7 @@ export function scenarioFromSubmission(job, id, photos = [], isGuidelineId = () 
   const count = tidied.patients.length;
   return {
     id,
-    complexity: tidied.complexity || 2,
+    complexity: tidied.complexity || 1, // Common presentation when none was chosen
     load: count > 1 ? 'several' : tidied.load,
     title: tidied.title || 'Submitted job',
     suburb: tidied.suburb || NO_SUBURB,

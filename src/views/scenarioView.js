@@ -108,7 +108,7 @@ function filtersHtml() {
       ),
     )
     .join('');
-  return `${chipRowHtml('Complexity', 'scenario-complexity', SCENARIO_COMPLEXITY, complexity, 'Any complexity')}
+  return `${chipRowHtml('Presentation', 'scenario-complexity', SCENARIO_COMPLEXITY, complexity, 'Any presentation')}
     ${chipRowHtml('Scene', 'scenario-load', SCENARIO_LOADS, load, 'Any scene load')}
     ${levelChoiceHtml(level)}    <label class="quiz-setting scenario-theme-setting">Theme
     <select id="scenario-theme-choice">${options}</select></label>`;
@@ -144,7 +144,7 @@ function progressHtml() {
   if (!progress.complexity.some((row) => row.run)) return '';
   const body = `<p class="scenario-intro">Scenarios run on this tracker, and the average of each
     one's latest score against its intended outcomes.</p>
-    <table class="scenario-progress"><thead><tr><th scope="col">Complexity</th><th scope="col">Run</th>
+    <table class="scenario-progress"><thead><tr><th scope="col">Presentation</th><th scope="col">Run</th>
     <th scope="col">Average</th></tr></thead><tbody>${rows(progress.complexity)}</tbody>
     <thead><tr><th scope="col">Scene</th><th scope="col"></th><th scope="col"></th></tr></thead>
     <tbody>${rows(progress.load)}</tbody></table>`;
@@ -156,11 +156,12 @@ export function renderScenarioList() {
   const shown = filterScenarios(shownScenarios, state.scenarioFilter, sectionOf);
   const groups = shown.length
     ? scenarioGroupsHtml(shown, rowHtml)
-    : '<p class="empty-message">No scenario matches. Try another complexity, scene, level or theme.</p>';
+    : '<p class="empty-message">No scenario matches. Try another scenario level, scene, learner level or theme.</p>';
   app.innerHTML = `<a class="back-link" href="#">‹ All guidelines</a>
     <div class="page-padding scenario-screen"><h1 class="quiz-title">Scenarios</h1>
-    <p class="scenario-intro">Openings for a mentor to run. Start with straightforward,
-    single-patient scenarios, then add complexity or scene load once the basics are solid.</p>
+    <p class="scenario-intro">Openings for a mentor to run. Start with common presentations
+    and a single patient, then move to undifferentiated or complex ones, or more scene load, once
+    the basics are solid.</p>
     ${filtersHtml()}${progressHtml()}${groups}
     <a class="scenario-queue-button scenario-submit-link" href="${SUBMIT_PAGE}">Add a job you went
     to as a scenario</a></div>`;

@@ -192,11 +192,13 @@ export const SCENARIO_THEMES = [
   { name: 'Rural', rural: true },
 ];
 export const SCENARIO_HASH_PREFIX = 'scenario-';
-// Two filters in place of levels (decision 19 Nov 2026, option B): how clinically hard the
-// scenario is, and the team and scene load on top of it. `short` is the chip's text.
+// Two filters (decision 19 Nov 2026, option B): the scenario's level, and the team and scene
+// load on top of it. The levels (SC-O, SC-U, 26 Nov 2026): 1 one condition to assess in a
+// structured way; 2 a story that fits more than one condition (X or Y); 3 two problems at once
+// (X and Y). Severity is separate, so an arrest can be level 1. `short` is the chip's text.
 export const SCENARIO_COMPLEXITY = {
-  1: { name: 'Straightforward', short: 'Simple' },
-  2: { name: 'Common presentation', short: 'Common' },
+  1: { name: 'Common presentation', short: 'Common' },
+  2: { name: 'Undifferentiated presentation', short: 'Undifferentiated' },
   3: { name: 'Complex or atypical', short: 'Complex' },
 };
 export const SCENARIO_LOADS = {

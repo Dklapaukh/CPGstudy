@@ -15,7 +15,7 @@ It uses the same guideline data and backend as the study app and is published th
   flashcards learnt and due today); Scenarios; general numbers; charts.
 - **Scenarios** (team and person pages): scenarios run, runs recorded, the average first and
   latest scores and how many scenarios went up or down since their first run; the same by
-  complexity and scene load; the guidelines most often ticked as struggled. A person page also
+  presentation and scene load; the guidelines most often ticked as struggled. A person page also
   lists each scenario run with its runs, first, latest and change in score, last run date and
   the guidelines struggled with in the latest run. Debrief notes are never sent.
 - **Over time**: a From and To date and three charts by week, guidelines marked complete, the

@@ -42,7 +42,7 @@ many you have reviewed and opens the next. See
 [Scenarios](scenarios.md), "Reviewing scenarios".
 
 **New and deleted scenarios.** "+ New scenario" at the top of the Scenarios section opens one
-form (`#new-scenario`): title, suburb, story, intention, complexity, scene load, intended
+form (`#new-scenario`): title, suburb, story, intention, presentation, scene load, intended
 outcomes (one per line), guidelines (CPG numbers) and one or more patients (up to 4), each with
 a label, background and all eight vitals. Every box is needed; several patients need the
 "several" scene load and a label each. Saving checks the whole scenario, gives it an id from its

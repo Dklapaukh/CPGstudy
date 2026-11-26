@@ -407,15 +407,15 @@ test('progress: run counts and average latest score by complexity and scene load
     b: { count: 1, runs: [{ at: 1, score: 60 }] },
   };
   const progress = scenarioProgress(list, (s) => records[s.id] || { count: 0, runs: [] });
-  const common = progress.complexity.find((row) => row.key === '2');
-  assert.deepEqual(common, {
+  const undifferentiated = progress.complexity.find((row) => row.key === '2');
+  assert.deepEqual(undifferentiated, {
     key: '2',
-    name: 'Common presentation',
+    name: 'Undifferentiated presentation',
     total: 2,
     run: 2,
     average: 70,
   });
-  const simple = progress.complexity.find((row) => row.key === '1');
-  assert.equal(simple.average, null);
+  const common = progress.complexity.find((row) => row.key === '1');
+  assert.equal(common.average, null);
   assert.equal(progress.load.find((row) => row.key === 'delegation').average, 60);
 });

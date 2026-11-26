@@ -54,7 +54,7 @@ function complexityHtml(complexity) {
       return `<option value="${value}"${selected}>${escapeHtml(text)}</option>`;
     })
     .join('');
-  return `<label class="submit-label" for="submit-complexity">Complexity
+  return `<label class="submit-label" for="submit-complexity">Presentation
       <span class="submit-required">(needed)</span></label>
     <select class="text-input" id="submit-complexity" name="complexity">${options}</select>`;
 }

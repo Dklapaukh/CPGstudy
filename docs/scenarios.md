@@ -4,8 +4,10 @@ Quiz > Scenarios (`#scenarios`) lists 40 or more hand-written openings for a men
 (`content/scenarios.js`, plus any added on the editor page), each in the Wellington region.
 Each scenario has two tags (decision 19 Nov 2026, SC-E), which replaced the old levels 1 to 5:
 
-- **Complexity:** Straightforward, Common presentation, or Complex or atypical
-  (`SCENARIO_COMPLEXITY`). The list is grouped by it.
+- **Presentation** (the scenario level, stored as `complexity`; SC-O, SC-U): 1 Common
+  presentation, 2 Undifferentiated presentation (the story fits more than one condition), 3
+  Complex or atypical (two problems at once) (`SCENARIO_COMPLEXITY`). The list is grouped by
+  it. Severity is separate, so an arrest can be a common presentation.
 - **Scene load:** Single patient, Delegation or Several patients (`SCENARIO_LOADS`).
 
 A scenario may also have the **levels it suits** (decision 24 Nov 2026): any of Student,
@@ -17,7 +19,7 @@ Two rows of chips (All plus the three of each) and a theme dropdown filter the l
 are Paediatrics, Obstetrics, Mental health, Respiratory, Cardiac, Trauma, Toxicology, Elderly and
 Rural. A theme comes from the sections or guideline numbers of a scenario's guidelines
 (`SCENARIO_THEMES` in `src/constants.js`); Rural comes from the scenario's `rural` field. Once
-anything has been run, a progress table at the top gives, for each complexity and scene load,
+anything has been run, a progress table at the top gives, for each presentation and scene load,
 how many have been run and their average latest score.
 
 A scenario (`#scenario-<id>`) shows its tags, title, suburb and story, then, when it has any,
@@ -96,7 +98,7 @@ The next scenario design (three levels, new openings, variation cards in place o
 
 The end of the Scenarios list links to `submit.html`, a form anyone can fill in **without
 signing in** to send an anonymised job they went to. In order: short title, suburb (optional,
-as it can be changed or made up), History, complexity and scene load (Single patient or
+as it can be changed or made up), History, presentation and scene load (Single patient or
 Delegation; Several patients when more than one patient is added); each patient's background,
 any number of vitals sets (each with a note such as "On arrival" or "After GTN") and Treatment
 and response; the guidelines; up to 4 photos (ECGs, rhythm strips, the monitor); then What
