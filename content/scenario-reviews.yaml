@@ -351,7 +351,7 @@ scenarios:
         note: ''
         otherLevels: Higher levels could introduce special circumstances
   - id: head-strike-warfarin
-    title: Head strike on warfarin
+    title: Fall in the garden
     reviewers: 1
     reviews:
       - reviewer: Danya
@@ -596,7 +596,7 @@ scenarios:
           symptoms for newer mentors. Symptoms could be added as an additional
           section
   - id: otaki-forks-tramper
-    title: Tramper at Ōtaki Forks
+    title: Tramper on Colonial Knob
     reviewers: 1
     reviews:
       - reviewer: Danya
@@ -786,7 +786,7 @@ scenarios:
         problems: []
         note: ''
   - id: stroke-breakfast
-    title: Stroke at breakfast
+    title: Dropped cup at breakfast
     reviewers: 1
     reviews:
       - reviewer: Danya
