@@ -2465,4 +2465,545 @@ export const scenarios = [
       },
     ],
   },
+  {
+    id: 'missed-dialysis',
+    complexity: 3,
+    load: 'single',
+    levels: ['icp'],
+    title: 'Missed dialysis',
+    suburb: 'Kilbirnie',
+    story:
+      'A 64-year-old man is weak and short of breath; his wife is calling. He is on haemodialysis and has felt worse since yesterday.',
+    giveIfAsked: [
+      'He missed his Friday and Monday dialysis when their car broke down.',
+      'His ankles are more swollen and he slept sitting up last night.',
+      '12 lead ECG: HR 38, no P waves, QRS 0.18 s with peaked T waves.',
+      'His fistula is in his left forearm: no IV or BP cuff on that arm.',
+    ],
+    intention:
+      'Treat severe hyperkalaemia in a man who is also fluid overloaded (ICP phase 1: new drugs). Watch for reading the ECG as severe, continuous salbutamol, calcium chloride, a flush, then sodium bicarbonate, an adrenaline infusion if the bradycardia persists, and caution with fluid and PEEP; GTN is contraindicated at this BP.',
+    outcomes: [
+      'Reads the ECG as severe hyperkalaemia',
+      'Gives continuous salbutamol, then calcium chloride, a flush and sodium bicarbonate',
+      'Starts an adrenaline infusion if the bradycardia persists',
+      'Weighs fluid and PEEP against the fluid overload and low BP',
+    ],
+    variations: [
+      {
+        lever: 'deterioration',
+        levels: ['icp'],
+        text: 'He arrests in PEA: calcium chloride and sodium bicarbonate go in as boluses alongside usual resuscitation.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'Give the ECG only as "slow and wide": the learner sorts hyperkalaemia from heart block, heart failure and sepsis, and calls ICP.',
+      },
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'His SpO₂ falls to 82% and he tires: PEEP or CPAP with caution in shock.',
+      },
+    ],
+    guidelines: ['cpg-3-17', 'cpg-3-6', 'cpg-3-12', 'cpg-2-5'],
+    patients: [
+      {
+        history:
+          'End-stage kidney failure from diabetes; haemodialysis three times a week. Type 2 diabetes, hypertension, heart failure.',
+        medications: 'Insulin glargine, amlodipine, calcitriol, calcium carbonate',
+        allergies: 'None known',
+        social: 'Lives with his wife. Usually drives himself to dialysis.',
+        vitals: {
+          gcs: '15',
+          rr: '28',
+          spo2: '89%',
+          hr: '38',
+          bp: '84/50',
+          temp: '36.4',
+          bgl: '6.8',
+          pain: '0/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'indigestion-johnsonville',
+    complexity: 3,
+    load: 'single',
+    levels: ['paramedic', 'icp'],
+    title: 'Indigestion in Johnsonville',
+    suburb: 'Johnsonville',
+    story:
+      'A 71-year-old woman feels sick and sweaty; her husband is calling. She thinks it is indigestion and has been lying on the couch for an hour.',
+    giveIfAsked: [
+      'The pain is a heavy ache in her upper abdomen and jaw; it started an hour ago.',
+      '12 lead ECG: ST elevation in II, III and aVF, and in V4R.',
+      'Her chest is clear and her neck veins are full.',
+      'She used two puffs of her husband’s GTN spray and felt faint afterwards.',
+    ],
+    intention:
+      'Manage an inferior STEMI with right ventricular involvement and shock. Watch for right-sided leads, withholding GTN, fluid for a preload-dependent heart while listening for crackles, activating the PCI pathway at Wellington Hospital, and calling ICP early: hypotension with bradycardia calls for adrenaline rather than metaraminol.',
+    outcomes: [
+      'Records right-sided leads and recognises right ventricular involvement',
+      'Withholds GTN and gives 500 ml of fluid, repeated once if needed',
+      'Activates the PCI pathway and calls ICP early',
+      'ICP: starts adrenaline for hypotension with bradycardia',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'It is a PE: no ST elevation, a long-haul flight last week and a swollen calf.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'overlapping',
+        levels: ['icp'],
+        text: 'Crackles appear after the second 500 ml: the left ventricle is failing too, so fluid stops and the vasopressor carries the BP.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'Her HR falls to 30 and she becomes drowsy: treat to the bradycardia guideline while ICP arrives.',
+      },
+    ],
+    guidelines: ['cpg-3-3', 'cpg-3-16', 'cpg-3-13', 'cpg-3-12'],
+    patients: [
+      {
+        history: 'Hypertension, high cholesterol.',
+        medications: 'Cilazapril, atorvastatin',
+        allergies: 'None known',
+        social: 'Retired teacher. Lives with her husband.',
+        vitals: {
+          gcs: '15',
+          rr: '20',
+          spo2: '95%',
+          hr: '44',
+          bp: '78/44',
+          temp: '36.2',
+          bgl: '7.9',
+          pain: '5/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'missed-her-steroids',
+    complexity: 3,
+    load: 'single',
+    levels: ['icp'],
+    title: 'Couldn’t keep her tablets down',
+    suburb: 'Karori',
+    story:
+      'A 58-year-old woman is confused and hot after two days of vomiting; her son is calling. She takes prednisone every day.',
+    giveIfAsked: [
+      'She has not kept her prednisone down for two days.',
+      'She had stinging when passing urine three days ago.',
+      'Her emergency hydrocortisone letter is on the fridge; nobody has given it.',
+    ],
+    intention:
+      'Manage adrenal crisis and septic shock together. Watch for linking the missed prednisone to the shock, hydrocortisone 100 mg and glucose, fluid then metaraminol while the systolic stays under 100, and the antibiotic criteria: Karori is less than 30 minutes from Wellington Hospital, so no antibiotic.',
+    outcomes: [
+      'Links the missed prednisone to the shock and gives hydrocortisone',
+      'Treats the low glucose',
+      'Gives fluid, then metaraminol for a systolic under 100',
+      'Applies the antibiotic criteria to the transport time',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['icp'],
+        text: 'Her systolic stays at 70 on metaraminol: an adrenaline infusion.',
+      },
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'Paramedic: hydrocortisone, glucose and fluid, then call ICP when the BP does not respond.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic', 'icp'],
+        text: 'Leave the prednisone out of the call: the learner finds it in her pill box and links it to the shock.',
+      },
+    ],
+    guidelines: ['cpg-12-16', 'cpg-6-2', 'cpg-5-3'],
+    patients: [
+      {
+        history: 'Rheumatoid arthritis on long-term prednisone. Hypothyroidism.',
+        medications: 'Prednisone 10 mg daily, methotrexate weekly, folic acid, levothyroxine',
+        allergies: 'None known',
+        social: 'Lives alone; her son called in when she stopped answering her phone.',
+        vitals: {
+          gcs: '14',
+          rr: '26',
+          spo2: '95%',
+          hr: '124',
+          bp: '74/40',
+          temp: '38.9',
+          bgl: '3.1',
+          pain: '3/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'queen-elizabeth-park-fall',
+    complexity: 3,
+    load: 'single',
+    levels: ['icp'],
+    rural: true,
+    title: 'Fall at Queen Elizabeth Park',
+    suburb: 'Paekākāriki',
+    story:
+      'A 78-year-old man has fallen on a walking track and hurt his ankle; a passer-by is calling. He says he felt "funny" just before he fell.',
+    giveIfAsked: [
+      'He takes gliclazide and skipped breakfast to walk early.',
+      'His ankle is badly deformed; the foot is pale and cool with a weak pulse.',
+      'His wife says he is muddled and slow to answer, which is not like him.',
+    ],
+    intention:
+      'Two problems meet at the ketamine decision. Watch for checking the glucose before anything else, recognising that the pale foot makes realignment urgent with more than 15 minutes to hospital, then ketamine once he is alert, with the preparation for dissociation checklist and the dose halved for his age, and the foot rechecked afterwards.',
+    outcomes: [
+      'Checks and treats the glucose first',
+      'Recognises that the pale foot makes realignment on scene urgent',
+      'Uses the dissociation checklist and halves the ketamine dose for his age',
+      'Rechecks perfusion, sensation and movement after realignment',
+    ],
+    variations: [
+      {
+        lever: 'escalation',
+        levels: ['paramedic'],
+        text: 'Paramedic: treat the glucose, give analgesia, call ICP and go through the checklist while waiting.',
+      },
+      {
+        lever: 'scene',
+        levels: ['paramedic', 'icp'],
+        text: 'It is dusk and raining, 400 m from the car park: plan the carry and where to realign.',
+      },
+      {
+        lever: 'complexity',
+        rung: 'contradictory',
+        levels: ['icp'],
+        text: 'He takes apixaban, has had black stools and his BP is 88/50: ketamine may make shock worse, but the foot still needs realigning.',
+      },
+    ],
+    guidelines: ['cpg-4-15', 'cpg-1-27', 'cpg-5-3', 'cpg-13-3'],
+    patients: [
+      {
+        history: 'Type 2 diabetes, hypertension, mild COPD.',
+        medications: 'Gliclazide, metformin, cilazapril',
+        allergies: 'None known',
+        social: 'Walks most mornings with his wife. Lives in Paekākāriki.',
+        vitals: {
+          gcs: '14',
+          rr: '18',
+          spo2: '97%',
+          hr: '96',
+          bp: '152/88',
+          temp: '36.1',
+          bgl: '2.9',
+          pain: '8/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'satay-at-the-takeaway',
+    complexity: 3,
+    load: 'single',
+    levels: ['paramedic'],
+    title: 'Satay at the takeaway',
+    suburb: 'Porirua',
+    story:
+      'A 19-year-old woman is wheezy and can’t finish a sentence at a takeaway shop; her friend is calling. She has asthma and has used her reliever twice.',
+    giveIfAsked: [
+      'She ate satay chicken 15 minutes ago and left her adrenaline autoinjector at home.',
+      'Her throat feels tight and itchy, and she has vomited once.',
+      'Faint hives on her back and stomach, seen only when her top is lifted.',
+    ],
+    intention:
+      'Recognise anaphylaxis in a known asthmatic and give IM adrenaline first: it treats both. Watch for looking under her clothes, not settling for a nebuliser alone, nebulised bronchodilators alongside, fluid for the low BP, and calling ICP if she is not improving 5 to 10 minutes after the first dose.',
+    outcomes: [
+      'Recognises anaphylaxis behind the wheeze',
+      'Gives IM adrenaline as the first drug',
+      'Adds nebulised bronchodilators and fluid for the low BP',
+      'Calls ICP if she is not improving after one dose',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'She is no better after two IM doses and her BP is 80/50: ICP for IV adrenaline.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'No hives and no food history at first: is this asthma alone or anaphylaxis?',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'She tires, goes quiet and her SpO₂ falls to 85%: a silent chest.',
+      },
+    ],
+    guidelines: ['cpg-12-12', 'cpg-2-1'],
+    patients: [
+      {
+        history: 'Asthma since childhood; one admission last winter.',
+        medications: 'Budesonide/formoterol, salbutamol',
+        allergies: 'Peanuts (anaphylaxis at age 8)',
+        social: 'Student. Out for dinner with a friend.',
+        vitals: {
+          gcs: '15',
+          rr: '32',
+          spo2: '91%',
+          hr: '128',
+          bp: '92/58',
+          temp: '36.8',
+          bgl: '6.1',
+          pain: '0/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'breathless-upper-hutt',
+    complexity: 3,
+    load: 'single',
+    levels: ['paramedic'],
+    title: 'Can’t get his breath',
+    suburb: 'Upper Hutt',
+    story:
+      'A 76-year-old man is struggling to breathe; his wife is calling. He has COPD and heart failure and has had a cough for four days.',
+    giveIfAsked: [
+      'He woke at 3 am gasping and has sat on the edge of the bed since.',
+      'His sputum is green and his ankles are more swollen than usual.',
+      'Wheeze throughout, and crackles halfway up both sides.',
+      'His usual SpO₂ is 89 to 92%.',
+    ],
+    intention:
+      'Three problems meet at CPAP: a COPD exacerbation, a chest infection and cardiogenic pulmonary oedema. Watch for not forcing one label, oxygen titrated to 88 to 92%, nebulised bronchodilators, GTN while the BP allows, CPAP for moderate to severe distress, hydrocortisone if the COPD is severe, and the antibiotic criteria (Hutt Hospital is under 30 minutes).',
+    outcomes: [
+      'Names all three problems rather than one',
+      'Titrates oxygen to his usual target',
+      'Gives GTN and nebulised bronchodilators together',
+      'Applies CPAP for moderate to severe distress, with its cautions',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'His BP falls to 88/50 on CPAP: stop the GTN and weigh CPAP in shock.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['paramedic'],
+        text: 'Breath sounds are quieter on the left: use CPAP with caution if a pneumothorax is possible.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'He becomes drowsy and his breathing slows: NIV is now contraindicated, so assisted ventilation and ICP.',
+      },
+    ],
+    guidelines: ['cpg-2-2', 'cpg-3-6', 'cpg-2-5', 'cpg-6-2'],
+    patients: [
+      {
+        history: 'COPD, heart failure, atrial fibrillation, type 2 diabetes.',
+        medications: 'Tiotropium, salbutamol, furosemide, metoprolol, apixaban, metformin',
+        allergies: 'None known',
+        social: 'Ex-smoker. Lives with his wife; walks to the letterbox on a good day.',
+        vitals: {
+          gcs: '15',
+          rr: '30',
+          spo2: '84% RA',
+          hr: '112 (AF)',
+          bp: '168/96',
+          temp: '37.9',
+          bgl: '9.4',
+          pain: '0/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'through-the-glass-door',
+    complexity: 3,
+    load: 'single',
+    levels: ['paramedic'],
+    title: 'Through the glass door',
+    suburb: 'Island Bay',
+    story:
+      'A 58-year-old man has cut his arm badly falling through a glass door; his daughter is calling. She says he went pale and grabbed his chest before he fell.',
+    giveIfAsked: [
+      'Heavy chest pain spreading to his left arm started 30 minutes ago while carrying firewood.',
+      'A deep cut on his right forearm is bleeding steadily through a towel; it slows with firm pressure.',
+      '12 lead ECG: ST elevation in V1 to V4.',
+      'He takes no blood thinners.',
+    ],
+    intention:
+      'An anterior STEMI and a bleeding wound pull in opposite directions. Watch for controlling the bleeding first, weighing aspirin against clinically significant bleeding (a caution, not a contraindication), activating the PCI pathway at Wellington Hospital and telling the cardiologist about the wound before ticagrelor, analgesia, and IV access in the left arm.',
+    outcomes: [
+      'Controls the bleeding with pressure before anything else',
+      'Weighs aspirin against the bleeding and explains the choice',
+      'Activates the PCI pathway and tells the cardiologist about the wound',
+      'Gains IV access in the left arm and gives analgesia',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'The bleeding is arterial and does not stop with pressure: a tourniquet, and the antiplatelet decision gets harder.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'He goes into VF in the ambulance.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'The ECG is normal and he denies chest pain: did he faint from the cut, or collapse first?',
+      },
+    ],
+    guidelines: ['cpg-3-3', 'cpg-3-16', 'cpg-4-23', 'cpg-4-21'],
+    patients: [
+      {
+        history: 'High cholesterol. Smoker.',
+        medications: 'Atorvastatin',
+        allergies: 'None known',
+        social: 'Carpenter. Lives with his daughter.',
+        vitals: {
+          gcs: '15',
+          rr: '22',
+          spo2: '96%',
+          hr: '104',
+          bp: '118/76',
+          temp: '36.4',
+          bgl: '6.6',
+          pain: '8/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'blocked-catheter',
+    complexity: 3,
+    load: 'single',
+    levels: ['paramedic'],
+    title: 'Pounding headache',
+    suburb: 'Whitby',
+    story:
+      'A 41-year-old man with a spinal cord injury has a pounding headache; his partner is calling. He says it feels like when his bladder is full.',
+    giveIfAsked: [
+      'His catheter bag has been empty since this morning.',
+      'His usual BP is about 100/60.',
+      'He is flushed and sweaty above his chest, and pale and cold below.',
+      'His urine has been cloudy and smelly for two days, and he felt shivery last night.',
+    ],
+    intention:
+      'Autonomic dysreflexia from a blocked catheter, with signs of a urinary infection. They meet at one decision: dysreflexia says remove the cause, but the catheter guideline says transport without flushing if signs of sepsis are significant. Watch for checking the bag and tubing, judging the sepsis signs (the dysreflexia hides the usual ones), an opiate and GTN for the BP, and transport.',
+    outcomes: [
+      'Recognises autonomic dysreflexia',
+      'Checks the bag and tubing and decides whether to flush, weighing the signs of sepsis',
+      'Gives an opiate and GTN to bring the systolic to 140 to 160',
+      'Recognises that the dysreflexia hides the usual signs of sepsis',
+    ],
+    variations: [
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'His systolic stays over 200 after GTN: clinical advice for labetalol, and CCP backup.',
+      },
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'The catheter drains well: the cause is a pressure injury or an ingrown toenail, so look below the injury.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'Once the catheter drains, his BP falls to 86/50 and his HR rises to 120: the sepsis was hidden.',
+      },
+    ],
+    guidelines: ['cpg-12-1', 'cpg-12-2', 'cpg-6-7', 'cpg-6-2'],
+    patients: [
+      {
+        history: 'C6 spinal cord injury from rugby at 24. Long-term suprapubic catheter.',
+        medications: 'Baclofen, oxybutynin, laxatives',
+        allergies: 'None known',
+        social: 'Works from home. Lives with his partner; carers visit each morning.',
+        vitals: {
+          gcs: '15',
+          rr: '20',
+          spo2: '97%',
+          hr: '52',
+          bp: '212/118',
+          temp: '38.3',
+          bgl: '6.4',
+          pain: 'Headache 8/10',
+        },
+      },
+    ],
+  },
+  {
+    id: 'wrist-and-a-fever',
+    complexity: 3,
+    load: 'single',
+    levels: ['paramedic'],
+    title: 'Found on the bathroom floor',
+    suburb: 'Stokes Valley',
+    story:
+      'An 81-year-old woman has fallen at home and hurt her wrist; her daughter is calling. She found her on the bathroom floor this morning.',
+    giveIfAsked: [
+      'She has been more muddled for a day and was up to the toilet all night.',
+      'Her wrist has a dinner-fork deformity, with good circulation and feeling in her hand.',
+      'She feels hot and shivery; her skin is mottled over her knees.',
+      'She has been on the floor for about an hour.',
+    ],
+    intention:
+      'The obvious injury hides the dangerous problem: sepsis, probably from her urine, caused the fall. Watch for a full assessment beyond the wrist, the early warning score, fluid for poor perfusion, analgesia that suits her age and BP, splinting, a pre-alert, and the antibiotic criteria (Hutt Hospital is under 30 minutes).',
+    outcomes: [
+      'Assesses beyond the wrist and finds the sepsis',
+      'Gives fluid for poor perfusion',
+      'Chooses analgesia that suits her age and BP',
+      'Splints the wrist and pre-alerts the hospital',
+    ],
+    variations: [
+      {
+        lever: 'uncertainty',
+        levels: ['supervised', 'paramedic'],
+        text: 'No fever: the confusion and fall could be sepsis, a stroke or a new blood-pressure tablet.',
+      },
+      {
+        lever: 'severity',
+        levels: ['paramedic', 'icp'],
+        text: 'Her hand is pale and pulseless: realignment needs ICP and ketamine, with cautions for her age and shock.',
+      },
+      {
+        lever: 'deterioration',
+        levels: ['paramedic', 'icp'],
+        text: 'Her BP is 78/40 after 2 litres: ICP for metaraminol.',
+      },
+    ],
+    guidelines: ['cpg-6-2', 'cpg-6-7', 'cpg-13-3', 'cpg-4-11', 'cpg-12-9'],
+    patients: [
+      {
+        history: 'Hypertension, osteoporosis, mild memory problems.',
+        medications: 'Amlodipine, alendronate, vitamin D, calcium',
+        allergies: 'None known',
+        social: 'Lives alone; her daughter visits every morning.',
+        vitals: {
+          gcs: '14',
+          rr: '24',
+          spo2: '94%',
+          hr: '118',
+          bp: '94/56',
+          temp: '38.4',
+          bgl: '7.2',
+          pain: '6/10',
+        },
+      },
+    ],
+  },
 ];

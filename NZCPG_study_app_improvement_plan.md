@@ -210,10 +210,20 @@ listing approved staff jobs, newest first with a theme dropdown, each with Lesso
 recording links; editors approve jobs into it (not into Scenarios) and change lessons and links
 on the editor page. The Add a job link moved there. It fills once the backend is redeployed.
 
+**New Complex scenarios** (26 Nov 2026, Claude's drafts, not yet reviewed): for ICP,
+`missed-dialysis`, `missed-her-steroids` and `queen-elizabeth-park-fall` (ICP only, as stretch
+scenarios) and `indigestion-johnsonville` (Paramedic and ICP); for Paramedic,
+`satay-at-the-takeaway`, `breathless-upper-hutt`, `through-the-glass-door`, `blocked-catheter`
+and `wrist-and-a-fever`. There are now 49 scenarios (23, 9 and 17); 8 Complex suit ICP and 13
+suit Paramedic. Editors review them on the editor page.
+
 **Next.**
 
-1. More scenarios on the review's themes (owner, 26 Nov 2026), notably Complex ones for ICP;
-   approved jobs can be ideas for them.
+1. Editors review the 9 new Complex scenarios. Ideas not yet written: anaphylaxis needing IV
+   adrenaline in a patient on a beta blocker, with chest pain; beta-blocker and calcium channel
+   blocker overdose (adrenaline over metaraminol, no glucagon); headache, then a falling GCS and
+   an RSI decision. Approved jobs can be ideas once the backend is redeployed. Open: whether a
+   new ICP scenario replaces a crash in the ICP benchmark set.
 2. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
    note in `bus-v-pedestrians`' intention; the bank of overdoses by medicine class.
 

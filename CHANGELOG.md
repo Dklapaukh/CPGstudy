@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-26: **9 new Complex scenarios** (Claude's drafts, 0 reviews): 4 for ICP (one also for Paramedic)
+  and 5 for Paramedic, one per rung of the complexity ladder or more. 49 scenarios.
 - 2026-11-26: **Anonymised jobs** (Quiz tab, editor page; AJ-A to AJ-I). Approved staff jobs go to a sixth
   Quiz button with lessons learnt and recording links, not to Scenarios; Add a job link moved there.
 - 2026-11-26: **Benchmark sets** (Scenarios list and editor page, SC-L). 5 scenarios per learner

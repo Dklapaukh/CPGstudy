@@ -195,3 +195,6 @@ Two of ICP's are crashes, so that set leans to trauma until more Complex scenari
   scenario (the owner's) is enough: the review is finished and scenario editing is back on
   (SC-M). The competency set in SC-R is agreed as drafted. The levels ticked in each review were
   copied into `content/scenarios.js`.
+- SC-V (owner, 26 Nov 2026): new Complex scenarios. `indigestion-johnsonville` suits Paramedic
+  as well as ICP; the other ICP drafts are ICP only, as stretch scenarios. Five more Complex
+  scenarios target Paramedics and stay within Paramedic scope (they escalate to ICP for ICP drugs).
