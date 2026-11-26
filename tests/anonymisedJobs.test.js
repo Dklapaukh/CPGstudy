@@ -67,6 +67,12 @@ test('lessonsOfJob: what it could teach, then the debrief points; "Not given" is
     'Does a 12-lead within 10 minutes',
   ]);
   assert.deepEqual(lessonsOfJob(approvedJob({ outcomes: ['Not given'] })), ['Spot a STEMI']);
+  assert.deepEqual(
+    lessonsOfJob(
+      approvedJob({ intention: 'Spot a STEMI\n\nCheck right-sided leads', outcomes: [] }),
+    ),
+    ['Spot a STEMI', 'Check right-sided leads'],
+  );
 });
 
 test('readLessonsBox: one per line, bullets and blank lines dropped, limits checked', () => {

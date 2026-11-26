@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-27: **Anonymised jobs**: each learning-point line is its own lesson; no presentation or scene load
+  tags on jobs; "What happened next" without "(for the mentor)".
 - 2026-11-27: **Add a job form**: History up to 1800 characters and Assessment up to 800; a scenario's
   story now keeps up to 4000 (other boxes stay at 2000).
 - 2026-11-27: **Add a job form**: the photo button says "Add a photo" (it opens the phone's picker, which may not offer the camera).

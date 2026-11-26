@@ -59,7 +59,8 @@ const tidyLessons = (lines) =>
  * points. The reviewer changes them when approving and later.
  */
 export function lessonsOfJob(job) {
-  const lines = [job.intention, ...(job.outcomes || [])];
+  // Each line of the learning points is its own lesson.
+  const lines = [...String(job.intention || '').split('\n'), ...(job.outcomes || [])];
   return tidyLessons(lines.filter((line) => line && line !== NOT_GIVEN));
 }
 

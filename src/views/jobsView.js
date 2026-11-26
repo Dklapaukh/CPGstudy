@@ -14,7 +14,7 @@ import { anonymisedJobs } from '../../content/anonymised-jobs.js';
 import { liveJobs, filterJobs } from '../anonymisedJobs.js';
 import { themesInUse } from '../scenarioLogic.js';
 import { JOBS_HASH, JOB_HASH_PREFIX, SUBMIT_PAGE } from '../constants.js';
-import { jobBodyHtml, scenarioTagsText } from './scenarioMarkup.js';
+import { jobBodyHtml } from './scenarioMarkup.js';
 import { quizIconHtml } from './templates.js';
 
 const app = document.getElementById('app');
@@ -56,8 +56,7 @@ function themeChoiceHtml(chosen) {
 /** One row of the list: title, then suburb, presentation and the date it was added. */
 const rowHtml = (job) => `<a class="scenario-row" href="#${escapeHtml(job.id)}">
     <span class="scenario-row__text"><b>${escapeHtml(job.title)}</b>
-    <small>${escapeHtml(job.suburb)} · ${escapeHtml(scenarioTagsText(job))}</small>
-    <small>Added ${escapeHtml(dateText(job.approved))}</small></span><span aria-hidden="true">›</span></a>`;
+    <small>${escapeHtml(job.suburb)} · Added ${escapeHtml(dateText(job.approved))}</small></span><span aria-hidden="true">›</span></a>`;
 
 /** What the list shows when nothing matches, or when no job has been approved yet. */
 const emptyHtml = () =>

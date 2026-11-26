@@ -141,8 +141,9 @@ function nextHtml(patient, index, editing) {
     : '';
   if (!later && !treatment) return '';
   const comment = commentSlot(editing, `patients.${index}.next`);
+  // A job is a real call, not a scenario run by a mentor.
   return foldHtml(
-    'What happened next (for the mentor)',
+    editing?.isJob ? 'What happened next' : 'What happened next (for the mentor)',
     later + treatment + comment,
     Boolean(editing),
   );
@@ -282,7 +283,7 @@ export function scenarioBodyHtml(scenario, editing) {
 }
 
 // Every fold open and nothing to tap: an anonymised job is read whole, not revealed in stages.
-const JOB_LAYOUT = { attrs: () => '', formFor: () => '', readOnly: true };
+const JOB_LAYOUT = { attrs: () => '', formFor: () => '', readOnly: true, isJob: true };
 
 /** A lesson list, or a note when there are none. */
 const lessonsHtml = (lessons) =>
@@ -310,7 +311,8 @@ function linksHtml(links) {
  * is when it was approved, in words. On the editor page (`isEditorPage`) guidelines are plain text.
  */
 export function jobBodyHtml(job, dateText, isEditorPage = false) {
-  return `<section class="scenario-card">${scenarioTagsHtml(job)}
+  // No presentation or scene load tags: a job is not a scenario, and editors may not set them.
+  return `<section class="scenario-card">
       <h1 class="scenario-title">${escapeHtml(job.title)}</h1>
       <p class="scenario-label">${escapeHtml(job.suburb)} · Added ${escapeHtml(dateText)}</p>
       <p class="scenario-story">${escapeHtml(job.story)}</p></section>
