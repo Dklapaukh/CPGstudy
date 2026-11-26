@@ -67,7 +67,7 @@ Publishing (push to `main`) and the `content/guidelines.js` rule are in `CLAUDE.
 | 18   | Medicine test (a whole medicine as multiple choice)             | Built 18 Nov 2026 (MT-A to MT-F)         |
 | 19   | Scenarios: 40, filters, Finish and debrief, editor page         | Built 19 Nov 2026 (SC-A to SC-D)         |
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
-| 21   | Scenario generator (no AI), `docs/scenario-generator.md`        | Designed; approach A chosen (SC-K); waits for the review |
+| 21   | Scenario levels, openings and variation cards, `docs/scenario-variations.md` | Designed 26 Nov 2026 (SC-N to SC-T); replaces the generator (SC-K) |
 | 22   | Level benchmark scenarios and per-level "move on" sets (SC-L)  | Noted 24 Nov 2026; waits for the scenario review |
 
 ### 8.2 Decisions
@@ -77,7 +77,7 @@ comments: list and queue (L to S, R4, R8) in `list-and-settings.md`; PDF and upd
 V, Y, R13) in `content-updates.md`; medicines quiz (E, Z1 to Z22, GM-A) in `medicines-quiz.md`;
 guideline quiz (Z12 to Z16, PG-) in `guideline-quiz.md`; MT- in `medicine-test.md`; MV-, SC-G in
 `manager.md`; ED-, SC-D in `editor.md`; ST- in `streak-and-stats.md`; SC- in `scenarios.md`;
-SC-K in `scenario-generator.md`; C2, C4, C5 in `backend.md`.
+SC-K, SC-N to SC-T in `scenario-variations.md`; C2, C4, C5 in `backend.md`.
 
 Decisions across the whole app:
 
@@ -116,6 +116,18 @@ Decisions across the whole app:
    passcodes hashed. Closest to today's design; the free plan does not pause when idle.
    Option C: Supabase (Postgres with sign-in and row-level security): real per-person accounts.
    Most secure, biggest rewrite; free projects pause after a week without use.
+
+4. **Name of scenario level 2** (diagnostic uncertainty, X or Y; SC-O, asked 26 Nov 2026).
+   Option A: "Undifferentiated presentation": the story fits more than one condition and the
+   learner narrows it; a clinical term that pairs with "Common presentation" (Claude's pick).
+   Option B: "Look-alikes": two conditions that present the same way; plain language.
+   Option C: "Differential diagnosis": familiar, but names a task more than a kind of scenario.
+   Option D: "Uncertain diagnosis": says what it is, but could unsettle a learner.
+5. **Is the scenario review finished?** All 40 scenarios have one review (the owner's, 24 to 26
+   Nov 2026); the aim was 3 editors each (SC-J). Option A: one is enough; switch scenario
+   editing back on (8.4 task 0) and start the rewrites. Option B: wait for two more editors.
+6. **The fixed competencies to rate every run** (SC-R): agree the draft set in
+   `docs/scenario-variations.md` or change it.
 
 ### 8.4 Open tasks (owner, by hand)
 
@@ -194,27 +206,30 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Where things stand
 
-**Now (24 Nov 2026).** Features 1 to 20 are built and on `main`, checked by the owner on
+**Now (26 Nov 2026).** Features 1 to 20 are built and on `main`, checked by the owner on
 several phones. Scenarios use complexity and scene load (SC-E) with the PEARLS debrief and score
-(SC-F); editors review and comment on scenarios. Editing, adding, deleting scenarios and
-approving jobs are paused until the review is finished (8.4 task 0). The
-backend redeploy for Add a scenario and scenario trends is still to do (8.4 task 1).
-`content/scenario-reviews.yaml` held 0 reviews on 24 Nov.
+(SC-F); editors review and comment on scenarios. The owner has reviewed all 40 scenarios (one
+review each, in `content/scenario-reviews.yaml`; 7 marked Small changes, none to rewrite or take
+out). From that review the scenario design was decided (feature 21, SC-N to SC-T): three levels,
+call-notes-then-history openings with "give if asked" notes, variation cards in place of the
+generator, decision points, competencies rated every run, guided progression. Editing, adding,
+deleting scenarios and approving jobs are still paused (8.4 task 0). The backend redeploy for Add
+a scenario and scenario trends is still to do (8.4 task 1).
 
-**Next.**
+**Next** (steps in `docs/scenario-variations.md`).
 
-1. Editors review the 40 scenarios (aim 3 each, SC-J); then switch scenario editing back on
-   (8.4 task 0).
-2. Claude rewrites those marked Small changes or Needs rewriting and drafts the level profiles
-   from the review notes.
-3. Scenario generator, step 1 of `docs/scenario-generator.md` (SC-K).
-4. Benchmark and per-level "move on" sets (SC-L, feature 22).
+1. Owner: 8.3 items 4 to 6 (level 2 name, whether the review is finished, the competencies).
+2. Claude rewrites the 7 scenarios marked Small changes and applies the in-line comments.
+3. New openings and "give if asked" notes for every scenario; re-tag them to levels 1 to 3.
+4. Variation cards drafted from the review notes, reviewed by editors, then shown in the app.
+5. Competency ratings in the debrief, then level suggestions with the benchmark and "move on"
+   sets (SC-L, feature 22).
+6. Decision points, starting with the most-run scenarios.
 
-No learner-facing changes until the review is complete. Open owner questions: 8.3 items 1 to 3.
+No learner-facing changes until the review is complete. Open owner questions: 8.3 items 1 to 6.
 
 **Known gaps and possible follow-ups.** The `demo` tracker is shared by every visitor, so marks
-mix (it could be read-only). No Straightforward scenario yet has Delegation or Several patients;
-a score only compares well when the same mentor rates consistently. Possible: a best score for
+mix (it could be read-only). A score only compares well when the same mentor rates consistently. Possible: a best score for
 Pick the guideline; changing its second or third guideline; scenario recommendations; adding or
 removing patients of a scenario on the editor page; cropping photos in the submit form;
 tap-editing an approved scenario's treatment and later vitals.

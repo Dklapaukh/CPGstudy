@@ -87,7 +87,7 @@ one-line-per-level notes gathered by level (`levelNotes`), then each scenario's 
 **Read it before writing new scenarios**, and fix the scenarios marked Small changes or Needs
 rewriting.
 
-A scenario generator is designed but not built: see [Scenario generator](scenario-generator.md).
+The next scenario design (three levels, new openings, variation cards in place of a generator) is decided but not built: see [Scenario design and variations](scenario-variations.md).
 
 ## Add a scenario (staff jobs)
 

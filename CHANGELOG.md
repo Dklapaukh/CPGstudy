@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-26: **Scenario design decided** (no app change; SC-N to SC-T). Three levels, new openings,
+  variation cards in place of the generator (`docs/scenario-variations.md` replaces the generator doc).
 - 2026-11-26: **Daily copy fixed** (test only). A scenario test now allows the "Suits …" pill that
   editors' levels add, which had failed edits-sync on 25 and 26 Nov.
 - 2026-11-25: **Scenario editing paused** (editor page only, SC-M). `SCENARIO_EDITING_ENABLED`

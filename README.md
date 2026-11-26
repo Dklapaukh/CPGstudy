@@ -23,7 +23,7 @@ How each part works, one file each in `docs/`:
 - [Guideline quiz](docs/guideline-quiz.md): includes Pick the guideline
 - [Medicine test](docs/medicine-test.md)
 - [Scenarios](docs/scenarios.md): includes the debrief, reviewing scenarios and the Add a scenario form
-- [Scenario generator](docs/scenario-generator.md): a design, not built
+- [Scenario design and variations](docs/scenario-variations.md): levels, openings and variation cards; a design, not built
 - [Streak and Data tab](docs/streak-and-stats.md)
 - [Content updates](docs/content-updates.md): publishing new guidelines, the daily PDF check, rebuilding from the PDF
 - [Manager view](docs/manager.md)
