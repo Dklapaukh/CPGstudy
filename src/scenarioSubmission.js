@@ -10,6 +10,8 @@ import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from './scenarioEdits.js';
 
 // The opening boxes, in the order shown. `max` is the most characters kept; `lines` > 1 is a
 // text area. The suburb is optional: it can be changed or made up to protect the patient.
+// Dispatch notes, history and assessment are joined into the scenario's story, so their limits
+// add up to under its 2000 characters.
 export const JOB_FIELDS = [
   {
     key: 'title',
@@ -19,29 +21,37 @@ export const JOB_FIELDS = [
     lines: 1,
     required: true,
   },
+  { key: 'suburb', label: 'Suburb (optional)', max: 60, lines: 1 },
   {
-    key: 'suburb',
-    label: 'Suburb (optional)',
-    hint: 'Change it or make one up if it could identify the patient',
-    max: 60,
-    lines: 1,
+    key: 'dispatch',
+    label: 'Dispatch notes',
+    hint: 'What you were told on the way',
+    max: 400,
+    lines: 4,
   },
   {
     key: 'story',
     label: 'History',
-    hint: 'The dispatch and what you found on arrival. Age and sex are fine; no names.',
-    max: 2000,
+    hint: 'What you found on arrival. Age and sex are fine; no names.',
+    max: 1000,
     lines: 5,
     required: true,
   },
+  {
+    key: 'assessment',
+    label: 'Assessment',
+    hint: 'Your findings and working diagnosis',
+    max: 500,
+    lines: 5,
+  },
 ];
-// The teaching boxes at the end of the form. Debrief points become the intended outcomes.
+// The learning points at the end of the form; an approved job's Lessons learnt start from them.
+// The presentation, scene load and intended outcomes are left for editors to set.
 export const INTENTION_FIELD = {
   key: 'intention',
-  label: 'What could it teach?',
-  hint: 'e.g. Spotting an inferior STEMI and giving fluids before GTN',
+  label: 'Learning points',
   max: 1000,
-  lines: 3,
+  lines: 4,
   required: true,
 };
 export const NAME_FIELD = {
@@ -54,9 +64,9 @@ export const NAME_FIELD = {
 // One patient's boxes, as in content/scenarios.js, plus what was done after the vitals.
 export const PATIENT_FIELDS = [
   { key: 'history', label: 'Medical history', max: 500, lines: 2 },
-  { key: 'medications', label: 'Medications', max: 500, lines: 2 },
+  { key: 'medications', label: 'Medications', max: 500, lines: 1 },
   { key: 'allergies', label: 'Allergies', max: 200, lines: 1 },
-  { key: 'social', label: 'Social history', max: 500, lines: 2 },
+  { key: 'social', label: 'Social history', max: 500, lines: 1 },
 ];
 export const TREATMENT_FIELD = {
   key: 'treatment',
@@ -165,10 +175,8 @@ export function missingFields(job) {
   return [
     !job.title && 'a short title',
     !job.story && 'the history',
-    !job.complexity && 'the presentation',
     !job.guidelines.length && 'at least one guideline',
-    !job.intention && 'what it could teach',
-    !job.outcomes.length && 'at least one debrief point',
+    !job.intention && 'the learning points',
   ].filter(Boolean);
 }
 
@@ -202,14 +210,35 @@ export function identifierWarnings(job) {
 /** How a guideline is offered in the picker: "4.1 Chest Pain". */
 export const guidelineChoiceText = (guideline) => `${guideline.n} ${guideline.t}`;
 
+/** The typed search, lower case, without a leading "CPG" (or "CPG EAS"). */
+const searchText = (text) =>
+  tidy(text, 200)
+    .toLowerCase()
+    .replace(/^(cpg\s*(eas\s*)?)/, '');
+
+/**
+ * The guidelines a search recommends, best first, at most `most`: those whose number starts with
+ * what was typed, then those whose number and title hold every typed word. [] for no search.
+ */
+export function guidelineMatches(text, guidelines, most = 6) {
+  const typed = searchText(text);
+  if (!typed) return [];
+  const words = typed.split(' ');
+  const byNumber = guidelines.filter((guideline) => guideline.n.toLowerCase().startsWith(typed));
+  const byWords = guidelines.filter(
+    (guideline) =>
+      !byNumber.includes(guideline) &&
+      words.every((word) => guidelineChoiceText(guideline).toLowerCase().includes(word)),
+  );
+  return [...byNumber, ...byWords].slice(0, most);
+}
+
 /**
  * The id of the guideline typed or picked: its CPG number ("4.1", "CPG 4.1"), its picker text
  * or its exact title, in any case. '' when it matches none, so only real guidelines are added.
  */
 export function guidelineIdFromText(text, guidelines) {
-  const typed = tidy(text, 200)
-    .toLowerCase()
-    .replace(/^(cpg\s*(eas\s*)?)/, '');
+  const typed = searchText(text);
   if (!typed) return '';
   const found = guidelines.find(
     (guideline) =>
@@ -247,6 +276,16 @@ function scenarioPatient(patient, index, count) {
 export const photoName = (jobId, index) =>
   `${String(jobId).replace(/[^a-z0-9-]/g, '')}-${index + 1}.jpg`;
 
+/** The scenario's story: the dispatch notes, the history and the assessment, each a paragraph. */
+const storyOf = (job) =>
+  [
+    job.dispatch && `Dispatch: ${job.dispatch}`,
+    job.story,
+    job.assessment && `Assessment: ${job.assessment}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
 /**
  * A job as a scenario (the fields of content/scenarios.js), with `photos` ([{ src, caption }],
  * from `photos`) and the extras of scenarioEdits.js. Empty boxes get a placeholder, so the
@@ -262,9 +301,9 @@ export function scenarioFromSubmission(job, id, photos = [], isGuidelineId = () 
     load: count > 1 ? 'several' : tidied.load,
     title: tidied.title || 'Submitted job',
     suburb: tidied.suburb || NO_SUBURB,
-    story: tidied.story,
+    story: storyOf(tidied),
     intention: tidied.intention || NOT_GIVEN,
-    outcomes: tidied.outcomes,
+    outcomes: tidied.outcomes.length ? tidied.outcomes : [NOT_GIVEN], // editors set them
     guidelines: tidied.guidelines,
     patients: tidied.patients.map((patient, index) => scenarioPatient(patient, index, count)),
     ...(photos.length ? { photos } : {}),

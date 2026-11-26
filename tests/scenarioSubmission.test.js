@@ -10,6 +10,7 @@ import {
   missingFields,
   identifierWarnings,
   guidelineIdFromText,
+  guidelineMatches,
   scenarioFromSubmission,
   photoName,
   scaledSize,
@@ -56,7 +57,7 @@ test('tidySubmission: trims, cuts to length and keeps only known keys and values
     isRealId,
   );
   assert.equal(job.title, 'Chest pain');
-  assert.equal(job.story.length, 2000);
+  assert.equal(job.story.length, 1000);
   assert.equal(job.complexity, 0);
   assert.equal(job.load, 'single');
   assert.equal('rural' in job, false);
@@ -91,16 +92,40 @@ test('tidySubmission: a job always has a patient, and a patient a full set of vi
   ]);
 });
 
-test('missingFields: title, history, complexity, a guideline, the teaching point and a debrief point; not the suburb', () => {
+test('missingFields: title, history, a guideline and the learning points; editors set the rest', () => {
   assert.deepEqual(missingFields(tidySubmission({})), [
     'a short title',
     'the history',
-    'the presentation',
     'at least one guideline',
-    'what it could teach',
-    'at least one debrief point',
+    'the learning points',
   ]);
-  assert.deepEqual(missingFields(tidySubmission(fullJob())), []);
+  const { complexity, outcomes, ...withoutEditorFields } = fullJob();
+  assert.ok(complexity && outcomes);
+  assert.deepEqual(missingFields(tidySubmission(withoutEditorFields)), []);
+});
+
+test('scenarioFromSubmission: dispatch notes, history and assessment make the story; no outcomes get a placeholder', () => {
+  const scenario = scenarioFromSubmission(
+    fullJob({ dispatch: 'Chest pain, 58M', assessment: 'Inferior STEMI', outcomes: [] }),
+    'job-3',
+  );
+  assert.equal(
+    scenario.story,
+    'Dispatch: Chest pain, 58M\n\nA 58-year-old man with chest pain.\n\nAssessment: Inferior STEMI',
+  );
+  assert.deepEqual(scenario.outcomes, ['Not given']);
+  assert.equal(scenarioFromSubmission(fullJob(), 'job-4').story, fullJob().story);
+});
+
+test('guidelineMatches: numbers starting with the search first, then every word in the name', () => {
+  const [first] = guidelines;
+  assert.equal(guidelineMatches(first.n, guidelines)[0].id, first.id);
+  assert.equal(guidelineMatches(`CPG ${first.n}`, guidelines)[0].id, first.id);
+  const word = first.t.split(' ')[0].toLowerCase();
+  assert.ok(guidelineMatches(word, guidelines).some((each) => each.id === first.id));
+  assert.ok(guidelineMatches('a', guidelines).length <= 6);
+  assert.deepEqual(guidelineMatches('  ', guidelines), []);
+  assert.deepEqual(guidelineMatches('zzqx', guidelines), []);
 });
 
 test('identifierWarnings: NHI, dates, phones, emails, streets and titled names, in any box', () => {

@@ -158,3 +158,39 @@
   font-size: 0.85rem;
   margin: -0.4rem 0 0.8rem;
 }
+
+/* BP: two number boxes side by side with a slash, taking two vitals' width. */
+.submit-vital--bp {
+  grid-column: span 2;
+}
+.submit-vital__bp {
+  align-items: center;
+  display: flex;
+  gap: 0.3rem;
+}
+.submit-vital__bp .text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The guidelines a search recommends: one full-width button each. */
+.submit-suggestions {
+  list-style: none;
+  margin: 0.4rem 0 0.8rem;
+  padding: 0;
+}
+.submit-suggestion {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--colour-line);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  min-height: 44px;
+  padding: 0.5rem 0.2rem;
+  text-align: left;
+  width: 100%;
+}
+.submit-suggestion b {
+  color: var(--colour-accent-text);
+}

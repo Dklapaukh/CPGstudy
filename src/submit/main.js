@@ -22,10 +22,11 @@ import {
   missingFields,
   identifierWarnings,
   guidelineIdFromText,
+  guidelineMatches,
   scaledSize,
   base64OfDataUrl,
 } from '../scenarioSubmission.js';
-import { renderSubmitPage } from './view.js';
+import { renderSubmitPage, guidelineSuggestionsHtml } from './view.js';
 
 // A second, lower quality is tried when a photo is still too big for the backend.
 const FALLBACK_JPEG_QUALITY = 0.6;
@@ -35,7 +36,7 @@ const SUBMIT_MESSAGES = {
   busy: 'Lots of jobs were sent in the last hour. Please try again later.',
   'not-confirmed': 'Tick the box to say the job is anonymised first.',
   'photo-failed': 'That photo couldn’t be read. Try taking it again.',
-  'no-guideline': 'Pick a guideline from the list (type its number, such as 1.17).',
+  'no-guideline': 'No guideline matches that. Try its number, such as 1.17, or a word of its name.',
 };
 const isGuidelineId = (id) => guidelines.some((guideline) => guideline.id === id);
 
@@ -55,9 +56,9 @@ const state = {
   sentId: '',
 };
 
-/** An empty job with one patient and one debrief point box. */
+/** An empty job with one patient. */
 function newJob() {
-  return { ...tidySubmission({}), patients: [emptyPatient()], outcomes: [''] };
+  return { ...tidySubmission({}), patients: [emptyPatient()] };
 }
 
 /** Draws the page from the current state. */
@@ -73,6 +74,13 @@ function boxValue(name) {
   return box ? box.value : '';
 }
 
+/** BP from its two number boxes, as "120/80"; '' when both are empty. */
+function bpValue(name) {
+  const systolic = boxValue(`${name}-sys`).trim();
+  const diastolic = boxValue(`${name}-dia`).trim();
+  return systolic || diastolic ? `${systolic}/${diastolic}` : '';
+}
+
 /** One patient's boxes as typed. */
 function readPatient(patient, index) {
   const read = { label: boxValue(`patient-${index}-label`) };
@@ -83,6 +91,7 @@ function readPatient(patient, index) {
     const vitals = Object.fromEntries(
       SCENARIO_VITALS.map(([key]) => [key, boxValue(`${prefix}-${key}`)]),
     );
+    vitals.bp = bpValue(`${prefix}-bp`);
     return { note: boxValue(`${prefix}-note`), vitals };
   });
   return read;
@@ -98,10 +107,7 @@ function readForm() {
   [...JOB_FIELDS, INTENTION_FIELD, NAME_FIELD].forEach(
     (field) => (job[field.key] = boxValue(field.key)),
   );
-  job.complexity = Number(boxValue('complexity'));
-  job.load = app.querySelector('[name="load"]:checked')?.value || job.load;
   job.patients = job.patients.map(readPatient);
-  job.outcomes = job.outcomes.map((point, index) => boxValue(`outcome-${index}`));
   state.photos.forEach((photo, index) => (photo.caption = boxValue(`caption-${index}`)));
   state.guidelineText = app.querySelector('#submit-guideline')?.value || '';
   state.confirmed = Boolean(app.querySelector('[name="confirmed"]')?.checked);
@@ -109,13 +115,21 @@ function readForm() {
 
 /* ---------- Guidelines ---------- */
 
-/** Adds the guideline typed or picked, if it is one; otherwise says how to pick one. */
-function addGuideline() {
-  const id = guidelineIdFromText(state.guidelineText, guidelines);
-  state.guidelineError = id ? '' : SUBMIT_MESSAGES['no-guideline'];
-  if (!id) return;
+/** Adds a guideline by id and clears the search. */
+function pickGuideline(id) {
+  if (!isGuidelineId(id)) return;
   if (!state.job.guidelines.includes(id)) state.job.guidelines.push(id);
   state.guidelineText = '';
+  state.guidelineError = '';
+}
+
+/** Enter in the search: adds the guideline typed exactly, else the top recommendation. */
+function addTypedGuideline() {
+  const id =
+    guidelineIdFromText(state.guidelineText, guidelines) ||
+    guidelineMatches(state.guidelineText, guidelines)[0]?.id;
+  if (id) pickGuideline(id);
+  else state.guidelineError = SUBMIT_MESSAGES['no-guideline'];
 }
 
 /* ---------- Photos ---------- */
@@ -239,12 +253,10 @@ const CLICK_ACTIONS = {
   'remove-patient': ({ index }) => state.job.patients.splice(index, 1),
   'add-vitals': ({ patient }) => state.job.patients[patient].vitalSets.push(emptyVitalSet()),
   'remove-vitals': ({ patient, index }) => state.job.patients[patient].vitalSets.splice(index, 1),
-  'add-guideline': addGuideline,
+  'pick-guideline': ({ id }) => pickGuideline(id),
   'remove-guideline': ({ id }) =>
     (state.job.guidelines = state.job.guidelines.filter((each) => each !== id)),
   'remove-photo': ({ index }) => state.photos.splice(index, 1),
-  'add-outcome': () => state.job.outcomes.push(''),
-  'remove-outcome': ({ index }) => state.job.outcomes.splice(index, 1),
   'start-again': startAgain,
 };
 
@@ -259,30 +271,31 @@ app.addEventListener('click', (event) => {
   }
   CLICK_ACTIONS[action]?.({ index: Number(index), patient: Number(patient), id });
   render();
-  if (action === 'add-guideline') document.getElementById('submit-guideline')?.focus();
+  if (action === 'pick-guideline') document.getElementById('submit-guideline')?.focus();
 });
 
 app.addEventListener('change', (event) => {
-  if (event.target.dataset.action === 'add-photos') {
-    readForm();
-    addPhotos(event.target.files);
-  } else if (
-    event.target.id === 'submit-guideline' &&
-    guidelineIdFromText(event.target.value, guidelines)
-  ) {
-    // A pick from the list is added at once; half-typed text waits for Add.
-    readForm();
-    addGuideline();
-    render();
-  }
+  if (event.target.dataset.action !== 'add-photos') return;
+  readForm();
+  addPhotos(event.target.files);
 });
 
-// Enter in the guideline box adds it; elsewhere it would send the form, which Send does instead.
+// Typing in the guideline search redraws only its recommendations, so the box keeps focus.
+app.addEventListener('input', (event) => {
+  if (event.target.id !== 'submit-guideline') return;
+  state.guidelineText = event.target.value;
+  state.guidelineError = '';
+  const results = document.getElementById('submit-guideline-results');
+  if (results)
+    results.innerHTML = guidelineSuggestionsHtml(state.guidelineText, state.job.guidelines);
+});
+
+// Enter in the guideline search adds the top match; elsewhere it would send the form.
 app.addEventListener('keydown', (event) => {
   if (event.key !== 'Enter' || event.target.id !== 'submit-guideline') return;
   event.preventDefault();
   readForm();
-  addGuideline();
+  addTypedGuideline();
   render();
   document.getElementById('submit-guideline')?.focus();
 });

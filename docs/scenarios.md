@@ -112,14 +112,16 @@ The scenario design (three levels, openings, variation cards, competency ratings
 Staff send jobs they went to with `submit.html`, linked at the top of
 [Anonymised jobs](anonymised-jobs.md), where approved jobs go (not to Scenarios; AJ-A). Anyone
 can fill it in **without signing in**. In order: short title, suburb (optional,
-as it can be changed or made up), History, presentation and scene load (Single patient or
-Delegation; Several patients when more than one patient is added); each patient's background,
-any number of vitals sets (each with a note such as "On arrival" or "After GTN") and Treatment
-and response; the guidelines; up to 4 photos (ECGs, rhythm strips, the monitor); then What
-could it teach and the debrief points, which start the job's Lessons learnt.
+as it can be changed or made up), Dispatch notes, History and Assessment (joined into the job's
+story as paragraphs); each patient's background, any number of vitals sets (each with a note
+such as "On arrival" or "After GTN"; the vitals open the phone's number pad, BP as two boxes)
+and Treatment and response; Guidelines used; up to 4 photos (ECGs, rhythm strips, the
+monitor); then Learning points, which start the job's Lessons learnt. Presentation, scene load
+and intended outcomes are not asked: editors set them (AJ-J).
 
-- **Guidelines** can only be added from the app's list (number, title or the dropdown), so
-  every one links to a real guideline.
+- **Guidelines** can only be added from the app's list: typing in the box searches by number
+  or name and recommends up to 6, tapped to add (Enter adds the top one), so every one links
+  to a real guideline.
 - **Anonymity:** the sender ticks that the job is anonymised, and the form warns once about
   anything that looks like an NHI, a date, a phone number, an email, a street address or a
   titled name (`src/scenarioSubmission.js`). Photos are made smaller on the phone (longest

@@ -74,3 +74,7 @@ organisation, an unlisted video).
 - AJ-I (Claude): an approved job is saved as `job|<id>` in the Edits tab, beside the other
   edits, so no backend change was needed; approving a job no longer counts as a scenario change,
   so it works even while scenario editing is paused (SC-M).
+- AJ-J (owner, 26 Nov 2026): the form drops presentation, scene load and debrief points (editors
+  set them, so jobs can later become scenarios); History splits into Dispatch notes and History,
+  plus Assessment; Teaching becomes Learning points; Send for checking becomes Send. A job with
+  no outcomes gets "Not given", left out of Lessons learnt.

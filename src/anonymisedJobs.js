@@ -24,7 +24,7 @@ export const MAX_LESSON_TEXT = 400;
 export const MAX_LINKS = 8;
 export const MAX_LINK_TITLE = 120;
 export const MAX_LINK_URL = 500;
-// What the form puts in a job's empty intention; it is not a lesson.
+// What the form puts in a job's empty intention and outcomes; it is not a lesson.
 const NOT_GIVEN = 'Not given';
 // A job id as the backend makes them ("job-mabc123-x1y2"), safe in an address and a file name.
 const JOB_ID_PATTERN = /^job-[a-z0-9-]{1,60}$/;
@@ -59,8 +59,8 @@ const tidyLessons = (lines) =>
  * points. The reviewer changes them when approving and later.
  */
 export function lessonsOfJob(job) {
-  const intention = job.intention && job.intention !== NOT_GIVEN ? [job.intention] : [];
-  return tidyLessons([...intention, ...(job.outcomes || [])]);
+  const lines = [job.intention, ...(job.outcomes || [])];
+  return tidyLessons(lines.filter((line) => line && line !== NOT_GIVEN));
 }
 
 /** Reads the Lessons learnt box, one lesson per line: { value: lines } or { error }. */

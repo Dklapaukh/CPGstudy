@@ -2,26 +2,20 @@
  * Add a job page (submit.html), markup only: the form and the thank-you box. Every value
  * comes from the page's state, so drawing again never loses what was typed.
  * The hidden "website" box is a bot trap: people never see it, form-filling bots fill it in.
- * Depends on logic.js, constants.js, scenarioSubmission.js, scenarioEdits.js, guidelines.js,
+ * Depends on logic.js, constants.js, scenarioSubmission.js, guidelines.js,
  * staffPage.js and the app's templates.
  */
 import { escapeHtml } from '../logic.js';
-import {
-  SCENARIO_COMPLEXITY,
-  SCENARIO_VITALS,
-  SUBMISSION_LIMITS,
-  SCENARIO_LOADS,
-} from '../constants.js';
+import { SCENARIO_VITALS, SUBMISSION_LIMITS } from '../constants.js';
 import {
   JOB_FIELDS,
   PATIENT_FIELDS,
   TREATMENT_FIELD,
   INTENTION_FIELD,
   NAME_FIELD,
-  SCENE_LOADS,
   guidelineChoiceText,
+  guidelineMatches,
 } from '../scenarioSubmission.js';
-import { MAX_OUTCOMES, MAX_OUTCOME_TEXT } from '../scenarioEdits.js';
 import { guidelines, guidelineById } from '../guidelines.js';
 import { warningHtml, noteHtml } from '../staffPage.js';
 import { coverHtml } from '../views/templates.js';
@@ -31,8 +25,11 @@ const smallButton = (action, label, data = '', ariaLabel = label) =>
   `<button class="submit-small-button" type="button" data-action="${action}"${data}
     aria-label="${escapeHtml(ariaLabel)}">${label}</button>`;
 
-/** One labelled box: a line, or a text area when `field.lines` > 1. `name` is its form name. */
-function boxHtml(field, name, value) {
+/**
+ * One labelled box: a line, or a text area when `field.lines` > 1. `name` is its form name.
+ * With `isLabelHidden` the label is for screen readers only (a card title already says it).
+ */
+function boxHtml(field, name, value, isLabelHidden = false) {
   const id = `submit-${name}`;
   const hint = field.hint ? ` placeholder="${escapeHtml(field.hint)}"` : '';
   const box =
@@ -42,42 +39,33 @@ function boxHtml(field, name, value) {
       : `<input class="text-input" id="${id}" name="${name}" type="text" maxlength="${field.max}"
           value="${escapeHtml(value)}"${hint}>`;
   const needed = field.required ? ' <span class="submit-required">(needed)</span>' : '';
-  return `<label class="submit-label" for="${id}">${escapeHtml(field.label)}${needed}</label>${box}`;
+  const labelClass = isLabelHidden ? 'visually-hidden' : 'submit-label';
+  return `<label class="${labelClass}" for="${id}">${escapeHtml(field.label)}${needed}</label>${box}`;
 }
 
-/** The complexity, with "Choose" first so it is a real choice. */
-function complexityHtml(complexity) {
-  const options = [['0', 'Choose…'], ...Object.entries(SCENARIO_COMPLEXITY)]
-    .map(([value, level]) => {
-      const text = value === '0' ? level : level.name;
-      const selected = Number(value) === complexity ? ' selected' : '';
-      return `<option value="${value}"${selected}>${escapeHtml(text)}</option>`;
-    })
-    .join('');
-  return `<label class="submit-label" for="submit-complexity">Presentation
-      <span class="submit-required">(needed)</span></label>
-    <select class="text-input" id="submit-complexity" name="complexity">${options}</select>`;
-}
-
-/** Scene load: single or delegation; with several patients it is "Several patients". */
-function loadHtml(job) {
-  if (job.patients.length > 1) {
-    return `<p class="submit-label">Scene load</p>${noteHtml(SCENARIO_LOADS.several.name)}`;
-  }
-  const choices = SCENE_LOADS.map(
-    ([value, text]) => `<label class="submit-check"><input type="radio" name="load"
-      value="${value}"${job.load === value ? ' checked' : ''}><span>${escapeHtml(text)}</span></label>`,
-  ).join('');
-  return `<fieldset class="submit-fieldset"><legend class="submit-label">Scene load</legend>
-    ${choices}</fieldset>`;
-}
-
-/** The opening: title, suburb, history, complexity and scene load. */
+/** The opening: title, suburb, dispatch notes, history and assessment. */
 function jobHtml(job) {
   const boxes = JOB_FIELDS.map((field) => boxHtml(field, field.key, job[field.key])).join('');
   return `<section class="submit-card" aria-labelledby="submit-job-title">
-    <h2 class="submit-card__title" id="submit-job-title">The job</h2>${boxes}
-    ${complexityHtml(job.complexity)}${loadHtml(job)}</section>`;
+    <h2 class="submit-card__title" id="submit-job-title">The job</h2>${boxes}</section>`;
+}
+
+// The phone keypad each vital opens: whole numbers, or numbers with a decimal point.
+const DECIMAL_VITALS = ['temp', 'bgl'];
+const keypadOf = (key) => (DECIMAL_VITALS.includes(key) ? 'decimal' : 'numeric');
+
+/** One number box of a vital; `keypad` is the phone pad it opens, `ariaLabel` its name if unlabelled. */
+const numberBoxHtml = (id, name, value, keypad, ariaLabel = '') =>
+  `<input class="text-input" id="${id}" name="${name}" type="text" inputmode="${keypad}"
+    maxlength="20" value="${escapeHtml(value)}"${ariaLabel ? ` aria-label="${ariaLabel}"` : ''}>`;
+
+/** BP as two number boxes, systolic and diastolic, since the number pad has no "/". */
+function bpHtml(id, name, value) {
+  const [systolic = '', diastolic = ''] = String(value).split('/');
+  const box = (part, text, ariaLabel) =>
+    numberBoxHtml(`${id}-${part}`, `${name}-${part}`, text.trim(), 'numeric', ariaLabel);
+  return `<span class="submit-vital__bp">${box('sys', systolic, 'BP systolic')}
+    <b aria-hidden="true">/</b>${box('dia', diastolic, 'BP diastolic')}</span>`;
 }
 
 /** One set of vitals: its note, then the eight vitals in a grid. Later sets can be removed. */
@@ -93,9 +81,13 @@ function vitalSetHtml(set, patientIndex, setIndex) {
     : '';
   const vitals = SCENARIO_VITALS.map(([key, label]) => {
     const id = `submit-${prefix}-${key}`;
+    const name = `${prefix}-${key}`;
+    if (key === 'bp') {
+      return `<div class="submit-vital submit-vital--bp" role="group" aria-label="BP">
+        <span aria-hidden="true">${escapeHtml(label)}</span>${bpHtml(id, name, set.vitals[key])}</div>`;
+    }
     return `<label class="submit-vital" for="${id}"><span>${escapeHtml(label)}</span>
-      <input class="text-input" id="${id}" name="${prefix}-${key}" type="text"
-        maxlength="20" value="${escapeHtml(set.vitals[key])}"></label>`;
+      ${numberBoxHtml(id, name, set.vitals[key], keypadOf(key))}</label>`;
   }).join('');
   const hint = setIndex ? 'e.g. 5 min after GTN 400 mcg' : 'e.g. On arrival';
   return `<div class="submit-vital-set">
@@ -138,7 +130,23 @@ function patientHtml(patient, index, count) {
     ${boxHtml(TREATMENT_FIELD, `patient-${index}-treatment`, patient.treatment)}</section>`;
 }
 
-/** The chosen guidelines, then a box that only adds real ones (picked from the list). */
+/** The guidelines a search recommends, not yet chosen, as buttons that add them. */
+export function guidelineSuggestionsHtml(text, chosen) {
+  return guidelineMatches(
+    text,
+    guidelines.filter((guideline) => !chosen.includes(guideline.id)),
+  )
+    .map(
+      (
+        guideline,
+      ) => `<li><button class="submit-suggestion" type="button" data-action="pick-guideline"
+        data-id="${escapeHtml(guideline.id)}"><b>${escapeHtml(guideline.n)}</b>
+        ${escapeHtml(guideline.t)}</button></li>`,
+    )
+    .join('');
+}
+
+/** The chosen guidelines, then a search box that recommends real ones to add. */
 function guidelinesHtml(state) {
   const chosen = state.job.guidelines
     .map(guidelineById)
@@ -153,24 +161,24 @@ function guidelinesHtml(state) {
         )}</li>`,
     )
     .join('');
-  const options = guidelines
-    .map((guideline) => `<option value="${escapeHtml(guidelineChoiceText(guideline))}"></option>`)
-    .join('');
   const full = state.job.guidelines.length >= SUBMISSION_LIMITS.GUIDELINES;
-  const picker = full
+  const search = full
     ? ''
-    : `<label class="submit-label" for="submit-guideline">Add a guideline</label>
-      <div class="submit-row"><input class="text-input" id="submit-guideline" type="text"
-        list="submit-guideline-list" placeholder="Type a number or name, e.g. 1.17"
-        value="${escapeHtml(state.guidelineText)}" autocomplete="off">
-      <button class="submit-small-button" type="button" data-action="add-guideline">Add</button></div>
-      <datalist id="submit-guideline-list">${options}</datalist>
+    : `<label class="visually-hidden" for="submit-guideline">Search the guidelines</label>
+      <input class="text-input" id="submit-guideline" type="search" enterkeyhint="search"
+        placeholder="Search by number or name, e.g. 1.17 or chest pain"
+        value="${escapeHtml(state.guidelineText)}" autocomplete="off"
+        aria-controls="submit-guideline-results">
+      <ul class="submit-suggestions" id="submit-guideline-results" aria-live="polite">${guidelineSuggestionsHtml(
+        state.guidelineText,
+        state.job.guidelines,
+      )}</ul>
       ${state.guidelineError ? `<p class="submit-error" role="alert">${escapeHtml(state.guidelineError)}</p>` : ''}`;
   return `<section class="submit-card" aria-labelledby="submit-guidelines-title">
-    <h2 class="submit-card__title" id="submit-guidelines-title">Guidelines
+    <h2 class="submit-card__title" id="submit-guidelines-title">Guidelines used
       <span class="submit-required">(at least one)</span></h2>
     ${noteHtml('Only guidelines in the app can be added, so each one links to it.')}
-    ${chosen ? `<ul class="submit-guidelines">${chosen}</ul>` : ''}${picker}</section>`;
+    ${chosen ? `<ul class="submit-guidelines">${chosen}</ul>` : ''}${search}</section>`;
 }
 
 /** One photo: the preview as it will be sent, its caption and Remove. */
@@ -201,37 +209,12 @@ function photosHtml(photos, isReading) {
     ${photos.map(photoHtml).join('')}${add}</section>`;
 }
 
-/** What it could teach, then the debrief points (the scenario's intended outcomes). */
-function teachingHtml(job) {
-  const points = job.outcomes
-    .map((point, index) => {
-      const id = `submit-outcome-${index}`;
-      const remove =
-        job.outcomes.length > 1
-          ? smallButton(
-              'remove-outcome',
-              'Remove',
-              ` data-index="${index}"`,
-              `Remove debrief point ${index + 1}`,
-            )
-          : '';
-      return `<label class="visually-hidden" for="${id}">Debrief point ${index + 1}</label>
-        <div class="submit-row"><input class="text-input" id="${id}" name="outcome-${index}"
-          type="text" maxlength="${MAX_OUTCOME_TEXT}" value="${escapeHtml(point)}"
-          placeholder="e.g. Recognises an inferior STEMI on the 12-lead">${remove}</div>`;
-    })
-    .join('');
-  const add =
-    job.outcomes.length < MAX_OUTCOMES
-      ? `<button class="button button--secondary" type="button" data-action="add-outcome">
-          Add a debrief point</button>`
-      : '';
-  return `<section class="submit-card" aria-labelledby="submit-teaching-title">
-    <h2 class="submit-card__title" id="submit-teaching-title">Teaching</h2>
-    ${boxHtml(INTENTION_FIELD, INTENTION_FIELD.key, job.intention)}
-    <p class="submit-label">Debrief points <span class="submit-required">(at least one)</span></p>
-    ${noteHtml('Short, observable things the learner should do. The mentor rates each one in the debrief.')}
-    ${points}${add}</section>`;
+/** The learning points: one box under its card title. */
+function learningHtml(job) {
+  return `<section class="submit-card" aria-labelledby="submit-learning-title">
+    <h2 class="submit-card__title" id="submit-learning-title">Learning points
+      <span class="submit-required">(needed)</span></h2>
+    ${boxHtml(INTENTION_FIELD, INTENTION_FIELD.key, job.intention, true)}</section>`;
 }
 
 /** The warnings about identifying details, asking to fix them or send again. */
@@ -251,10 +234,10 @@ function sendHtml(state) {
       <span>I’ve removed everything that could identify the patient, in the text and the photos.</span></label>
     ${identifierWarningsHtml(state.warnings)}${warningHtml(state.message)}
     <button class="button" type="button" data-action="send"${state.isSending ? ' disabled' : ''}>
-      ${state.isSending ? 'Sending…' : 'Send for checking'}</button></section>`;
+      ${state.isSending ? 'Sending…' : 'Send'}</button></section>`;
 }
 
-/** The whole form, in the order a job is told: opening, patients, guidelines, photos, teaching. */
+/** The whole form, in the order a job is told: opening, patients, guidelines, photos, learning. */
 function formHtml(state) {
   const { job } = state;
   const patients = job.patients
@@ -270,7 +253,7 @@ function formHtml(state) {
       <b>Leave out anything that could identify the patient:</b> names, NHI, addresses, dates
       of birth and the date of the job. Age and sex are fine.</p>
     ${jobHtml(job)}${patients}${addPatient}${guidelinesHtml(state)}
-    ${photosHtml(state.photos, state.isReading)}${teachingHtml(job)}${sendHtml(state)}`;
+    ${photosHtml(state.photos, state.isReading)}${learningHtml(job)}${sendHtml(state)}`;
 }
 
 /** The thank-you box after a job is sent. */
