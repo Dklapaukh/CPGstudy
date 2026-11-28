@@ -22,8 +22,8 @@ How each part works, one file each in `docs/`:
 - [Medicines quiz](docs/medicines-quiz.md)
 - [Guideline quiz](docs/guideline-quiz.md): includes Pick the guideline
 - [Medicine test](docs/medicine-test.md)
-- [Scenarios](docs/scenarios.md): includes the debrief, reviewing scenarios and the Add a job form
-- [Anonymised jobs](docs/anonymised-jobs.md): approved staff jobs, lessons learnt and recording links
+- [Scenarios](docs/scenarios.md): includes the debrief and reviewing scenarios
+- [Anonymised jobs](docs/anonymised-jobs.md): kept outside the app; the Quiz button and Add a job link open work pages
 - [Scenario design and variations](docs/scenario-variations.md): levels, openings and variation cards; a design, not built
 - [Streak and Data tab](docs/streak-and-stats.md)
 - [Content updates](docs/content-updates.md): publishing new guidelines, the daily PDF check, rebuilding from the PDF
@@ -34,55 +34,52 @@ How each part works, one file each in `docs/`:
 
 ## Structure
 
-| Path                                                                           | Purpose                                                                                           |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `index.html`, `styles/app.css`                                                 | Page shell and all styles.                                                                        |
-| `src/main.js`, `src/navigation.js`, `src/events.js`                            | Start-up, screen changes, all clicks and typing.                                                  |
-| `src/constants.js`                                                             | Named constants: status codes, storage keys, backend address, timings, messages.                  |
-| `src/state.js`                                                                 | The one state object and saving it on the phone.                                                  |
-| `src/api.js`, `src/sync.js`                                                    | Talking to the backend; queued edits and merging.                                                 |
-| `src/guidelines.js`, `src/logic.js`, `src/comments.js`                         | The guideline list and lookup by id; pure logic (merge, filters, search, shared helpers).         |
-| `src/markedState.js`, `src/settingsState.js`, `src/theme.js`                   | Marked dates; "mark for review after N days"; dark mode.                                          |
-| `src/queue.js`, `src/queueState.js`, `src/related.js`                          | Guidelines to learn (the queue) and the related list.                                             |
-| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`                  | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                                |
-| `src/quizState.js`                                                             | Medicines quiz: session and saved schedules.                                                      |
-| `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`                        | Guideline quiz, pure logic: ordering rounds, number questions, building a play.                   |
-| `src/guidelineQuizState.js`                                                    | Guideline quiz: the play in memory and saved scores.                                              |
-| `src/sortQuiz.js`, `src/sortQuizState.js`                                      | Pick the guideline: pieces of 2 or 3 related guidelines, pure logic; the round in memory.         |
-| `src/medicineTest.js`, `src/medicineTestState.js`                              | Medicine test: one medicine's cards as tick-all and one-of-four questions; best scores.           |
-| `src/practiceLevels.js`, `content/practice-level-overrides.js`                 | Medicines quiz ATP filter: reads the 1.1 table (pure); hand-set rows for unmatched medicines.     |
-| `src/streakState.js`                                                           | Study streak: the days with a finished Quiz-tab activity, saved as one extra entry.               |
-| `src/report.js`                                                                | "Report a mistake or request" email.                                                              |
-| `src/updates.js`, `src/updateState.js`, `version.json`                         | Update prompt: pure logic, checking and downloading, the published date and file list.            |
-| `src/views/`                                                                   | One file per screen or screen part.                                                               |
-| `manager.html`, `styles/manager.css`, `src/manager/`                           | The manager view: `main.js` (sign in, drawing), `stats.js` (pure sums), `view.js`, `chart.js`.    |
-| `editor.html`, `styles/editor.css`, `src/editor/`                              | The editor page: `main.js` (sign in, saving), `questions.js` (every question), `view.js`.         |
-| `src/staffPage.js`                                                             | What the manager and editor pages share: tab passcode, backend requests, warnings.                |
-| `submit.html`, `styles/submit.css`, `src/submit/`, `src/scenarioSubmission.js` | Add a job form: `main.js` (photos, sending), `view.js`; checks and tidying (pure).                |
-| `src/anonymisedJobs.js`, `src/views/jobsView.js`, `src/editor/jobsView.js`     | Anonymised jobs: pure logic, the app's list and job, the editor's section and card.               |
-| `content/anonymised-jobs.yaml`, `content/anonymised-jobs.js`                   | Approved jobs: readable record and what the app loads. Written by `sync-edits.js`.                |
-| `src/questionEdits.js`                                                         | Editors' changes to quiz questions, pure logic: applying them, finding ones to review.            |
-| `content/card-edits.yaml`, `content/card-edits.js`                             | Published edits: readable record and what the app loads. Written by `sync-edits.js`.              |
-| `scripts/sync-edits.js`                                                        | Copies the Sheet's Edits tab into the two files above (daily, `edits-sync.yml`).                  |
-| `content/scenarios.js`, `content/scenario-edits.js` (and `.yaml`)              | Hand-written scenarios; editors' changes to them, written by `sync-edits.js`.                     |
-| `src/scenarioEdits.js`, `src/scenarioLogic.js`, `src/scenarioRunState.js`      | Scenarios: applying edits; themes, filters and runs (pure); saving a run and debrief.             |
-| `src/scenarioReviews.js`, `src/editor/reviewView.js`                           | Editors' reviews of scenarios: grades and report (pure); the Review card on the editor page.      |
-| `src/views/scenarioView.js`, `src/views/scenarioMarkup.js`                     | Scenario screens; markup shared with the editor page (`src/editor/scenarioView.js`).              |
-| `content/guidelines.js`                                                        | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.                |
-| `content/related.js`, `content/related-overrides.js`                           | Related-guideline links (built) and the hand-edited overrides.                                    |
-| `content/pdf-status.json`, `content/pdf-rebuild.json`                          | Last PDF scan; fingerprint of each rebuilt guideline. Written by scripts.                         |
-| `scripts/pdfScan.js`, `scripts/check-pdf.js`                                   | Reads the PDF's export date and each guideline's newest version entry.                            |
-| `scripts/pdfPages.js`, `pdfContent.js`, `pdfRows.js`, `pdfTables.js`           | Converter from the PDF to content blocks.                                                         |
-| `scripts/contentCheck.js`                                                      | Refuses content with unexpected markup.                                                           |
-| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`                      | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                          |
-| `scripts/build-related.js`                                                     | Rebuilds `content/related.js`.                                                                    |
-| `scripts/audit.js`                                                             | `npm run audit`: style-guide report (headers, comments, length, copies, dead code).               |
-| `scripts/practice-level-review.js`                                             | Prints what each practice level is shown in the Medicines quiz, for checking.                     |
-| `scripts/guideline.js`, `scenario.js`, `lookupText.js`                         | `npm run guideline` / `npm run scenario`: print one guideline or scenario (with reviews) as text. |
-| `docs/`                                                                        | How each feature works, one file each (list above).                                               |
-| `backend/Code.gs`                                                              | The Google Apps Script service; linted and formatted with the app (a plain script, not a module). |
-| `.github/workflows/`                                                           | `checks.yml` (every push), `pdf-check.yml` and `edits-sync.yml` (daily).                          |
-| `tests/`                                                                       | `npm test`. Includes a simulated-browser run of the whole app.                                    |
+| Path                                                                      | Purpose                                                                                           |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `index.html`, `styles/app.css`                                            | Page shell and all styles.                                                                        |
+| `src/main.js`, `src/navigation.js`, `src/events.js`                       | Start-up, screen changes, all clicks and typing.                                                  |
+| `src/constants.js`                                                        | Named constants: status codes, storage keys, backend address, timings, messages.                  |
+| `src/state.js`                                                            | The one state object and saving it on the phone.                                                  |
+| `src/api.js`, `src/sync.js`                                               | Talking to the backend; queued edits and merging.                                                 |
+| `src/guidelines.js`, `src/logic.js`, `src/comments.js`                    | The guideline list and lookup by id; pure logic (merge, filters, search, shared helpers).         |
+| `src/markedState.js`, `src/settingsState.js`, `src/theme.js`              | Marked dates; "mark for review after N days"; dark mode.                                          |
+| `src/queue.js`, `src/queueState.js`, `src/related.js`                     | Guidelines to learn (the queue) and the related list.                                             |
+| `src/quizCards.js`, `src/quizDoses.js`, `src/quizSchedule.js`             | Medicines quiz, pure logic: cards, adult doses, spaced repetition.                                |
+| `src/quizState.js`                                                        | Medicines quiz: session and saved schedules.                                                      |
+| `src/guidelineQuizRounds.js`, `…Numbers.js`, `…Play.js`                   | Guideline quiz, pure logic: ordering rounds, number questions, building a play.                   |
+| `src/guidelineQuizState.js`                                               | Guideline quiz: the play in memory and saved scores.                                              |
+| `src/sortQuiz.js`, `src/sortQuizState.js`                                 | Pick the guideline: pieces of 2 or 3 related guidelines, pure logic; the round in memory.         |
+| `src/medicineTest.js`, `src/medicineTestState.js`                         | Medicine test: one medicine's cards as tick-all and one-of-four questions; best scores.           |
+| `src/practiceLevels.js`, `content/practice-level-overrides.js`            | Medicines quiz ATP filter: reads the 1.1 table (pure); hand-set rows for unmatched medicines.     |
+| `src/streakState.js`                                                      | Study streak: the days with a finished Quiz-tab activity, saved as one extra entry.               |
+| `src/report.js`                                                           | "Report a mistake or request" email.                                                              |
+| `src/updates.js`, `src/updateState.js`, `version.json`                    | Update prompt: pure logic, checking and downloading, the published date and file list.            |
+| `src/views/`                                                              | One file per screen or screen part.                                                               |
+| `manager.html`, `styles/manager.css`, `src/manager/`                      | The manager view: `main.js` (sign in, drawing), `stats.js` (pure sums), `view.js`, `chart.js`.    |
+| `editor.html`, `styles/editor.css`, `src/editor/`                         | The editor page: `main.js` (sign in, saving), `questions.js` (every question), `view.js`.         |
+| `src/staffPage.js`                                                        | What the manager and editor pages share: tab passcode, backend requests, warnings.                |
+| `src/questionEdits.js`                                                    | Editors' changes to quiz questions, pure logic: applying them, finding ones to review.            |
+| `content/card-edits.yaml`, `content/card-edits.js`                        | Published edits: readable record and what the app loads. Written by `sync-edits.js`.              |
+| `scripts/sync-edits.js`                                                   | Copies the Sheet's Edits tab into the two files above (daily, `edits-sync.yml`).                  |
+| `content/scenarios.js`, `content/scenario-edits.js` (and `.yaml`)         | Hand-written scenarios; editors' changes to them, written by `sync-edits.js`.                     |
+| `src/scenarioEdits.js`, `src/scenarioLogic.js`, `src/scenarioRunState.js` | Scenarios: applying edits; themes, filters and runs (pure); saving a run and debrief.             |
+| `src/scenarioReviews.js`, `src/editor/reviewView.js`                      | Editors' reviews of scenarios: grades and report (pure); the Review card on the editor page.      |
+| `src/views/scenarioView.js`, `src/views/scenarioMarkup.js`                | Scenario screens; markup shared with the editor page (`src/editor/scenarioView.js`).              |
+| `content/guidelines.js`                                                   | Guideline text as data, one guideline per line (about 1.3 MB). Built from the PDF.                |
+| `content/related.js`, `content/related-overrides.js`                      | Related-guideline links (built) and the hand-edited overrides.                                    |
+| `content/pdf-status.json`, `content/pdf-rebuild.json`                     | Last PDF scan; fingerprint of each rebuilt guideline. Written by scripts.                         |
+| `scripts/pdfScan.js`, `scripts/check-pdf.js`                              | Reads the PDF's export date and each guideline's newest version entry.                            |
+| `scripts/pdfPages.js`, `pdfContent.js`, `pdfRows.js`, `pdfTables.js`      | Converter from the PDF to content blocks.                                                         |
+| `scripts/contentCheck.js`                                                 | Refuses content with unexpected markup.                                                           |
+| `scripts/contentUpdate.js`, `scripts/build-guidelines.js`                 | Merges a rebuilt PDF into `content/guidelines.js` and writes the report.                          |
+| `scripts/build-related.js`                                                | Rebuilds `content/related.js`.                                                                    |
+| `scripts/audit.js`                                                        | `npm run audit`: style-guide report (headers, comments, length, copies, dead code).               |
+| `scripts/practice-level-review.js`                                        | Prints what each practice level is shown in the Medicines quiz, for checking.                     |
+| `scripts/guideline.js`, `scenario.js`, `lookupText.js`                    | `npm run guideline` / `npm run scenario`: print one guideline or scenario (with reviews) as text. |
+| `docs/`                                                                   | How each feature works, one file each (list above).                                               |
+| `backend/Code.gs`                                                         | The Google Apps Script service; linted and formatted with the app (a plain script, not a module). |
+| `.github/workflows/`                                                      | `checks.yml` (every push), `pdf-check.yml` and `edits-sync.yml` (daily).                          |
+| `tests/`                                                                  | `npm test`. Includes a simulated-browser run of the whole app.                                    |
 
 ## Run, check and publish
 

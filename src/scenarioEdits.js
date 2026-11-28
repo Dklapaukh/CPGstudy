@@ -15,10 +15,8 @@
  *   { kind: 'scenario', off?: true, added: <a whole scenario> }  one an editor created; it is
  *     not in content/scenarios.js, so its values are changed in `added` itself, with no review.
  *   { kind: 'scenario', deleted: true }  one an editor deleted for good; it has no undo.
- * A new scenario may also have what a submitted job adds (Add a scenario, approved on the editor
- * page): per patient `vitalsNote`, `laterVitals` ([{ note, vitals }]), `assessment`, `treatment`
- * and `followUp`, and
- * `photos` ([{ src, caption }], published by the daily copy into content/scenario-photos).
+ * A new scenario may also have, per patient, `vitalsNote`, `laterVitals` ([{ note, vitals }]),
+ * `assessment`, `treatment` and `followUp`.
  * Depends on constants.js and scenarioVariations.js.
  */
 import {
@@ -35,11 +33,11 @@ export const SCENARIO_TEXT_FIELDS = ['title', 'suburb', 'story', 'intention'];
 export const PATIENT_TEXT_FIELDS = ['label', 'history', 'medications', 'allergies', 'social'];
 // The longest text one box keeps, so one edit stays well inside the Sheet's limit.
 export const MAX_SCENARIO_TEXT = 2000;
-// The story is longer: a sent job joins its dispatch notes and history there.
+// The story is longer, for the dispatch notes and history together.
 export const MAX_SCENARIO_STORY = 4100;
-// A sent job's assessment, one per patient, is the longest box of all.
+// A patient's assessment is the longest box of all.
 export const MAX_ASSESSMENT_TEXT = 10000;
-// A patient's optional long texts from a sent job, with the most characters each keeps.
+// A patient's optional long texts, with the most characters each keeps.
 const PATIENT_EXTRA_TEXTS = [
   ['assessment', MAX_ASSESSMENT_TEXT],
   ['treatment', MAX_SCENARIO_TEXT],
@@ -57,14 +55,9 @@ export const MAX_GIVE_IF_ASKED = 8;
 export const MAX_PATIENTS = 4;
 // A new scenario's id is made from its title, cut to this length.
 const MAX_ID_LENGTH = 60;
-// A submitted job's extras (all optional): later vitals sets and photos per scenario, the most
-// of each kept, and the longest note and caption. A photo is only ever one the daily copy
-// publishes, so its address is checked.
+// A patient's optional later vitals sets: the most kept, and the longest note of a set.
 export const MAX_LATER_VITALS = 5;
-export const MAX_PHOTOS = 4;
 const MAX_NOTE_TEXT = 80;
-const MAX_CAPTION_TEXT = 120;
-const PHOTO_SRC_PATTERN = /^content\/scenario-photos\/[a-z0-9-]+\.jpg$/;
 // The scenario-wide values an editor may change, besides the text fields.
 const OTHER_FIELDS = [
   'complexity',
@@ -233,37 +226,7 @@ export const emptyScenarioDraft = () => ({
   outcomes: '',
   guidelines: '',
   patients: [emptyPatient()],
-  photos: [],
 });
-
-/**
- * A scenario as the new scenario form's box texts (the reverse of readNewScenario), so a
- * submitted job can be changed before it is approved. `numberOfId` gives a guideline's CPG
- * number. Photos keep their address and caption; `preview` (a data: address) is for showing.
- */
-export function scenarioDraftOf(scenario, numberOfId) {
-  const vitalsText = (vitals) =>
-    Object.fromEntries(SCENARIO_VITALS.map(([key]) => [key, String(vitals?.[key] ?? '')]));
-  return {
-    ...Object.fromEntries(SCENARIO_TEXT_FIELDS.map((field) => [field, scenario[field] || ''])),
-    complexity: String(scenario.complexity),
-    load: scenario.load,
-    outcomes: scenario.outcomes.join('\n'),
-    guidelines: scenario.guidelines.map(numberOfId).join(', '),
-    patients: scenario.patients.map((patient) => ({
-      ...emptyPatient(),
-      ...Object.fromEntries(PATIENT_TEXT_FIELDS.map((field) => [field, patient[field] || ''])),
-      vitalsNote: patient.vitalsNote || '',
-      vitals: vitalsText(patient.vitals),
-      laterVitals: (patient.laterVitals || []).map((set) => ({
-        note: set.note || '',
-        vitals: vitalsText(set.vitals),
-      })),
-      ...Object.fromEntries(extraTextKeys.map((key) => [key, patient[key] || ''])),
-    })),
-    photos: (scenario.photos || []).map((photo) => ({ ...photo })),
-  };
-}
 
 /**
  * An id for a new scenario from its title ("Fall at the marae" -> "fall-at-the-marae"), with
@@ -336,7 +299,6 @@ export function readNewScenario(draft, takenIds, guidelineIdOfNumber) {
       ...patient,
       ...extras.patients[index],
     })),
-    ...(extras.photos.length ? { photos: extras.photos } : {}),
   };
   const id = newScenarioId(scenario.title, takenIds);
   return { value: cleanAddedScenario(scenario, id, () => true) };
@@ -349,8 +311,8 @@ function readOptional(draft, path, max) {
 }
 
 /**
- * The form's optional extras (a submitted job's): each patient's vitals note, later vitals and
- * treatment, and the photos' captions. { patients, photos } or { path, error }.
+ * The form's optional extras: each patient's vitals note, later vitals, assessment, treatment
+ * and follow up. { patients } or { path, error }.
  */
 function readDraftExtras(draft) {
   const patients = [];
@@ -384,13 +346,7 @@ function readDraftExtras(draft) {
       ...texts,
     });
   }
-  const photos = [];
-  for (const [index, photo] of (draft.photos || []).entries()) {
-    const caption = readOptional(draft, `photos.${index}.caption`, MAX_CAPTION_TEXT);
-    if (caption.error) return caption;
-    photos.push({ src: photo.src, caption: caption.value });
-  }
-  return { patients, photos };
+  return { patients };
 }
 
 // Validators for typed-in scenario text: non-empty and within the limits.
@@ -431,7 +387,7 @@ const isOptionalText = (value, max) =>
   value === undefined || value === '' || (typeof value === 'string' && value.length <= max);
 
 /**
- * A patient's extras from a submitted job, cleaned: { vitalsNote, laterVitals, assessment,
+ * A patient's extras, cleaned: { vitalsNote, laterVitals, assessment,
  * treatment, followUp }, or null when one is malformed.
  */
 function cleanPatientExtras(patient, vitalKeys) {
@@ -453,17 +409,6 @@ function cleanPatientExtras(patient, vitalKeys) {
   if (!sets.every(Boolean)) return null;
   const texts = Object.fromEntries(extraTextKeys.map((key) => [key, patient[key] || '']));
   return { vitalsNote: vitalsNote || '', laterVitals: sets, ...texts };
-}
-
-/** A new scenario's photos, cleaned: [] when there are none, null when one is malformed. */
-function cleanPhotos(photos = []) {
-  if (!Array.isArray(photos) || photos.length > MAX_PHOTOS) return null;
-  const clean = photos.map((photo) =>
-    photo && PHOTO_SRC_PATTERN.test(photo.src) && isOptionalText(photo.caption, MAX_CAPTION_TEXT)
-      ? { src: photo.src, caption: photo.caption || '' }
-      : null,
-  );
-  return clean.every(Boolean) ? clean : null;
 }
 
 /** A new scenario's "give if asked" facts copied ([] when it has none), or null when broken. */
@@ -501,10 +446,9 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
   if (!scenario || typeof scenario !== 'object' || !Array.isArray(scenario.patients)) return null;
   const patients = scenario.patients.map(cleanPatient);
   const isWhole = isWholeScenario(scenario, patients, isGuidelineId);
-  const photos = cleanPhotos(scenario.photos);
   const facts = cleanFacts(scenario.giveIfAsked);
   const cards = cleanCards(scenario.variations);
-  if (!isWhole || !photos || !facts || !cards) return null;
+  if (!isWhole || !facts || !cards) return null;
   const levels = tidyLevels(scenario.levels);
   const clean = {
     id,
@@ -514,7 +458,6 @@ export function cleanAddedScenario(scenario, id, isGuidelineId) {
     outcomes: [...scenario.outcomes],
     guidelines: [...scenario.guidelines],
     patients,
-    ...(photos.length ? { photos } : {}),
     ...(levels ? { levels } : {}),
     ...(facts.length ? { giveIfAsked: facts } : {}),
     ...(cards.length ? { variations: cards } : {}),

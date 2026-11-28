@@ -416,6 +416,14 @@ h1 {
   line-height: 1.3;
   text-decoration: none;
 }
+/* "Add a job you went to": a plain link across the whole choice, under the buttons. */
+.quiz-choice__link {
+  grid-column: 1 / -1;
+  justify-self: center;
+  padding: 0.5rem;
+  color: var(--colour-accent-text);
+  font-weight: 600;
+}
 .quiz-button__icon {
   width: 30px;
   height: 30px;
@@ -3145,7 +3153,7 @@ ul.sort-piece__text {
 }
 .scenario-story {
   margin: 0.5rem 0 0;
-  white-space: pre-line; /* a sent job's dispatch notes and history are paragraphs */
+  white-space: pre-line; /* the dispatch notes and history are paragraphs */
 }
 .scenario-fact {
   margin: 0 0 0.6rem;
@@ -3205,26 +3213,6 @@ ul.sort-piece__text {
   color: var(--colour-accent-text);
   font-weight: 600;
   cursor: pointer;
-}
-.scenario-photo {
-  margin: 0 0 0.8rem;
-}
-.scenario-photo img {
-  border-radius: 8px;
-  display: block;
-  max-width: 100%;
-}
-.scenario-photo figcaption {
-  color: var(--colour-muted);
-  font-size: 0.8rem;
-  margin-top: 0.3rem;
-}
-.scenario-submit-link {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-  text-decoration: none;
 }
 .scenario-queue-message {
   min-height: 1.5em;
@@ -3388,7 +3376,7 @@ ul.sort-piece__text {
   color: #fff;
 }
 
-/* A sent job's long texts (assessment, treatment, follow up) keep the sender's line breaks. */
+/* A patient's long texts (assessment, treatment, follow up) keep their line breaks. */
 .scenario-long-text {
   white-space: pre-line;
 }

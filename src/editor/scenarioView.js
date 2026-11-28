@@ -61,7 +61,6 @@ const FIELD_NAMES = {
   treatment: 'Treatment and response',
   followUp: 'Follow up',
   note: 'Note',
-  caption: 'Caption',
 };
 const VITAL_NAMES = Object.fromEntries(SCENARIO_VITALS);
 const HINTS = {
@@ -93,7 +92,6 @@ const LONG_FIELDS = [
 /** What a path is called on the page: "Story", "Patient 2: HR". */
 export function pathName(scenario, path) {
   const [top, index, field, vital] = path.split('.');
-  if (top === 'photos') return `Photo ${Number(index) + 1}: caption`;
   if (top !== 'patients') return FIELD_NAMES[top];
   let name = field === 'vitals' ? VITAL_NAMES[vital] : FIELD_NAMES[field];
   if (field === 'laterVitals') {
@@ -355,7 +353,7 @@ export function editingPausedHtml(viewer, signedInButtons) {
   return `<div class="editor-back-bar"><a class="back-link" href="#">‹ All guidelines</a>
     ${signedInButtons}</div>
     <main class="page-padding">${warningHtml(viewer.message)}<h1>Scenario editing is paused</h1>
-    ${noteHtml('New scenarios wait until the scenario review is finished. Submitted jobs can still be approved to Anonymised jobs.')}</main>`;
+    ${noteHtml('New scenarios wait until the scenario review is finished.')}</main>`;
 }
 
 /** The delete button, or after one tap the question that makes sure. */
@@ -380,7 +378,7 @@ export function deletedScenarioHtml(viewer, signedInButtons) {
 
 /* ---------- The new scenario form ---------- */
 
-const SHORT_FIELDS = ['title', 'suburb', 'label', 'vitalsNote', 'note', 'caption'];
+const SHORT_FIELDS = ['title', 'suburb', 'label', 'vitalsNote', 'note'];
 const DRAFT_HINTS = {
   ...HINTS,
   suburb: 'Wellington, Porirua, Kāpiti or Hutt Valley.',
@@ -388,10 +386,9 @@ const DRAFT_HINTS = {
   label: 'Needed when there are several patients, for example "Driver".',
   vitalsNote: 'Optional, for example "On arrival".',
   note: 'Optional, for example "5 min after GTN".',
-  assessment: 'Optional: findings and working diagnosis, from a sent job.',
+  assessment: 'Optional: findings and working diagnosis.',
   treatment: 'Optional: what was done and how they responded. Shown folded, for the mentor.',
-  followUp: 'Optional: what happened to the patient later, from a sent job.',
-  caption: 'Optional, for example "12-lead on arrival".',
+  followUp: 'Optional: what happened to the patient later.',
 };
 
 /** One box of the form: a line for short texts, a few lines for the rest. */
@@ -470,53 +467,28 @@ function draftPatientHtml(draft, index) {
     ${remove ? `<div class="editor-buttons">${remove}</div>` : ''}</fieldset>`;
 }
 
-/** The photos of a submitted job: each as it will show, its caption and Remove. */
-function draftPhotosHtml(draft) {
-  if (!draft.photos?.length) return '';
-  const photos = draft.photos
-    .map(
-      (photo, index) => `<figure class="scenario-photo">
-        ${photo.preview ? `<img src="${escapeHtml(photo.preview)}" alt="Photo ${index + 1}">` : noteHtml('Loading the photo…')}
-        ${draftBoxHtml(draft, `photos.${index}.caption`)}
-        <div class="editor-buttons">${actionButtonHtml('draft-remove-photo', 'Remove this photo', ` data-index="${index}"`)}</div>
-      </figure>`,
-    )
-    .join('');
-  return `<fieldset class="editor-patient"><legend>Photos</legend>
-    ${noteHtml('A removed photo is never published. Check nothing in a photo names the patient.')}${photos}</fieldset>`;
-}
-
 /**
  * The new scenario form. `draft` holds each box's text (scenarioEdits.js emptyScenarioDraft);
- * `error` is { path, error } for the box that couldn't be kept, or null. With `job` (a submitted
- * job, { id }) it is the Edit and approve form for that job.
+ * `error` is { path, error } for the box that couldn't be kept, or null.
  */
-export function newScenarioHtml(viewer, draft, error, signedInButtons, job = null) {
+export function newScenarioHtml(viewer, draft, error, signedInButtons) {
   const errorText = error ? `${pathName(draft, error.path)}: ${error.error}` : '';
   const addPatient =
     draft.patients.length < MAX_PATIENTS
       ? actionButtonHtml('draft-add-patient', '+ Add a patient')
       : '';
-  const heading = job ? 'Edit and approve a submitted job' : 'New scenario';
-  const intro = job
-    ? `Change anything before approving: the job is added to Anonymised jobs, not Scenarios. Its
-      intention and intended outcomes become its Lessons learnt. Check nothing in the text or
-      photos could identify the patient. Boxes marked optional can be left empty.`
-    : 'Every box is needed except those marked optional.';
-  const save = job ? 'Save and approve' : 'Save the scenario';
-  const cancel = job ? `#j-${escapeHtml(job.id)}` : '#';
-  return `<div class="editor-back-bar"><a class="back-link" href="${cancel}">‹ Back</a>
+  return `<div class="editor-back-bar"><a class="back-link" href="#">‹ Back</a>
     ${signedInButtons}</div>
-    <main class="page-padding">${warningHtml(viewer.message)}<h1>${heading}</h1>
-    ${noteHtml(`${intro} ${job ? 'It reaches the app the next morning.' : 'Saved scenarios reach the app the next morning; after saving, tap any value to change it.'}`)}
+    <main class="page-padding">${warningHtml(viewer.message)}<h1>New scenario</h1>
+    ${noteHtml('Every box is needed except those marked optional. Saved scenarios reach the app the next morning; after saving, tap any value to change it.')}
     ${['title', 'suburb', 'story', 'intention'].map((path) => draftBoxHtml(draft, path)).join('')}
     ${draftSelectHtml(draft, 'complexity', SCENARIO_COMPLEXITY)}
     ${draftSelectHtml(draft, 'load', SCENARIO_LOADS)}${noteHtml(escapeHtml(HINTS.load))}
     ${draftBoxHtml(draft, 'outcomes')}${draftBoxHtml(draft, 'guidelines')}
     ${draft.patients.map((patient, index) => draftPatientHtml(draft, index)).join('')}
-    <div class="editor-buttons">${addPatient}</div>${draftPhotosHtml(draft)}${warningHtml(errorText)}
-    <div class="editor-buttons">${actionButtonHtml('draft-save', save, '', 'button')}
-      <a class="switch-button" href="${cancel}">Cancel</a></div></main>`;
+    <div class="editor-buttons">${addPatient}</div>${warningHtml(errorText)}
+    <div class="editor-buttons">${actionButtonHtml('draft-save', 'Save the scenario', '', 'button')}
+      <a class="switch-button" href="#">Cancel</a></div></main>`;
 }
 
 /** The screen for an edit whose scenario is no longer in content/scenarios.js. */

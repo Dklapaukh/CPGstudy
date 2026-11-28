@@ -292,6 +292,25 @@ test('a saved new scenario is checked again: unknown keys go, a broken one is re
   assert.equal(cleanAddedScenario('not a scenario', 'x', isGuidelineId), null);
 });
 
+test('a new scenario keeps well-formed later vitals; photos are no longer kept (AJ-L)', () => {
+  const scenario = readNewScenario(filledDraft(), [], guidelineIdOfNumber).value;
+  const clean = (changes) => cleanAddedScenario({ ...scenario, ...changes }, 'x', isGuidelineId);
+  const photo = { src: 'content/scenario-photos/job-1-1.jpg', caption: '' };
+  assert.equal('photos' in clean({ photos: [photo] }), false);
+  const withLater = (laterVitals) =>
+    clean({ patients: [{ ...scenario.patients[0], laterVitals }] });
+  const vitals = scenario.patients[0].vitals;
+  assert.deepEqual(withLater([{ note: 'After GTN', vitals }]).patients[0].laterVitals, [
+    { note: 'After GTN', vitals },
+  ]);
+  assert.equal(
+    withLater([{ note: 'x', vitals: { hr: '1' } }]),
+    null,
+    'every later vital is needed',
+  );
+  assert.equal(withLater('not a list'), null);
+});
+
 test('a new scenario is changed in place in its edit, and kept whole', () => {
   const added = readNewScenario(filledDraft(), [], guidelineIdOfNumber).value;
   const edit = { kind: 'scenario', added };

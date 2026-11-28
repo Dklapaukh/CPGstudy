@@ -23,7 +23,6 @@ import { renderSortQuizScreen } from './views/sortQuizView.js';
 import { renderMedicineTestScreen } from './views/medicineTestView.js';
 import { renderSettingsScreen } from './views/settingsView.js';
 import { renderScenarioList, renderScenario, scenarioFromHash } from './views/scenarioView.js';
-import { renderJobList, renderJob, jobFromHash } from './views/jobsView.js';
 import { applyAutoReview } from './settingsState.js';
 import { markGuidelineSeen } from './updateState.js';
 import {
@@ -37,7 +36,6 @@ import {
   SETTINGS_HASH,
   STATS_HASH,
   SCENARIOS_HASH,
-  JOBS_HASH,
 } from './constants.js';
 
 const app = document.getElementById('app');
@@ -165,12 +163,6 @@ export function route() {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
     if (scenario) renderScenario(scenario);
     else renderScenarioList();
-    window.scrollTo(0, 0);
-  } else if (id === JOBS_HASH || jobFromHash(id)) {
-    if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;
-    const job = jobFromHash(id);
-    if (job) renderJob(job);
-    else renderJobList();
     window.scrollTo(0, 0);
   } else if (id === SORT_QUIZ_HASH) {
     if (app.querySelector('.guideline-row')) state.listScrollY = window.scrollY;

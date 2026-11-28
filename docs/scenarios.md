@@ -81,7 +81,7 @@ button to the next one. Under each scenario a **Review this scenario** card has:
   unsafe or wrong?" (`REVIEW_QUESTIONS`), each up to 200 characters.
 
 **In-line comments.** Each part of the scenario on the editor page (story, give if asked, each patient's
-vitals, background and what happened next, the photos, the intention, the debrief points and
+vitals, background and what happened next, the intention, the debrief points and
 the guidelines) ends with a **💬 Comment** button. It opens a box showing that part's questions
 (`COMMENT_PARTS` in `src/scenarioComments.js`, such as "Do the vitals fit the story, the age and
 how unwell they are?") above the comment. The guidelines' box also takes **guidelines to add**
@@ -107,39 +107,13 @@ rewriting.
 
 The scenario design (three levels, openings, variation cards, competency ratings) is in [Scenario design and variations](scenario-variations.md).
 
-## Add a job (the form)
+## What happened next
 
-Staff send jobs they went to with `submit.html`, linked at the top of
-[Anonymised jobs](anonymised-jobs.md), where approved jobs go (not to Scenarios; AJ-A). Anyone
-can fill it in **without signing in**. In order: short title, suburb (optional,
-as it can be changed or made up), Dispatch notes, History and the first patient's Assessment;
-each patient's background, any number of vitals sets (each with a note such as "On arrival" or
-"After GTN"; the vitals open the phone's number pad, BP as two boxes, BP sys and BP dia), an
-Assessment for every patient after the first, and Treatment and response; Guidelines used;
-Follow up, one box per patient ("Follow up patient 2"); up to 4 photos (ECGs, rhythm strips,
-the monitor); then Learning points, one lesson per line in the job's Lessons learnt. Dispatch
-notes and History are joined into the job's story; each patient keeps its own Assessment and
-Follow up. Assessment holds 10,000 characters, the other long boxes 2,000; a counter shows once
-500 are left. Presentation, scene load and intended outcomes are not asked: editors set them
-(AJ-J).
-
-- **Guidelines** can only be added from the app's list: typing in the box searches by number
-  or name and recommends up to 6, tapped to add (Enter adds the top one), so every one links
-  to a real guideline.
-- **Anonymity:** the sender ticks that the job is anonymised, and the form warns once about
-  anything that looks like an NHI, a date, a phone number, an email, a street address or a
-  titled name (`src/scenarioSubmission.js`). Photos are made smaller on the phone (longest
-  side 1600 px) and re-saved as JPEG, which drops their location data.
-- **Bots:** a hidden box, a form open at least 20 seconds and at most 30 jobs an hour.
-
-The backend (`scenario-submit`) saves the photos in a private Drive folder, "CPG scenario
-submissions", adds a **Pending** row to the `Submissions` tab and emails the owner. Checking
-and approving are in [Anonymised jobs](anonymised-jobs.md).
-
-A new scenario written on the editor page may still hold what a job has (per patient a note on
-the first vitals, later vitals and the treatment and response, and photos;
-`src/scenarioEdits.js`), all optional; in the app later vitals and treatment are in a folded
-"What happened next (for the mentor)" and photos in a folded "ECGs and photos".
+A new scenario written on the editor page may hold, per patient, a note on the first vitals,
+later vitals, an assessment, the treatment and response and a follow up (`src/scenarioEdits.js`),
+all optional; in the app later vitals, treatment and follow up are in a folded "What happened
+next (for the mentor)". Staff jobs are not sent through the app: see
+[Anonymised jobs](anonymised-jobs.md).
 
 ## Decisions
 

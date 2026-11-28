@@ -4,18 +4,15 @@
  * loads), and the scenario edits (changed, new and deleted scenarios) into
  * content/scenario-edits.yaml and content/scenario-edits.js, the benchmark sets edit into
  * content/scenario-set-edits.yaml and .js (src/scenarioSets.js), and the editors' reviews of scenarios
- * into content/scenario-reviews.yaml (read before writing new scenarios), and the approved
- * anonymised jobs into content/anonymised-jobs.yaml and .js (src/anonymisedJobs.js). It also
- * copies the photos of approved submitted jobs that new scenarios or anonymised jobs use into
- * content/scenario-photos. Run every morning by .github/workflows/edits-sync.yml, or by hand with
+ * into content/scenario-reviews.yaml (read before writing new scenarios). Anonymised jobs are
+ * kept outside the app (AJ-L), so none are copied. Run every morning by .github/workflows/edits-sync.yml, or by hand with
  * `node scripts/sync-edits.js`. Prints how many edits need an editor's review after a guideline
  * update (the editor page lists them).
  * Depends on src/api.js, src/questionEdits.js, src/scenarioEdits.js, src/scenarioSets.js,
- * src/scenarioReviews.js, src/anonymisedJobs.js,
- * src/guidelines.js,
+ * src/scenarioReviews.js, src/scenarioComments.js, src/guidelines.js,
  * src/editor/questions.js, content/scenarios.js and the yaml package.
  */
-import { writeFileSync, readdirSync, unlinkSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { stringify } from 'yaml';
 import { sendRequest } from '../src/api.js';
@@ -33,9 +30,6 @@ import { isReviewEditId, cleanReview, reviewReport } from '../src/scenarioReview
 import { allComments, partName } from '../src/scenarioComments.js';
 import { guidelineById } from '../src/guidelines.js';
 import { scenarios } from '../content/scenarios.js';
-import { SCENARIO_PHOTO_FOLDER } from '../src/constants.js';
-import { photoName } from '../src/scenarioSubmission.js';
-import { jobIdOfEdit, cleanJobEntry } from '../src/anonymisedJobs.js';
 
 const contentPath = (name) => fileURLToPath(new URL(`../content/${name}`, import.meta.url));
 const KEPT_KEYS = ['kind', 'off', 'was'];
@@ -116,11 +110,6 @@ const FILES = {
     exported: 'scenarioEdits',
     header: `Editors' changes to scenarios, by edit id (src/scenarioEdits.js). Written by\n${WRITTEN_BY}`,
   },
-  jobs: {
-    name: 'anonymised-jobs',
-    exported: 'anonymisedJobs',
-    header: `Approved anonymised jobs, by edit id (src/anonymisedJobs.js). Written by\n${WRITTEN_BY}`,
-  },
   sets: {
     name: 'scenario-set-edits',
     exported: 'scenarioSetEdits',
@@ -137,19 +126,6 @@ export function cleanSetEdits(edits, scenarioEditsById) {
   const ids = new Set([...scenarios.map((scenario) => scenario.id), ...added]);
   const clean = cleanSetsEdit(edits[SCENARIO_SETS_EDIT_ID], (id) => ids.has(id));
   return clean ? { [SCENARIO_SETS_EDIT_ID]: clean } : {};
-}
-
-/** The approved anonymised jobs by edit id, each checked (bad ones dropped), sorted by id. */
-export function cleanJobEdits(edits) {
-  const sorted = {};
-  Object.keys(edits)
-    .filter(jobIdOfEdit)
-    .sort()
-    .forEach((id) => {
-      const clean = cleanJobEntry(edits[id], jobIdOfEdit(id), isGuidelineId);
-      if (clean) sorted[id] = clean;
-    });
-  return sorted;
 }
 
 /** The reviews among the edits, each checked, oldest first; bad ones are dropped. */
@@ -206,49 +182,14 @@ function editsToReview(edits, scenarioEditsById) {
   ];
 }
 
-/**
- * The photos to publish: those of approved jobs ({ id, photos: [{ data }] } from the backend)
- * that a new scenario in `scenarioEditsById` or an anonymised job in `jobEditsById` shows, as
- * { name, data }. A photo an editor took
- * out before approving is never published. Names are "<job id>-<n>.jpg", as the editor page
- * gives them (src/scenarioSubmission.js, photoName).
- */
-export function photosToPublish(submissions, scenarioEditsById, jobEditsById = {}) {
-  const shown = [
-    ...Object.values(scenarioEditsById).map((edit) => edit.added),
-    ...Object.values(jobEditsById).map((edit) => edit.job),
-  ];
-  const used = new Set(shown.flatMap((item) => (item?.photos || []).map((photo) => photo.src)));
-  return submissions.flatMap(({ id, photos = [] }) =>
-    photos
-      .map((photo, index) => ({ name: photoName(id, index), data: photo.data }))
-      .filter((photo) => used.has(`${SCENARIO_PHOTO_FOLDER}/${photo.name}`)),
-  );
-}
-
-/** Writes the photos to publish and removes any other photo in the folder. */
-function writePhotos(files) {
-  const folder = fileURLToPath(new URL(`../${SCENARIO_PHOTO_FOLDER}/`, import.meta.url));
-  const names = new Set(files.map((file) => file.name));
-  readdirSync(folder)
-    .filter((name) => name.endsWith('.jpg') && !names.has(name))
-    .forEach((name) => unlinkSync(folder + name));
-  files.forEach((file) => writeFileSync(folder + file.name, Buffer.from(file.data, 'base64')));
-}
-
-/**
- * Writes the question, scenario, benchmark set and anonymised job edits; returns the question,
- * scenario and job edits, cleaned.
- */
+/** Writes the question, scenario and benchmark set edits; returns the question and scenario edits, cleaned. */
 function writeAllEdits(sheetEdits) {
   const edits = cleanEdits(sheetEdits);
   const scenarioEditsById = cleanScenarioEdits(sheetEdits);
-  const jobEditsById = cleanJobEdits(sheetEdits);
   writeEdits(FILES.cards, edits);
   writeEdits(FILES.scenarios, scenarioEditsById);
   writeEdits(FILES.sets, cleanSetEdits(sheetEdits, scenarioEditsById));
-  writeEdits(FILES.jobs, jobEditsById);
-  return { edits, scenarioEditsById, jobEditsById };
+  return { edits, scenarioEditsById };
 }
 
 /** Fetches the edits, writes their files and lists the edits that need review. */
@@ -258,7 +199,7 @@ async function main() {
     console.error(`The backend refused: ${reply.error}. Is backend/Code.gs redeployed?`);
     process.exit(1);
   }
-  const { edits, scenarioEditsById, jobEditsById } = writeAllEdits(reply.edits || {});
+  const { edits, scenarioEditsById } = writeAllEdits(reply.edits || {});
   const reviews = cleanReviews(reply.edits || {});
   const comments = allComments(reply.edits || {}, isGuidelineId);
   writeReviews(reviews, comments, scenarioEditsById);
@@ -269,16 +210,6 @@ async function main() {
   const count = Object.keys(edits).length + Object.keys(scenarioEditsById).length;
   console.log(`${count} edits written; ${toReview.length} need review.`);
   toReview.forEach((id) => console.log(`  needs review: ${id}`));
-
-  const approved = await sendRequest({ action: 'approved-scenarios' });
-  if (!approved.ok) {
-    console.error(`The backend refused approved jobs: ${approved.error}. Is it redeployed?`);
-    process.exit(1);
-  }
-  const photos = photosToPublish(approved.submissions || [], scenarioEditsById, jobEditsById);
-  console.log(`${Object.keys(jobEditsById).length} anonymised jobs written.`);
-  writePhotos(photos);
-  console.log(`${photos.length} photos of approved jobs written.`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) await main();

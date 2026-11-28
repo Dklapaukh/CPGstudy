@@ -287,32 +287,16 @@ export const SCENARIO_VITALS = [
   ['bgl', 'BGL'],
   ['pain', 'Pain'],
 ];
-// Add a scenario (submit.html): anyone can send an anonymised job, with no sign-in; editors
-// approve it on the editor page before the daily copy adds it to Anonymised jobs. The backend checks
-// the same limits (backend/Code.gs). Photos are made smaller on the phone, which also drops
-// their location data. A form sent sooner than SUBMIT_MIN_FORM_MS after opening is a bot's.
-export const SUBMIT_PAGE = 'submit.html';
-export const SUBMIT_MIN_FORM_MS = 20000;
-export const SUBMISSION_LIMITS = {
-  IMAGES: 4,
-  IMAGE_LONGEST_SIDE_PX: 1600,
-  IMAGE_JPEG_QUALITY: 0.8,
-  IMAGE_BASE64_LENGTH: 2000000,
-  CAPTION: 120,
-  PATIENTS: 6,
-  VITAL_SETS: 6,
-  GUIDELINES: 12,
-};
-// Where the daily copy puts approved jobs' photos, as the app addresses them.
-export const SCENARIO_PHOTO_FOLDER = 'content/scenario-photos';
-// Anonymised jobs (Quiz > Anonymised jobs, docs/anonymised-jobs.md): approved jobs as a library
-// of interesting jobs and lessons learnt. The list is #jobs and one job is #job-<job id>.
-export const JOBS_HASH = 'jobs';
-export const JOB_HASH_PREFIX = 'job-';
+// Anonymised jobs (docs/anonymised-jobs.md, AJ-L): kept outside the app, which holds no job
+// data. The Quiz choice's "Anonymised jobs" button opens the SharePoint page that holds them and
+// its "Add a job" link opens the work form staff send a job with, each in a new tab.
+// PLACEHOLDERS: replace both with the real addresses (plan section 8).
+export const ANONYMISED_JOBS_URL = 'https://example.sharepoint.com/sites/anonymised-jobs';
+export const ADD_JOB_FORM_URL = 'https://forms.office.com/add-a-job';
 // Scenario editing on the editor page. Paused 25 Nov 2026 while editors reviewed the scenarios
 // and switched back on 26 Nov 2026 when the owner called the review finished (plan 8.3, SC-M).
 // While false the page shows no way to change a scenario (tap-to-edit, leave out, undo, delete,
-// keep or drop, + New scenario, approving a submitted job) and refuses every save of a
+// keep or drop, + New scenario) and refuses every save of a
 // `scenario|<id>` edit, including the levels a review ticks.
 export const SCENARIO_EDITING_ENABLED = true;
 

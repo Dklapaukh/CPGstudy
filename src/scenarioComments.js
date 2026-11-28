@@ -62,7 +62,6 @@ export const COMMENT_PARTS = {
       'Does it change one thing (the diagnosis, a second problem, severity, escalation or scene)?',
     ],
   },
-  photos: { name: 'ECGs and photos', questions: ['Do the ECGs and photos fit the story?'] },
   intention: {
     name: 'Intention',
     questions: ['Is it one clear thing to practise?', 'Does it suit the levels ticked?'],
@@ -81,7 +80,7 @@ export const COMMENT_PARTS = {
   },
 };
 const PART_PATTERN =
-  /^(story|giveIfAsked|photos|intention|outcomes|variations|guidelines|patients\.\d\.(vitals|background|next))$/;
+  /^(story|giveIfAsked|intention|outcomes|variations|guidelines|patients\.\d\.(vitals|background|next))$/;
 
 /** The kind of a part: 'vitals' for 'patients.1.vitals', or the part itself. */
 export const partKind = (part) => String(part).split('.').at(-1);

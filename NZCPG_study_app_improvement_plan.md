@@ -69,7 +69,7 @@ Publishing (push to `main`) and the `content/guidelines.js` rule are in `CLAUDE.
 | 20   | Reviewing scenarios on the editor page; levels each suits       | Built 24 Nov 2026 (SC-H, SC-I)           |
 | 21   | Scenario levels, openings, variation cards and competency ratings, `docs/scenario-variations.md` | Built 26 Nov 2026 (SC-N to SC-P, SC-R, SC-U); SC-Q dropped |
 | 22   | Level benchmark and "move on" sets, 5 scenarios per learner level (SC-L) | Built 26 Nov 2026 |
-| 23   | Anonymised jobs: approved staff jobs, lessons learnt and recording links, `docs/anonymised-jobs.md` | Built 26 Nov 2026 (AJ-A to AJ-I) |
+| 23   | Anonymised jobs: kept outside the app (SharePoint page and work form), `docs/anonymised-jobs.md` | Built 26 Nov 2026; Option C 28 Nov 2026 (AJ-L) |
 
 ### 8.2 Decisions
 
@@ -107,7 +107,7 @@ Decisions across the whole app:
    Option B: leave it as built: Paramedics do not get the Eclampsia card.
 
 3. **Replacing the Google Sheet backend** (asked 18 Nov 2026). The app reaches the backend only
-   through `src/api.js` (one address; ten actions plus the editor ones in `backend/Code.gs`), so a move means a new
+   through `src/api.js` (one address; seven actions plus the two editor ones in `backend/Code.gs`), so a move means a new
    backend, a new `BACKEND_URL` and copying the Sheet's rows; the screens stay as they are. The
    people lists (Managers, Assignments, Editors) are now edited by hand in the Sheet and would
    need another way to edit them.
@@ -120,22 +120,26 @@ Decisions across the whole app:
 
 ### 8.4 Open tasks (owner, by hand)
 
-1. **Switch on Add a job (and so Anonymised jobs), scenario trends and the Competencies table:** redeploy the backend
-   (`docs/backend.md`, "Redeploying the backend"; allow the Drive and Google Docs permissions at
-   `setup`, needed for job folders, AJ-K). Until
-   then the form and the daily copy fail ("Is it redeployed?") and the manager page shows no
-   scenario trends.
-2. **Email filter** on the subject "NZCPG study app:" for the report address.
-3. **Delete eleven merged branches on GitHub** (checked 16 Nov 2026): `feature-6-converter`,
+1. **Switch on scenario trends, the Competencies table and faster syncs, and take out the job
+   actions:** redeploy the backend (`docs/backend.md`, "Redeploying the backend"; no Drive or
+   Docs permission is needed any more, AJ-L). The running version should then read "version
+   without Add a job or Drive (28 Nov 2026)". Until then the manager page shows no scenario
+   trends. Optional afterwards: delete the `Submissions` tab, the "CPG scenario submissions"
+   Drive folder and any `job|…` rows in `Edits`.
+2. **Give the two Anonymised jobs addresses** (AJ-L): the SharePoint page and the Add a job work
+   form. Until then `ANONYMISED_JOBS_URL` and `ADD_JOB_FORM_URL` in `src/constants.js` are
+   placeholders, so the Quiz button and the link open nothing useful.
+3. **Email filter** on the subject "NZCPG study app:" for the report address.
+4. **Delete eleven merged branches on GitHub** (checked 16 Nov 2026): `feature-6-converter`,
    `feature-6-pdf-check`, `feature-quiz`, `guideline-quiz`, `layout-and-switch-back`,
    `ordering-and-report`, `quiz-by-medicine`, `quiz-practise-medicine`, `review-items`,
    `pdf-update-test`, `test-pdf-check`. Claude's workspace cannot delete branches; use the bin
    icon on <https://github.com/Dklapaukh/CPGstudy/branches/all> (never `main`). The old
    `Mentors` tab of the Sheet can also be deleted.
-4. **Morphine 14.32:** the owner is telling the guideline coordinator the PDF page is cut short.
-5. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
+5. **Morphine 14.32:** the owner is telling the guideline coordinator the PDF page is cut short.
+6. **When the first real PDF update arrives:** read the "Check formatting" list in the pull
    request and run `node scripts/practice-level-review.js` on its branch before merging.
-6. **If commits stop for 60 days**, GitHub pauses the daily PDF check: press "Enable workflow"
+7. **If commits stop for 60 days**, GitHub pauses the daily PDF check: press "Enable workflow"
    on the Actions tab, "pdf-check".
 
 ## 10. Style guide: how all code is written
@@ -199,20 +203,20 @@ outcome names its additional treatments instead; `remutaka-motorbike` gained a h
 injury as a "give if asked" fact; Colonial Knob replaced Ōtaki Forks with no helicopter. The
 debrief now rates the six competencies every run (SC-R) and saves the learner's level; the
 manager page has a Competencies table. Decision points (SC-Q) were dropped. The backend
-redeploy for Add a job, scenario trends, the Competencies table, job folders (AJ-K) and faster
-syncs (lock for writes only, batched saves, `since`) is still to do (8.4 task 1; the running
-version should then read "version with since and read-only requests unlocked (28 Nov 2026)").
+redeploy for scenario trends, the Competencies table and faster syncs (lock for writes only,
+batched saves, `since`), now also taking out the job actions (AJ-L), is still to do (8.4 task 1;
+the running version should then read "version without Add a job or Drive (28 Nov 2026)").
 
 The benchmark and "move on" sets (feature 22, SC-L) are built: a Benchmark set dropdown on
 the Scenarios list and a Benchmark sets section on the editor page; `after-the-party` gained
 ICP so ICP has 4 Complex.
 
-**Anonymised jobs** (feature 23, `docs/anonymised-jobs.md`) is built: a sixth Quiz button
-listing approved staff jobs, newest first with a theme dropdown, each with Lessons learnt and
-recording links; editors approve jobs into it (not into Scenarios) and change lessons and links
-on the editor page. The Add a job link moved there. It fills once the backend is redeployed. Since 27 Nov 2026
-(AJ-K) each job is kept in its own Drive subfolder with its photos, data and a Google Doc, and
-the Sheet holds only pointers, so no box is limited by a cell's size.
+**Anonymised jobs** (feature 23, `docs/anonymised-jobs.md`): Option C (AJ-L, 28 Nov 2026), the
+app holds no job data. The sixth Quiz button opens an external SharePoint page and "Add a job
+you went to" an external work form, each in a new tab; their addresses are placeholders until
+the owner gives them (8.4 task 2). The Add a job form, the in-app job list, the editor page's
+job sections, the backend's job actions and Drive folders, the daily copy of jobs and scenario
+photos were removed.
 
 **New Complex scenarios** (26 Nov 2026, Claude's drafts, not yet reviewed): for ICP,
 `missed-dialysis`, `missed-her-steroids` and `queen-elizabeth-park-fall` (ICP only, as stretch
@@ -226,7 +230,7 @@ suit Paramedic. Editors review them on the editor page.
 1. Editors review the 9 new Complex scenarios. Ideas not yet written: anaphylaxis needing IV
    adrenaline in a patient on a beta blocker, with chest pain; beta-blocker and calcium channel
    blocker overdose (adrenaline over metaraminol, no glucagon); headache, then a falling GCS and
-   an RSI decision. Approved jobs can be ideas once the backend is redeployed. Open: whether a
+   an RSI decision. Jobs on the SharePoint page can be ideas. Open: whether a
    new ICP scenario replaces a crash in the ICP benchmark set.
 2. Possible: filter the cards by the learner's level; a "Do first" field (SC-T) in place of the
    note in `bus-v-pedestrians`' intention; the bank of overdoses by medicine class.
@@ -236,5 +240,5 @@ Open owner questions: 8.3 items 1 to 3.
 **Known gaps and possible follow-ups.** The `demo` tracker is shared by every visitor, so marks
 mix (it could be read-only). A score only compares well when the same mentor rates consistently. Possible: a best score for
 Pick the guideline; changing its second or third guideline; scenario recommendations; adding or
-removing patients of a scenario on the editor page; cropping photos in the submit form;
-tap-editing an approved scenario's treatment and later vitals.
+removing patients of a scenario on the editor page; tap-editing a new scenario's treatment and
+later vitals.

@@ -16,8 +16,11 @@ the edits to the daily copy ("edits", no passcode: they are published anyway).
   18 Nov 2026: an old `Mentors` tab is no longer read and can be deleted.
 - The passcode is also kept in the phone's browser and the backend address is in the page.
   Anyone with a tracker passcode can read and change that tracker, so keep passcodes long.
-- Only writes (save, signup, scenario-submit and the editor's edit-save and submission-decide,
-  `WRITE_ACTIONS`) wait for the script lock; reads run side by side.
+- Only writes (save, signup and the editor's edit-save, `WRITE_ACTIONS`) wait for the script
+  lock; reads run side by side.
+- The backend holds no job data and needs no Drive or Docs access (AJ-L, 28 Nov 2026). The old
+  `Submissions` tab, the "CPG scenario submissions" Drive folder and any `job|…` rows in `Edits`
+  are no longer read and can be deleted.
 - A save reads the `Data` tab once into a key-to-row map and writes in batches (one per run of
   neighbouring changed rows, one for new rows), then answers from that same read.
 - `load` and `save` take an optional `since` (ms) and send back only entries with `t` after it.
@@ -40,10 +43,10 @@ No programming needed; allow 10 minutes. Needs the V8 runtime.
    tab, click in the code, select all of it (Ctrl+A, or Cmd+A on a Mac), and paste (Ctrl+V or
    Cmd+V) so the new code replaces the old. Press the Save button (the disk picture).
 3. **Run `setup`.** In the bar above the code is a small drop-down list of names; choose
-   `setup`, then press Run. If Google asks for permission (for example "Send email as you" or
-   Drive), press Review permissions, choose your account and press Allow. Wait for "Execution
+   `setup`, then press Run. If Google asks for permission (for example "Send email as you"),
+   press Review permissions, choose your account and press Allow. Wait for "Execution
    completed" at the bottom. `setup` adds any missing tabs (`Managers`, `Assignments`,
-   `History`, `Editors`, `Edits`, `Submissions`) and, the first time, fills `History` from the
+   `History`, `Editors`, `Edits`) and, the first time, fills `History` from the
    dates already saved. Nothing in the old tabs is changed, and running it again does no harm.
 4. **Redeploy at the same address.** Top right, press Deploy, then **Manage deployments** (not
    "New deployment": that would make a new address and the app would stop working). Press the

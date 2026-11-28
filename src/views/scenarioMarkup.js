@@ -6,9 +6,7 @@
  * editor's box in place of the open one: { attrs(path), formFor(path) }, where a path names one
  * value as in scenarioEdits.js. It may also have commentFor(part), which gives the in-line
  * comment button and box of a part (scenarioComments.js) to put at the end of that part.
- * Without it the markup is the app's. With `readOnly: true` (a
- * submitted job waiting for approval) it is the editor's layout with nothing to tap.
- * jobBodyHtml draws an approved anonymised job (Quiz > Anonymised jobs) with the same parts.
+ * Without it the markup is the app's.
  * Depends on logic.js, guidelines.js, constants.js, scenarioEdits.js and scenarioVariations.js.
  */
 import { escapeHtml } from '../logic.js';
@@ -118,7 +116,7 @@ const factHtml = (label, text, path, editing) =>
 function patientLabelHtml(patient, prefix, editing) {
   const path = `${prefix}.label`;
   if (openForm(editing, path)) return openForm(editing, path);
-  if (!patient.label && (!editing || editing.readOnly)) return '';
+  if (!patient.label && !editing) return '';
   const text = patient.label ? escapeHtml(patient.label) : '<i>No patient label</i>';
   return `<h2 class="scenario-patient"${boxAttrs(editing, path)}>${text}</h2>`;
 }
@@ -141,7 +139,7 @@ function assessmentHtml(patient, editing) {
 }
 
 /**
- * What happened after the first vitals, from a submitted job: later vitals, each with its note,
+ * What happened after the first vitals: later vitals, each with its note,
  * then the treatment and response, then the follow up. Folded in the app, so the mentor reveals
  * it when it fits. Nothing when the patient has none of them.
  */
@@ -154,28 +152,7 @@ function nextHtml(patient, index, editing) {
     longTextHtml('Follow up', patient.followUp);
   if (!later && !texts) return '';
   const comment = commentSlot(editing, `patients.${index}.next`);
-  // A job is a real call, not a scenario run by a mentor.
-  return foldHtml(
-    editing?.isJob ? 'What happened next' : 'What happened next (for the mentor)',
-    later + texts + comment,
-    Boolean(editing),
-  );
-}
-
-/** A submitted job's photos (ECGs, the monitor) with captions, folded in the app. */
-function photosHtml(scenario, editing) {
-  const photos = scenario.photos || [];
-  if (!photos.length) return '';
-  const figures = photos
-    .map(
-      (photo, index) => `<figure class="scenario-photo">
-        <img src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.caption || `Photo ${index + 1}`)}"
-          loading="lazy">${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ''}
-      </figure>`,
-    )
-    .join('');
-  const comment = commentSlot(editing, 'photos');
-  return foldHtml(`ECGs and photos (${photos.length})`, figures + comment, Boolean(editing));
+  return foldHtml('What happened next (for the mentor)', later + texts + comment, Boolean(editing));
 }
 
 /** The vitals and background of one patient, its assessment, then what happened next when known. */
@@ -224,7 +201,7 @@ function guidelinesHtml(scenario, editing) {
  */
 function giveIfAskedHtml(scenario, editing) {
   const facts = scenario.giveIfAsked || [];
-  if (!facts.length && (!editing || editing.readOnly)) return '';
+  if (!facts.length && !editing) return '';
   const list = facts.length
     ? facts.map((fact) => `<li>${escapeHtml(fact)}</li>`).join('')
     : '<li><i>None yet</i></li>';
@@ -244,7 +221,7 @@ function giveIfAskedHtml(scenario, editing) {
  */
 function variationsHtml(scenario, editing) {
   const cards = scenario.variations || [];
-  if (!cards.length && (!editing || editing.readOnly)) return '';
+  if (!cards.length && !editing) return '';
   const items = cards.length
     ? cards
         .map(
@@ -264,9 +241,8 @@ function variationsHtml(scenario, editing) {
 }
 
 /**
- * The scenario as learners see it: the story card, each patient (with what happened next and
- * the photos, for a submitted job), the intention and intended
- * outcomes (folded in the app, open for an editor) and the guidelines.
+ * The scenario as learners see it: the story card, each patient (with what happened next),
+ * the intention and intended outcomes (folded in the app, open for an editor) and the guidelines.
  */
 export function scenarioBodyHtml(scenario, editing) {
   const text = (path, tag, className) =>
@@ -289,49 +265,7 @@ export function scenarioBodyHtml(scenario, editing) {
       ${text('story', 'p', 'scenario-story')}${commentSlot(editing, 'story')}</section>
     ${giveIfAskedHtml(scenario, editing)}
     ${scenario.patients.map((patient, index) => patientHtml(patient, index, editing)).join('')}
-    ${photosHtml(scenario, editing)}
     ${foldHtml(intentionTitle, intention, Boolean(editing))}
     ${variationsHtml(scenario, editing)}
     ${guidelinesHtml(scenario, editing)}`;
-}
-
-// Every fold open and nothing to tap: an anonymised job is read whole, not revealed in stages.
-const JOB_LAYOUT = { attrs: () => '', formFor: () => '', readOnly: true, isJob: true };
-
-/** A lesson list, or a note when there are none. */
-const lessonsHtml = (lessons) =>
-  lessons.length
-    ? `<ul class="scenario-fact scenario-outcomes">${lessons
-        .map((lesson) => `<li>${escapeHtml(lesson)}</li>`)
-        .join('')}</ul>`
-    : '<p class="scenario-intro">No lessons written yet.</p>';
-
-/** The recordings and links, each opening in a new tab; nothing when there are none. */
-function linksHtml(links) {
-  if (!links.length) return '';
-  const rows = links
-    .map(
-      (link) => `<a class="scenario-guideline" href="${escapeHtml(link.url)}" target="_blank"
-        rel="noopener noreferrer"><span>${escapeHtml(link.title)}</span><span aria-hidden="true">↗</span></a>`,
-    )
-    .join('');
-  return foldHtml(`Recordings and links (${links.length})`, rows, true);
-}
-
-/**
- * An approved anonymised job (AJ-C): the job as sent (story, each patient with what happened
- * next, the photos, the guidelines), then Lessons learnt, then Recordings and links. `dateText`
- * is when it was approved, in words. On the editor page (`isEditorPage`) guidelines are plain text.
- */
-export function jobBodyHtml(job, dateText, isEditorPage = false) {
-  // No presentation or scene load tags: a job is not a scenario, and editors may not set them.
-  return `<section class="scenario-card">
-      <h1 class="scenario-title">${escapeHtml(job.title)}</h1>
-      <p class="scenario-label">${escapeHtml(job.suburb)} · Added ${escapeHtml(dateText)}</p>
-      <p class="scenario-story">${escapeHtml(job.story)}</p></section>
-    ${job.patients.map((patient, index) => patientHtml(patient, index, JOB_LAYOUT)).join('')}
-    ${photosHtml(job, JOB_LAYOUT)}
-    ${guidelinesHtml(job, isEditorPage ? JOB_LAYOUT : undefined)}
-    ${foldHtml('Lessons learnt', lessonsHtml(job.lessons), true)}
-    ${linksHtml(job.links)}`;
 }

@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-28: **Anonymised jobs, Option C** (AJ-L; backend, deploy needed): the app holds no job data; the Quiz button and Add
+  a job link open SharePoint and a work form (placeholder URLs); Add a job form, job sections, Drive code and photos removed.
 - 2026-11-28: **Faster syncs** (backend, deploy needed): lock only for writes, a save reads the Data tab once
   and batches writes, load/save take `since` (the app sends its newest t); unused SCENE_LOADS removed.
 - 2026-11-27: **Jobs kept in Drive** (AJ-K): a subfolder per job with photos, data and a Google Doc (backend,

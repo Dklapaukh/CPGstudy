@@ -5,7 +5,6 @@
  * guidelineQuizState.js (the most recent quiz score on each row).
  */
 import { scenariosButtonHtml } from './scenarioView.js';
-import { jobsButtonHtml } from './jobsView.js';
 import { state } from '../state.js';
 import { guidelines, sections } from '../guidelines.js';
 import {
@@ -19,7 +18,7 @@ import {
   markedTime,
   formatUpdatedDate,
 } from '../logic.js';
-import { aiNoticeHtml } from './templates.js';
+import { aiNoticeHtml, quizIconHtml } from './templates.js';
 import { queueButtonHtml } from './queueView.js';
 import { quizButtonHtml } from './quizView.js';
 import { sortQuizButtonHtml } from './sortQuizView.js';
@@ -29,7 +28,7 @@ import { footerHtml, drawUpdateStatus } from './updateView.js';
 import { lastScore } from '../guidelineQuizState.js';
 import { streakButtonHtml } from './streakView.js';
 import { isDemoTracker } from '../streakState.js';
-import { FILTER, STATUS, MESSAGES } from '../constants.js';
+import { FILTER, STATUS, MESSAGES, ANONYMISED_JOBS_URL, ADD_JOB_FORM_URL } from '../constants.js';
 
 const app = document.getElementById('app');
 const OVERALL_RING_NAME = '\u0000overall'; // cannot clash with a section name
@@ -107,10 +106,18 @@ function tabsHtml() {
     ${queueButtonHtml()}</nav>`;
 }
 
+// Anonymised jobs live outside the app (AJ-L): both links open the work pages in a new tab.
+const EXTERNAL = 'target="_blank" rel="noopener noreferrer"';
+
+/** The "Anonymised jobs" button (the SharePoint page) and the "Add a job" link (the work form). */
+const jobsLinksHtml = () =>
+  `<a class="quiz-button" href="${ANONYMISED_JOBS_URL}" ${EXTERNAL}>${quizIconHtml('folder')}<span>Anonymised jobs <span aria-hidden="true">↗</span></span></a>
+  <a class="quiz-choice__link" href="${ADD_JOB_FORM_URL}" ${EXTERNAL}>Add a job you went to <span aria-hidden="true">↗</span></a>`;
+
 /** The Quiz tab's choice of quizzes, shown under the tracker name while the tab is open. */
 function quizChoiceHtml() {
   return `<div class="quiz-choice" id="quiz-choice"${quizChoiceOpen ? '' : ' hidden'}>
-    ${quizButtonHtml()}${guidelineQuizButtonHtml()}${medicineTestButtonHtml()}${sortQuizButtonHtml()}${scenariosButtonHtml()}${jobsButtonHtml()}</div>`;
+    ${quizButtonHtml()}${guidelineQuizButtonHtml()}${medicineTestButtonHtml()}${sortQuizButtonHtml()}${scenariosButtonHtml()}${jobsLinksHtml()}</div>`;
 }
 
 /** Opens and closes the Quiz tab's choice without redrawing the list. */

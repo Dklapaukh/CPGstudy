@@ -6,7 +6,13 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { SEARCH_PAUSE_MS, SYNC_DELAY_AFTER_EDIT_MS, DOUBLE_TAP_MS } from '../src/constants.js';
+import {
+  SEARCH_PAUSE_MS,
+  SYNC_DELAY_AFTER_EDIT_MS,
+  DOUBLE_TAP_MS,
+  ANONYMISED_JOBS_URL,
+  ADD_JOB_FORM_URL,
+} from '../src/constants.js';
 
 const TRACKER = 'maple-oak-reef-11';
 const OTHER_TRACKER = 'other-tracker';
@@ -818,15 +824,21 @@ test('Switch tracker has a back link to the open tracker, which stays saved unti
   await signIn(TRACKER); // back to Sam's tracker for the tests that follow
 });
 
-test('Anonymised jobs open from the Quiz choice, with the Add a job link at the top', async () => {
+test('Anonymised jobs and Add a job open the work pages outside the app, in a new tab (AJ-L)', async () => {
   dom.window.location.hash = '';
   await sleep(30);
-  assert.ok($('#quiz-choice a[href="#jobs"]'), 'Anonymised jobs is in the Quiz choice');
+  const jobs = $(`#quiz-choice a[href="${ANONYMISED_JOBS_URL}"]`);
+  const addJob = $(`#quiz-choice a[href="${ADD_JOB_FORM_URL}"]`);
+  assert.match(jobs.textContent, /Anonymised jobs/);
+  assert.match(addJob.textContent, /Add a job/);
+  [jobs, addJob].forEach((link) => {
+    assert.match(link.href, /^https:\/\//);
+    assert.equal(link.target, '_blank');
+    assert.match(link.rel, /noopener/);
+  });
   dom.window.location.hash = '#jobs';
   await sleep(30);
-  assert.equal($('.quiz-title').textContent, 'Anonymised jobs');
-  assert.equal($('.jobs-screen .scenario-submit-link').getAttribute('href'), 'submit.html');
-  assert.ok($('.empty-message'), 'no jobs are published yet');
+  assert.ok($('.home-header'), 'the old in-app list is gone: #jobs shows the guideline list');
   dom.window.location.hash = '';
   await sleep(30);
 });
