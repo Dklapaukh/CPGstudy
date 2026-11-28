@@ -17,6 +17,7 @@ const tabs = {
   Data: [['Key', 'P', 'G', 'S', 'N', 'U']],
 };
 let sleeps = 0;
+let locks = 0; // how many times a request waited for the script lock
 const emails = [];
 const cacheValues = {};
 const properties = {};
@@ -127,7 +128,7 @@ const spreadsheet = {
 
 const environment = {
   SpreadsheetApp: { getActiveSpreadsheet: () => spreadsheet },
-  LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+  LockService: { getScriptLock: () => ({ waitLock: () => locks++, releaseLock() {} }) },
   ContentService: {
     createTextOutput: (text) => ({
       text,
@@ -185,7 +186,10 @@ const { doGet, doPost, setup } = new Function(
 const post = (body) => JSON.parse(doPost({ postData: { contents: JSON.stringify(body) } }).text);
 
 test('opening the backend address says which version is live, so a redeploy can be checked', () => {
-  assert.match(doGet().text, /running, version with job folders in Drive \(27 Nov 2026\)/);
+  assert.match(
+    doGet().text,
+    /running, version with since and read-only requests unlocked \(28 Nov 2026\)/,
+  );
 });
 
 test('open: a tracker, and a wrong or old mentor passcode that is delayed after the lock', () => {
@@ -220,6 +224,70 @@ test('save: bad ids ignored, future times cut back, older edits lose', () => {
   });
   assert.equal(older.saved, 0);
   assert.equal(older.data.g1.n, 'hi');
+});
+
+test('save: many changes in one read; a repeated id keeps the newest; rows stay one per key', () => {
+  const t = Date.now() - 1000;
+  const saved = post({
+    action: 'save',
+    code: 'tracker-1',
+    changes: [
+      { id: 'b1', s: 'c', n: 'one', t },
+      { id: 'b2', s: 'v', n: 'two', t },
+      { id: 'b1', s: 'v', n: 'newer', t: t + 1 },
+      { id: 'b2', s: 'c', n: 'older', t: t - 1 },
+    ],
+  });
+  assert.equal(saved.saved, 3);
+  assert.deepEqual(saved.data.b1, { s: 'v', n: 'newer', t: t + 1 });
+  assert.equal(saved.data.b2.n, 'two');
+  const again = post({
+    action: 'save',
+    code: 'tracker-1',
+    changes: [
+      { id: 'b2', s: 'c', n: 'two again', t: t + 5 },
+      { id: 'b1', s: 'c', n: 'one again', t: t + 5 },
+    ],
+  });
+  assert.equal(again.saved, 2);
+  const keys = tabs.Data.map((row) => row[0]).filter((key) => /\|b[12]$/.test(key));
+  assert.deepEqual(keys.sort(), ['tracker-1|b1', 'tracker-1|b2']);
+  assert.equal(post({ action: 'load', code: 'tracker-1' }).data.b1.n, 'one again');
+});
+
+test('since: load and save send back only entries edited after it', () => {
+  // g1 from an earlier test is dated ahead of the clock, so only these ids are compared.
+  const ids = (data) => Object.keys(data).filter((id) => /^[bs]\d$/.test(id));
+  const t = Date.now() - 500;
+  post({ action: 'save', code: 'tracker-1', changes: [{ id: 's1', s: 'c', n: 'a', t }] });
+  assert.deepEqual(ids(post({ action: 'load', code: 'tracker-1', since: t - 1 }).data), ['s1']);
+  assert.deepEqual(ids(post({ action: 'load', code: 'tracker-1', since: t }).data), []);
+  const save = post({
+    action: 'save',
+    code: 'tracker-1',
+    since: t,
+    changes: [{ id: 's2', s: 'v', n: 'b', t: t + 1 }],
+  });
+  assert.deepEqual(ids(save.data), ['s2']);
+  assert.deepEqual(ids(post({ action: 'load', code: 'tracker-1' }).data).sort(), [
+    'b1',
+    'b2',
+    's1',
+    's2',
+  ]);
+});
+
+test('lock: only writes wait for it; reads such as load, open and edits do not', () => {
+  const before = locks;
+  post({ action: 'load', code: 'tracker-1' });
+  post({ action: 'open', code: 'tracker-1' });
+  post({ action: 'edits' });
+  post({ action: 'editor-open', code: 'nobody' });
+  assert.equal(locks, before);
+  post({ action: 'save', code: 'tracker-1', changes: [] });
+  post({ action: 'signup', name: '' });
+  post({ action: 'edit-save', code: 'nobody' });
+  assert.equal(locks, before + 3);
 });
 
 test('unknown actions, the removed create action and bad requests give generic errors', () => {

@@ -5,13 +5,14 @@
  */
 import { state, saveSession } from './state.js';
 import { sendRequest } from './api.js';
-import { mergeRemoteEntries, syncStatusText } from './logic.js';
+import { mergeRemoteEntries, syncSinceTime, syncStatusText } from './logic.js';
 import {
   SCREEN,
   MESSAGES,
   SYNC_DELAY_AFTER_EDIT_MS,
   SYNC_DELAY_MORE_PENDING_MS,
   SYNC_DELAY_AFTER_FAILURE_MS,
+  SYNC_SINCE_MARGIN_MS,
 } from './constants.js';
 
 const handlers = { refreshScreen: () => {}, signOut: () => {} };
@@ -75,7 +76,11 @@ export async function syncNow() {
   const { changes, sentTimestamps } = takePendingChanges();
   const code = state.passcode;
   try {
-    const request = changes.length ? { action: 'save', code, changes } : { action: 'load', code };
+    // The first sync each visit fetches everything; later ones only what is newer (see constants).
+    const since = state.fullSyncDone ? syncSinceTime(state.entries, SYNC_SINCE_MARGIN_MS) : 0;
+    const request = changes.length
+      ? { action: 'save', code, changes, since }
+      : { action: 'load', code, since };
     const response = await sendRequest(request);
     state.syncInProgress = false;
     if (response && !response.ok && response.error === 'not-found') {
@@ -84,6 +89,7 @@ export async function syncNow() {
     }
     if (!response || !response.ok) throw new Error('The server did not accept the request');
     forgetSentChanges(sentTimestamps);
+    state.fullSyncDone = true;
     state.lastSyncFailed = false;
     if (response.label) state.label = response.label;
     const merged = mergeRemoteEntries(state.entries, response.data || {});

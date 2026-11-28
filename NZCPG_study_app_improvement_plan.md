@@ -121,7 +121,8 @@ Decisions across the whole app:
 ### 8.4 Open tasks (owner, by hand)
 
 1. **Switch on Add a job (and so Anonymised jobs), scenario trends and the Competencies table:** redeploy the backend
-   (`docs/backend.md`, "Redeploying the backend"; allow the Drive permission at `setup`). Until
+   (`docs/backend.md`, "Redeploying the backend"; allow the Drive and Google Docs permissions at
+   `setup`, needed for job folders, AJ-K). Until
    then the form and the daily copy fail ("Is it redeployed?") and the manager page shows no
    scenario trends.
 2. **Email filter** on the subject "NZCPG study app:" for the report address.
@@ -185,7 +186,7 @@ Goal: a programmer who does not know the project can read any function once and 
 
 ## 13. Where things stand
 
-**Now (26 Nov 2026).** Features 1 to 23 are built and on `main`. The owner's scenario review
+**Now (28 Nov 2026).** Features 1 to 23 are built and on `main`. The owner's scenario review
 (one review each, `content/scenario-reviews.yaml`) is finished and scenario editing is back on
 (SC-U). From it (feature 21, `docs/scenario-variations.md`): the 7 Small-changes scenarios and
 every in-line comment are fixed; every scenario has a call-notes-then-history opening and "give
@@ -198,8 +199,9 @@ outcome names its additional treatments instead; `remutaka-motorbike` gained a h
 injury as a "give if asked" fact; Colonial Knob replaced Ōtaki Forks with no helicopter. The
 debrief now rates the six competencies every run (SC-R) and saves the learner's level; the
 manager page has a Competencies table. Decision points (SC-Q) were dropped. The backend
-redeploy for Add a job, scenario trends and the Competencies table is still to do (8.4
-task 1; the running version should then read "version with competency ratings (26 Nov 2026)").
+redeploy for Add a job, scenario trends, the Competencies table, job folders (AJ-K) and faster
+syncs (lock for writes only, batched saves, `since`) is still to do (8.4 task 1; the running
+version should then read "version with since and read-only requests unlocked (28 Nov 2026)").
 
 The benchmark and "move on" sets (feature 22, SC-L) are built: a Benchmark set dropdown on
 the Scenarios list and a Benchmark sets section on the editor page; `after-the-party` gained
@@ -208,7 +210,9 @@ ICP so ICP has 4 Complex.
 **Anonymised jobs** (feature 23, `docs/anonymised-jobs.md`) is built: a sixth Quiz button
 listing approved staff jobs, newest first with a theme dropdown, each with Lessons learnt and
 recording links; editors approve jobs into it (not into Scenarios) and change lessons and links
-on the editor page. The Add a job link moved there. It fills once the backend is redeployed.
+on the editor page. The Add a job link moved there. It fills once the backend is redeployed. Since 27 Nov 2026
+(AJ-K) each job is kept in its own Drive subfolder with its photos, data and a Google Doc, and
+the Sheet holds only pointers, so no box is limited by a cell's size.
 
 **New Complex scenarios** (26 Nov 2026, Claude's drafts, not yet reviewed): for ICP,
 `missed-dialysis`, `missed-her-steroids` and `queen-elizabeth-park-fall` (ICP only, as stretch

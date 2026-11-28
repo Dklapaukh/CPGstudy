@@ -3,6 +3,8 @@
 Newest first. One entry of at most two lines per change; the detail is in `docs/` and the git
 history. Entries before 19 Nov 2026 name README sections; each is now a file in `docs/` (see the README list).
 
+- 2026-11-28: **Faster syncs** (backend, deploy needed): lock only for writes, a save reads the Data tab once
+  and batches writes, load/save take `since` (the app sends its newest t); unused SCENE_LOADS removed.
 - 2026-11-27: **Jobs kept in Drive** (AJ-K): a subfolder per job with photos, data and a Google Doc (backend,
   deploy needed); per-patient Assessment (10,000) and Follow up; long boxes 2,000; counter at 500 left.
 - 2026-11-27: **Anonymised jobs**: each learning-point line is its own lesson; no presentation or scene load

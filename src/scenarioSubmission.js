@@ -80,10 +80,6 @@ export const TREATMENT_FIELD = {
   max: 2000,
   lines: 4,
 };
-export const SCENE_LOADS = [
-  ['single', 'Single patient'],
-  ['delegation', 'Delegation (more tasks than one person can do)'],
-];
 const MAX_LABEL = 40;
 const MAX_NOTE = 80;
 const MAX_VITAL = 20;

@@ -16,8 +16,16 @@ the edits to the daily copy ("edits", no passcode: they are published anyway).
   18 Nov 2026: an old `Mentors` tab is no longer read and can be deleted.
 - The passcode is also kept in the phone's browser and the backend address is in the page.
   Anyone with a tracker passcode can read and change that tracker, so keep passcodes long.
-- Every request reads the whole `Data` tab. Revisit that (for example one tab per tracker) at
-  about 20,000 rows, roughly 40 full trackers, or when a sync takes more than 3 seconds.
+- Only writes (save, signup, scenario-submit and the editor's edit-save and submission-decide,
+  `WRITE_ACTIONS`) wait for the script lock; reads run side by side.
+- A save reads the `Data` tab once into a key-to-row map and writes in batches (one per run of
+  neighbouring changed rows, one for new rows), then answers from that same read.
+- `load` and `save` take an optional `since` (ms) and send back only entries with `t` after it.
+  The app sends its newest `t` less an hour (`SYNC_SINCE_MARGIN_MS`), since times come from each
+  phone's clock; the first sync after the app opens asks for everything.
+- Every request still reads the whole `Data` tab. Revisit that (for example one tab per
+  tracker) at about 20,000 rows, roughly 40 full trackers, or when a sync takes more than 3
+  seconds.
 
 ## Redeploying the backend
 
@@ -44,7 +52,7 @@ No programming needed; allow 10 minutes. Needs the V8 runtime.
 5. **Check it worked:** open
    <https://script.google.com/macros/s/AKfycbxbWfT-QHIqOAYU2DykLE_rVss4ewVKoWLpKW6j-I_U9heUYyvJ-l71j4oVwduKS4zVVA/exec>
    in a browser. It must say "CPG tracker service is running, " followed by `BACKEND_VERSION`
-   from `backend/Code.gs` (today "version with competency ratings (26 Nov 2026)").
+   from `backend/Code.gs` (today "version with since and read-only requests unlocked (28 Nov 2026)").
    If it says only "CPG tracker service is running", or a page says "still running an older
    version of the backend", the address still runs the old code: in Manage deployments edit the
    deployment whose Web app URL is the address above, and choose New version.
@@ -79,3 +87,6 @@ No programming needed; allow 10 minutes. Needs the V8 runtime.
   (`MAX_CLOCK_AHEAD_MS`).
 - C4 (owner): passcodes stay plain text in the Sheet (see plan 8.3 item 3).
 - C5: revisit reading the whole Data tab at about 20,000 rows or a sync over 3 seconds.
+- C6 (28 Nov 2026): the lock is taken only for writes; a save reads the Data tab once and
+  batches its writes; `since` trims load and save replies. A phone whose clock is more than an
+  hour behind may have its edits reach other phones only when they next open the app.

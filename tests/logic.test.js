@@ -11,6 +11,7 @@ import {
   guidelineMatches,
   guidelineSearchText,
   mergeRemoteEntries,
+  syncSinceTime,
   nextTimestamp,
   syncStatusText,
   flattenGuidelines,
@@ -236,4 +237,10 @@ test('noteObject reads a JSON object note and falls back to {}', () => {
   assert.deepEqual(noteObject({ n: 'not json' }), {});
   assert.deepEqual(noteObject({ n: 'null' }), {});
   assert.deepEqual(noteObject({ n: '5' }), {});
+});
+
+test('syncSinceTime: the newest entry time less the margin, and 0 with no entries', () => {
+  assert.equal(syncSinceTime({}, 100), 0);
+  assert.equal(syncSinceTime({ a: { t: 500 }, b: { t: 900 }, c: {} }, 100), 800);
+  assert.equal(syncSinceTime({ a: { t: 50 } }, 100), 0);
 });

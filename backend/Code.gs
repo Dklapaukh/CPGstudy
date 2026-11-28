@@ -29,7 +29,12 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60 * 1000;
 
 // Shown when the web app address is opened in a browser, so the owner can check that a redeploy
 // reached the address the app uses. Change it whenever the requests the backend accepts change.
-const BACKEND_VERSION = 'version with job folders in Drive (27 Nov 2026)';
+const BACKEND_VERSION = 'version with since and read-only requests unlocked (28 Nov 2026)';
+
+// The actions that write to the Sheet, Drive or the sign-up counter. Only these take the script
+// lock, so reads (open, demo, load, stats, edits, the editor page) never queue behind a save or a
+// job being sent. Each write is one setValues, so a read never sees half of a row.
+const WRITE_ACTIONS = ['save', 'signup', 'scenario-submit', 'edit-save', 'submission-decide'];
 
 // The tracker with this label (any case) opens for first-time visitors (action "demo").
 const DEMO_LABEL = 'demo';
@@ -185,13 +190,12 @@ function doPost(e) {
   let reply;
   try {
     const request = JSON.parse(e.postData.contents);
-    const lock = LockService.getScriptLock();
-    lock.waitLock(LOCK_WAIT_MS);
-    try {
-      reply = handleRequest_(request);
-    } finally {
-      lock.releaseLock();
-    }
+    reply =
+      WRITE_ACTIONS.indexOf(request.action) >= 0
+        ? withLock_(function () {
+            return handleRequest_(request);
+          })
+        : handleRequest_(request);
   } catch (err) {
     console.error(err); // Details stay in the Apps Script log, not on the phone.
     reply = { ok: false, error: 'server-error' };
@@ -204,6 +208,22 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify(reply)).setMimeType(
     ContentService.MimeType.JSON,
   );
+}
+
+/** Runs `work` while holding the script lock, so two writes never interleave; returns its result. */
+function withLock_(work) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(LOCK_WAIT_MS);
+  try {
+    return work();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** The request's `since` (a time in ms): only entries edited after it are sent back. 0 = all. */
+function sinceOf_(request) {
+  return Math.max(0, Number(request.since) || 0);
 }
 
 /** `open`: a tracker's passcode opens it with its data; a wrong one is answered slowly. */
@@ -222,18 +242,28 @@ function openDemo_() {
   return { ok: true, code: demo.code, label: demo.label, data: readData_(demo.code) };
 }
 
-/** `load`: a tracker's label and data, read again by an app that already has its passcode. */
+/**
+ * `load`: a tracker's label and data, read again by an app that already has its passcode. With
+ * `since`, only the entries edited after it.
+ */
 function loadTracker_(request, code) {
   const tracker = findTracker_(code);
   if (!tracker) return { ok: false, error: 'not-found' };
-  return { ok: true, label: tracker.label, data: readData_(code) };
+  return { ok: true, label: tracker.label, data: readData_(code, sinceOf_(request)) };
 }
 
-/** `save`: writes the app's changes to a tracker and replies with its data as now saved. */
+/**
+ * `save`: writes the app's changes to a tracker and replies with its data as now saved (with
+ * `since`, only the entries edited after it), from the one read of the Data tab the save made.
+ */
 function saveTracker_(request, code) {
   if (!findTracker_(code)) return { ok: false, error: 'not-found' };
-  const saved = saveChanges_(code, request.changes || []);
-  return { ok: true, saved: saved, data: readData_(code) };
+  const result = saveChanges_(code, Array.isArray(request.changes) ? request.changes : []);
+  return {
+    ok: true,
+    saved: result.saved,
+    data: entriesOfRows_(result.rows, code, sinceOf_(request)),
+  };
 }
 
 /** `stats` (manager page): the stats and history of the trackers a manager's passcode can see. */
@@ -1155,19 +1185,26 @@ function backfillHistory_() {
   );
 }
 
-/** Returns this tracker's entries as { guidelineId: { s, n, t } }. */
-function readData_(code) {
-  const rows = getSheet_(SHEET.DATA).getDataRange().getValues();
+/**
+ * Returns this tracker's entries as { guidelineId: { s, n, t } }; with `since` (ms), only those
+ * edited after it, so a phone that is up to date gets a small reply.
+ */
+function readData_(code, since) {
+  return entriesOfRows_(getSheet_(SHEET.DATA).getDataRange().getValues(), code, since || 0);
+}
+
+/** The entries of one tracker in these Data tab rows (row 1 the headings) with t after `since`. */
+function entriesOfRows_(rows, code, since) {
   const entries = {};
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (normalise_(cell_(row, DATA_COLUMN.PASSCODE)) === code) {
-      entries[String(cell_(row, DATA_COLUMN.GUIDELINE))] = {
-        s: String(cell_(row, DATA_COLUMN.STATUS)),
-        n: String(cell_(row, DATA_COLUMN.NOTE)),
-        t: Number(cell_(row, DATA_COLUMN.UPDATED)) || 0,
-      };
-    }
+    const updated = Number(cell_(row, DATA_COLUMN.UPDATED)) || 0;
+    if (updated <= since || normalise_(cell_(row, DATA_COLUMN.PASSCODE)) !== code) continue;
+    entries[String(cell_(row, DATA_COLUMN.GUIDELINE))] = {
+      s: String(cell_(row, DATA_COLUMN.STATUS)),
+      n: String(cell_(row, DATA_COLUMN.NOTE)),
+      t: updated,
+    };
   }
   return entries;
 }
@@ -1187,39 +1224,100 @@ function cleanChange_(change) {
 }
 
 /**
- * Saves each change {id, s, n, t}. The newest change (largest t) wins. Returns how many saved.
- * Every saved change that moves a status or records a quiz score also adds a History row.
+ * Saves each change {id, s, n, t}. The newest change (largest t) wins. The Data tab is read once
+ * into a key -> row map and written in a few batches (one per run of neighbouring changed rows,
+ * one for all new rows), not one search and one write per change. Returns { saved (how many),
+ * rows (the Data tab as now saved) }. Every saved change that moves a status or records a quiz
+ * score also adds a History row. Called only under the lock (WRITE_ACTIONS).
  */
 function saveChanges_(code, changes) {
   const sheet = getSheet_(SHEET.DATA);
-  const history = [];
+  const batch = {
+    rows: sheet.getDataRange().getValues(),
+    changedRows: {}, // index in rows -> true, for rows already in the tab
+    history: [],
+  };
+  batch.rowOfKey = dataRowIndexes_(batch.rows);
+  batch.firstNewRow = batch.rows.length;
   let saved = 0;
   changes.forEach(function (change) {
     const clean = cleanChange_(change);
-    if (!clean) return;
-    const key = code + '|' + clean.id;
-    const found = sheet.getRange('A:A').createTextFinder(key).matchEntireCell(true).findNext();
-    if (!found) {
-      sheet.appendRow([key, code, clean.id, clean.status, clean.note, clean.updated]);
-      historyRows_(code, clean, STATUS.INCOMPLETE, '').forEach(function (row) {
-        history.push(row);
-      });
-      saved++;
-      return;
-    }
-    // Status, note and time are next to each other, so one read and one write cover them.
-    const cells = sheet.getRange(found.getRow(), DATA_COLUMN.STATUS, 1, 3);
-    const old = cells.getValues()[0];
-    if (clean.updated >= (Number(old[2]) || 0)) {
-      cells.setValues([[clean.status, clean.note, clean.updated]]);
-      historyRows_(code, clean, String(old[0]), String(old[1])).forEach(function (row) {
-        history.push(row);
-      });
-      saved++;
-    }
+    if (clean && applyChange_(batch, code, clean)) saved++;
   });
-  appendHistory_(history);
-  return saved;
+  writeChangedRows_(sheet, batch.rows, Object.keys(batch.changedRows).map(Number));
+  writeNewRows_(sheet, batch.rows.slice(batch.firstNewRow), batch.firstNewRow);
+  appendHistory_(batch.history);
+  return { saved: saved, rows: batch.rows };
+}
+
+/**
+ * Puts one cleaned change into the batch's rows unless the row holds a newer edit, noting the
+ * row to write and its History rows. Returns true when it was saved.
+ */
+function applyChange_(batch, code, clean) {
+  const key = code + '|' + clean.id;
+  let index = batch.rowOfKey[key];
+  let oldStatus = STATUS.INCOMPLETE;
+  let oldNote = '';
+  if (index === undefined) {
+    index = batch.rows.push([key, code, clean.id, '', '', 0]) - 1;
+    batch.rowOfKey[key] = index;
+  } else {
+    const row = batch.rows[index];
+    if (clean.updated < (Number(cell_(row, DATA_COLUMN.UPDATED)) || 0)) return false;
+    oldStatus = String(cell_(row, DATA_COLUMN.STATUS));
+    oldNote = String(cell_(row, DATA_COLUMN.NOTE));
+  }
+  setDataValues_(batch.rows[index], clean);
+  if (index < batch.firstNewRow) batch.changedRows[index] = true;
+  historyRows_(code, clean, oldStatus, oldNote).forEach(function (row) {
+    batch.history.push(row);
+  });
+  return true;
+}
+
+/** Each Data tab key -> its index in `rows` (the first row with that key, as the search found). */
+function dataRowIndexes_(rows) {
+  const rowOfKey = {};
+  for (let i = 1; i < rows.length; i++) {
+    const key = String(cell_(rows[i], DATA_COLUMN.KEY));
+    if (!(key in rowOfKey)) rowOfKey[key] = i;
+  }
+  return rowOfKey;
+}
+
+/** Puts a cleaned change's status, note and time into one row of sheet values. */
+function setDataValues_(row, clean) {
+  row[DATA_COLUMN.STATUS - 1] = clean.status;
+  row[DATA_COLUMN.NOTE - 1] = clean.note;
+  row[DATA_COLUMN.UPDATED - 1] = clean.updated;
+}
+
+/**
+ * Writes the status, note and time of these changed rows (indexes in `rows`): one setValues for
+ * each run of neighbouring rows, since status, note and time sit side by side.
+ */
+function writeChangedRows_(sheet, rows, indexes) {
+  indexes.sort(function (a, b) {
+    return a - b;
+  });
+  let runStart = 0;
+  for (let i = 1; i <= indexes.length; i++) {
+    if (i < indexes.length && indexes[i] === indexes[i - 1] + 1) continue;
+    const first = indexes[runStart];
+    const values = rows.slice(first, indexes[i - 1] + 1).map(function (row) {
+      return row.slice(DATA_COLUMN.STATUS - 1, DATA_COLUMN.UPDATED);
+    });
+    if (values.length)
+      sheet.getRange(first + 1, DATA_COLUMN.STATUS, values.length, 3).setValues(values);
+    runStart = i;
+  }
+}
+
+/** Adds the new rows below the last row of the tab in one write; `firstIndex` is their index. */
+function writeNewRows_(sheet, newRows, firstIndex) {
+  if (newRows.length === 0) return;
+  sheet.getRange(firstIndex + 1, 1, newRows.length, newRows[0].length).setValues(newRows);
 }
 
 /** Makes a new tracker passcode such as "maple-otter-tide-42" that is not already in use. */

@@ -14,6 +14,8 @@ export const state = {
   entries: {}, // guideline id -> { s, n, t }, the merged view of this tracker
   pendingChanges: {}, // guideline id -> { s, n, t }, edits not yet uploaded
   syncInProgress: false,
+  // True once a sync this visit fetched every entry; later syncs send `since`. Memory only.
+  fullSyncDone: false,
   lastSyncFailed: false,
   storageBlocked: false,
   syncTimer: 0,

@@ -122,6 +122,15 @@ export function guidelineMatches(guideline, status, filter, searchText) {
 }
 
 /**
+ * The `since` time for a sync: the newest entry's `t` less `marginMs`, never below 0 (0 asks
+ * the backend for every entry, as for a phone with none).
+ */
+export function syncSinceTime(entries, marginMs) {
+  const newest = Object.values(entries).reduce((max, entry) => Math.max(max, entry.t || 0), 0);
+  return newest ? Math.max(0, newest - marginMs) : 0;
+}
+
+/**
  * Merges entries from the server into the local ones. The entry with the newest `t` wins.
  * Returns { entries, changed }; `changed` is true only when status or note differ,
  * so the screen is redrawn only when something visible changed.

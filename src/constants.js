@@ -16,6 +16,10 @@ export const SYNC_DELAY_AFTER_EDIT_MS = 900;
 export const SYNC_DELAY_MORE_PENDING_MS = 500;
 export const SYNC_DELAY_AFTER_FAILURE_MS = 10000;
 export const BACKGROUND_SYNC_INTERVAL_MS = 30000;
+// A sync asks only for entries edited after the newest one this phone has, less this margin:
+// times come from each phone's clock, so another phone a little behind is still picked up. The
+// first sync after the app opens asks for everything, catching a clock further behind.
+export const SYNC_SINCE_MARGIN_MS = 60 * 60 * 1000;
 // The list is redrawn this long after typing in the search box stops (review item R8).
 export const SEARCH_PAUSE_MS = 150;
 export const COMMENT_CONFIRMATION_MS = 1500;
